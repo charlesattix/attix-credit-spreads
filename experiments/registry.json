@@ -157,6 +157,20 @@
       "backtest_config": null,
       "notes": "XGBoost binary classifier (win/loss) trained on EXP-600 champion config trade features. Time-series CV only. max_depth=3, min_child_weight=5. Backtest comparison: EXP-600 with vs without ML filter."
     },
+    "EXP-800": {
+      "id": "EXP-800",
+      "name": "Safe Kelly 4/7/9",
+      "created_by": "charles",
+      "created_date": "2026-03-26",
+      "status": "paper_trading",
+      "ticker": "SPY",
+      "account_id": null,
+      "live_since": null,
+      "paper_config": "configs/paper_exp800.yaml",
+      "backtest_config": null,
+      "description": "EXP-400 champion signal generation (dte=15, otm=2%, width=$12, sl=1.25x, pt=55%) with Safe Kelly criterion position sizing and 3-tier portfolio drawdown circuit breakers. Kelly fractions: bull=9%, neutral=7%, bear=4%. Circuit breakers: Tier1 DD≤-8% → halve sizing, Tier2 DD≤-10% → floor to 2%, Tier3 DD≤-12% → flatten + halt 30 trades.",
+      "notes": "Safe Kelly 4/7/9 on EXP-400 champion. Kelly HWM + CB state persisted in data/exp800/pilotai_exp800.db (table: kelly_state)."
+    },
     "EXP-307": {
       "id": "EXP-307",
       "name": "Sector ETF Diversification",
