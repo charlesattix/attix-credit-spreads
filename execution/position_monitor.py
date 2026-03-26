@@ -173,6 +173,32 @@ class PositionMonitor:
         # Tracks consecutive Alpaca API failures for escalation alerting
         self._consecutive_api_failures = 0
 
+        # Three-tier portfolio drawdown CB (enabled when any tier is configured > 0)
+        _t1 = float(risk.get("portfolio_cb_flatten_pct", 0))
+        _t2 = float(risk.get("portfolio_cb_pause_pct",   0))
+        _t3 = float(risk.get("portfolio_cb_halt_pct",    0))
+        if _t1 > 0 or _t2 > 0 or _t3 > 0:
+            try:
+                from execution.drawdown_circuit_breaker import DrawdownCircuitBreaker
+                starting_nav = float(risk.get("account_size", 100_000))
+                self._portfolio_cb = DrawdownCircuitBreaker(
+                    db_path=db_path,
+                    starting_nav=starting_nav,
+                    tier1_pct=-abs(_t1) / 100 if _t1 > 0 else DrawdownCircuitBreaker.TIER_1_PCT,
+                    tier2_pct=-abs(_t2) / 100 if _t2 > 0 else DrawdownCircuitBreaker.TIER_2_PCT,
+                    tier3_pct=-abs(_t3) / 100 if _t3 > 0 else DrawdownCircuitBreaker.TIER_3_PCT,
+                )
+                logger.info(
+                    "PositionMonitor: three-tier portfolio CB enabled — "
+                    "flatten=%.0f%% pause=%.0f%% halt=%.0f%%",
+                    _t1, _t2, _t3,
+                )
+            except Exception as _pcb_err:
+                logger.warning("PositionMonitor: portfolio CB init failed (non-fatal): %s", _pcb_err)
+                self._portfolio_cb = None
+        else:
+            self._portfolio_cb = None
+
         # Strategy registry — maps strategy_name → strategy instance for manage_position()
         self._strategy_registry: Dict[str, object] = {}
         self._exit_snapshot_cache = None
@@ -376,6 +402,24 @@ class PositionMonitor:
                 logger.error(
                     "PositionMonitor: error checking position %s: %s", pos.get("id"), e
                 )
+
+        # Step 6: Three-tier portfolio drawdown CB check (after exits so NAV is up-to-date)
+        if self._portfolio_cb is not None and self.alpaca is not None:
+            try:
+                account = self.alpaca.get_account()
+                current_nav = float(account.get("equity") or account.get("portfolio_value") or 0)
+                if current_nav > 0:
+                    cb_result = self._portfolio_cb.check_and_act(
+                        current_nav, alpaca_client=self.alpaca
+                    )
+                    _action = cb_result.get("action", "none")
+                    if _action not in ("none", "hwm_updated"):
+                        logger.warning(
+                            "PositionMonitor: portfolio CB action=%s state=%s dd=%.2f%%",
+                            _action, cb_result.get("state"), cb_result.get("drawdown", 0) * 100,
+                        )
+            except Exception as _pcb_err:
+                logger.debug("PositionMonitor: portfolio CB check failed (non-fatal): %s", _pcb_err)
 
     # ------------------------------------------------------------------
     # Exit condition checks

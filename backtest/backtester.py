@@ -457,6 +457,24 @@ class Backtester:
             self.backtest_config.get('max_portfolio_exposure_pct', 100.0)
         )
 
+        # Portfolio-level three-tier drawdown circuit breaker thresholds.
+        # These operate on the rolling HWM (always HWM-based, unlike the existing
+        # drawdown_cb_pct which uses starting_capital in non-compound mode).
+        # All three default to 0 = disabled (backward compat).
+        #   portfolio_cb_flatten_pct: close ALL positions when DD hits this level (e.g. 8 → -8%)
+        #   portfolio_cb_pause_pct:   block new entries when DD hits this level (e.g. 10 → -10%)
+        #   portfolio_cb_halt_pct:    hard stop when DD hits this level (e.g. 12 → -12%)
+        self._pcb_flatten_pct: float = float(self.backtest_config.get('portfolio_cb_flatten_pct', 0))
+        self._pcb_pause_pct:   float = float(self.backtest_config.get('portfolio_cb_pause_pct',   0))
+        self._pcb_halt_pct:    float = float(self.backtest_config.get('portfolio_cb_halt_pct',    0))
+        # CB trigger counters (exposed in results)
+        self._pcb_tier1_triggers: int = 0
+        self._pcb_tier2_triggers: int = 0
+        self._pcb_tier3_triggers: int = 0
+        # Pause/halt state flags (reset at start of each run_backtest call)
+        self._pcb_paused: bool = False
+        self._pcb_halted: bool = False
+
         # P7: Outlier month exclusion — list of "YYYY-MM" strings.
         # On days falling within these months, NO new entries are opened.
         # Existing positions are still managed (stops, profit targets, expiration).
@@ -618,6 +636,14 @@ class Backtester:
         self._volume_skipped = 0
         # P1-D: reset ruin flag
         self._ruin_triggered = False
+        # Reset portfolio CB state for this run
+        self._pcb_tier1_triggers = 0
+        self._pcb_tier2_triggers = 0
+        self._pcb_tier3_triggers = 0
+        self._pcb_paused = False
+        self._pcb_halted = False
+        # HWM for portfolio CB (always tracks the peak total equity during this run)
+        self._pcb_hwm = self.starting_capital
 
         open_positions = []
 
@@ -761,12 +787,71 @@ class Backtester:
             _month_str = current_date.strftime("%Y-%m")
             _excluded_month = _month_str in self._exclude_months
 
+            # Portfolio-level three-tier CB check (runs only when enabled, i.e. pct > 0).
+            # Operates on the rolling HWM of total equity (capital + open position MTM).
+            _position_value = sum(p.get('current_value', 0) for p in open_positions)
+            _total_equity_now = self.capital + _position_value
+            if _total_equity_now > self._pcb_hwm:
+                self._pcb_hwm = _total_equity_now
+
+            if self._pcb_hwm > 0:
+                _pcb_dd = (_total_equity_now - self._pcb_hwm) / self._pcb_hwm  # negative fraction
+            else:
+                _pcb_dd = 0.0
+
+            # Tier 3: hard stop — close all and halt
+            if self._pcb_halt_pct > 0 and _pcb_dd <= -abs(self._pcb_halt_pct) / 100 and not self._pcb_halted:
+                self._pcb_halted = True
+                self._pcb_paused = True
+                self._pcb_tier3_triggers += 1
+                logger.warning(
+                    "PORTFOLIO CB TIER3 HALT %s: total_equity=%.0f hwm=%.0f dd=%.1f%%",
+                    current_date.strftime("%Y-%m-%d"), _total_equity_now, self._pcb_hwm, _pcb_dd * 100,
+                )
+                # Flatten all open positions immediately
+                for _pos in list(open_positions):
+                    _pos['exit_reason'] = 'portfolio_cb_halt'
+                    self._close_at_expiration_real(_pos, current_date)
+                open_positions.clear()
+
+            # Tier 1: flatten — close all positions
+            elif self._pcb_flatten_pct > 0 and _pcb_dd <= -abs(self._pcb_flatten_pct) / 100 and not self._pcb_paused:
+                self._pcb_paused = True
+                self._pcb_tier1_triggers += 1
+                logger.warning(
+                    "PORTFOLIO CB TIER1 FLATTEN %s: total_equity=%.0f hwm=%.0f dd=%.1f%%",
+                    current_date.strftime("%Y-%m-%d"), _total_equity_now, self._pcb_hwm, _pcb_dd * 100,
+                )
+                # Flatten all open positions immediately
+                for _pos in list(open_positions):
+                    _pos['exit_reason'] = 'portfolio_cb_flatten'
+                    self._close_at_expiration_real(_pos, current_date)
+                open_positions.clear()
+
+            # Tier 2: pause new entries
+            elif self._pcb_pause_pct > 0 and _pcb_dd <= -abs(self._pcb_pause_pct) / 100 and not self._pcb_paused:
+                self._pcb_paused = True
+                self._pcb_tier2_triggers += 1
+                logger.warning(
+                    "PORTFOLIO CB TIER2 PAUSE %s: total_equity=%.0f hwm=%.0f dd=%.1f%%",
+                    current_date.strftime("%Y-%m-%d"), _total_equity_now, self._pcb_hwm, _pcb_dd * 100,
+                )
+
+            # Recovery from pause/flatten (not halt) when DD recovers above flatten threshold
+            elif self._pcb_paused and not self._pcb_halted and _pcb_dd > -abs(self._pcb_flatten_pct if self._pcb_flatten_pct > 0 else self._pcb_pause_pct) / 100:
+                self._pcb_paused = False
+                logger.info(
+                    "PORTFOLIO CB RECOVERY %s: dd=%.1f%% recovered above flatten threshold",
+                    current_date.strftime("%Y-%m-%d"), _pcb_dd * 100,
+                )
+
             _skip_new_entries = (
                 _drawdown_pct < _cb_threshold
                 or _iv_too_low
                 or _vix_too_high
                 or _excluded_month
                 or self._ruin_triggered  # P1-D: halt all entries after capital reaches zero
+                or self._pcb_paused      # Portfolio CB: paused or halted
             )
 
             # Crypto risk gate: additional entry filters for crypto ETF backtests.
@@ -2518,6 +2603,10 @@ class Backtester:
             'volume_skipped': self._volume_skipped,
             # P1-D: whether capital reached zero during the backtest
             'ruin_triggered': self._ruin_triggered,
+            # Portfolio-level three-tier CB trigger counts
+            'portfolio_cb_tier1_triggers': self._pcb_tier1_triggers,
+            'portfolio_cb_tier2_triggers': self._pcb_tier2_triggers,
+            'portfolio_cb_tier3_triggers': self._pcb_tier3_triggers,
             # Bootstrap resampling stats (full MC mode only — empty dict otherwise)
             'bootstrap': bootstrap_stats,
         }

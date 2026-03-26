@@ -183,6 +183,10 @@ def _build_config(params: dict, starting_capital: float = 100_000) -> dict:
             "oi_gate":             params.get("oi_gate", False),
             "oi_min_factor":       params.get("oi_min_factor", 2),
             "volume_gate_on_miss": params.get("volume_gate_on_miss", "open"),
+            # Portfolio-level three-tier drawdown CB (all default 0 = disabled)
+            "portfolio_cb_flatten_pct": params.get("portfolio_cb_flatten_pct", 0),
+            "portfolio_cb_pause_pct":   params.get("portfolio_cb_pause_pct",   0),
+            "portfolio_cb_halt_pct":    params.get("portfolio_cb_halt_pct",    0),
         },
     }
 

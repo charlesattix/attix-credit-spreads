@@ -58,6 +58,29 @@ class ExecutionEngine:
             )
         init_db(db_path)
 
+        # Three-tier portfolio drawdown CB (enabled when any tier is configured > 0)
+        risk_cfg = self.config.get("risk", {})
+        _t1 = float(risk_cfg.get("portfolio_cb_flatten_pct", 0))
+        _t2 = float(risk_cfg.get("portfolio_cb_pause_pct",   0))
+        _t3 = float(risk_cfg.get("portfolio_cb_halt_pct",    0))
+        if _t1 > 0 or _t2 > 0 or _t3 > 0:
+            from execution.drawdown_circuit_breaker import DrawdownCircuitBreaker
+            starting_nav = float(risk_cfg.get("account_size", 100_000))
+            self._portfolio_cb = DrawdownCircuitBreaker(
+                db_path=db_path,
+                starting_nav=starting_nav,
+                tier1_pct=-abs(_t1) / 100 if _t1 > 0 else DrawdownCircuitBreaker.TIER_1_PCT,
+                tier2_pct=-abs(_t2) / 100 if _t2 > 0 else DrawdownCircuitBreaker.TIER_2_PCT,
+                tier3_pct=-abs(_t3) / 100 if _t3 > 0 else DrawdownCircuitBreaker.TIER_3_PCT,
+            )
+            logger.info(
+                "ExecutionEngine: three-tier portfolio CB enabled — "
+                "flatten=%.0f%% pause=%.0f%% halt=%.0f%%",
+                _t1, _t2, _t3,
+            )
+        else:
+            self._portfolio_cb = None
+
     def _check_drawdown_cb(self) -> Optional[str]:
         """Return a human-readable block reason if the drawdown circuit breaker is tripped, else None.
 
@@ -264,6 +287,20 @@ class ExecutionEngine:
                 ticker, spread_type, cb_reason,
             )
             return {"status": "drawdown_cb_tripped", "message": cb_reason, "client_order_id": client_id}
+
+        # Three-tier portfolio CB: check entry permission
+        if self._portfolio_cb is not None and not self._portfolio_cb.is_entry_allowed():
+            _pcb_status = self._portfolio_cb.get_status()
+            logger.warning(
+                "ExecutionEngine: entry BLOCKED by three-tier portfolio CB "
+                "(state=%s) for %s %s",
+                _pcb_status.get("state"), ticker, spread_type,
+            )
+            return {
+                "status": "portfolio_cb_blocked",
+                "client_order_id": client_id,
+                "message": f"portfolio_cb state={_pcb_status.get('state')}",
+            }
 
         # Submit to Alpaca
         try:
