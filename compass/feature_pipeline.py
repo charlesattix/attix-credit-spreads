@@ -303,7 +303,8 @@ class FeaturePipeline:
                 parts.append(dummies)
 
         result = pd.concat(parts, axis=1)
-        result[:] = sanitize_features(result.values.astype(np.float64))
+        clean = sanitize_features(result.values.astype(np.float64))
+        result = pd.DataFrame(clean, columns=result.columns, index=result.index)
         return result
 
     # ── Convenience: get feature names after transform ───────────────────

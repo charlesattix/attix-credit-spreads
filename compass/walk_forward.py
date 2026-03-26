@@ -113,7 +113,8 @@ def prepare_features(
 
     features = pd.concat(parts, axis=1)
     # Sanitize inf / nan in the combined matrix
-    features[:] = sanitize_features(features.values)
+    clean = sanitize_features(features.values.astype(float))
+    features = pd.DataFrame(clean, columns=features.columns, index=features.index)
     return features
 
 
