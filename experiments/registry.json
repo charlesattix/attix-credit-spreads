@@ -156,20 +156,6 @@
       "paper_config": null,
       "backtest_config": null,
       "notes": "XGBoost binary classifier (win/loss) trained on EXP-600 champion config trade features. Time-series CV only. max_depth=3, min_child_weight=5. Backtest comparison: EXP-600 with vs without ML filter."
-    },
-    "EXP-700": {
-      "id": "EXP-700",
-      "name": "ML-Filtered Champion",
-      "created_by": "charles",
-      "created_date": "2026-03-26",
-      "status": "paper_trading",
-      "ticker": "SPY",
-      "account_id": "PA3D44G9ZYRC",
-      "live_since": "2026-03-26",
-      "paper_config": "configs/paper_exp700.yaml",
-      "backtest_config": null,
-      "description": "EXP-400 Champion with XGBoost ensemble ML filter (AUC 0.793, threshold 0.65). Filters low-confidence trades for higher win rate and returns. Walk-forward validated + 2025 holdout.",
-      "notes": "ML-filtered Champion. +149.7% return, 3.18 Sharpe, 93.4% WR in holdout."
     }
   }
 }

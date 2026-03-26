@@ -160,11 +160,6 @@ function ExperimentCard({ exp, starting }: { exp: ExperimentData; starting: numb
         )}
       </div>
 
-      {/* Equity Chart */}
-      {exp.alpaca_equity_history && exp.alpaca_equity_history.length > 1 && (
-        <EquityChart data={exp.alpaca_equity_history} starting={starting} />
-      )}
-
       {/* Live Alpaca stats */}
       {hasAlpaca ? (
         <div className="grid grid-cols-3 gap-3 mb-4 p-3 bg-gray-50 rounded-lg">
@@ -245,87 +240,6 @@ function AlpacaMetric({ label, value, valueColor }: { label: string; value: stri
     <div className="text-center">
       <p className="text-xs text-gray-400">{label}</p>
       <p className={`text-sm font-bold ${valueColor}`}>{value}</p>
-    </div>
-  )
-}
-
-function EquityChart({ data, starting }: { data: Array<{ date: string; equity: number; profit_loss: number }>; starting: number }) {
-  const w = 600
-  const h = 160
-  const pad = { top: 10, right: 10, bottom: 24, left: 55 }
-  const cw = w - pad.left - pad.right
-  const ch = h - pad.top - pad.bottom
-
-  const equities = data.map(d => d.equity)
-  const minEq = Math.min(...equities) * 0.999
-  const maxEq = Math.max(...equities) * 1.001
-  const range = maxEq - minEq || 1
-
-  const overall = equities[equities.length - 1] - starting
-  const lineColor = overall >= 0 ? '#22c55e' : '#ef4444'
-  const fillColor = overall >= 0 ? '#22c55e10' : '#ef444410'
-
-  const points = data.map((d, i) => {
-    const x = pad.left + (i / (data.length - 1)) * cw
-    const y = pad.top + ch - ((d.equity - minEq) / range) * ch
-    return { x, y, ...d }
-  })
-
-  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
-  const areaPath = linePath + ` L${points[points.length - 1].x.toFixed(1)},${pad.top + ch} L${points[0].x.toFixed(1)},${pad.top + ch} Z`
-
-  // Y-axis ticks (3 ticks)
-  const yTicks = [minEq, (minEq + maxEq) / 2, maxEq].map(v => ({
-    value: v,
-    y: pad.top + ch - ((v - minEq) / range) * ch,
-    label: `$${(v / 1000).toFixed(1)}k`
-  }))
-
-  // X-axis labels (show ~5 dates)
-  const step = Math.max(1, Math.floor(data.length / 5))
-  const xLabels = data.filter((_, i) => i % step === 0 || i === data.length - 1).map((d, idx, arr) => ({
-    x: pad.left + ((data.indexOf(d)) / (data.length - 1)) * cw,
-    label: d.date.slice(5), // MM-DD
-  }))
-
-  // Starting equity reference line
-  const startY = pad.top + ch - ((starting - minEq) / range) * ch
-
-  return (
-    <div className="mb-4 -mx-1">
-      <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{ height: 160 }}>
-        {/* Grid lines */}
-        {yTicks.map((t, i) => (
-          <g key={i}>
-            <line x1={pad.left} y1={t.y} x2={w - pad.right} y2={t.y}
-              stroke="#f1f5f9" strokeWidth="1" />
-            <text x={pad.left - 6} y={t.y + 4} textAnchor="end"
-              fill="#94a3b8" fontSize="10" fontFamily="system-ui">{t.label}</text>
-          </g>
-        ))}
-
-        {/* Starting equity reference */}
-        {starting >= minEq && starting <= maxEq && (
-          <line x1={pad.left} y1={startY} x2={w - pad.right} y2={startY}
-            stroke="#cbd5e1" strokeWidth="1" strokeDasharray="4,4" />
-        )}
-
-        {/* Area fill */}
-        <path d={areaPath} fill={fillColor} />
-
-        {/* Line */}
-        <path d={linePath} fill="none" stroke={lineColor} strokeWidth="2" strokeLinejoin="round" />
-
-        {/* Data points on hover (last point always shown) */}
-        <circle cx={points[points.length - 1].x} cy={points[points.length - 1].y}
-          r="3" fill={lineColor} />
-
-        {/* X-axis labels */}
-        {xLabels.map((l, i) => (
-          <text key={i} x={l.x} y={h - 4} textAnchor="middle"
-            fill="#94a3b8" fontSize="9" fontFamily="system-ui">{l.label}</text>
-        ))}
-      </svg>
     </div>
   )
 }

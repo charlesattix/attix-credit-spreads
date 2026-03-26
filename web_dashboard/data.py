@@ -344,7 +344,6 @@ def query_all_live(report_date: Optional[str] = None) -> List[dict]:
                     "open_trades":  exp.get("open_positions", []),
                     "error":        exp.get("error"),
                     "alpaca":       exp.get("alpaca"),
-                    "alpaca_equity_history": exp.get("alpaca_equity_history", []),
                 }
                 flattened.append(flat)
             return flattened
@@ -355,15 +354,9 @@ def query_all_live(report_date: Optional[str] = None) -> List[dict]:
             exp.get("id"): exp.get("alpaca")
             for exp in pushed["experiments"]
         }
-        hist_by_id = {
-            exp.get("id"): exp.get("alpaca_equity_history", [])
-            for exp in pushed["experiments"]
-        }
         for r in results:
             if r.get("alpaca") is None:
                 r["alpaca"] = alp_by_id.get(r["id"])
-            if not r.get("alpaca_equity_history"):
-                r["alpaca_equity_history"] = hist_by_id.get(r["id"], [])
 
     return results
 

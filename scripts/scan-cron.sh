@@ -57,19 +57,17 @@ _run_scan "exp400" "configs/paper_champion.yaml" ".env.exp400" "data/pilotai_exp
 _run_scan "exp401" "configs/paper_exp401.yaml"   ".env.exp401" "data/pilotai_exp401.db"
 _run_scan "exp503" "configs/paper_exp503.yaml"   ".env.exp503" "data/pilotai_exp503.db"
 _run_scan "exp600" "configs/paper_exp600.yaml"   ".env.exp600" "data/pilotai_exp600.db"
-# EXP-700: ML-filtered champion — uses custom scanner
-{
+
+# EXP-700: ML-filtered champion (custom scanner)
+_run_ml_scan() {
   local LOG_FILE="${LOG_DIR}/scan-cron-exp700.log"
   if [ -f "$LOG_FILE" ] && [ "$(stat -f%z "$LOG_FILE" 2>/dev/null || echo 0)" -gt "$MAX_LOG_SIZE" ]; then
     mv "$LOG_FILE" "${LOG_FILE}.1"
   fi
   echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Starting exp700 ML scan (ET: $(TZ=America/New_York date '+%H:%M %Z'))" >> "$LOG_FILE"
   /usr/bin/python3 scripts/exp700_ml_scanner.py --config configs/paper_exp700.yaml --env-file .env.exp700 >> "$LOG_FILE" 2>&1
-  local EXIT_CODE=$?
-  if [ $EXIT_CODE -eq 0 ]; then
-    echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] exp700 ML scan completed successfully" >> "$LOG_FILE"
-  else
-    echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] exp700 ML scan failed with exit code $EXIT_CODE" >> "$LOG_FILE"
-  fi
+  local RC=$?
+  [ $RC -eq 0 ] && echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] exp700 ML scan completed successfully" >> "$LOG_FILE" || echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] exp700 ML scan failed with exit code $RC" >> "$LOG_FILE"
   echo "---" >> "$LOG_FILE"
 }
+_run_ml_scan

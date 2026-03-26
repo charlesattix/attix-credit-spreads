@@ -155,8 +155,6 @@ def _build_config(params: dict, starting_capital: float = 100_000) -> dict:
             # COMPASS: Composite Macro Position & Sector Signal
             "compass_enabled":       params.get("compass_enabled", False),
             "compass_rrg_filter":    params.get("compass_rrg_filter", False),
-            # Safe Kelly regime-adaptive risk sizing (exp_307)
-            "regime_risk_sizing":    params.get("regime_risk_sizing", {}),
         },
         "risk": {
             "stop_loss_multiplier": params.get("stop_loss_multiplier", 2.5),

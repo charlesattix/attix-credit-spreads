@@ -4,16 +4,12 @@
 Build a validated, multi-strategy options trading system on SPY. Data-driven approach: kill losing strategies, optimize winners, follow what the data says. Paper trade the winners, then go live.
 
 ## North Star
-
-| Metric | Target | Current Best |
-|--------|--------|-------------|
-| Avg Annual Return | 55% | **134.3%** (Safe Kelly, EXP-safe-kelly) |
-| Max Drawdown | ≤30% | **-4.2% to -9.2%** (Mega Portfolio / Safe Kelly) |
-| Sharpe Ratio | 6.0 | **2.60 – 3.87** (Optimal Blend / Mega Portfolio) |
-| All years profitable | 6/6 | ✅ (all champion configs) |
-| Validated & multi-strategy | ✅ | ✅ (paper live since 2026-03-15) |
-
-**🚫 NO SYNTHETIC DATA — EVER.** All pricing must come from `IronVault.instance()` → `data/options_cache.db`. Black-Scholes/heuristic pricing is permanently BANNED. Cache miss → skip trade (return `None`), NEVER fabricate. See `docs/DATA_ARCHITECTURE.md`, `shared/iron_vault.py`, `scripts/iron_vault_setup.py`.
+- **55% avg annual return**
+- **Sharpe ratio of 6**
+- **≤30% max drawdown** in any year
+- **Multi-strategy, research-backed, validated**
+- **All 6 years (2020-2025) profitable**
+- **🚫 NO SYNTHETIC DATA — EVER.** All pricing must come from `IronVault.instance()` → `data/options_cache.db`. Black-Scholes/heuristic pricing is permanently BANNED. Cache miss → skip trade (return `None`), NEVER fabricate. See `docs/DATA_ARCHITECTURE.md`, `shared/iron_vault.py`, `scripts/iron_vault_setup.py`.
 
 ---
 
@@ -93,38 +89,6 @@ Build a validated, multi-strategy options trading system on SPY. Data-driven app
 - **Next step:** Accumulate 12+ months of EXP-600 paper trade data, retrain, test on held-out period.
 - **Outputs:** `ml/ibit_model_report.md`, `ml/ibit_feature_importance.md`, `output/exp601_ml_comparison.json`
 
-### 🔬 Active Research Experiments
-
-#### Wave 3 — Alpha Roadmap Research (2026-03-16)
-
-| Experiment | Branch | Result | Verdict |
-|-----------|--------|--------|---------|
-| **Optimal Blend** | `experiment/optimal-blend` | 2.60 Sharpe, -7.0% MaxDD P5, 34.2% CAGR | ✅ Best risk-adjusted base |
-| **Regime Sub-models** | `experiment/regime-submodels` | Per-regime sub-strategy routing | 🔄 In evaluation |
-| **SKEW Overlay** | `experiment/skew-overlay` | No predictive signal found | ❌ No signal |
-| **Alpha Roadmap** | `output/alpha_roadmap.md` | Consolidated alpha research map | 📄 Reference doc |
-
-#### Wave 4 — Return Enhancement Overlays (2026-03-26)
-
-| Experiment | Branch | Result | Verdict |
-|-----------|--------|--------|---------|
-| **ML-005** | `experiment/ml-005` | +149.7% avg return, 3.18 Sharpe | ✅ Strong signal |
-| **Market-Neutral IC** | `experiment/market-neutral-ic` | +45.6% avg, 1.73 Sharpe | ✅ Passes threshold |
-| **Dynamic Allocation** | `experiment/dynamic-allocation` | +43.2% CAGR, 2.69 Sharpe | ✅ Passes threshold |
-| **Safe Kelly Sizing** | `experiment/safe-kelly` | +134.3% avg, -9.2% MaxDD | ✅ North Star current best |
-| **Mega Portfolio** | `experiment/mega-portfolio` | 3.87 Sharpe, -1.2% MaxDD | ✅ Best Sharpe achieved |
-| **Vol Harvesting** | `experiment/vol-harvesting` | +10% avg, 1.98 Sharpe | ⚠️ Below target, revisit |
-| **Cash Activation** | `experiment/cash-activation` | +3.4pp CAGR improvement | ⚠️ Marginal — monitor |
-| **Vol Strangle Overlay** | `experiment/vol-strangle-overlay` | +2.3%/yr improvement | ⚠️ Below target threshold |
-| **QQQ Sleeve** | `experiment/qqq-sleeve` | +0.06 Sharpe improvement (conditional) | ⚠️ Conditional benefit only |
-| **1DTE Scalping** | `experiment/1dte` | Insufficient data for conclusion | ⚠️ Needs more data |
-| **Tactical Regime Sizing** | `experiment/tactical-regime-concentration` | Calmar 1.08 vs 1.80 flat; -3.1pp avg | ❌ Hurts risk-adjusted returns |
-| **Event Vol Machine** | `experiment/event-vol-machine` | -0.2% avg return across 2020-2025 | ❌ Negative alpha |
-
-**Wave 4 conclusion:** Only ML-005, Market-Neutral IC, Dynamic Allocation, Safe Kelly, and Mega Portfolio
-clear the bar. The overlay strategies (tactical sizing, event vol, SKEW) consistently fail to add
-alpha over the base combo regime system. Focus capital on the ✅ experiments.
-
 ### 🪦 Retired
 
 | ID | Name | Creator | Why Retired |
@@ -188,12 +152,20 @@ alpha over the base combo regime system. Focus capital on the ✅ experiments.
 ### Key Files
 ```
 🔒 Iron Vault (Centralized Data Layer):
+<<<<<<< Updated upstream
+├── shared/iron_vault.py           ← THE single data provider — all data access goes here
+├── scripts/iron_vault_setup.py    ← Bootstrap: validates keys, checks cache, reports gaps
+├── docs/DATA_ARCHITECTURE.md      ← Full data architecture documentation
+├── data/options_cache.db          ← 905MB, 5.67M daily bars, 168K contracts (2020-2026)
+└── data/macro_state.db            ← Regime/sector macro data
+=======
 ├── shared/iron_vault.py            ← THE single data provider (singleton)
 ├── scripts/iron_vault_setup.py     ← Bootstrap & validation
 ├── docs/DATA_ARCHITECTURE.md       ← Full architecture docs
-├── data/options_cache.db           ← ~905 MB source of truth (real Polygon data, 2020-2026)
+├── data/options_cache.db           ← ~905 MB source of truth (real Polygon data)
 ├── data/macro_state.db             ← Regime/sector data (COMPASS)
 └── backtest/historical_data.py     ← Raw DB queries (wrapped by IronVault)
+>>>>>>> Stashed changes
 
 configs/
 ├── champion.json              ← EXP-400 raw params

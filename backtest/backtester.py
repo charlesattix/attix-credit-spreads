@@ -407,14 +407,6 @@ class Backtester:
         self._regime_config: dict = self.strategy_params.get('regime_config', {})
         self._regime_by_date: dict = {}  # populated by _build_combo_regime_series
 
-        # Safe Kelly regime-adaptive risk sizing (exp_307)
-        # Maps regime → risk % per trade, e.g. {"bull": 9.0, "neutral": 7.0, "bear": 4.0}
-        # When set, overrides max_risk_per_trade per day in flat sizing mode.
-        self._regime_risk_sizing: dict = self.strategy_params.get('regime_risk_sizing', {})
-        self._current_regime_risk_pct: float = float(
-            self.risk_params.get('max_risk_per_trade', 8.0)
-        )
-
         # DTE targeting — configurable for optimization sweep
         self._target_dte: int = int(self.strategy_params.get('target_dte', 35))
         self._min_dte: int = int(self.strategy_params.get('min_dte', 25))
@@ -804,13 +796,6 @@ class Backtester:
             # Phase 6: Combo regime override — replaces single-MA gate in opportunity finders
             if self._regime_mode == 'combo':
                 _regime_today = self._regime_by_date.get(pd.Timestamp(current_date.date()), 'neutral')
-                # Safe Kelly: update per-day risk % based on regime (exp_307)
-                if self._regime_risk_sizing:
-                    self._current_regime_risk_pct = float(
-                        self._regime_risk_sizing.get(
-                            _regime_today, self.risk_params.get('max_risk_per_trade', 8.0)
-                        )
-                    )
                 _ic_neutral_only = self.strategy_params.get('iron_condor', {}).get('neutral_regime_only', False)
                 if _ic_neutral_only:
                     # IC-in-NEUTRAL mode: BULL→puts only, NEUTRAL→IC only, BEAR→calls only
@@ -1794,11 +1779,9 @@ class Backtester:
         account_base = self.capital if self._compound else self.starting_capital
         max_contracts_cap = self.risk_params.get('max_contracts', 999)
         if self._sizing_mode == 'flat':
-            # Flat risk: risk _current_regime_risk_pct % of account_base per trade.
-            # _current_regime_risk_pct defaults to max_risk_per_trade; when
-            # regime_risk_sizing is configured it is updated each day by the combo
-            # regime loop (Safe Kelly 4/7/9 tiers — bull=9%, neutral=7%, bear=4%).
-            flat_risk_pct = self._current_regime_risk_pct / 100.0
+            # Flat risk: always risk exactly max_risk_per_trade % of account_base,
+            # optionally scaled down by VIX level (vix_dynamic_sizing config).
+            flat_risk_pct = self.risk_params.get('max_risk_per_trade', 2.0) / 100.0
             # VIX dynamic sizing: scale position size based on current VIX level.
             # Config: {"full_below": 18, "half_below": 22, "quarter_below": 25}
             # Above quarter_below → 0 (blocked by vix_max_entry gate before reaching here).

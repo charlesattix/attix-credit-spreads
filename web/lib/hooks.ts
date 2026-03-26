@@ -130,7 +130,6 @@ export interface ExperimentData {
   alpaca: AlpacaAccount | null
   stats: ExperimentStats
   equity_curve: Array<{ date: string; cumulative_pnl: number; cumulative_pnl_pct: number }>
-  alpaca_equity_history: Array<{ date: string; equity: number; profit_loss: number }>
   open_positions: Array<{
     id: string; ticker: string; strategy_type: string
     entry_date: string; expiration: string
