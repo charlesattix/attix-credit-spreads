@@ -174,30 +174,62 @@ class RegimeModelRouter:
     # ─────────────────────────────────────────────────────────────────────────
 
     def _load_model(self, path: Path) -> Any:
-        """Load joblib model; return None on failure (graceful degradation)."""
+        """Load a model from *path*; return None on failure (graceful degradation).
+
+        Files named ``ensemble_model_*.joblib`` are loaded via
+        EnsembleSignalModel so the ensemble dict payload is handled
+        correctly (GAP-7).  Legacy ``signal_model_*.joblib`` files
+        (raw XGBClassifier payloads) are loaded with joblib directly.
+        """
         if not path.exists():
             log.warning("RegimeModelRouter: model not found at %s — running without ML", path)
             return None
         try:
-            import joblib
-            model = joblib.load(str(path))
-            log.info("RegimeModelRouter: loaded model from %s", path.name)
-            return model
+            if path.name.startswith("ensemble_model_"):
+                # Delegate to EnsembleSignalModel — its payload is a dict,
+                # not a raw sklearn classifier, and calling predict_proba()
+                # on it directly would fail (GAP-7).
+                from compass.ensemble_signal_model import EnsembleSignalModel
+                model = EnsembleSignalModel(model_dir=str(path.parent))
+                if model.load(path.name):
+                    log.info("RegimeModelRouter: loaded EnsembleSignalModel from %s", path.name)
+                    return model
+                log.warning(
+                    "RegimeModelRouter: EnsembleSignalModel.load() failed for %s", path.name
+                )
+                return None
+            else:
+                # Legacy raw sklearn/XGBoost classifier payload.
+                import joblib
+                model = joblib.load(str(path))
+                log.info("RegimeModelRouter: loaded legacy model from %s", path.name)
+                return model
         except Exception as exc:
             log.warning("RegimeModelRouter: failed to load model (%s) — running without ML", exc)
             return None
 
     def _score_features(self, features: Dict) -> float:
-        """Run features through the loaded ML model, return confidence in [0, 1]."""
+        """Run features through the loaded ML model, return probability in [0, 1].
+
+        Handles two model types (GAP-7):
+          * EnsembleSignalModel / SignalModel — call predict(features_dict),
+            read the "probability" key from the returned PredictionResult.
+          * Raw sklearn-compatible classifier (legacy signal_model_*.joblib) —
+            build a sorted feature vector and call predict_proba().
+        """
+        # Our model classes (SignalModel, EnsembleSignalModel) expose a
+        # predict(Dict) → PredictionResult interface and set self.trained.
+        # Raw sklearn classifiers don't have 'trained'.
+        if hasattr(self._model, "trained"):
+            result = self._model.predict(features)
+            return float(result.get("probability", 0.5))
+
+        # Legacy raw sklearn-compatible classifier path.
         import numpy as np
-        # Build feature vector in the order the model expects
-        # The signal_model is a classifier; use predict_proba if available
         keys = sorted(features.keys())
         vec = np.array([[features[k] for k in keys]], dtype=float)
         if hasattr(self._model, "predict_proba"):
             probs = self._model.predict_proba(vec)[0]
-            # Probability of the positive class (index 1)
             return float(probs[1]) if len(probs) > 1 else float(probs[0])
-        else:
-            pred = self._model.predict(vec)[0]
-            return float(bool(pred))
+        pred = self._model.predict(vec)[0]
+        return float(bool(pred))

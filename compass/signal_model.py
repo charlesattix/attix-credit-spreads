@@ -32,6 +32,19 @@ from sklearn.calibration import CalibratedClassifierCV
 from sklearn.metrics import accuracy_score, precision_score, recall_score, roc_auc_score
 from sklearn.model_selection import train_test_split
 
+try:
+    from sklearn.frozen import FrozenEstimator  # sklearn ≥1.6
+    _HAS_FROZEN = True
+except ImportError:
+    _HAS_FROZEN = False
+
+
+def _calibrate_prefit(estimator):
+    """Wrap estimator for post-fit calibration, compatible with sklearn ≥1.6."""
+    if _HAS_FROZEN:
+        return CalibratedClassifierCV(FrozenEstimator(estimator), method='sigmoid')
+    return CalibratedClassifierCV(estimator, method='sigmoid', cv='prefit')
+
 from shared.indicators import sanitize_features
 from shared.types import PredictionResult
 
@@ -161,11 +174,7 @@ class SignalModel:
             # Calibration on held-out calibration set (not test set)
             if calibrate:
                 logger.info("Calibrating probabilities on held-out calibration set...")
-                self.calibrated_model = CalibratedClassifierCV(
-                    self.model,
-                    method='sigmoid',
-                    cv='prefit'
-                )
+                self.calibrated_model = _calibrate_prefit(self.model)
                 self.calibrated_model.fit(X_cal, y_cal)
 
                 y_proba_test_cal = self.calibrated_model.predict_proba(X_test)[:, 1]

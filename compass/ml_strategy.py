@@ -26,6 +26,7 @@ from strategies.base import (
     Signal,
 )
 from compass.signal_model import SignalModel
+from compass.ensemble_signal_model import EnsembleSignalModel  # GAP-6
 from compass.features import FeatureEngine
 
 logger = logging.getLogger(__name__)
@@ -52,6 +53,24 @@ def confidence_to_size_multiplier(
     return min_mult + (max_mult - min_mult) * clamped
 
 
+def _load_model_from_path(path: str):
+    """Load a SignalModel or EnsembleSignalModel from *path*, detecting type by filename prefix.
+
+    Files named ``ensemble_model_*.joblib`` are loaded as EnsembleSignalModel;
+    all other ``.joblib`` files are loaded as SignalModel (backward compatible).
+
+    Returns the loaded model instance, or None if loading fails.
+    """
+    basename = os.path.basename(path)
+    model_dir = os.path.dirname(path) or "."
+    model: SignalModel | EnsembleSignalModel
+    if basename.startswith("ensemble_model_"):
+        model = EnsembleSignalModel(model_dir=model_dir)
+    else:
+        model = SignalModel(model_dir=model_dir)
+    return model if model.load(basename) else None
+
+
 class RegimeModelRouter:
     """Routes predictions to regime-specific ML models.
 
@@ -68,15 +87,16 @@ class RegimeModelRouter:
 
     def __init__(
         self,
-        default_model: SignalModel,
+        default_model,
         regime_model_paths: Optional[Dict[str, str]] = None,
     ):
         self.default_model = default_model
-        self.regime_models: Dict[str, SignalModel] = {}
+        self.regime_models: Dict[str, Any] = {}
         if regime_model_paths:
             for regime, path in regime_model_paths.items():
-                model = SignalModel(model_dir=os.path.dirname(path))
-                if model.load(os.path.basename(path)):
+                # GAP-6: detect SignalModel vs EnsembleSignalModel from filename prefix
+                model = _load_model_from_path(path)
+                if model is not None:
                     self.regime_models[regime] = model
                     logger.info("Loaded regime model for %s from %s", regime, path)
                 else:

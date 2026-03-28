@@ -146,10 +146,10 @@ from compass.signal_model import SignalModel
 |---|---|---|---|
 | `MLEnhancedStrategy(signal_model=...)` | `compass/ml_strategy.py:124` | **Yes** — only calls `.predict()` | — |
 | `RegimeModelRouter.regime_models[r].predict()` | `compass/ml_strategy.py:94,97` | **Yes** — duck-typing | — |
-| `RegimeModelRouter` instantiates `SignalModel` | `compass/ml_strategy.py:78` | **No** | GAP-6 |
-| `ModelRetrainer.check_and_retrain(current_model)` | `compass/online_retrain.py` | **No** | GAP-1,2,3,4,5 |
-| `compass/__init__.py` export | `compass/__init__.py:24` | **No** | GAP-8 |
-| `ml/regime_model_router.py` raw joblib load | `ml/regime_model_router.py:84` | **No** | GAP-7 |
+| `RegimeModelRouter` instantiates `SignalModel` | `compass/ml_strategy.py:78` | **Fixed (2026-03-28)** | GAP-6 |
+| `ModelRetrainer.check_and_retrain(current_model)` | `compass/online_retrain.py` | **Fixed (prior)** | GAP-1,2,3,4,5 |
+| `compass/__init__.py` export | `compass/__init__.py:24` | **Fixed (2026-03-28)** | GAP-8 |
+| `ml/regime_model_router.py` raw joblib load | `ml/regime_model_router.py:84` | **Fixed (2026-03-28)** | GAP-7 |
 
 ---
 
@@ -475,12 +475,13 @@ Week 2-3:  Monitor shadow logs
            → Confirm mean |Δprob| < 0.15
            → Confirm no inference-time KeyErrors (feature mismatch)
 
-Week 3-4:  Implement Phase 4B fixes
-           → Fix online_retrain.py (GAP-1..5)
-           → Fix ml_strategy.py:RegimeModelRouter (GAP-6)
-           → Fix compass/__init__.py (GAP-8)
-           → Decide on ml/regime_model_router.py (GAP-7: Option A or B)
-           → Decide on inference-time FeaturePipeline (§4.2)
+Week 3-4:  Implement Phase 4B fixes [COMPLETED 2026-03-28]
+           → Fixed online_retrain.py (GAP-1..5) — _model_file_prefix, model_class param
+           → Fixed ml_strategy.py:RegimeModelRouter (GAP-6) — _load_model_from_path helper
+           → Fixed compass/__init__.py (GAP-8) — EnsembleSignalModel now exported
+           → Fixed ml/regime_model_router.py (GAP-7) — delegates to EnsembleSignalModel
+           → Fixed compass/signal_model.py cv='prefit' sklearn 1.6+ compat
+           → Tests: tests/test_ensemble_integration.py (19 tests, all pass)
 
 Week 4:    Hard swap
            → Remove ShadowEnsemble

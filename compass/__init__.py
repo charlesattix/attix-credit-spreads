@@ -22,6 +22,7 @@ from compass.events import (
 from compass.risk_gate import RiskGate
 from compass.sizing import calculate_dynamic_risk, get_contract_size, PositionSizer
 from compass.signal_model import SignalModel
+from compass.ensemble_signal_model import EnsembleSignalModel  # GAP-8
 from compass.features import FeatureEngine
 from compass.iv_surface import IVAnalyzer
 from compass.ml_strategy import MLEnhancedStrategy, confidence_to_size_multiplier, RegimeModelRouter
@@ -58,6 +59,7 @@ __all__ = [
     "PositionSizer",
     # ML
     "SignalModel",
+    "EnsembleSignalModel",
     "FeatureEngine",
     "IVAnalyzer",
     "MLEnhancedStrategy",
