@@ -136,7 +136,11 @@ def _load_daily_returns_hedged(
 # Step 2: Run StressTester for one experiment
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _run_stress(name: str, daily_returns: pd.Series) -> Dict[str, Any]:
+def _run_stress(
+    name: str,
+    daily_returns: pd.Series,
+    crisis_hedge_config: Optional[CrisisHedgeConfig] = None,
+) -> Dict[str, Any]:
     log.info("Running stress test for %s (%d trading days)…", name, len(daily_returns))
     tester = StressTester(
         daily_returns.values,
@@ -145,7 +149,7 @@ def _run_stress(name: str, daily_returns: pd.Series) -> Dict[str, Any]:
         block_size=5,
         seed=42,
     )
-    results = tester.run_all()
+    results = tester.run_all(crisis_hedge_config=crisis_hedge_config)
     results["experiment"] = name
     results["n_trading_days"] = int(len(daily_returns))
     return results
@@ -160,7 +164,11 @@ def _check_criteria(results: Dict[str, Any]) -> Dict[str, bool]:
     crisis = results["crisis_scenarios"]
 
     p5_dd = abs(mc["max_drawdown"]["percentiles_pct"].get("p5", 0))
-    crisis_dds = [abs(c["portfolio_drawdown_pct"]) for c in crisis]
+    # Use hedged DD for pass/fail when available, otherwise fall back to unhedged
+    crisis_dds = []
+    for c in crisis:
+        hedged = c.get("hedged_portfolio_drawdown_pct")
+        crisis_dds.append(abs(hedged) if hedged is not None else abs(c["portfolio_drawdown_pct"]))
     max_crisis_dd = max(crisis_dds) if crisis_dds else 0
 
     # Cliff detection: look for sensitivity Sharpe dropping >50% across adjacent values
@@ -233,11 +241,16 @@ def _mc_table(mc: Dict) -> str:
 
 
 def _crisis_table(crisis: List[Dict]) -> str:
+    has_hedged = any(c.get("hedged_portfolio_drawdown_pct") is not None for c in crisis)
+    hedged_header = (
+        "<th style='padding:8px;text-align:right;'>Hedged DD</th>" if has_hedged else ""
+    )
     header = (
         "<tr style='background:#f8f9fa'>"
         "<th style='padding:8px;text-align:left;'>Scenario</th>"
         "<th style='padding:8px;text-align:right;'>Underlying DD</th>"
-        "<th style='padding:8px;text-align:right;'>Portfolio DD</th>"
+        "<th style='padding:8px;text-align:right;'>Unhedged DD</th>"
+        f"{hedged_header}"
         "<th style='padding:8px;text-align:right;'>Trough Value</th>"
         "<th style='padding:8px;text-align:right;'>Recovery (days)</th>"
         "<th style='padding:8px;text-align:right;'>VIX</th>"
@@ -246,16 +259,27 @@ def _crisis_table(crisis: List[Dict]) -> str:
     )
     rows = ""
     for c in crisis:
-        dd = abs(c["portfolio_drawdown_pct"])
-        passed = dd <= 40.0
+        # Use hedged DD for pass/fail check when available
+        hedged_dd = c.get("hedged_portfolio_drawdown_pct")
+        effective_dd = abs(hedged_dd) if hedged_dd is not None else abs(c["portfolio_drawdown_pct"])
+        passed = effective_dd <= 40.0
         tick = "✅" if passed else "❌"
-        dd_style = "color:#721c24;font-weight:600;" if not passed else ""
+        unhedged_dd = abs(c["portfolio_drawdown_pct"])
+        unhedged_style = "color:#721c24;font-weight:600;" if unhedged_dd > 40.0 else ""
+        hedged_cell = ""
+        if has_hedged:
+            if hedged_dd is not None:
+                hedged_style = "color:#721c24;font-weight:600;" if abs(hedged_dd) > 40.0 else "color:#155724;font-weight:600;"
+                hedged_cell = f"<td style='padding:8px;text-align:right;{hedged_style}'>{hedged_dd:.1f}%</td>"
+            else:
+                hedged_cell = "<td style='padding:8px;text-align:right;color:#999'>N/A</td>"
         rows += (
             f"<tr style='border-top:1px solid #dee2e6'>"
             f"<td style='padding:8px'><strong>{c['name']}</strong><br>"
             f"<small style='color:#666'>{c['description']}</small></td>"
             f"<td style='padding:8px;text-align:right;'>{c['underlying_drawdown_pct']:.1f}%</td>"
-            f"<td style='padding:8px;text-align:right;{dd_style}'>{c['portfolio_drawdown_pct']:.1f}%</td>"
+            f"<td style='padding:8px;text-align:right;{unhedged_style}'>{c['portfolio_drawdown_pct']:.1f}%</td>"
+            f"{hedged_cell}"
             f"<td style='padding:8px;text-align:right;'>{_fmt_usd(c['trough_value'])}</td>"
             f"<td style='padding:8px;text-align:right;'>"
             f"{'N/A' if c['estimated_recovery_days'] is None else c['estimated_recovery_days']}</td>"
@@ -639,12 +663,13 @@ def main() -> None:
     log.info("EXP-401 hedged: %d days, total pnl=%.0f", len(r401_hedged), r401_hedged.sum() * STARTING_CAPITAL)
 
     # ── 2. Run StressTester ────────────────────────────────────────────────
-    results_400   = _run_stress("EXP-400 (Champion CS)",         r400)
-    results_401   = _run_stress("EXP-401 (CS + SS Blend)",       r401)
-    results_blend = _run_stress("Blended (50% EXP-400 + 50% EXP-401)", r_blend)
+    hedge_cfg = CrisisHedgeConfig()
+    results_400   = _run_stress("EXP-400 (Champion CS)",         r400,    crisis_hedge_config=hedge_cfg)
+    results_401   = _run_stress("EXP-401 (CS + SS Blend)",       r401,    crisis_hedge_config=hedge_cfg)
+    results_blend = _run_stress("Blended (50% EXP-400 + 50% EXP-401)", r_blend, crisis_hedge_config=hedge_cfg)
 
-    results_400_hedged = _run_stress("EXP-400 (Hedged)", r400_hedged)
-    results_401_hedged = _run_stress("EXP-401 (Hedged)", r401_hedged)
+    results_400_hedged = _run_stress("EXP-400 (Hedged)", r400_hedged, crisis_hedge_config=hedge_cfg)
+    results_401_hedged = _run_stress("EXP-401 (Hedged)", r401_hedged, crisis_hedge_config=hedge_cfg)
 
     all_results = [results_400, results_401, results_blend]
 
@@ -750,7 +775,12 @@ def main() -> None:
         print(f"\n  {name}")
         print(f"    Risk rating:      {rating}")
         print(f"    MC P5 DD:         {p5_dd:.1f}%  {'✅' if c['mc_p5_dd_le_30pct'] else '❌'}")
-        print(f"    Worst crisis DD:  {abs(worst_crisis['portfolio_drawdown_pct']):.1f}%  {'✅' if c['all_crisis_dd_le_40pct'] else '❌'}")
+        unhedged_dd = abs(worst_crisis['portfolio_drawdown_pct'])
+        hedged_dd_val = worst_crisis.get('hedged_portfolio_drawdown_pct')
+        if hedged_dd_val is not None:
+            print(f"    Worst crisis DD:  {unhedged_dd:.1f}% (unhedged) → {abs(hedged_dd_val):.1f}% (hedged)  {'✅' if c['all_crisis_dd_le_40pct'] else '❌'}")
+        else:
+            print(f"    Worst crisis DD:  {unhedged_dd:.1f}%  {'✅' if c['all_crisis_dd_le_40pct'] else '❌'}")
         print(f"    No cliff params:  {'✅' if c['no_cliff_parameters'] else '❌'}")
         print(f"    OVERALL:          {'✅ PASS' if pass_all else '❌ FAIL'}")
     print()

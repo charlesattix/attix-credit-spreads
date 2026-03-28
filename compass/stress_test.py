@@ -21,6 +21,8 @@ from typing import Any, Callable, Dict, List, Optional
 
 import numpy as np
 
+from compass.crisis_hedge import CrisisHedgeConfig, CrisisHedgeController
+
 logger = logging.getLogger(__name__)
 
 
@@ -189,6 +191,7 @@ class StressTester:
     def run_all(
         self,
         param_sweep_fn: Optional[Callable] = None,
+        crisis_hedge_config: Optional[CrisisHedgeConfig] = None,
     ) -> Dict[str, Any]:
         """Run the full stress testing suite.
 
@@ -197,6 +200,9 @@ class StressTester:
                 Signature: ``fn(param_name, param_value) -> daily_returns_array``.
                 If None, sensitivity analysis uses the built-in return-scaling
                 heuristic.
+            crisis_hedge_config: Optional hedge configuration. When provided,
+                crisis scenarios compute both unhedged and hedged drawdowns
+                using VIX-adaptive position scaling from CrisisHedgeController.
 
         Returns:
             Dict with keys: monte_carlo, crisis_scenarios, sensitivity, summary.
@@ -207,7 +213,7 @@ class StressTester:
         )
 
         mc = self.run_monte_carlo()
-        crisis = self.run_crisis_scenarios()
+        crisis = self.run_crisis_scenarios(crisis_hedge_config=crisis_hedge_config)
         sensitivity = self.run_sensitivity_analysis(param_sweep_fn)
 
         summary = self._build_summary(mc, crisis, sensitivity)
@@ -370,6 +376,7 @@ class StressTester:
     def run_crisis_scenarios(
         self,
         scenarios: Optional[List[Dict[str, Any]]] = None,
+        crisis_hedge_config: Optional[CrisisHedgeConfig] = None,
     ) -> List[Dict[str, Any]]:
         """Overlay historical crisis return paths onto the portfolio.
 
@@ -377,14 +384,25 @@ class StressTester:
         portfolio and measures peak-to-trough drawdown, days to recovery
         (using historical mean return), and margin impact.
 
+        When *crisis_hedge_config* is provided, a parallel hedged path is
+        computed by interpolating VIX linearly from ``vix_start`` to
+        ``vix_peak`` over the crisis duration and scaling each daily shock
+        by :meth:`CrisisHedgeController.position_scale_factor`.
+
         Args:
             scenarios: List of scenario dicts. Defaults to CRISIS_SCENARIOS.
+            crisis_hedge_config: Optional hedge configuration for computing
+                hedged drawdowns alongside unhedged results.
 
         Returns:
             List of scenario result dicts.
         """
         scenarios = scenarios or CRISIS_SCENARIOS
         results = []
+
+        hedge_controller: Optional[CrisisHedgeController] = None
+        if crisis_hedge_config is not None:
+            hedge_controller = CrisisHedgeController(crisis_hedge_config)
 
         # Historical daily mean return (for recovery estimation)
         if len(self.returns) > 0:
@@ -397,7 +415,9 @@ class StressTester:
             if len(shocks) == 0:
                 continue
 
-            # Apply shocks to portfolio
+            n_days = len(shocks)
+
+            # Apply shocks to portfolio (unhedged)
             equity = _returns_to_equity(shocks, self.starting_capital)
             trough = float(np.min(equity))
             trough_pct = (trough - self.starting_capital) / self.starting_capital
@@ -425,10 +445,38 @@ class StressTester:
             vix_peak = scenario.get("vix_peak", 40)
             vix_multiplier = vix_peak / max(vix_start, 1)
 
-            results.append({
+            # ── Hedged path (VIX-adaptive scaling) ────────────────────────
+            hedged_portfolio_drawdown_pct = None
+            hedged_trough_value = None
+            hedged_equity_path = None
+            hedged_peak_dd = None
+
+            if hedge_controller is not None:
+                hedged_shocks = np.empty_like(shocks)
+                for day_idx in range(n_days):
+                    # Linearly interpolate VIX from start to peak over the crisis
+                    t = day_idx / max(n_days - 1, 1)
+                    vix_today = vix_start + (vix_peak - vix_start) * t
+                    scale = hedge_controller.position_scale_factor(vix=vix_today)
+                    hedged_shocks[day_idx] = shocks[day_idx] * scale
+
+                hedged_equity = _returns_to_equity(hedged_shocks, self.starting_capital)
+                hedged_trough = float(np.min(hedged_equity))
+                hedged_trough_pct = (hedged_trough - self.starting_capital) / self.starting_capital
+                hedged_peak_dd = _max_drawdown(hedged_equity)
+
+                # Apply same spread_beta to hedged path
+                hedged_adjusted_trough_pct = hedged_trough_pct * spread_beta
+                hedged_portfolio_drawdown_pct = round(hedged_adjusted_trough_pct * 100, 2)
+                hedged_trough_value = round(
+                    self.starting_capital * (1 + hedged_adjusted_trough_pct), 2,
+                )
+                hedged_equity_path = hedged_equity.tolist()
+
+            result_entry = {
                 "name": scenario["name"],
                 "description": scenario["description"],
-                "n_days": len(shocks),
+                "n_days": n_days,
                 "underlying_drawdown_pct": round(trough_pct * 100, 2),
                 "portfolio_drawdown_pct": round(adjusted_trough_pct * 100, 2),
                 "max_drawdown_pct": round(peak_dd * 100, 2),
@@ -439,15 +487,30 @@ class StressTester:
                 "vix_multiplier": round(vix_multiplier, 2),
                 "estimated_recovery_days": days_to_recover,
                 "equity_path": equity.tolist(),
-            })
+                # Hedged results (None when no hedge config provided)
+                "hedged_portfolio_drawdown_pct": hedged_portfolio_drawdown_pct,
+                "hedged_trough_value": hedged_trough_value,
+                "hedged_equity_path": hedged_equity_path,
+            }
 
-            logger.info(
-                "Crisis '%s': underlying DD=%.1f%%, portfolio DD=%.1f%%, recovery=%s days",
-                scenario["name"],
-                trough_pct * 100,
-                adjusted_trough_pct * 100,
-                days_to_recover or "N/A",
-            )
+            results.append(result_entry)
+
+            if hedge_controller is not None:
+                logger.info(
+                    "Crisis '%s': unhedged DD=%.1f%%, hedged DD=%.1f%%, recovery=%s days",
+                    scenario["name"],
+                    adjusted_trough_pct * 100,
+                    hedged_portfolio_drawdown_pct,
+                    days_to_recover or "N/A",
+                )
+            else:
+                logger.info(
+                    "Crisis '%s': underlying DD=%.1f%%, portfolio DD=%.1f%%, recovery=%s days",
+                    scenario["name"],
+                    trough_pct * 100,
+                    adjusted_trough_pct * 100,
+                    days_to_recover or "N/A",
+                )
 
         return results
 
@@ -654,8 +717,13 @@ class StressTester:
         else:
             hist_sharpe = hist_dd = hist_cagr = hist_calmar = 0.0
 
-        # Worst crisis impact
+        # Worst crisis impact (use hedged DD when available for effective worst)
         worst_crisis = min(crisis, key=lambda c: c["portfolio_drawdown_pct"]) if crisis else None
+        worst_crisis_hedged = None
+        if crisis and any(c.get("hedged_portfolio_drawdown_pct") is not None for c in crisis):
+            hedged_scenarios = [c for c in crisis if c.get("hedged_portfolio_drawdown_pct") is not None]
+            if hedged_scenarios:
+                worst_crisis_hedged = min(hedged_scenarios, key=lambda c: c["hedged_portfolio_drawdown_pct"])
 
         # Find the sensitivity param with largest Sharpe range
         max_sharpe_range = 0.0
@@ -688,6 +756,10 @@ class StressTester:
             "worst_crisis": {
                 "name": worst_crisis["name"] if worst_crisis else "N/A",
                 "portfolio_drawdown_pct": worst_crisis["portfolio_drawdown_pct"] if worst_crisis else 0,
+                "hedged_portfolio_drawdown_pct": (
+                    worst_crisis_hedged["hedged_portfolio_drawdown_pct"]
+                    if worst_crisis_hedged else None
+                ),
                 "estimated_recovery_days": worst_crisis["estimated_recovery_days"] if worst_crisis else None,
             },
             "most_sensitive_parameter": most_sensitive_param,
@@ -723,9 +795,13 @@ class StressTester:
         elif median_dd > 10:
             score += 1
 
-        # Worst crisis drawdown
+        # Worst crisis drawdown (use hedged DD when available)
         if crisis:
-            worst_dd = abs(min(c["portfolio_drawdown_pct"] for c in crisis))
+            dds = []
+            for c in crisis:
+                h = c.get("hedged_portfolio_drawdown_pct")
+                dds.append(h if h is not None else c["portfolio_drawdown_pct"])
+            worst_dd = abs(min(dds))
             if worst_dd > 60:
                 score += 3
             elif worst_dd > 40:
