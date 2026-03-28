@@ -1,20 +1,27 @@
 """
-Online / Rolling Retraining for the Signal Model
+Online / Rolling Retraining for Signal Models
 
 Monitors model staleness, feature drift, and out-of-sample performance to
 decide when to retrain.  After retraining, compares the new model against
 the current model on a held-out set before promoting it to production.
 
 Keeps the last N model versions on disk for rollback.
+
+GAP fixes (phase4_integration_plan.md §3.2 Step 1):
+  GAP-1  _check_performance reads "ensemble_test_auc" OR "test_auc".
+  GAP-3  model_class parameter: replaces hardcoded SignalModel() construction.
+  GAP-4  File glob patterns derived from model class name so ensemble files
+         are saved, pruned, listed, and age-checked correctly.
+  GAP-5  feature_pipeline parameter: applied before training so training
+         features always match inference features.
 """
 
-import json
 import logging
 import os
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, Type
 
 import numpy as np
 import pandas as pd
@@ -24,6 +31,20 @@ from compass.signal_model import SignalModel
 from shared.indicators import sanitize_features
 
 logger = logging.getLogger(__name__)
+
+
+def _model_file_prefix(model_class: type) -> str:
+    """Return the versioned-file prefix for a model class.
+
+    ``EnsembleSignalModel`` → ``"ensemble_model"``
+    ``SignalModel`` (default) → ``"signal_model"``
+
+    Derived from ``model_class.__name__`` so subclasses are handled
+    automatically without an explicit registry.
+    """
+    name = getattr(model_class, '__name__', '')
+    return 'ensemble_model' if 'Ensemble' in name else 'signal_model'
+
 
 # ---------------------------------------------------------------------------
 # Data classes
@@ -68,7 +89,14 @@ class RetrainResult:
 # ---------------------------------------------------------------------------
 
 class ModelRetrainer:
-    """Online / rolling retraining manager for :class:`SignalModel`.
+    """Online / rolling retraining manager for signal models.
+
+    Supports both :class:`~compass.signal_model.SignalModel` and
+    :class:`~compass.ensemble_signal_model.EnsembleSignalModel` via the
+    ``model_class`` parameter (GAP-3).  File glob patterns are derived
+    automatically from the model class name (GAP-4).  An optional
+    ``feature_pipeline`` ensures training and inference features stay
+    aligned (GAP-5).
 
     Parameters
     ----------
@@ -94,6 +122,21 @@ class ModelRetrainer:
         promotions that are slightly worse on the holdout but still fresh.
     min_samples : int
         Minimum number of training samples required to attempt retraining.
+    model_class : type, optional
+        Model class to instantiate when no ``current_model`` is supplied and
+        when training the candidate model.  Defaults to
+        :class:`~compass.signal_model.SignalModel`.  Pass
+        :class:`~compass.ensemble_signal_model.EnsembleSignalModel` to use
+        the ensemble instead.  Any class with the same
+        ``train`` / ``predict_batch`` / ``save`` / ``load`` interface works.
+        **GAP-3 fix.**
+    feature_pipeline : object, optional
+        A stateless transformer with a ``transform(df) -> DataFrame`` method
+        (e.g. :class:`~compass.feature_pipeline.FeaturePipeline`).
+        When provided, ``check_and_retrain`` applies it to ``trades_df``
+        *before* training so that training features match inference features.
+        The rolling-window trim still uses the raw (un-transformed) DataFrame
+        to preserve date-column access.  **GAP-5 fix.**
     """
 
     def __init__(
@@ -108,6 +151,8 @@ class ModelRetrainer:
         keep_versions: int = 3,
         min_promotion_auc_delta: float = -0.005,
         min_samples: int = 100,
+        model_class: Optional[Type] = None,       # GAP-3
+        feature_pipeline: Optional[Any] = None,   # GAP-5
     ):
         self.model_dir = Path(model_dir)
         self.model_dir.mkdir(parents=True, exist_ok=True)
@@ -120,6 +165,12 @@ class ModelRetrainer:
         self.keep_versions = keep_versions
         self.min_promotion_auc_delta = min_promotion_auc_delta
         self.min_samples = min_samples
+        # GAP-3: configurable model class (default: SignalModel for backward compat)
+        self.model_class: Type = model_class if model_class is not None else SignalModel
+        # GAP-4: file prefix derived from model class name
+        self._model_file_prefix: str = _model_file_prefix(self.model_class)
+        # GAP-5: optional feature pipeline for training/inference alignment
+        self.feature_pipeline: Optional[Any] = feature_pipeline
 
     # ------------------------------------------------------------------
     # Public API
@@ -129,7 +180,7 @@ class ModelRetrainer:
         self,
         trades_df: pd.DataFrame,
         labels: np.ndarray,
-        current_model: Optional[SignalModel] = None,
+        current_model: Optional[Any] = None,
         force: bool = False,
     ) -> RetrainResult:
         """Evaluate whether the model needs retraining and, if so, retrain.
@@ -139,11 +190,13 @@ class ModelRetrainer:
         trades_df : pd.DataFrame
             Feature DataFrame (rows = trades, columns = feature names).
             Should be sorted chronologically (oldest first).
+            If a ``feature_pipeline`` is configured, the raw DataFrame is
+            expected here — the pipeline is applied internally.
         labels : np.ndarray
             Binary labels aligned with *trades_df* rows.
-        current_model : SignalModel, optional
+        current_model : model object, optional
             The currently-deployed model.  If ``None``, a fresh one is loaded
-            from ``model_dir``.
+            from ``model_dir`` using ``self.model_class``.
         force : bool
             Skip trigger checks and retrain unconditionally.
 
@@ -153,13 +206,26 @@ class ModelRetrainer:
         """
         # --- load current model if needed ---
         if current_model is None:
-            current_model = SignalModel(model_dir=str(self.model_dir))
+            # GAP-3: use self.model_class instead of hardcoded SignalModel
+            current_model = self.model_class(model_dir=str(self.model_dir))
             if not current_model.load():
                 logger.info("No existing model found — will train from scratch")
                 force = True
 
-        # --- check triggers ---
-        trigger = self._evaluate_triggers(current_model, trades_df, labels)
+        # GAP-5: Apply FeaturePipeline to produce the feature representation
+        # that the model sees at inference time.  Raw trades_df is preserved
+        # for rolling-window trimming (which may need date columns).
+        if self.feature_pipeline is not None:
+            features_df = self.feature_pipeline.transform(trades_df)
+            logger.debug(
+                "FeaturePipeline applied: %d raw cols → %d pipeline cols",
+                trades_df.shape[1], features_df.shape[1],
+            )
+        else:
+            features_df = trades_df
+
+        # --- check triggers (on pipeline-transformed features if set) ---
+        trigger = self._evaluate_triggers(current_model, features_df, labels)
 
         if not force and not trigger.triggered:
             logger.info("No retrain trigger fired — model is current")
@@ -174,10 +240,16 @@ class ModelRetrainer:
 
         logger.info("Retrain triggered: %s", ", ".join(trigger.reasons))
 
-        # --- window the data ---
-        trades_windowed, labels_windowed = self._apply_rolling_window(
+        # --- window the raw data (preserves date columns for calendar trim) ---
+        trades_windowed_raw, labels_windowed = self._apply_rolling_window(
             trades_df, labels
         )
+
+        # GAP-5: Apply pipeline to the windowed slice used for training
+        if self.feature_pipeline is not None:
+            trades_windowed = self.feature_pipeline.transform(trades_windowed_raw)
+        else:
+            trades_windowed = trades_windowed_raw
 
         if len(trades_windowed) < self.min_samples:
             logger.warning(
@@ -195,7 +267,8 @@ class ModelRetrainer:
         holdout_labels = labels_windowed[-n_holdout:]
 
         # --- train new model ---
-        new_model = SignalModel(model_dir=str(self.model_dir))
+        # GAP-3: use self.model_class instead of hardcoded SignalModel
+        new_model = self.model_class(model_dir=str(self.model_dir))
         stats = new_model.train(
             train_features,
             train_labels,
@@ -241,7 +314,7 @@ class ModelRetrainer:
 
     def _evaluate_triggers(
         self,
-        model: SignalModel,
+        model: Any,
         features_df: pd.DataFrame,
         labels: np.ndarray,
     ) -> RetrainTrigger:
@@ -279,13 +352,13 @@ class ModelRetrainer:
 
         return trigger
 
-    def _get_model_age_days(self, model: SignalModel) -> Optional[int]:
+    def _get_model_age_days(self, model: Any) -> Optional[int]:
         """Return model age in days, or None if unknown."""
         ts = model.training_stats.get("timestamp") if model.training_stats else None
         if ts is None:
-            # Fall back: check the most recent model file's saved timestamp
+            # GAP-4: fall back using the correct file prefix for this model class
             model_files = sorted(
-                self.model_dir.glob("signal_model_*.joblib"),
+                self.model_dir.glob(f"{self._model_file_prefix}_*.joblib"),
                 key=lambda p: p.stat().st_mtime,
                 reverse=True,
             )
@@ -306,7 +379,7 @@ class ModelRetrainer:
             return None
 
     def _check_feature_drift(
-        self, model: SignalModel, features_df: pd.DataFrame
+        self, model: Any, features_df: pd.DataFrame
     ) -> List[str]:
         """Return names of features whose recent mean drifted beyond threshold.
 
@@ -342,7 +415,7 @@ class ModelRetrainer:
 
     def _check_performance(
         self,
-        model: SignalModel,
+        model: Any,
         features_df: pd.DataFrame,
         labels: np.ndarray,
     ) -> Optional[Dict]:
@@ -350,7 +423,10 @@ class ModelRetrainer:
         if not model.trained:
             return None
 
-        baseline_auc = model.training_stats.get("test_auc")
+        # GAP-1 fix: EnsembleSignalModel uses "ensemble_test_auc"; SignalModel
+        # uses "test_auc".  Try both so this works with either class.
+        stats = model.training_stats or {}
+        baseline_auc = stats.get("ensemble_test_auc") or stats.get("test_auc")
         if baseline_auc is None:
             return None
 
@@ -406,8 +482,8 @@ class ModelRetrainer:
 
     def _compare_models(
         self,
-        old_model: SignalModel,
-        new_model: SignalModel,
+        old_model: Any,
+        new_model: Any,
         holdout_features: pd.DataFrame,
         holdout_labels: np.ndarray,
     ) -> ABResult:
@@ -458,20 +534,29 @@ class ModelRetrainer:
     # Versioned save / prune
     # ------------------------------------------------------------------
 
-    def _save_versioned(self, model: SignalModel) -> Path:
-        """Save model with a timestamped filename and return the path."""
+    def _save_versioned(self, model: Any) -> Path:
+        """Save model with a timestamped filename and return the path.
+
+        GAP-4 fix: filename prefix is derived from ``self._model_file_prefix``
+        so EnsembleSignalModel files are named ``ensemble_model_*.joblib``
+        (which ``EnsembleSignalModel.load()`` expects) rather than the old
+        hardcoded ``signal_model_*.joblib``.
+        """
         ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-        filename = f"signal_model_{ts}.joblib"
+        filename = f"{self._model_file_prefix}_{ts}.joblib"
         model.save(filename)
         return self.model_dir / filename
 
     def _prune_old_versions(self) -> List[Path]:
         """Delete model versions beyond ``keep_versions``, oldest first.
 
+        GAP-4 fix: uses ``self._model_file_prefix`` glob so ensemble files are
+        pruned when the retrainer is configured with EnsembleSignalModel.
+
         Returns list of deleted paths.
         """
         model_files = sorted(
-            self.model_dir.glob("signal_model_*.joblib"),
+            self.model_dir.glob(f"{self._model_file_prefix}_*.joblib"),
             key=lambda p: p.stat().st_mtime,
             reverse=True,
         )
@@ -493,16 +578,20 @@ class ModelRetrainer:
         return deleted
 
     def _count_versions(self) -> int:
-        return len(list(self.model_dir.glob("signal_model_*.joblib")))
+        # GAP-4: count files matching this retrainer's model class prefix
+        return len(list(self.model_dir.glob(f"{self._model_file_prefix}_*.joblib")))
 
     # ------------------------------------------------------------------
     # Convenience: list versions
     # ------------------------------------------------------------------
 
     def list_versions(self) -> List[Dict]:
-        """Return metadata for each model version on disk, newest first."""
+        """Return metadata for each model version on disk, newest first.
+
+        GAP-4 fix: lists files matching this retrainer's model class prefix.
+        """
         model_files = sorted(
-            self.model_dir.glob("signal_model_*.joblib"),
+            self.model_dir.glob(f"{self._model_file_prefix}_*.joblib"),
             key=lambda p: p.stat().st_mtime,
             reverse=True,
         )
