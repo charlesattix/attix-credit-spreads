@@ -111,6 +111,11 @@ strategy:
     use_signal_model: true
     ml_blend_weight: 0.25   # 25% ML blend, 75% pure regime table
 
+    # Shadow mode: run EnsembleSignalModel in parallel for comparison logging.
+    # Primary (signal_model_*.joblib) controls all live decisions.
+    # Shadow predictions are logged to compass/shadow_log.csv only.
+    shadow_ensemble: true
+
     # Signals below this score (after regime scaling) are dropped
     min_score_threshold: 30.0
 

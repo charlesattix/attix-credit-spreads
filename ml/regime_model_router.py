@@ -42,6 +42,11 @@ class RegimeModelRouter:
         model_path      str   None   — path to .joblib model (default: latest)
         ml_blend_weight float  0.25  — weight of ML confidence adjustment
                                         (0 = pure regime table, 1 = pure ML)
+        shadow_ensemble bool  False  — wrap primary model with ShadowEnsemble;
+                                        loads latest ensemble_model_*.joblib as
+                                        shadow alongside the primary signal model.
+                                        Primary still controls all live decisions;
+                                        shadow predictions are logged only.
     """
 
     # Maps regime label (from MarketSnapshot.regime or ComboRegimeDetector) to
@@ -62,8 +67,9 @@ class RegimeModelRouter:
         self._neutral_mult = float(cfg.get("neutral_mult",  1.00))
         self._low_vol_mult = float(cfg.get("low_vol_mult",  1.20))
         self._crash_mult   = float(cfg.get("crash_mult",    0.00))
-        self._blend_weight = float(cfg.get("ml_blend_weight", 0.25))
-        self._use_model    = bool(cfg.get("use_signal_model", True))
+        self._blend_weight    = float(cfg.get("ml_blend_weight", 0.25))
+        self._use_model       = bool(cfg.get("use_signal_model", True))
+        self._shadow_ensemble = bool(cfg.get("shadow_ensemble", False))
 
         # Resolved multiplier table
         self._mult_table: Dict[str, float] = {
@@ -82,7 +88,11 @@ class RegimeModelRouter:
         self._model: Any = None
         if self._use_model:
             model_path = Path(cfg.get("model_path", str(_DEFAULT_MODEL_PATH)))
-            self._model = self._load_model(model_path)
+            primary = self._load_model(model_path)
+            if primary is not None and self._shadow_ensemble:
+                self._model = self._wrap_shadow(primary, model_path.parent)
+            else:
+                self._model = primary
 
         log.info(
             "RegimeModelRouter: min=%.2f neutral=%.2f max=%.2f "
@@ -207,6 +217,52 @@ class RegimeModelRouter:
         except Exception as exc:
             log.warning("RegimeModelRouter: failed to load model (%s) — running without ML", exc)
             return None
+
+    def _wrap_shadow(self, primary: Any, model_dir: Path) -> Any:
+        """Attempt to load the latest ensemble_model_*.joblib and wrap primary
+        in a ShadowEnsemble.  Returns primary unchanged if no ensemble model is
+        found or if loading fails.
+        """
+        # Find the most-recently-modified ensemble model in the same dir.
+        candidates = sorted(
+            model_dir.glob("ensemble_model_*.joblib"),
+            key=lambda p: p.stat().st_mtime,
+            reverse=True,
+        )
+        if not candidates:
+            log.warning(
+                "ShadowEnsemble requested but no ensemble_model_*.joblib found "
+                "in %s — running primary only",
+                model_dir,
+            )
+            return primary
+
+        ensemble_path = candidates[0]
+        try:
+            from compass.ensemble_signal_model import EnsembleSignalModel
+            shadow_model = EnsembleSignalModel(model_dir=str(model_dir))
+            if not shadow_model.load(ensemble_path.name):
+                log.warning(
+                    "ShadowEnsemble: EnsembleSignalModel.load() failed for %s "
+                    "— running primary only",
+                    ensemble_path.name,
+                )
+                return primary
+
+            from compass.shadow_ensemble import ShadowEnsemble
+            wrapped = ShadowEnsemble(primary, shadow_model)
+            log.info(
+                "ShadowEnsemble activated: primary=%s  shadow=%s",
+                type(primary).__name__,
+                ensemble_path.name,
+            )
+            return wrapped
+        except Exception as exc:
+            log.warning(
+                "ShadowEnsemble: failed to load shadow model (%s) — running primary only",
+                exc,
+            )
+            return primary
 
     def _score_features(self, features: Dict) -> float:
         """Run features through the loaded ML model, return probability in [0, 1].
