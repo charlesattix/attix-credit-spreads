@@ -2180,5 +2180,25 @@
       "p5_dd": 38.63,
       "max_crisis_dd": 51.78
     }
-  }
+  },
+  "crisis_hedge_impact": [
+    {
+      "name": "EXP-400",
+      "unhedged_sharpe": 1.236,
+      "hedged_sharpe": 2.381,
+      "unhedged_p5_dd": 44.99,
+      "hedged_p5_dd": 21.65,
+      "unhedged_crisis_dd": 51.78,
+      "hedged_crisis_dd": 51.78
+    },
+    {
+      "name": "EXP-401",
+      "unhedged_sharpe": 0.35,
+      "hedged_sharpe": 0.581,
+      "unhedged_p5_dd": 51.19,
+      "hedged_p5_dd": 42.38,
+      "unhedged_crisis_dd": 51.78,
+      "hedged_crisis_dd": 51.78
+    }
+  ]
 }

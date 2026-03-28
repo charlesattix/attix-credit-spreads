@@ -26,7 +26,7 @@ import logging
 import math
 import sys
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 
 import numpy as np
 import pandas as pd
@@ -35,6 +35,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from compass.stress_test import StressTester
+from compass.crisis_hedge import CrisisHedgeConfig, CrisisHedgeController
 
 logging.basicConfig(
     level=logging.INFO,
@@ -78,6 +79,57 @@ def _blend_returns(r1: pd.Series, r2: pd.Series) -> pd.Series:
     blended = 0.5 * combined["r1"] + 0.5 * combined["r2"]
     blended.index.name = "date"
     return blended
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Step 1b: Crisis-hedge-adjusted daily returns
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _load_daily_returns_hedged(
+    csv_path: Path,
+    starting_capital: float,
+    controller: CrisisHedgeController,
+) -> pd.Series:
+    """Same as _load_daily_returns but with CrisisHedgeController applied.
+
+    For each trade row:
+      - position_scale_factor(vix, regime) scales PnL (proxy for sizing reduction)
+      - For stop-loss exits, additionally applies stop_loss_multiplier tightening:
+        an early exit ratio = stop_multiplier / base_stop_multiplier caps the loss
+
+    The hedged PnL is then aggregated by exit_date, same as the unhedged path.
+    """
+    base_stop = controller.cfg.base_stop_multiplier
+    df = pd.read_csv(csv_path, parse_dates=["exit_date", "entry_date"])
+
+    hedged_pnl = []
+    for _, row in df.iterrows():
+        vix = float(row.get("vix", 20.0)) if not pd.isna(row.get("vix", float("nan"))) else 20.0
+        regime = str(row.get("regime", "neutral")) if not pd.isna(row.get("regime", float("nan"))) else "neutral"
+        pnl = float(row["pnl"])
+
+        scale = controller.position_scale_factor(vix=vix, regime=regime)
+
+        # For losing stop-loss exits, tighten cap via stop multiplier
+        if pnl < 0 and str(row.get("exit_reason", "")).lower() == "stop_loss":
+            stop_mult = controller.stop_loss_multiplier(vix=vix, regime=regime)
+            # Tighter stop = less loss: cap loss at stop_mult/base_stop fraction
+            tighten_ratio = stop_mult / base_stop  # 1.0 normal → <1.0 tighter
+            pnl = max(pnl * tighten_ratio, pnl)    # tighten can only reduce loss
+
+        hedged_pnl.append(pnl * scale)
+
+    df["hedged_pnl"] = hedged_pnl
+    daily_pnl = df.groupby("exit_date")["hedged_pnl"].sum()
+
+    start = df["entry_date"].min()
+    end = df["exit_date"].max()
+    all_days = pd.bdate_range(start=start, end=end)
+
+    daily_pnl = daily_pnl.reindex(all_days, fill_value=0.0)
+    daily_returns = daily_pnl / starting_capital
+    daily_returns.index.name = "date"
+    return daily_returns
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -366,9 +418,46 @@ def _comparison_table(all_results: List[Dict]) -> str:
     )
 
 
+def _hedge_impact_table(hedge_impact: List[Dict]) -> str:
+    """Render before/after crisis hedge comparison table."""
+    header = (
+        "<tr style='background:#f8f9fa'>"
+        "<th style='padding:8px 14px;text-align:left'>Experiment</th>"
+        "<th style='padding:8px 14px;text-align:right'>Unhedged Sharpe</th>"
+        "<th style='padding:8px 14px;text-align:right'>Hedged Sharpe</th>"
+        "<th style='padding:8px 14px;text-align:right'>Unhedged MC P5 DD</th>"
+        "<th style='padding:8px 14px;text-align:right'>Hedged MC P5 DD</th>"
+        "<th style='padding:8px 14px;text-align:right'>Unhedged Crisis DD</th>"
+        "<th style='padding:8px 14px;text-align:right'>Hedged Crisis DD</th>"
+        "<th style='padding:8px 14px;text-align:center'>DD Improved?</th>"
+        "</tr>"
+    )
+    rows = ""
+    for h in hedge_impact:
+        improved = h["hedged_crisis_dd"] < h["unhedged_crisis_dd"]
+        tick = "✅" if improved else "—"
+        rows += (
+            f"<tr style='border-top:1px solid #dee2e6'>"
+            f"<td style='padding:8px 14px;font-weight:500'>{h['name']}</td>"
+            f"<td style='padding:8px 14px;text-align:right'>{h['unhedged_sharpe']:.3f}</td>"
+            f"<td style='padding:8px 14px;text-align:right'>{h['hedged_sharpe']:.3f}</td>"
+            f"<td style='padding:8px 14px;text-align:right'>{h['unhedged_p5_dd']:.1f}%</td>"
+            f"<td style='padding:8px 14px;text-align:right'>{h['hedged_p5_dd']:.1f}%</td>"
+            f"<td style='padding:8px 14px;text-align:right'>{h['unhedged_crisis_dd']:.1f}%</td>"
+            f"<td style='padding:8px 14px;text-align:right'>{h['hedged_crisis_dd']:.1f}%</td>"
+            f"<td style='padding:8px 14px;text-align:center;font-size:1.1em'>{tick}</td>"
+            f"</tr>"
+        )
+    return (
+        f'<table style="border-collapse:collapse;width:100%;font-size:0.9em">'
+        f'<thead>{header}</thead><tbody>{rows}</tbody></table>'
+    )
+
+
 def _generate_html(
     all_results: List[Dict],
     all_criteria: List[Dict],
+    hedge_impact: Optional[List[Dict]] = None,
 ) -> str:
     # Build experiment order: EXP-400, EXP-401, Blended
     summary_cards = "".join(
@@ -402,6 +491,19 @@ def _generate_html(
             f'{r["experiment"]} — Monte Carlo ({r["monte_carlo"]["n_simulations"]:,} paths, '
             f'block={r["monte_carlo"]["block_size"]} days)</h3>'
             f'{_mc_table(r["monte_carlo"])}'
+        )
+
+    # Crisis hedge impact section
+    hedge_section = ""
+    if hedge_impact:
+        hedge_section = (
+            f'<h2>Crisis Hedge Impact</h2>'
+            f'<p style="font-size:0.85em;color:#666;margin-bottom:12px">'
+            f'CrisisHedgeController applied: VIX-adaptive position sizing (floor=20, ceiling=50) '
+            f'+ stop-loss tightening (base=3.5×, min=1.5×). '
+            f'Impact shows how hedge would have modified historical PnL stream.'
+            f'</p>'
+            f'{_hedge_impact_table(hedge_impact)}'
         )
 
     overall_pass = all(
@@ -487,6 +589,8 @@ def _generate_html(
 </p>
 {crisis_sections}
 
+{hedge_section}
+
 <h2>Sensitivity Analysis</h2>
 <p style="font-size:0.85em;color:#666;margin-bottom:12px">
   Heuristic scaling model (no full backtest re-run).
@@ -522,10 +626,25 @@ def main() -> None:
     log.info("EXP-401: %d days, total pnl=%.0f", len(r401), r401.sum() * STARTING_CAPITAL)
     log.info("Blended: %d days", len(r_blend))
 
+    # ── 1b. Crisis-hedge-adjusted returns ─────────────────────────────────
+    hedge_ctrl = CrisisHedgeController(CrisisHedgeConfig())
+    log.info("Loading hedged daily returns (CrisisHedgeController active)…")
+    r400_hedged = _load_daily_returns_hedged(
+        ROOT / "compass/training_data_exp400.csv", STARTING_CAPITAL, hedge_ctrl
+    )
+    r401_hedged = _load_daily_returns_hedged(
+        ROOT / "compass/training_data_exp401.csv", STARTING_CAPITAL, hedge_ctrl
+    )
+    log.info("EXP-400 hedged: %d days, total pnl=%.0f", len(r400_hedged), r400_hedged.sum() * STARTING_CAPITAL)
+    log.info("EXP-401 hedged: %d days, total pnl=%.0f", len(r401_hedged), r401_hedged.sum() * STARTING_CAPITAL)
+
     # ── 2. Run StressTester ────────────────────────────────────────────────
     results_400   = _run_stress("EXP-400 (Champion CS)",         r400)
     results_401   = _run_stress("EXP-401 (CS + SS Blend)",       r401)
     results_blend = _run_stress("Blended (50% EXP-400 + 50% EXP-401)", r_blend)
+
+    results_400_hedged = _run_stress("EXP-400 (Hedged)", r400_hedged)
+    results_401_hedged = _run_stress("EXP-401 (Hedged)", r401_hedged)
 
     all_results = [results_400, results_401, results_blend]
 
@@ -534,6 +653,37 @@ def main() -> None:
     criteria_401   = _check_criteria(results_401)
     criteria_blend = _check_criteria(results_blend)
     all_criteria   = [criteria_400, criteria_401, criteria_blend]
+
+    # Build hedge impact comparison
+    def _worst_crisis_dd(r: Dict) -> float:
+        return max(abs(c["portfolio_drawdown_pct"]) for c in r["crisis_scenarios"])
+
+    hedge_impact = [
+        {
+            "name": "EXP-400",
+            "unhedged_sharpe": results_400["summary"]["historical"]["sharpe"],
+            "hedged_sharpe":   results_400_hedged["summary"]["historical"]["sharpe"],
+            "unhedged_p5_dd":  abs(results_400["monte_carlo"]["max_drawdown"]["percentiles_pct"]["p5"]),
+            "hedged_p5_dd":    abs(results_400_hedged["monte_carlo"]["max_drawdown"]["percentiles_pct"]["p5"]),
+            "unhedged_crisis_dd": _worst_crisis_dd(results_400),
+            "hedged_crisis_dd":   _worst_crisis_dd(results_400_hedged),
+        },
+        {
+            "name": "EXP-401",
+            "unhedged_sharpe": results_401["summary"]["historical"]["sharpe"],
+            "hedged_sharpe":   results_401_hedged["summary"]["historical"]["sharpe"],
+            "unhedged_p5_dd":  abs(results_401["monte_carlo"]["max_drawdown"]["percentiles_pct"]["p5"]),
+            "hedged_p5_dd":    abs(results_401_hedged["monte_carlo"]["max_drawdown"]["percentiles_pct"]["p5"]),
+            "unhedged_crisis_dd": _worst_crisis_dd(results_401),
+            "hedged_crisis_dd":   _worst_crisis_dd(results_401_hedged),
+        },
+    ]
+
+    log.info(
+        "Hedge impact — EXP-400: crisis DD %.1f%% → %.1f%%  EXP-401: %.1f%% → %.1f%%",
+        hedge_impact[0]["unhedged_crisis_dd"], hedge_impact[0]["hedged_crisis_dd"],
+        hedge_impact[1]["unhedged_crisis_dd"], hedge_impact[1]["hedged_crisis_dd"],
+    )
 
     for name, c in [("EXP-400", criteria_400), ("EXP-401", criteria_401), ("Blended", criteria_blend)]:
         log.info(
@@ -568,6 +718,7 @@ def main() -> None:
             all_results[i]["experiment"]: all_criteria[i]
             for i in range(len(all_results))
         },
+        "crisis_hedge_impact": hedge_impact,
     }
     # Also remove sample_paths from nested mc dict
     for exp_data in payload["experiments"].values():
@@ -580,7 +731,7 @@ def main() -> None:
 
     # ── 5. Generate HTML ───────────────────────────────────────────────────
     html_out = reports_dir / "stress_test_report.html"
-    html = _generate_html(all_results, all_criteria)
+    html = _generate_html(all_results, all_criteria, hedge_impact=hedge_impact)
     with open(html_out, "w") as fh:
         fh.write(html)
     log.info("Saved HTML report → %s", html_out)
