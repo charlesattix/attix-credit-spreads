@@ -77,6 +77,35 @@ class CrisisHedgeConfig:
     log_decisions: bool = True
 
 
+# ── Pre-built configs for specific experiment profiles ─────────────────────
+
+# EXP-401 trades straddles/strangles alongside credit spreads.  These
+# short-vol structures suffer amplified losses when VIX spikes because both
+# legs move against the position simultaneously.  The default config
+# (floor=20, ceiling=50) leaves too much exposure during the critical VIX
+# 15-25 range where straddle/strangle gamma is highest.
+#
+# Optimised parameters:
+#   • vix_scale_floor  15 → start throttling 5 pts earlier
+#   • vix_scale_ceiling 40 → reach zero exposure by VIX 40 (vs 50)
+#   • vix_stop_floor   15 → start tightening stops earlier
+#   • vix_stop_ceiling  35 → hit min stop by VIX 35 (vs 45)
+#   • base_stop_multiplier 2.5 → tighter base (strangles can gap)
+#   • min_stop_multiplier  1.0 → very tight in crisis
+#   • high_vol_regime_scale 0.10 → throttle to 10% (vs 25%)
+#   • vix_ts_backwardation_penalty 0.40 → heavier backwardation penalty
+EXP401_HEDGE_CONFIG = CrisisHedgeConfig(
+    vix_scale_floor=14.0,
+    vix_scale_ceiling=38.0,
+    vix_stop_floor=14.0,
+    vix_stop_ceiling=32.0,
+    base_stop_multiplier=2.0,
+    min_stop_multiplier=1.0,
+    high_vol_regime_scale=0.10,
+    vix_ts_backwardation_penalty=0.50,
+)
+
+
 class CrisisHedgeController:
     """VIX-adaptive position sizing and stop-loss controller.
 
