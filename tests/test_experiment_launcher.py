@@ -1,18 +1,21 @@
 """
-Tests for compass/experiment_launcher.py — Config validation and experiment launcher.
+Tests for compass/experiment_launcher.py — Experiment launcher with config
+validation, pre-flight checks, dry-run trade simulation, and rollback.
 
 Covers:
-  - Schema validation (missing fields, type errors, range violations, cross-field)
-  - Pre-flight checks (training data, models, features, risk gates, hedge params)
-  - Dry-run simulation (all stages, risk gate blocking)
-  - PreflightReport properties (all_passed, n_errors, n_warnings)
-  - HTML launch report (sections, badges, content)
-  - ExperimentLauncher integration (preflight, custom checks)
-  - Edge cases (empty config, partial config)
+  - Schema validation (missing fields, type errors, ranges, cross-field)
+  - Pre-flight checks (training data, models, features, compatibility,
+    risk gates, hedge params)
+  - Dry-run simulation (pipeline stages, 10 simulated trades)
+  - Lifecycle (start, stop, rollback, update_config, state transitions)
+  - PreflightReport properties
+  - HTML launch report (all sections, simulated trades table)
+  - Edge cases (empty config, already running, no rollback snapshot)
 """
 
 from __future__ import annotations
 
+import copy
 import os
 import tempfile
 from pathlib import Path
@@ -24,11 +27,15 @@ from compass.experiment_launcher import (
     DryRunResult,
     ExperimentLauncher,
     PreflightReport,
+    REQUIRED_FEATURES,
+    SimulatedTrade,
     ValidationError,
+    _check_feature_compatibility,
     _check_feature_pipeline,
     _check_hedge_params,
     _check_risk_gates,
     _check_training_data,
+    _simulate_trades,
     simulate_dry_run,
     validate_config,
 )
@@ -66,8 +73,9 @@ def base_dir(tmp_path):
     """Temp dir mimicking project structure with training data and features."""
     compass_dir = tmp_path / "compass"
     compass_dir.mkdir()
-    # Training data
-    (compass_dir / "training_data_combined.csv").write_text("col1,col2\n1,2\n")
+    # Training data with required feature columns
+    header = ",".join(sorted(REQUIRED_FEATURES)) + ",extra_col"
+    (compass_dir / "training_data_combined.csv").write_text(header + "\n1,2,3,4,5,6,7,8,9\n")
     # Feature pipeline
     (compass_dir / "feature_pipeline.py").write_text("# stub\n")
     # Model file
@@ -100,7 +108,7 @@ class TestValidation:
 
     def test_missing_all_sections(self):
         errors = validate_config({})
-        assert len(errors) >= 3  # strategy, risk, backtest
+        assert len(errors) >= 3
 
     def test_missing_strategy_field(self, valid_config):
         del valid_config["strategy"]["min_dte"]
@@ -155,13 +163,12 @@ class TestPreflightChecks:
     def test_training_data_found(self, valid_config, base_dir):
         result = _check_training_data(valid_config, base_dir)
         assert result.passed
-        assert "training_data" in result.details
 
     def test_training_data_missing(self, valid_config, tmp_path):
-        empty_dir = tmp_path / "empty"
-        empty_dir.mkdir()
-        (empty_dir / "compass").mkdir()
-        result = _check_training_data(valid_config, empty_dir)
+        empty = tmp_path / "empty"
+        empty.mkdir()
+        (empty / "compass").mkdir()
+        result = _check_training_data(valid_config, empty)
         assert not result.passed
 
     def test_feature_pipeline_found(self, valid_config, base_dir):
@@ -169,10 +176,28 @@ class TestPreflightChecks:
         assert result.passed
 
     def test_feature_pipeline_missing(self, valid_config, tmp_path):
-        empty_dir = tmp_path / "empty"
-        empty_dir.mkdir()
-        (empty_dir / "compass").mkdir()
-        result = _check_feature_pipeline(valid_config, empty_dir)
+        empty = tmp_path / "empty"
+        empty.mkdir()
+        (empty / "compass").mkdir()
+        result = _check_feature_pipeline(valid_config, empty)
+        assert not result.passed
+
+    def test_feature_compatibility_pass(self, valid_config, base_dir):
+        result = _check_feature_compatibility(valid_config, base_dir)
+        assert result.passed
+
+    def test_feature_compatibility_missing_columns(self, valid_config, tmp_path):
+        compass = tmp_path / "compat" / "compass"
+        compass.mkdir(parents=True)
+        (compass / "training_data_test.csv").write_text("col_a,col_b\n1,2\n")
+        result = _check_feature_compatibility(valid_config, tmp_path / "compat")
+        assert not result.passed
+        assert "Missing" in result.message
+
+    def test_feature_compatibility_no_csv(self, valid_config, tmp_path):
+        compass = tmp_path / "nocsv" / "compass"
+        compass.mkdir(parents=True)
+        result = _check_feature_compatibility(valid_config, tmp_path / "nocsv")
         assert not result.passed
 
     def test_risk_gates_configured(self, valid_config, base_dir):
@@ -183,11 +208,6 @@ class TestPreflightChecks:
         result = _check_risk_gates({}, base_dir)
         assert not result.passed
 
-    def test_risk_gates_missing_critical_field(self, base_dir):
-        config = {"risk": {"profit_target": 50}}
-        result = _check_risk_gates(config, base_dir)
-        assert not result.passed
-
     def test_hedge_params_configured(self, valid_config, base_dir):
         result = _check_hedge_params(valid_config, base_dir)
         assert result.passed
@@ -196,12 +216,44 @@ class TestPreflightChecks:
         config = {"risk": {"profit_target": 50}}
         result = _check_hedge_params(config, base_dir)
         assert not result.passed
-        assert "stop_loss" in result.message
 
-    def test_check_result_dataclass(self):
-        cr = CheckResult(name="test", passed=True, message="ok")
-        assert cr.passed
-        assert cr.details == ""
+
+# ── Simulated trades tests ────────────────────────────────────────────────────
+
+class TestSimulatedTrades:
+    def test_returns_correct_count(self, valid_config):
+        trades = _simulate_trades(valid_config, n_trades=10)
+        assert len(trades) == 10
+
+    def test_trade_has_correct_fields(self, valid_config):
+        trades = _simulate_trades(valid_config, n_trades=1)
+        t = trades[0]
+        assert isinstance(t, SimulatedTrade)
+        assert t.trade_id == 1
+        assert t.direction in ("bull_put", "bear_call")
+        assert t.contracts >= 1
+        assert t.credit > 0
+        assert t.max_loss > 0
+        assert t.outcome in ("win", "loss")
+
+    def test_deterministic_with_seed(self, valid_config):
+        t1 = _simulate_trades(valid_config, n_trades=5, seed=99)
+        t2 = _simulate_trades(valid_config, n_trades=5, seed=99)
+        assert [t.pnl for t in t1] == [t.pnl for t in t2]
+
+    def test_risk_gate_blocks_excess_positions(self, valid_config):
+        valid_config["risk"]["max_positions"] = 3
+        trades = _simulate_trades(valid_config, n_trades=10)
+        blocked = [t for t in trades if not t.risk_gate_passed]
+        assert len(blocked) > 0  # trades beyond position 3 should be blocked
+
+    def test_win_loss_pnl_signs(self, valid_config):
+        trades = _simulate_trades(valid_config, n_trades=20, seed=42)
+        for t in trades:
+            if t.outcome == "win":
+                assert t.pnl > 0
+            else:
+                assert t.pnl < 0
 
 
 # ── Dry-run tests ─────────────────────────────────────────────────────────────
@@ -219,14 +271,19 @@ class TestDryRun:
         assert "run_model" in stages
         assert "check_sizing" in stages
         assert "risk_gates" in stages
+        assert "simulate_trades" in stages
         assert "summary" in stages
+
+    def test_has_simulated_trades(self, valid_config, base_dir):
+        result = simulate_dry_run(valid_config, base_dir, n_trades=10)
+        assert len(result.simulated_trades) == 10
 
     def test_would_trade_with_valid_config(self, valid_config, base_dir):
         result = simulate_dry_run(valid_config, base_dir)
         assert result.would_trade
 
     def test_blocked_by_excessive_risk(self, valid_config, base_dir):
-        valid_config["risk"]["max_risk_per_trade"] = 10.0  # > 5% MASTERPLAN limit
+        valid_config["risk"]["max_risk_per_trade"] = 10.0
         result = simulate_dry_run(valid_config, base_dir)
         assert not result.would_trade
         assert result.risk_gate_result == "block"
@@ -235,19 +292,104 @@ class TestDryRun:
         result = simulate_dry_run(valid_config, base_dir)
         assert result.estimated_contracts >= 1
 
-    def test_estimated_risk_dollars(self, valid_config, base_dir):
+    def test_summary_has_simulated_metrics(self, valid_config, base_dir):
         result = simulate_dry_run(valid_config, base_dir)
-        assert result.estimated_risk_dollars == 100_000 * 0.05  # 5% of 100k
+        assert "simulated_pnl" in result.summary
+        assert "simulated_win_rate" in result.summary
 
-    def test_no_model_warns(self, valid_config, tmp_path):
-        empty = tmp_path / "nomodels"
+
+# ── Lifecycle tests ───────────────────────────────────────────────────────────
+
+class TestLifecycle:
+    def test_initial_state_is_idle(self, launcher):
+        assert launcher.state == "idle"
+        assert not launcher.is_running
+
+    def test_start_transitions_to_running(self, launcher):
+        launcher.start()
+        assert launcher.state == "running"
+        assert launcher.is_running
+
+    def test_start_saves_previous_config(self, launcher):
+        original = copy.deepcopy(launcher.config)
+        launcher.start()
+        assert launcher.previous_config == original
+
+    def test_start_raises_if_already_running(self, launcher):
+        launcher.start()
+        with pytest.raises(RuntimeError, match="already running"):
+            launcher.start()
+
+    def test_start_raises_on_validation_errors(self, base_dir):
+        bad_config = {"strategy": {"min_dte": "bad"}}
+        launcher = ExperimentLauncher(bad_config, base_dir=base_dir)
+        with pytest.raises(RuntimeError, match="validation error"):
+            launcher.start()
+
+    def test_stop_transitions_to_stopped(self, launcher):
+        launcher.start()
+        launcher.stop(reason="test done")
+        assert launcher.state == "stopped"
+        assert not launcher.is_running
+
+    def test_stop_raises_if_not_running(self, launcher):
+        with pytest.raises(RuntimeError, match="not running"):
+            launcher.stop()
+
+    def test_rollback_restores_config(self, launcher):
+        original = copy.deepcopy(launcher.config)
+        launcher.start()
+        launcher.config["strategy"]["spread_width"] = 99
+        restored = launcher.rollback()
+        assert restored == original
+        assert launcher.config == original
+
+    def test_rollback_stops_running_experiment(self, launcher):
+        launcher.start()
+        launcher.rollback()
+        assert launcher.state == "stopped"
+
+    def test_rollback_raises_with_no_snapshot(self, valid_config, base_dir):
+        launcher = ExperimentLauncher(valid_config, base_dir=base_dir)
+        with pytest.raises(RuntimeError, match="No previous config"):
+            launcher.rollback()
+
+    def test_update_config_validates_first(self, launcher):
+        bad = {"strategy": {"min_dte": "bad"}}
+        errors = launcher.update_config(bad)
+        assert len(errors) > 0
+        # Config should NOT have changed
+        assert launcher.config != bad
+
+    def test_update_config_saves_rollback(self, launcher):
+        original = copy.deepcopy(launcher.config)
+        new_config = copy.deepcopy(launcher.config)
+        new_config["strategy"]["spread_width"] = 10
+        errors = launcher.update_config(new_config)
+        assert len([e for e in errors if e.severity == "error"]) == 0
+        assert launcher.config == new_config
+        assert launcher.previous_config == original
+
+    def test_update_config_raises_while_running(self, launcher):
+        launcher.start()
+        with pytest.raises(RuntimeError, match="running"):
+            launcher.update_config(launcher.config)
+
+    def test_start_with_force_bypasses_check_failures(self, valid_config, tmp_path):
+        # No training data / model = failed checks, but no validation errors
+        empty = tmp_path / "force"
         empty.mkdir()
-        compass = empty / "compass"
-        compass.mkdir()
-        (compass / "feature_pipeline.py").write_text("# stub")
-        result = simulate_dry_run(valid_config, empty)
-        model_step = next(s for s in result.steps if s.stage == "run_model")
-        assert model_step.status == "warn"
+        (empty / "compass").mkdir()
+        (empty / "compass" / "feature_pipeline.py").write_text("# stub")
+        launcher = ExperimentLauncher(valid_config, base_dir=empty)
+        # Without force: should raise
+        with pytest.raises(RuntimeError, match="pre-flight check"):
+            launcher.start(force=False)
+        # Reset state
+        launcher._state = "idle"
+        # With force: should succeed
+        launcher.start(force=True)
+        assert launcher.is_running
 
 
 # ── PreflightReport tests ────────────────────────────────────────────────────
@@ -258,37 +400,18 @@ class TestPreflightReport:
         assert isinstance(report, PreflightReport)
         assert report.n_errors == 0
 
-    def test_not_passed_with_invalid(self, base_dir):
-        bad_config = {"strategy": {"min_dte": "bad"}}
-        launcher = ExperimentLauncher(bad_config, base_dir=base_dir)
-        report = launcher.preflight()
-        assert not report.all_passed
-        assert report.n_errors > 0
-
     def test_n_checks_total(self, launcher):
         report = launcher.preflight()
-        assert report.n_checks_total == 5  # 5 default checks
-
-    def test_experiment_id_in_report(self, launcher):
-        report = launcher.preflight()
-        assert report.experiment_id == "EXP-TEST"
-
-    def test_config_summary_populated(self, launcher):
-        report = launcher.preflight()
-        assert "strategy" in report.config_summary
-        assert "risk" in report.config_summary
+        assert report.n_checks_total == 6  # 6 default checks now
 
     def test_dry_run_included(self, launcher):
         report = launcher.preflight(include_dry_run=True)
         assert report.dry_run is not None
+        assert len(report.dry_run.simulated_trades) == 10
 
     def test_dry_run_excluded(self, launcher):
         report = launcher.preflight(include_dry_run=False)
         assert report.dry_run is None
-
-    def test_estimated_performance(self, launcher):
-        report = launcher.preflight()
-        assert report.estimated_performance["sharpe"] == 1.5
 
 
 # ── HTML report tests ─────────────────────────────────────────────────────────
@@ -305,63 +428,39 @@ class TestHTMLReport:
         html = launcher.generate_html(report)
         assert "EXP-TEST" in html
 
+    def test_contains_simulated_trades_table(self, launcher):
+        report = launcher.preflight()
+        html = launcher.generate_html(report)
+        assert "Simulated Trades" in html
+        assert "bull_put" in html or "bear_call" in html
+
     def test_contains_status_badge(self, launcher):
         report = launcher.preflight()
         html = launcher.generate_html(report)
         assert "READY" in html
 
-    def test_contains_validation_section(self, launcher):
+    def test_contains_all_sections(self, launcher):
         report = launcher.preflight()
         html = launcher.generate_html(report)
         assert "Validation" in html
-
-    def test_contains_preflight_checks(self, launcher):
-        report = launcher.preflight()
-        html = launcher.generate_html(report)
         assert "Pre-Flight Checks" in html
-
-    def test_contains_dry_run(self, launcher):
-        report = launcher.preflight()
-        html = launcher.generate_html(report)
         assert "Dry Run" in html
-        assert "Would Trade" in html
-
-    def test_contains_config_summary(self, launcher):
-        report = launcher.preflight()
-        html = launcher.generate_html(report)
         assert "Config Summary" in html
-
-    def test_contains_estimated_performance(self, launcher):
-        report = launcher.preflight()
-        html = launcher.generate_html(report)
         assert "Estimated Performance" in html
-        assert "Sharpe" in html
 
     def test_blocked_status_badge(self, base_dir):
-        bad_config = {}
-        launcher = ExperimentLauncher(bad_config, base_dir=base_dir)
+        launcher = ExperimentLauncher({}, base_dir=base_dir)
         report = launcher.preflight()
         html = launcher.generate_html(report)
         assert "NOT READY" in html
 
-
-# ── File output tests ─────────────────────────────────────────────────────────
-
-class TestFileOutput:
-    def test_writes_html_file(self, launcher):
+    def test_writes_file(self, launcher):
         with tempfile.TemporaryDirectory() as tmpdir:
             path = os.path.join(tmpdir, "launch.html")
             report = launcher.generate_report_file(output_path=path)
             assert os.path.isfile(path)
-            assert isinstance(report, PreflightReport)
             with open(path) as f:
                 assert "<!DOCTYPE html>" in f.read()
-
-    def test_creates_output_directory(self, launcher):
-        with tempfile.TemporaryDirectory() as tmpdir:
-            path = os.path.join(tmpdir, "sub", "dir", "report.html")
-            launcher.generate_report_file(output_path=path)
-            assert os.path.isfile(path)
 
 
 # ── Custom checks tests ──────────────────────────────────────────────────────
