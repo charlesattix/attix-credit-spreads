@@ -102,6 +102,24 @@ class IVRVSpread:
     spread_percentile: float
 
 
+@dataclass
+class TermStructurePoint:
+    """Single tenor on the vol term structure."""
+    tenor_days: int
+    tenor_label: str
+    iv: float
+
+
+@dataclass
+class TermStructureSnapshot:
+    """Full term structure at a point in time."""
+    date: datetime
+    points: List[TermStructurePoint]
+    slope: float  # short-end minus long-end (positive = backwardation)
+    curvature: float  # belly vs wings
+    is_inverted: bool  # True when short > long (fear signal)
+
+
 # ---------------------------------------------------------------------------
 # Core forecaster
 # ---------------------------------------------------------------------------
@@ -324,6 +342,68 @@ class VolForecaster:
         if latest.spread_percentile < 0.20:
             return "cheap"
         return None
+
+    # ------------------------------------------------------------------
+    # Term structure analysis
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def build_term_structure(
+        iv_by_tenor: Dict[int, float],
+        date: Optional[datetime] = None,
+    ) -> TermStructureSnapshot:
+        """Build a term structure snapshot from {tenor_days: iv} mapping.
+
+        Args:
+            iv_by_tenor: e.g. {7: 0.18, 30: 0.20, 60: 0.22, 90: 0.21}
+            date: Observation date.
+        """
+        if not iv_by_tenor:
+            return TermStructureSnapshot(
+                date=date or datetime.now(), points=[], slope=0.0,
+                curvature=0.0, is_inverted=False,
+            )
+
+        sorted_tenors = sorted(iv_by_tenor.items())
+        labels = {7: "1W", 14: "2W", 21: "3W", 30: "1M", 45: "45D",
+                  60: "2M", 90: "3M", 120: "4M", 180: "6M", 252: "1Y", 365: "1Y+"}
+
+        points = []
+        for t, iv in sorted_tenors:
+            label = labels.get(t, f"{t}D")
+            points.append(TermStructurePoint(tenor_days=t, tenor_label=label, iv=iv))
+
+        # Slope: short minus long
+        short_iv = sorted_tenors[0][1]
+        long_iv = sorted_tenors[-1][1]
+        slope = short_iv - long_iv
+        is_inverted = slope > 0.005  # 50 bps threshold
+
+        # Curvature: mid-tenor vs average of ends (positive = humped)
+        curvature = 0.0
+        if len(sorted_tenors) >= 3:
+            mid_idx = len(sorted_tenors) // 2
+            mid_iv = sorted_tenors[mid_idx][1]
+            end_avg = (short_iv + long_iv) / 2.0
+            curvature = mid_iv - end_avg
+
+        return TermStructureSnapshot(
+            date=date or datetime.now(),
+            points=points,
+            slope=slope,
+            curvature=curvature,
+            is_inverted=is_inverted,
+        )
+
+    @staticmethod
+    def term_structure_series(
+        iv_by_tenor_series: Dict[datetime, Dict[int, float]],
+    ) -> List[TermStructureSnapshot]:
+        """Build term structures across multiple dates."""
+        results = []
+        for dt, mapping in sorted(iv_by_tenor_series.items()):
+            results.append(VolForecaster.build_term_structure(mapping, date=dt))
+        return results
 
     # ------------------------------------------------------------------
     # Full forecast
