@@ -483,10 +483,10 @@ svg{{display:block;margin:0 auto}}
         ks = f"{r.gpd_fit.ks_pvalue:.3f}" if r.gpd_fit else "N/A"
         n_obs = var95.n_obs if var95 else 0
         return f"""<div class="grid">
-<div class="card"><div class="lbl">VaR 95%</div><div class="val">{var95.var:.4f if var95 else 0:.4f}</div></div>
-<div class="card"><div class="lbl">CVaR 95%</div><div class="val">{var95.cvar:.4f if var95 else 0:.4f}</div></div>
-<div class="card"><div class="lbl">VaR 99%</div><div class="val">{var99.var:.4f if var99 else 0:.4f}</div></div>
-<div class="card"><div class="lbl">CVaR 99%</div><div class="val">{var99.cvar:.4f if var99 else 0:.4f}</div></div>
+<div class="card"><div class="lbl">VaR 95%</div><div class="val">{(var95.var if var95 else 0):.4f}</div></div>
+<div class="card"><div class="lbl">CVaR 95%</div><div class="val">{(var95.cvar if var95 else 0):.4f}</div></div>
+<div class="card"><div class="lbl">VaR 99%</div><div class="val">{(var99.var if var99 else 0):.4f}</div></div>
+<div class="card"><div class="lbl">CVaR 99%</div><div class="val">{(var99.cvar if var99 else 0):.4f}</div></div>
 <div class="card"><div class="lbl">GPD Shape (xi)</div><div class="val">{xi}</div></div>
 <div class="card"><div class="lbl">KS p-value</div><div class="val">{ks}</div></div>
 <div class="card"><div class="lbl">Observations</div><div class="val">{n_obs}</div></div>
