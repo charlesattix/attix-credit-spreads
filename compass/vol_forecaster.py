@@ -530,26 +530,242 @@ class VolForecaster:
     # HTML report
     # ------------------------------------------------------------------
 
+    @staticmethod
+    def _svg_line_chart(
+        series_map: Dict[str, List[Tuple[int, float]]],
+        width: int = 800,
+        height: int = 300,
+        title: str = "",
+        colors: Optional[Dict[str, str]] = None,
+        y_label: str = "",
+    ) -> str:
+        """Render an inline SVG line chart.
+
+        Args:
+            series_map: {label: [(x_idx, y_val), ...]}
+        """
+        colors = colors or {}
+        default_colors = ["#2980b9", "#e74c3c", "#27ae60", "#e67e22", "#8e44ad", "#1abc9c"]
+
+        all_y = [y for pts in series_map.values() for _, y in pts]
+        all_x = [x for pts in series_map.values() for x, _ in pts]
+        if not all_y or not all_x:
+            return ""
+
+        y_min, y_max = min(all_y), max(all_y)
+        x_min, x_max = min(all_x), max(all_x)
+        if y_max == y_min:
+            y_max = y_min + 0.01
+        if x_max == x_min:
+            x_max = x_min + 1
+
+        pad_l, pad_r, pad_t, pad_b = 60, 20, 40, 40
+        pw = width - pad_l - pad_r
+        ph = height - pad_t - pad_b
+
+        def tx(x: float) -> float:
+            return pad_l + (x - x_min) / (x_max - x_min) * pw
+
+        def ty(y: float) -> float:
+            return pad_t + (1.0 - (y - y_min) / (y_max - y_min)) * ph
+
+        lines: List[str] = []
+        lines.append(f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
+                      f'style="background:#fff;border:1px solid #ddd;border-radius:6px;margin:0.5rem 0">')
+        if title:
+            lines.append(f'<text x="{width // 2}" y="20" text-anchor="middle" '
+                          f'font-size="14" font-weight="bold" fill="#1a1a2e">{title}</text>')
+
+        # Y-axis gridlines + labels
+        for i in range(5):
+            yv = y_min + (y_max - y_min) * i / 4
+            yp = ty(yv)
+            lines.append(f'<line x1="{pad_l}" y1="{yp:.1f}" x2="{width - pad_r}" y2="{yp:.1f}" '
+                          f'stroke="#eee" stroke-width="1"/>')
+            lines.append(f'<text x="{pad_l - 5}" y="{yp + 4:.1f}" text-anchor="end" '
+                          f'font-size="10" fill="#666">{yv:.2%}</text>')
+
+        if y_label:
+            lines.append(f'<text x="12" y="{height // 2}" text-anchor="middle" '
+                          f'font-size="11" fill="#666" transform="rotate(-90,12,{height // 2})">'
+                          f'{y_label}</text>')
+
+        # Series
+        for idx, (label, pts) in enumerate(series_map.items()):
+            color = colors.get(label, default_colors[idx % len(default_colors)])
+            pts_sorted = sorted(pts)
+            path_d = " ".join(
+                f"{'M' if j == 0 else 'L'}{tx(x):.1f},{ty(y):.1f}"
+                for j, (x, y) in enumerate(pts_sorted)
+            )
+            lines.append(f'<path d="{path_d}" fill="none" stroke="{color}" stroke-width="2"/>')
+            # Legend entry
+            lx = pad_l + 10 + idx * 120
+            lines.append(f'<rect x="{lx}" y="{height - 18}" width="12" height="12" fill="{color}"/>')
+            lines.append(f'<text x="{lx + 16}" y="{height - 8}" font-size="11" fill="#333">{label}</text>')
+
+        lines.append("</svg>")
+        return "\n".join(lines)
+
+    @staticmethod
+    def _svg_regime_timeline(
+        forecasts: List[VolForecast],
+        width: int = 800,
+        height: int = 60,
+    ) -> str:
+        """Horizontal colour-bar showing regime over time."""
+        if not forecasts:
+            return ""
+        n = len(forecasts)
+        regime_colors = {
+            VolRegime.LOW: "#27ae60",
+            VolRegime.NORMAL: "#2980b9",
+            VolRegime.HIGH: "#e67e22",
+            VolRegime.EXTREME: "#e74c3c",
+        }
+        bar_w = width / max(n, 1)
+        parts = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
+                  f'style="border:1px solid #ddd;border-radius:6px;margin:0.5rem 0">']
+        for i, f in enumerate(forecasts):
+            c = regime_colors.get(f.regime, "#999")
+            parts.append(f'<rect x="{i * bar_w:.1f}" y="0" width="{bar_w + 0.5:.1f}" '
+                          f'height="{height - 20}" fill="{c}"/>')
+        # Legend
+        lx = 5
+        for regime, color in regime_colors.items():
+            parts.append(f'<rect x="{lx}" y="{height - 16}" width="10" height="10" fill="{color}"/>')
+            parts.append(f'<text x="{lx + 14}" y="{height - 7}" font-size="10" fill="#333">'
+                          f'{regime.value.upper()}</text>')
+            lx += 80
+        parts.append("</svg>")
+        return "\n".join(parts)
+
+    @staticmethod
+    def _svg_term_structure(
+        snapshot: TermStructureSnapshot,
+        width: int = 500,
+        height: int = 250,
+    ) -> str:
+        """Bar/line chart for a single term structure snapshot."""
+        if not snapshot.points:
+            return ""
+        ivs = [p.iv for p in snapshot.points]
+        labels = [p.tenor_label for p in snapshot.points]
+        y_min = min(ivs) * 0.9
+        y_max = max(ivs) * 1.1
+        if y_max == y_min:
+            y_max = y_min + 0.01
+
+        pad_l, pad_r, pad_t, pad_b = 60, 20, 30, 50
+        pw = width - pad_l - pad_r
+        ph = height - pad_t - pad_b
+        bar_w = pw / max(len(ivs), 1) * 0.6
+        gap = pw / max(len(ivs), 1)
+
+        parts = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
+                  f'style="background:#fff;border:1px solid #ddd;border-radius:6px;margin:0.5rem 0">']
+
+        inv_label = " (INVERTED)" if snapshot.is_inverted else ""
+        parts.append(f'<text x="{width // 2}" y="18" text-anchor="middle" font-size="13" '
+                      f'font-weight="bold" fill="#1a1a2e">Term Structure{inv_label}</text>')
+
+        for i, (iv, label) in enumerate(zip(ivs, labels)):
+            x = pad_l + i * gap + (gap - bar_w) / 2
+            frac = (iv - y_min) / (y_max - y_min)
+            bar_h = frac * ph
+            y = pad_t + ph - bar_h
+            color = "#e74c3c" if snapshot.is_inverted else "#2980b9"
+            parts.append(f'<rect x="{x:.1f}" y="{y:.1f}" width="{bar_w:.1f}" '
+                          f'height="{bar_h:.1f}" fill="{color}" rx="3"/>')
+            parts.append(f'<text x="{x + bar_w / 2:.1f}" y="{y - 4:.1f}" text-anchor="middle" '
+                          f'font-size="10" fill="#333">{iv:.1%}</text>')
+            parts.append(f'<text x="{x + bar_w / 2:.1f}" y="{height - 10:.0f}" text-anchor="middle" '
+                          f'font-size="10" fill="#666">{label}</text>')
+
+        parts.append(f'<text x="{pad_l - 5}" y="{height - 30}" text-anchor="end" font-size="10" '
+                      f'fill="#666">slope={snapshot.slope:+.1%} curv={snapshot.curvature:+.1%}</text>')
+        parts.append("</svg>")
+        return "\n".join(parts)
+
     def generate_report(
         self,
         forecasts: List[VolForecast],
         output_path: str = "reports/vol_forecast.html",
+        term_structure: Optional[TermStructureSnapshot] = None,
     ) -> str:
-        """Write an HTML report summarising the vol forecasts."""
+        """Write an HTML report with charts for vol forecasts.
+
+        Includes:
+        - IV vs RV line chart
+        - Vol regime colour timeline
+        - Forecast accuracy metrics
+        - Term structure visualisation (if provided)
+        - Full data table
+        """
         path = Path(output_path)
         path.parent.mkdir(parents=True, exist_ok=True)
 
+        # --- IV vs RV chart ---
+        has_iv = any(f.iv is not None for f in forecasts)
+        iv_rv_chart = ""
+        if has_iv:
+            iv_pts = [(i, f.iv) for i, f in enumerate(forecasts) if f.iv is not None]
+            rv_pts = [(i, f.rv) for i, f in enumerate(forecasts) if f.rv > 0]
+            blended_pts = [(i, f.blended_vol) for i, f in enumerate(forecasts)]
+            iv_rv_chart = self._svg_line_chart(
+                {"IV": iv_pts, "RV": rv_pts, "Blended": blended_pts},
+                title="Implied vs Realised Volatility",
+                colors={"IV": "#e74c3c", "RV": "#2980b9", "Blended": "#27ae60"},
+                y_label="Annualised Vol",
+            )
+        else:
+            # Chart EWMA / GARCH / blended even without IV
+            ewma_pts = [(i, f.ewma_vol) for i, f in enumerate(forecasts) if f.ewma_vol > 0]
+            garch_pts = [(i, f.garch_vol) for i, f in enumerate(forecasts) if f.garch_vol > 0]
+            blended_pts = [(i, f.blended_vol) for i, f in enumerate(forecasts) if f.blended_vol > 0]
+            if ewma_pts:
+                iv_rv_chart = self._svg_line_chart(
+                    {"EWMA": ewma_pts, "GARCH": garch_pts, "Blended": blended_pts},
+                    title="Volatility Forecasts",
+                    colors={"EWMA": "#e74c3c", "GARCH": "#2980b9", "Blended": "#27ae60"},
+                    y_label="Annualised Vol",
+                )
+
+        # --- Regime timeline ---
+        regime_timeline = self._svg_regime_timeline(forecasts)
+
+        # --- Term structure ---
+        ts_html = ""
+        if term_structure is not None and term_structure.points:
+            ts_html = (
+                '<h2>Vol Term Structure</h2>\n'
+                + self._svg_term_structure(term_structure)
+            )
+
+        # --- Accuracy ---
+        acc = self.accuracy_stats()
+        acc_html = ""
+        if acc["n"] > 0:
+            acc_html = f"""
+<h2>Forecast Accuracy</h2>
+<table class="metrics"><tr><th>MAE</th><th>RMSE</th><th>Bias</th><th>N</th></tr>
+<tr><td>{acc['mae']:.4f}</td><td>{acc['rmse']:.4f}</td>
+<td>{acc['bias']:.4f}</td><td>{int(acc['n'])}</td></tr></table>"""
+
+        # --- Data table rows ---
         rows = []
         for f in forecasts:
             dt_str = f.date.strftime("%Y-%m-%d") if hasattr(f.date, "strftime") else str(f.date)
+            iv_str = f"{f.iv:.4f}" if f.iv is not None else "-"
+            sp_str = f"{f.iv_rv_spread:.4f}" if f.iv_rv_spread is not None else "-"
             rows.append(
                 f"<tr><td>{dt_str}</td>"
                 f"<td>{f.ewma_vol:.4f}</td>"
                 f"<td>{f.garch_vol:.4f}</td>"
                 f"<td>{f.blended_vol:.4f}</td>"
                 f"<td>{f.rv:.4f}</td>"
-                f"<td>{f.iv if f.iv is not None else '-'}</td>"
-                f"<td>{f.iv_rv_spread if f.iv_rv_spread is not None else '-'}</td>"
+                f"<td>{iv_str}</td>"
+                f"<td>{sp_str}</td>"
                 f"<td class='regime-{f.regime.value}'>{f.regime.value.upper()}</td></tr>"
             )
 
@@ -558,43 +774,46 @@ class VolForecaster:
         regime_counts = {r: regimes.count(r) for r in VolRegime if regimes.count(r) > 0}
         regime_summary = " | ".join(f"{r.value.upper()}: {c}" for r, c in regime_counts.items())
 
-        # Accuracy
-        acc = self.accuracy_stats()
-        acc_html = ""
-        if acc["n"] > 0:
-            acc_html = f"""
-            <h2>Forecast Accuracy</h2>
-            <table><tr><th>MAE</th><th>RMSE</th><th>Bias</th><th>N</th></tr>
-            <tr><td>{acc['mae']:.4f}</td><td>{acc['rmse']:.4f}</td>
-            <td>{acc['bias']:.4f}</td><td>{int(acc['n'])}</td></tr></table>
-            """
-
         html = f"""<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>Volatility Forecast Report</title>
 <style>
-body {{ font-family: -apple-system, sans-serif; margin: 2rem; background: #f5f5f5; }}
-h1 {{ color: #1a1a2e; }}
+body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+       margin: 2rem; background: #f5f5f5; color: #1a1a2e; }}
+h1 {{ color: #1a1a2e; border-bottom: 2px solid #16213e; padding-bottom: 0.5rem; }}
 h2 {{ color: #16213e; margin-top: 2rem; }}
-table {{ border-collapse: collapse; width: 100%; margin: 1rem 0; background: #fff; }}
-th, td {{ border: 1px solid #ddd; padding: 8px; text-align: right; }}
-th {{ background: #16213e; color: #fff; }}
+table {{ border-collapse: collapse; width: 100%; margin: 1rem 0; background: #fff;
+         border-radius: 6px; overflow: hidden; }}
+table.metrics {{ width: auto; }}
+th, td {{ border: 1px solid #ddd; padding: 8px 12px; text-align: right; }}
+th {{ background: #16213e; color: #fff; font-weight: 600; }}
 tr:nth-child(even) {{ background: #f9f9f9; }}
 .regime-low {{ color: #27ae60; font-weight: bold; }}
 .regime-normal {{ color: #2980b9; font-weight: bold; }}
 .regime-high {{ color: #e67e22; font-weight: bold; }}
 .regime-extreme {{ color: #e74c3c; font-weight: bold; }}
-.summary {{ background: #fff; padding: 1rem; border-radius: 8px; margin: 1rem 0; }}
+.summary {{ background: #fff; padding: 1.2rem 1.5rem; border-radius: 8px;
+            margin: 1rem 0; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }}
+.chart-section {{ margin: 1.5rem 0; }}
 </style></head><body>
 <h1>Volatility Forecast Report</h1>
 <div class="summary">
 <p><strong>Generated:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M')}</p>
 <p><strong>Forecasts:</strong> {len(forecasts)}</p>
 <p><strong>Regime Distribution:</strong> {regime_summary}</p>
-<p><strong>GARCH Params:</strong> omega={self.garch_params.omega:.2e}
-   alpha={self.garch_params.alpha:.4f} beta={self.garch_params.beta:.4f}
+<p><strong>GARCH Params:</strong> &omega;={self.garch_params.omega:.2e}
+   &alpha;={self.garch_params.alpha:.4f} &beta;={self.garch_params.beta:.4f}
    persistence={self.garch_params.persistence:.4f}</p>
 </div>
+
+<h2>IV vs RV</h2>
+<div class="chart-section">{iv_rv_chart}</div>
+
+<h2>Vol Regime Timeline</h2>
+<div class="chart-section">{regime_timeline}</div>
+
+{ts_html}
 {acc_html}
+
 <h2>Forecast Series</h2>
 <table>
 <tr><th>Date</th><th>EWMA</th><th>GARCH</th><th>Blended</th>
@@ -604,5 +823,5 @@ tr:nth-child(even) {{ background: #f9f9f9; }}
 </body></html>"""
 
         path.write_text(html, encoding="utf-8")
-        logger.info("Vol forecast report written to %s", path)
+        logger.info("Vol forecast report written to %s (%d forecasts)", path, len(forecasts))
         return str(path)

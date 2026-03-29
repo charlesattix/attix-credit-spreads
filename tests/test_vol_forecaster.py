@@ -12,6 +12,8 @@ from compass.vol_forecaster import (
     GARCHParams,
     ForecastAccuracy,
     IVRVSpread,
+    TermStructurePoint,
+    TermStructureSnapshot,
     VOL_REGIME_THRESHOLDS,
     TRADING_DAYS,
 )
@@ -399,3 +401,184 @@ class TestReport:
         html = out.read_text()
         assert "Forecast Accuracy" in html
         assert "MAE" in html
+
+    def test_report_contains_iv_rv_chart_with_iv(self, tmp_path):
+        vf = VolForecaster()
+        forecasts = [
+            VolForecast(date=pd.Timestamp(f"2026-01-{d:02d}"), ewma_vol=0.15,
+                        garch_vol=0.16, blended_vol=0.155, regime=VolRegime.NORMAL,
+                        iv=0.20, rv=0.14, iv_rv_spread=0.06)
+            for d in range(1, 11)
+        ]
+        out = tmp_path / "report.html"
+        vf.generate_report(forecasts, output_path=str(out))
+        html = out.read_text()
+        assert "<svg" in html
+        assert "IV" in html and "RV" in html
+
+    def test_report_contains_vol_chart_no_iv(self, tmp_path):
+        vf = VolForecaster()
+        forecasts = [
+            VolForecast(date=pd.Timestamp(f"2026-01-{d:02d}"), ewma_vol=0.15,
+                        garch_vol=0.16, blended_vol=0.155, regime=VolRegime.NORMAL, rv=0.14)
+            for d in range(1, 11)
+        ]
+        out = tmp_path / "report.html"
+        vf.generate_report(forecasts, output_path=str(out))
+        html = out.read_text()
+        assert "<svg" in html
+        assert "EWMA" in html
+
+    def test_report_regime_timeline_svg(self, tmp_path):
+        vf = VolForecaster()
+        forecasts = [
+            VolForecast(date=pd.Timestamp("2026-01-01"), ewma_vol=0.08,
+                        garch_vol=0.08, blended_vol=0.08, regime=VolRegime.LOW, rv=0.07),
+            VolForecast(date=pd.Timestamp("2026-01-02"), ewma_vol=0.40,
+                        garch_vol=0.40, blended_vol=0.40, regime=VolRegime.EXTREME, rv=0.38),
+        ]
+        out = tmp_path / "report.html"
+        vf.generate_report(forecasts, output_path=str(out))
+        html = out.read_text()
+        assert "Vol Regime Timeline" in html
+        assert "#27ae60" in html  # LOW colour
+        assert "#e74c3c" in html  # EXTREME colour
+
+    def test_report_with_term_structure(self, tmp_path):
+        vf = VolForecaster()
+        ts = VolForecaster.build_term_structure({30: 0.18, 60: 0.20, 90: 0.22})
+        forecasts = [
+            VolForecast(date=pd.Timestamp("2026-01-01"), ewma_vol=0.18,
+                        garch_vol=0.18, blended_vol=0.18, regime=VolRegime.NORMAL, rv=0.15),
+        ]
+        out = tmp_path / "report.html"
+        vf.generate_report(forecasts, output_path=str(out), term_structure=ts)
+        html = out.read_text()
+        assert "Term Structure" in html
+        assert "1M" in html
+
+
+# ---------------------------------------------------------------------------
+# Term structure analysis
+# ---------------------------------------------------------------------------
+
+class TestTermStructure:
+    def test_build_basic(self):
+        ts = VolForecaster.build_term_structure({30: 0.18, 60: 0.20, 90: 0.22})
+        assert isinstance(ts, TermStructureSnapshot)
+        assert len(ts.points) == 3
+        assert ts.points[0].tenor_days == 30
+
+    def test_tenor_labels(self):
+        ts = VolForecaster.build_term_structure({7: 0.20, 30: 0.18, 90: 0.16})
+        labels = [p.tenor_label for p in ts.points]
+        assert labels == ["1W", "1M", "3M"]
+
+    def test_custom_tenor_label(self):
+        ts = VolForecaster.build_term_structure({42: 0.19})
+        assert ts.points[0].tenor_label == "42D"
+
+    def test_slope_contango(self):
+        # Normal term structure: short < long → negative slope
+        ts = VolForecaster.build_term_structure({30: 0.15, 60: 0.18, 90: 0.22})
+        assert ts.slope < 0
+        assert not ts.is_inverted
+
+    def test_slope_backwardation(self):
+        # Inverted: short >> long
+        ts = VolForecaster.build_term_structure({30: 0.30, 60: 0.25, 90: 0.20})
+        assert ts.slope > 0
+        assert ts.is_inverted
+
+    def test_curvature_humped(self):
+        # Belly higher than average of ends → positive curvature
+        ts = VolForecaster.build_term_structure({30: 0.15, 60: 0.25, 90: 0.15})
+        assert ts.curvature > 0
+
+    def test_curvature_flat(self):
+        ts = VolForecaster.build_term_structure({30: 0.20, 60: 0.20, 90: 0.20})
+        assert ts.curvature == pytest.approx(0.0)
+
+    def test_empty_input(self):
+        ts = VolForecaster.build_term_structure({})
+        assert len(ts.points) == 0
+        assert ts.slope == 0.0
+        assert ts.curvature == 0.0
+        assert not ts.is_inverted
+
+    def test_single_tenor(self):
+        ts = VolForecaster.build_term_structure({30: 0.20})
+        assert len(ts.points) == 1
+        assert ts.slope == 0.0  # short == long
+        assert ts.curvature == 0.0
+
+    def test_term_structure_series(self):
+        data = {
+            pd.Timestamp("2026-01-01"): {30: 0.18, 60: 0.20, 90: 0.22},
+            pd.Timestamp("2026-01-02"): {30: 0.25, 60: 0.22, 90: 0.19},
+        }
+        results = VolForecaster.term_structure_series(data)
+        assert len(results) == 2
+        assert not results[0].is_inverted
+        assert results[1].is_inverted
+
+    def test_date_passthrough(self):
+        dt = pd.Timestamp("2026-06-15")
+        ts = VolForecaster.build_term_structure({30: 0.20}, date=dt)
+        assert ts.date == dt
+
+
+# ---------------------------------------------------------------------------
+# SVG chart internals
+# ---------------------------------------------------------------------------
+
+class TestSVGCharts:
+    def test_line_chart_basic(self):
+        svg = VolForecaster._svg_line_chart(
+            {"A": [(0, 0.10), (1, 0.15), (2, 0.12)]},
+            title="Test Chart",
+        )
+        assert "<svg" in svg
+        assert "Test Chart" in svg
+        assert "<path" in svg
+
+    def test_line_chart_empty(self):
+        svg = VolForecaster._svg_line_chart({})
+        assert svg == ""
+
+    def test_line_chart_multiple_series(self):
+        svg = VolForecaster._svg_line_chart({
+            "X": [(0, 0.1), (1, 0.2)],
+            "Y": [(0, 0.15), (1, 0.25)],
+        })
+        assert svg.count("<path") == 2
+
+    def test_regime_timeline_colors(self):
+        forecasts = [
+            VolForecast(date=pd.Timestamp("2026-01-01"), ewma_vol=0.08,
+                        garch_vol=0.08, blended_vol=0.08, regime=VolRegime.LOW, rv=0.07),
+            VolForecast(date=pd.Timestamp("2026-01-02"), ewma_vol=0.25,
+                        garch_vol=0.25, blended_vol=0.25, regime=VolRegime.HIGH, rv=0.22),
+        ]
+        svg = VolForecaster._svg_regime_timeline(forecasts)
+        assert "#27ae60" in svg  # LOW
+        assert "#e67e22" in svg  # HIGH
+
+    def test_regime_timeline_empty(self):
+        assert VolForecaster._svg_regime_timeline([]) == ""
+
+    def test_term_structure_svg(self):
+        ts = VolForecaster.build_term_structure({30: 0.18, 60: 0.20, 90: 0.22})
+        svg = VolForecaster._svg_term_structure(ts)
+        assert "<svg" in svg
+        assert "1M" in svg
+        assert "3M" in svg
+
+    def test_term_structure_svg_empty(self):
+        ts = VolForecaster.build_term_structure({})
+        assert VolForecaster._svg_term_structure(ts) == ""
+
+    def test_term_structure_svg_inverted_label(self):
+        ts = VolForecaster.build_term_structure({30: 0.30, 90: 0.18})
+        svg = VolForecaster._svg_term_structure(ts)
+        assert "INVERTED" in svg
