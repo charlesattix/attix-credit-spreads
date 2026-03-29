@@ -607,3 +607,10 @@ class TestEdgeCasesAndRecovery:
         r1 = p.transform(df)
         r2 = p.transform(df)
         pd.testing.assert_frame_equal(r1, r2)
+
+    def test_hedge_stop_loss_multiplier_in_range(self):
+        """Stop-loss multiplier stays in valid range for all VIX levels."""
+        ctrl = CrisisHedgeController(CrisisHedgeConfig(log_decisions=False))
+        for vix in range(5, 80, 5):
+            m = ctrl.stop_loss_multiplier(vix=float(vix))
+            assert 1.0 <= m <= 3.5
