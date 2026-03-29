@@ -23,14 +23,23 @@ from compass.crisis_hedge import CrisisHedgeConfig, CrisisHedgeController
 
 # ─── Fixtures ─────────────────────────────────────────────────────────────────
 
+# Pin to explicit floor=20/ceiling=50 config for breakpoint math tests.
+# These tests verify the _vix_scale algorithm, not the current defaults.
+_MATH_TEST_CONFIG = CrisisHedgeConfig(
+    vix_scale_floor=20.0, vix_scale_ceiling=50.0,
+    vix_stop_floor=20.0, vix_stop_ceiling=45.0,
+    log_decisions=False,
+)
+
+
 @pytest.fixture
 def default_ctrl() -> CrisisHedgeController:
-    return CrisisHedgeController()
+    return CrisisHedgeController(_MATH_TEST_CONFIG)
 
 
 @pytest.fixture
 def silent_ctrl() -> CrisisHedgeController:
-    return CrisisHedgeController(CrisisHedgeConfig(log_decisions=False))
+    return CrisisHedgeController(_MATH_TEST_CONFIG)
 
 
 # ─── CrisisHedgeConfig ────────────────────────────────────────────────────────
@@ -38,10 +47,10 @@ def silent_ctrl() -> CrisisHedgeController:
 class TestCrisisHedgeConfig:
 
     def test_default_vix_scale_floor(self):
-        assert CrisisHedgeConfig().vix_scale_floor == 20.0
+        assert CrisisHedgeConfig().vix_scale_floor == 12.0
 
     def test_default_vix_scale_ceiling(self):
-        assert CrisisHedgeConfig().vix_scale_ceiling == 50.0
+        assert CrisisHedgeConfig().vix_scale_ceiling == 35.0
 
     def test_default_base_stop_multiplier(self):
         assert CrisisHedgeConfig().base_stop_multiplier == 3.5
@@ -50,10 +59,10 @@ class TestCrisisHedgeConfig:
         assert CrisisHedgeConfig().min_stop_multiplier == 1.5
 
     def test_default_vix_stop_floor(self):
-        assert CrisisHedgeConfig().vix_stop_floor == 20.0
+        assert CrisisHedgeConfig().vix_stop_floor == 12.0
 
     def test_default_vix_stop_ceiling(self):
-        assert CrisisHedgeConfig().vix_stop_ceiling == 45.0
+        assert CrisisHedgeConfig().vix_stop_ceiling == 25.8
 
     def test_default_crash_regime_scale(self):
         assert CrisisHedgeConfig().crash_regime_scale == 0.0
@@ -219,6 +228,7 @@ class TestPositionScaleFactor:
     def test_backwardation_penalty_capped_at_config(self):
         # inversion_depth = 0.4 → penalty = min(0.25, 0.4*2=0.80) = 0.25
         ctrl = CrisisHedgeController(CrisisHedgeConfig(
+            vix_scale_floor=20.0, vix_scale_ceiling=50.0,
             vix_ts_backwardation_penalty=0.25, log_decisions=False
         ))
         # vix=25 (scale=0.75), vix3m=15 (ratio=0.6, inversion=0.4)
@@ -229,6 +239,7 @@ class TestPositionScaleFactor:
     def test_backwardation_small_inversion(self):
         # inversion_depth=0.05 → penalty = min(0.25, 0.10) = 0.10
         ctrl = CrisisHedgeController(CrisisHedgeConfig(
+            vix_scale_floor=20.0, vix_scale_ceiling=50.0,
             vix_ts_backwardation_penalty=0.25, log_decisions=False
         ))
         s_flat = ctrl.position_scale_factor(vix=25.0)     # vix=vix3m → no penalty
@@ -239,6 +250,7 @@ class TestPositionScaleFactor:
 
     def test_term_structure_disabled(self):
         ctrl = CrisisHedgeController(CrisisHedgeConfig(
+            vix_scale_floor=20.0, vix_scale_ceiling=50.0,
             use_vix_term_structure=False, log_decisions=False
         ))
         s_no_ts = ctrl.position_scale_factor(vix=25.0)
@@ -437,8 +449,8 @@ class TestHysteresisState:
 
     def test_last_scale_factor_not_updated_on_crash_regime(self):
         ctrl = CrisisHedgeController(CrisisHedgeConfig(log_decisions=False))
-        ctrl.position_scale_factor(vix=15.0)  # sets _last_scale_factor=1.0
-        ctrl.position_scale_factor(vix=15.0, regime="crash")
+        ctrl.position_scale_factor(vix=10.0)  # below floor=12 → sets _last_scale_factor=1.0
+        ctrl.position_scale_factor(vix=10.0, regime="crash")
         # crash returns early without updating _last_scale_factor
         assert ctrl._last_scale_factor == pytest.approx(1.0, abs=1e-6)
 
@@ -461,7 +473,7 @@ class TestEdgeCases:
 
     def test_controller_initialises_without_config(self):
         ctrl = CrisisHedgeController()
-        assert ctrl.cfg.vix_scale_floor == 20.0
+        assert ctrl.cfg.vix_scale_floor == 12.0
 
     def test_controller_initialises_with_none_config(self):
         ctrl = CrisisHedgeController(config=None)

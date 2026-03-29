@@ -17,17 +17,17 @@ Usage:
     stop_price = entry_credit * stop_mult
 
 Design:
-    VIX scaling (piecewise linear, default config floor=20, ceiling=50):
-        VIX ≤ 20:        scale = 1.00
-        VIX 20–30 (+10): scale = 1.00 → 0.50  (slope: −0.050/pt)
-        VIX 30–40 (+10): scale = 0.50 → 0.10  (slope: −0.040/pt)
-        VIX 40–50 (+10): scale = 0.10 → 0.00  (slope: −0.010/pt)
-        VIX ≥ 50:        scale = 0.00 (no new entries)
+    VIX scaling (piecewise linear, default config floor=12, ceiling=35):
+        VIX ≤ 12:          scale = 1.00
+        VIX 12–19.7 (+7.7): scale = 1.00 → 0.50
+        VIX 19.7–27.3:      scale = 0.50 → 0.10
+        VIX 27.3–35:        scale = 0.10 → 0.00
+        VIX ≥ 35:           scale = 0.00 (no new entries)
 
-    Stop tightening (linear, default floor=20, ceiling=45):
-        VIX ≤ 20: stop = base_stop_multiplier (3.5×)
-        VIX ≥ 45: stop = min_stop_multiplier  (1.5×)
-        Between:  linear interpolation
+    Stop tightening (linear, default floor=12, ceiling=25.8):
+        VIX ≤ 12:   stop = base_stop_multiplier (3.5×)
+        VIX ≥ 25.8: stop = min_stop_multiplier  (1.5×)
+        Between:     linear interpolation
 
     Regime hard gates (override VIX calculation):
         crash    → scale = crash_regime_scale  (default 0.0)
@@ -51,13 +51,15 @@ log = logging.getLogger(__name__)
 
 @dataclass
 class CrisisHedgeConfig:
-    # VIX scaling thresholds
-    vix_scale_floor: float = 20.0     # Below this: 100% position size
-    vix_scale_ceiling: float = 50.0   # Above this: 0% position size (no new entries)
+    # VIX scaling thresholds — optimised via hedge_param_sweep.py grid search
+    # (sweep found floor=12/ceiling=35 dominates old floor=20/ceiling=50 for
+    #  both EXP-400 and EXP-401; see experiments/sweep_analysis.md)
+    vix_scale_floor: float = 12.0     # Below this: 100% position size
+    vix_scale_ceiling: float = 35.0   # Above this: 0% position size (no new entries)
 
-    # VIX stop-loss thresholds (override the strategy's base stop multiplier)
-    vix_stop_floor: float = 20.0      # Below this: use base stop multiplier
-    vix_stop_ceiling: float = 45.0    # Above this: use minimum stop multiplier
+    # VIX stop-loss thresholds (derived: floor + 0.6 * span)
+    vix_stop_floor: float = 12.0      # Below this: use base stop multiplier
+    vix_stop_ceiling: float = 25.8    # Above this: use minimum stop multiplier
     base_stop_multiplier: float = 3.5  # Normal-market stop (from config)
     min_stop_multiplier: float = 1.5   # Crash-market stop (minimum allowed)
 
@@ -78,32 +80,61 @@ class CrisisHedgeConfig:
 
 
 # ── Pre-built configs for specific experiment profiles ─────────────────────
-
-# EXP-401 trades straddles/strangles alongside credit spreads.  These
-# short-vol structures suffer amplified losses when VIX spikes because both
-# legs move against the position simultaneously.  The default config
-# (floor=20, ceiling=50) leaves too much exposure during the critical VIX
-# 15-25 range where straddle/strangle gamma is highest.
 #
-# Optimised parameters:
-#   • vix_scale_floor  15 → start throttling 5 pts earlier
-#   • vix_scale_ceiling 40 → reach zero exposure by VIX 40 (vs 50)
-#   • vix_stop_floor   15 → start tightening stops earlier
-#   • vix_stop_ceiling  35 → hit min stop by VIX 35 (vs 45)
-#   • base_stop_multiplier 2.5 → tighter base (strangles can gap)
-#   • min_stop_multiplier  1.0 → very tight in crisis
-#   • high_vol_regime_scale 0.10 → throttle to 10% (vs 25%)
-#   • vix_ts_backwardation_penalty 0.40 → heavier backwardation penalty
+# Each experiment may override the defaults based on its strategy risk
+# profile.  Use ``get_hedge_config(experiment_id)`` to look up the right
+# config.  Unknown IDs fall back to ``CrisisHedgeConfig()`` defaults.
+
+# EXP-400 (Champion CS): pure credit spreads + iron condors.
+# Sweep-optimal: floor=12, ceiling=35 (same as new defaults).
+# No overrides needed — the defaults ARE the EXP-400 optimal config.
+EXP400_HEDGE_CONFIG = CrisisHedgeConfig()
+
+# EXP-401 (CS + SS Blend): straddles/strangles alongside credit spreads.
+# Short-vol structures suffer amplified gamma losses during VIX spikes.
+# Sweep found floor=14/ceiling=35 is the best passing config that
+# maximises annual return (8.3%) while keeping MC P5 DD ≤ 30%.
+# Tighter stops and lower HV regime cap further reduce tail risk.
 EXP401_HEDGE_CONFIG = CrisisHedgeConfig(
     vix_scale_floor=14.0,
-    vix_scale_ceiling=38.0,
+    vix_scale_ceiling=35.0,
     vix_stop_floor=14.0,
-    vix_stop_ceiling=32.0,
+    vix_stop_ceiling=26.6,     # 14 + 0.6*(35-14)
     base_stop_multiplier=2.0,
     min_stop_multiplier=1.0,
     high_vol_regime_scale=0.10,
     vix_ts_backwardation_penalty=0.50,
 )
+
+# ── Experiment config lookup ──────────────────────────────────────────────
+
+_EXPERIMENT_CONFIGS: Dict[str, CrisisHedgeConfig] = {
+    "EXP-400": EXP400_HEDGE_CONFIG,
+    "400":     EXP400_HEDGE_CONFIG,
+    "EXP-401": EXP401_HEDGE_CONFIG,
+    "401":     EXP401_HEDGE_CONFIG,
+}
+
+
+def get_hedge_config(experiment_id: str) -> CrisisHedgeConfig:
+    """Look up the CrisisHedgeConfig for an experiment.
+
+    Args:
+        experiment_id: E.g. "EXP-400", "400", "EXP-401", "401".
+
+    Returns:
+        The experiment-specific config, or ``CrisisHedgeConfig()`` defaults
+        if the ID is not registered.
+    """
+    cfg = _EXPERIMENT_CONFIGS.get(experiment_id)
+    if cfg is not None:
+        return cfg
+    # Try case-insensitive / prefix match
+    key = experiment_id.upper().replace("EXP-", "").replace("EXP", "")
+    for k, v in _EXPERIMENT_CONFIGS.items():
+        if k.upper().replace("EXP-", "").replace("EXP", "") == key:
+            return v
+    return CrisisHedgeConfig()
 
 
 class CrisisHedgeController:

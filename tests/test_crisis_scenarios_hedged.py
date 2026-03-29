@@ -141,19 +141,19 @@ class TestCrisisScenariosHedged:
 
 class TestVixInterpolationInCrisis:
 
-    def test_single_day_scenario_uses_peak_vix(self):
-        """Flash crash (1 day): VIX jumps instantly to peak, scale should reflect that."""
+    def test_single_day_scenario_uses_start_vix(self):
+        """Flash crash (1 day): only day_idx=0 → uses vix_start, not vix_peak."""
         rng = np.random.RandomState(42)
         returns = rng.normal(0.0004, 0.01, 252)
         tester = StressTester(returns, starting_capital=100_000, n_simulations=100, seed=42)
         cfg = CrisisHedgeConfig(log_decisions=False)
 
-        # Custom 1-day scenario
+        # Custom 1-day scenario with vix_start below floor (scale=1.0)
         scenario = {
             "name": "Single Day Test",
             "description": "1-day shock",
             "daily_shocks": [-0.10],
-            "vix_start": 15.0,
+            "vix_start": 10.0,
             "vix_peak": 65.0,
         }
         results = tester.run_crisis_scenarios(
@@ -161,15 +161,8 @@ class TestVixInterpolationInCrisis:
         )
         r = results[0]
 
-        # VIX=65 → scale=0.0 (above ceiling of 50), so hedged shock ≈ 0
-        # Hedged DD should be ~0 (VIX at 65 means fully hedged on that single day)
-        # But day 0: t=0/max(0,1)=0 → vix = vix_start + (vix_peak-vix_start)*0 = vix_start=15
-        # Wait, for n_days=1: t = 0 / max(0, 1) = 0 → vix = 15.0 → scale = 1.0
-        # Actually that means for a 1-day scenario, VIX stays at start...
-        # Let me reconsider: for 1 day, there's only day_idx=0.
-        # t = 0 / max(1-1, 1) = 0/1 = 0 → vix = vix_start = 15
-        # So the single day uses the start VIX, scale=1.0
-        # hedged DD should equal unhedged DD
+        # For 1 day: day_idx=0, t=0/max(0,1)=0, vix = vix_start = 10.0
+        # VIX 10 is below floor=12, so scale=1.0 → hedged ≈ unhedged
         assert r["hedged_portfolio_drawdown_pct"] is not None
         assert abs(r["hedged_portfolio_drawdown_pct"] - r["portfolio_drawdown_pct"]) < 1.0
 
@@ -199,15 +192,15 @@ class TestVixInterpolationInCrisis:
             "name": "Low VIX Selloff",
             "description": "Gentle selloff with low VIX",
             "daily_shocks": _build_crash_path(-0.15, 30),
-            "vix_start": 12.0,
-            "vix_peak": 18.0,   # stays below default floor of 20
+            "vix_start": 9.0,
+            "vix_peak": 11.0,   # stays below default floor of 12
         }
         results = tester.run_crisis_scenarios(
             scenarios=[scenario], crisis_hedge_config=cfg
         )
         r = results[0]
 
-        # Since VIX stays below 20 (floor), scale=1.0 throughout → no hedge benefit
+        # Since VIX stays below 12 (floor), scale=1.0 throughout → no hedge benefit
         assert abs(r["hedged_portfolio_drawdown_pct"] - r["portfolio_drawdown_pct"]) < 0.5
 
 

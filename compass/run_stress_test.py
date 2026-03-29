@@ -35,7 +35,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from compass.stress_test import StressTester
-from compass.crisis_hedge import CrisisHedgeConfig, CrisisHedgeController, EXP401_HEDGE_CONFIG
+from compass.crisis_hedge import CrisisHedgeConfig, CrisisHedgeController, get_hedge_config
 
 logging.basicConfig(
     level=logging.INFO,
@@ -651,12 +651,8 @@ def main() -> None:
     log.info("Blended: %d days", len(r_blend))
 
     # ── 1b. Crisis-hedge-adjusted returns ─────────────────────────────────
-    # EXP-400 (credit spreads): default hedge config
-    hedge_ctrl_400 = CrisisHedgeController(CrisisHedgeConfig())
-    # EXP-401 (straddles/strangles blend): aggressive hedge config
-    # Straddles/strangles have amplified short-vol losses in VIX spikes;
-    # need earlier throttling (floor=15) and tighter stops (base=2.5×).
-    hedge_ctrl_401 = CrisisHedgeController(EXP401_HEDGE_CONFIG)
+    hedge_ctrl_400 = CrisisHedgeController(get_hedge_config("EXP-400"))
+    hedge_ctrl_401 = CrisisHedgeController(get_hedge_config("EXP-401"))
     log.info("Loading hedged daily returns (CrisisHedgeController active)…")
     r400_hedged = _load_daily_returns_hedged(
         ROOT / "compass/training_data_exp400.csv", STARTING_CAPITAL, hedge_ctrl_400
@@ -668,13 +664,13 @@ def main() -> None:
     log.info("EXP-401 hedged: %d days, total pnl=%.0f", len(r401_hedged), r401_hedged.sum() * STARTING_CAPITAL)
 
     # ── 2. Run StressTester ────────────────────────────────────────────────
-    hedge_cfg_default = CrisisHedgeConfig()
-    hedge_cfg_401 = EXP401_HEDGE_CONFIG
-    results_400   = _run_stress("EXP-400 (Champion CS)",         r400,    crisis_hedge_config=hedge_cfg_default)
+    hedge_cfg_400 = get_hedge_config("EXP-400")
+    hedge_cfg_401 = get_hedge_config("EXP-401")
+    results_400   = _run_stress("EXP-400 (Champion CS)",         r400,    crisis_hedge_config=hedge_cfg_400)
     results_401   = _run_stress("EXP-401 (CS + SS Blend)",       r401,    crisis_hedge_config=hedge_cfg_401)
-    results_blend = _run_stress("Blended (50% EXP-400 + 50% EXP-401)", r_blend, crisis_hedge_config=hedge_cfg_default)
+    results_blend = _run_stress("Blended (50% EXP-400 + 50% EXP-401)", r_blend, crisis_hedge_config=hedge_cfg_400)
 
-    results_400_hedged = _run_stress("EXP-400 (Hedged)", r400_hedged, crisis_hedge_config=hedge_cfg_default)
+    results_400_hedged = _run_stress("EXP-400 (Hedged)", r400_hedged, crisis_hedge_config=hedge_cfg_400)
     results_401_hedged = _run_stress("EXP-401 (Hedged)", r401_hedged, crisis_hedge_config=hedge_cfg_401)
 
     all_results = [results_400, results_401, results_blend]
