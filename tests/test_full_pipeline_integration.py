@@ -153,7 +153,7 @@ class TestFeatureToSignalPipeline:
             entry_price=0.65,
             stop_loss=1.95,
             profit_target=0.33,
-            risk_pct=5.0,
+            risk_pct=0.05,
         )
         account = {
             "account_value": 100_000,
@@ -535,6 +535,30 @@ class TestCrossCuttingIntegration:
         )
         assert isinstance(contracts, int)
         assert contracts >= 0
+
+    def test_pipeline_pruning_removes_expected_features(self):
+        """Verify that PRUNED_REMOVED features are absent from pipeline output."""
+        df = pd.DataFrame({
+            "spy_price": [450], "vix": [20], "contracts": [3],
+            "net_credit": [0.65], "spread_width": [5.0],
+            "max_loss_per_unit": [4.35], "regime": ["bull"],
+            "strategy_type": ["CS"], "spread_type": ["bull_put"],
+        })
+        result = FeaturePipeline(pruned=True).transform(df)
+        for removed in PRUNED_REMOVED:
+            assert removed not in result.columns
+
+    def test_hedge_and_sizer_both_respond_to_same_regime(self):
+        """Verify hedge and sizing both use the same regime taxonomy."""
+        for regime in ["bull", "bear", "high_vol", "low_vol", "crash"]:
+            ctrl = CrisisHedgeController(CrisisHedgeConfig(log_decisions=False))
+            scale = ctrl.position_scale_factor(vix=20.0, regime=regime)
+            sizer = AdvancedPositionSizer()
+            result = sizer.compute(
+                win_prob=0.75, win_return=0.40, loss_return=1.0, regime=regime,
+            )
+            assert result.regime == regime
+            assert 0 <= scale <= 1.0
 
     def test_regime_classifier_feeds_hedge_and_sizing(self):
         """RegimeClassifier → hedge scale → sizing regime fraction."""
