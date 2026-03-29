@@ -951,7 +951,7 @@ Examples:
             import time as _time
 
             from execution.position_monitor import PositionMonitor
-            from shared.scheduler import SLOT_MACRO_WEEKLY, SLOT_SCAN, ScanScheduler
+            from shared.scheduler import SLOT_MACRO_WEEKLY, SLOT_RETRAIN, SLOT_SCAN, ScanScheduler
 
             def _run_macro_weekly_with_retry(max_attempts: int = 5) -> None:
                 """Run the weekly macro snapshot with exponential backoff retries.
@@ -1020,9 +1020,66 @@ Examples:
                 except Exception as _hb_exc:
                     logger.warning("Failed to write heartbeat: %s", _hb_exc)
 
+            # ── Phase 4: RetrainScheduler for SLOT_RETRAIN (16:30 ET daily) ──
+            from compass.retrain_scheduler import RetrainScheduler
+            from compass.ensemble_signal_model import EnsembleSignalModel
+
+            _model_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "models")
+            _retrain_scheduler = RetrainScheduler(
+                model_dir=_model_dir,
+                model_class=EnsembleSignalModel,
+                telegram_bot=getattr(system, 'telegram_bot', None),
+            )
+
+            def _run_retrain_check() -> None:
+                """Load recent closed trades, build features, and run retrain check."""
+                import numpy as np
+                import pandas as pd
+                try:
+                    db_path = args.db_path or os.environ.get("PILOTAI_DB_PATH")
+                    trades = get_trades(status="closed", path=db_path)
+                    if not trades or len(trades) < 30:
+                        logger.info(
+                            "SLOT_RETRAIN: only %d closed trades (need ≥30), skipping retrain check",
+                            len(trades) if trades else 0,
+                        )
+                        return
+                    trades_df = pd.DataFrame(trades)
+
+                    # Build feature matrix via FeaturePipeline if available
+                    try:
+                        from compass.feature_pipeline import FeaturePipeline
+                        pipeline = FeaturePipeline()
+                        features_df = pipeline.transform(trades_df)
+                    except Exception as feat_exc:
+                        logger.warning("FeaturePipeline failed (%s), passing raw trades_df", feat_exc)
+                        features_df = trades_df
+
+                    # Extract labels: "win" column (1=profitable, 0=loss)
+                    if "win" in trades_df.columns:
+                        labels = trades_df["win"].values.astype(int)
+                    elif "pnl" in trades_df.columns:
+                        labels = (trades_df["pnl"] > 0).astype(int).values
+                    else:
+                        logger.warning("SLOT_RETRAIN: no 'win' or 'pnl' column, skipping")
+                        return
+
+                    result = _retrain_scheduler.run_retrain_check(
+                        features_df, labels, current_model=None,
+                    )
+                    logger.info(
+                        "SLOT_RETRAIN complete: triggered=%s retrained=%s",
+                        result.trigger.triggered, result.retrained,
+                    )
+                except Exception:
+                    logger.exception("SLOT_RETRAIN failed")
+
             def scan_and_sync(slot_type=SLOT_SCAN):
                 if slot_type == SLOT_MACRO_WEEKLY:
                     _run_macro_weekly_with_retry()
+                elif slot_type == SLOT_RETRAIN:
+                    _run_retrain_check()
+                    _write_heartbeat()
                 else:
                     system.scan_opportunities()
                     _write_heartbeat()
