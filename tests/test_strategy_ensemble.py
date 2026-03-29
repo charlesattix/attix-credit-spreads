@@ -322,6 +322,35 @@ class TestWeightEvolution:
         assert len(ens.weight_history) == 0
 
 
+# ── Predict method tests ─────────────────────────────────────────────
+
+
+class TestPredict:
+    def test_predict_returns_tuple(self):
+        ens = _make_ensemble()
+        ens.analyze()
+        sig = pd.Series({s: 1.0 for s in ens.strategies})
+        result = ens.predict(sig)
+        assert isinstance(result, tuple)
+        assert len(result) == 2
+
+    def test_predict_sizing_reduced_on_disagreement(self):
+        ens = _make_ensemble()
+        ens.analyze()
+        agree = pd.Series({s: 1.0 for s in ens.strategies})
+        disagree = pd.Series(dict(zip(ens.strategies, [1.0, -1.0, 1.0, -1.0])))
+        _, sz_agree = ens.predict(agree)
+        _, sz_disagree = ens.predict(disagree)
+        assert sz_agree >= sz_disagree
+
+    def test_predict_auto_analyzes(self):
+        ens = _make_ensemble()
+        assert ens.confidence is None
+        sig = pd.Series({s: 1.0 for s in ens.strategies})
+        ens.predict(sig)
+        assert ens.confidence is not None
+
+
 # ── Full pipeline tests ─────────────────────────────────────────────────
 
 

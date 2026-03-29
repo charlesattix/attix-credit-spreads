@@ -191,6 +191,42 @@ class StrategyEnsemble:
             "weight_history": self.weight_history,
         }
 
+    def predict(self, signals: pd.Series) -> Tuple[float, float]:
+        """Predict ensemble signal + confidence for a single observation.
+
+        Parameters
+        ----------
+        signals : pd.Series
+            Strategy signals keyed by strategy name.
+
+        Returns
+        -------
+        (ensemble_signal, sizing_factor) where sizing_factor is reduced
+        when strategies disagree.
+        """
+        if self.confidence is None:
+            self.analyze()
+
+        # Get regime-conditional or dynamic weights
+        regime = str(self.regimes.iloc[-1]) if len(self.regimes) > 0 else "neutral"
+        rw = self.regime_weights.get(regime)
+        weights = rw.weights if rw is not None else {
+            s: self.current_weights[s].weight for s in self.strategies
+        }
+
+        ens_signal = sum(weights.get(s, 0) * signals.get(s, 0) for s in self.strategies)
+
+        # Sizing: reduce when strategies disagree
+        nonzero = signals[signals != 0]
+        if len(nonzero) >= 2:
+            majority = np.sign(nonzero.sum())
+            agreement = float((np.sign(nonzero) == majority).mean()) if majority != 0 else 0.0
+        else:
+            agreement = 1.0
+        sizing = max(self.min_confidence, agreement)
+
+        return float(ens_signal), float(sizing)
+
     # ── Dynamic weight computation ──────────────────────────────────────
 
     def _compute_dynamic_weights(self) -> Dict[str, StrategyWeight]:
