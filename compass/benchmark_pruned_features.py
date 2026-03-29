@@ -101,9 +101,12 @@ def build_pipeline_df(
 ) -> tuple:
     """Apply FeaturePipeline and optionally prune features.
 
+    Always starts from the full 31-feature pipeline output (pruned=False)
+    so this benchmark can compare full vs pruned side-by-side.
+
     Returns (df_out, feature_names).
     """
-    pipeline = FeaturePipeline()
+    pipeline = FeaturePipeline(pruned=False)
     features_clean = pipeline.transform(df)
 
     if prune:

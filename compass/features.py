@@ -23,6 +23,70 @@ from shared.indicators import calculate_rsi
 logger = logging.getLogger(__name__)
 
 
+# ── Pruned feature set (post-ablation) ────────────────────────────────────
+#
+# The 21 features that survived the walk-forward ablation analysis.
+# 10 features were removed from the pipeline's original 31:
+#   - 1 harmful (contracts_log — hurts AUC by -0.006)
+#   - 9 noise (zero gain + zero permutation importance one-hot dummies)
+#
+# 5 additional harmful/noise features (vix_percentile_20d, otm_pct,
+# ma20_slope_ann_pct, spread_width, day_of_week) are already absent from
+# the FeaturePipeline output.
+#
+# Benchmark results (experiments/pruned_features_benchmark.md):
+#   XGBoost AUC: 0.8025 (31 feat) → 0.8077 (21 feat)  +0.005
+#   Ensemble AUC: 0.8277 (31 feat) → 0.8318 (21 feat)  +0.004
+#
+# Reference: experiments/feature_importance_report.md, Section 4-5
+#            compass/benchmark_pruned_features.py
+
+PRUNED_FEATURES = [
+    # Calendar / timing
+    "days_since_last_trade",
+    # Momentum & trend
+    "rsi_14",
+    "momentum_5d_pct",
+    "momentum_10d_pct",
+    # Volatility context
+    "vix_zscore",
+    "vix_change_5d_pct",
+    "vix_percentile_50d",
+    "vix_percentile_100d",
+    "iv_rank",
+    # Price structure
+    "spy_price_zscore",
+    "dist_from_ma20_pct",
+    "dist_from_ma50_pct",
+    "dist_from_ma80_pct",
+    "dist_from_ma200_pct",
+    "ma50_slope_ann_pct",
+    # Realized volatility
+    "realized_vol_atr20",
+    "realized_vol_20d",
+    # Trade structure
+    "credit_to_width",
+    "loss_to_width",
+    # Categorical (only signal-carrying dummies)
+    "strategy_type_CS",
+    "spread_type_bull_put",
+]
+
+# Features removed by pruning (present in pipeline, removed by ablation)
+PRUNED_REMOVED = [
+    "contracts_log",        # harmful: hurts AUC
+    "regime_bear",          # noise: zero importance
+    "regime_bull",          # noise: zero importance
+    "regime_crash",         # noise: zero importance
+    "regime_high_vol",      # noise: zero importance
+    "regime_low_vol",       # noise: zero importance
+    "strategy_type_IC",     # noise: zero importance
+    "strategy_type_SS",     # noise: zero importance
+    "spread_type_bear_call",  # noise: zero importance
+    "spread_type_unknown",  # noise: zero importance
+]
+
+
 class FeatureEngine:
     """
     Comprehensive feature engineering for options trading ML models.

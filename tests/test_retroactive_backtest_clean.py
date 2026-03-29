@@ -128,9 +128,10 @@ class TestPrepareClean:
         assert "credit_to_width" in cols
         assert "loss_to_width" in cols
 
-    def test_has_log_contracts(self, trade_df):
+    def test_contracts_log_pruned(self, trade_df):
+        """contracts_log is removed by the pruned pipeline (harmful feature)."""
         cols, df = prepare_clean_features(trade_df)
-        assert "contracts_log" in cols
+        assert "contracts_log" not in cols
 
     def test_no_raw_prices(self, trade_df):
         cols, df = prepare_clean_features(trade_df)

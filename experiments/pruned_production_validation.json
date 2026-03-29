@@ -1,0 +1,176 @@
+{
+  "feature_count": 21,
+  "features": [
+    "days_since_last_trade",
+    "rsi_14",
+    "momentum_5d_pct",
+    "momentum_10d_pct",
+    "vix_zscore",
+    "vix_change_5d_pct",
+    "vix_percentile_50d",
+    "vix_percentile_100d",
+    "iv_rank",
+    "spy_price_zscore",
+    "dist_from_ma20_pct",
+    "dist_from_ma50_pct",
+    "dist_from_ma80_pct",
+    "dist_from_ma200_pct",
+    "ma50_slope_ann_pct",
+    "realized_vol_atr20",
+    "realized_vol_20d",
+    "credit_to_width",
+    "loss_to_width",
+    "strategy_type_CS",
+    "spread_type_bull_put"
+  ],
+  "xgboost_walk_forward": {
+    "aggregate": {
+      "accuracy_mean": 0.768,
+      "accuracy_std": 0.0742,
+      "precision_mean": 0.7932,
+      "precision_std": 0.123,
+      "recall_mean": 0.7367,
+      "recall_std": 0.1966,
+      "brier_score_mean": 0.1666,
+      "brier_score_std": 0.032,
+      "auc_mean": 0.8077,
+      "auc_std": 0.0629,
+      "signal_sharpe_mean": 2.9671,
+      "signal_sharpe_std": 3.9104,
+      "total_oos_samples": "368",
+      "n_folds": 5
+    },
+    "folds": [
+      {
+        "fold": 0,
+        "train_period": "2020-01-02 \u2192 2020-12-28",
+        "test_period": "2021-01-11 \u2192 2021-12-27",
+        "n_train": "60",
+        "n_test": "101",
+        "accuracy": 0.8416,
+        "precision": 0.9,
+        "recall": 0.875,
+        "brier_score": 0.1469,
+        "auc": 0.8089,
+        "signal_sharpe": 8.5777,
+        "test_win_rate": 0.7129
+      },
+      {
+        "fold": 1,
+        "train_period": "2020-01-02 \u2192 2021-12-27",
+        "test_period": "2022-01-05 \u2192 2022-12-21",
+        "n_train": "161",
+        "n_test": "59",
+        "accuracy": 0.661,
+        "precision": 0.6,
+        "recall": 0.3913,
+        "brier_score": 0.2219,
+        "auc": 0.6987,
+        "signal_sharpe": -0.3151,
+        "test_win_rate": 0.3898
+      },
+      {
+        "fold": 2,
+        "train_period": "2020-01-02 \u2192 2022-12-21",
+        "test_period": "2023-01-04 \u2192 2023-12-27",
+        "n_train": "220",
+        "n_test": "69",
+        "accuracy": 0.8261,
+        "precision": 0.8919,
+        "recall": 0.8049,
+        "brier_score": 0.1425,
+        "auc": 0.8493,
+        "signal_sharpe": 4.758,
+        "test_win_rate": 0.5942
+      },
+      {
+        "fold": 3,
+        "train_period": "2020-01-02 \u2192 2023-12-27",
+        "test_period": "2024-01-03 \u2192 2024-12-23",
+        "n_train": "289",
+        "n_test": "69",
+        "accuracy": 0.7826,
+        "precision": 0.8182,
+        "recall": 0.8372,
+        "brier_score": 0.1587,
+        "auc": 0.8408,
+        "signal_sharpe": 2.8079,
+        "test_win_rate": 0.6232
+      },
+      {
+        "fold": 4,
+        "train_period": "2020-01-02 \u2192 2024-12-23",
+        "test_period": "2025-01-02 \u2192 2025-12-26",
+        "n_train": "358",
+        "n_test": "70",
+        "accuracy": 0.7286,
+        "precision": 0.7561,
+        "recall": 0.775,
+        "brier_score": 0.1632,
+        "auc": 0.8408,
+        "signal_sharpe": -0.9928,
+        "test_win_rate": 0.5714
+      }
+    ],
+    "n_folds": 5
+  },
+  "ensemble_training_stats": {
+    "ensemble_test_auc": 0.8961111111111111,
+    "ensemble_test_accuracy": 0.7790697674418605,
+    "ensemble_test_precision": 0.7924528301886793,
+    "ensemble_test_recall": 0.84,
+    "n_train": 273,
+    "n_calibration": 69,
+    "n_test": 86,
+    "n_features": 21,
+    "positive_rate": 0.5771028037383178,
+    "n_wf_folds": 5,
+    "per_model": {
+      "xgboost": {
+        "test_auc": 0.8766666666666667,
+        "test_accuracy": 0.8023255813953488,
+        "test_precision": 0.7894736842105263,
+        "test_recall": 0.9,
+        "weight": 0.3181320716331332
+      },
+      "random_forest": {
+        "test_auc": 0.885,
+        "test_accuracy": 0.7674418604651163,
+        "test_precision": 0.7777777777777778,
+        "test_recall": 0.84,
+        "weight": 0.3379104742330424
+      },
+      "extra_trees": {
+        "test_auc": 0.8727777777777778,
+        "test_accuracy": 0.7906976744186046,
+        "test_precision": 0.82,
+        "test_recall": 0.82,
+        "weight": 0.34395745413382445
+      }
+    },
+    "ensemble_weights": {
+      "xgboost": 0.3181320716331332,
+      "random_forest": 0.3379104742330424,
+      "extra_trees": 0.34395745413382445
+    },
+    "test_auc": 0.8961111111111111,
+    "timestamp": "2026-03-29T09:59:28.050402+00:00"
+  },
+  "signal_model_training_stats": {
+    "train_accuracy": 0.8921568627450981,
+    "test_accuracy": 0.7906976744186046,
+    "train_precision": 0.905982905982906,
+    "test_precision": 0.8076923076923077,
+    "train_recall": 0.905982905982906,
+    "test_recall": 0.84,
+    "train_auc": 0.967875036840554,
+    "test_auc": 0.8622222222222222,
+    "test_auc_calibrated": 0.8622222222222222,
+    "n_train": 204,
+    "n_validation": 69,
+    "n_test": 86,
+    "n_calibration": 69,
+    "n_features": 21,
+    "positive_rate": 0.5771028037383178
+  }
+}

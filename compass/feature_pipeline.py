@@ -164,13 +164,25 @@ class FeaturePipeline:
         numeric_features: Optional[Sequence[str]] = None,
         categorical_features: Optional[Sequence[str]] = None,
         zscore_window: int = ZSCORE_WINDOW,
+        pruned: bool = True,
     ):
+        """
+        Args:
+            numeric_features: Override numeric feature list. If None, uses defaults.
+            categorical_features: Override categorical features. Defaults to
+                regime, strategy_type, spread_type.
+            zscore_window: Rolling window for z-score normalization.
+            pruned: When True (default), drop the 10 features identified as
+                harmful or noise by the ablation analysis. Set to False for
+                backward-compatible full 31-feature output.
+        """
         self.numeric_features = list(numeric_features) if numeric_features else None
         self.categorical_features = (
             list(categorical_features) if categorical_features is not None
             else ["regime", "strategy_type", "spread_type"]
         )
         self.zscore_window = zscore_window
+        self.pruned = pruned
 
     # ── Default numeric feature list ─────────────────────────────────────
 
@@ -305,6 +317,14 @@ class FeaturePipeline:
         result = pd.concat(parts, axis=1)
         clean = sanitize_features(result.values.astype(np.float64))
         result = pd.DataFrame(clean, columns=result.columns, index=result.index)
+
+        # Step 8: Prune harmful/noise features (post-ablation)
+        if self.pruned:
+            from compass.features import PRUNED_REMOVED
+            to_drop = [c for c in PRUNED_REMOVED if c in result.columns]
+            if to_drop:
+                result = result.drop(columns=to_drop)
+
         return result
 
     # ── Convenience: get feature names after transform ───────────────────
