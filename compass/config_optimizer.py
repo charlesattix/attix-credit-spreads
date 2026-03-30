@@ -62,6 +62,8 @@ class ParamDef:
         """Encode a value to numeric for GP input."""
         if self.param_type == ParamType.CATEGORICAL:
             return float(self.choices.index(value)) if value in self.choices else 0.0
+        if self.param_type == ParamType.DISCRETE and self.choices:
+            return float(self.choices.index(value)) if value in self.choices else 0.0
         return float(value)
 
     def decode(self, encoded: float) -> Any:
