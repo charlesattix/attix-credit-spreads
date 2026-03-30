@@ -273,6 +273,27 @@ class TradeFlowAnalyzer:
 
     # ── Public API ──────────────────────────────────────────────────────
 
+    def get_summary(self) -> Dict[str, Any]:
+        """Return a compact summary dict suitable for dashboards/alerting."""
+        if self.vpin_result is None:
+            self.analyze()
+        vp = self.vpin_result
+        acc = self.accumulation
+        imb = self.imbalance
+        mom = self.momentum
+        return {
+            "vpin": vp.vpin if vp else 0.0,
+            "toxicity": vp.toxicity_level if vp else "unknown",
+            "accumulation_phase": acc.phase if acc else "neutral",
+            "accumulation_strength": acc.strength if acc else 0.0,
+            "divergence": acc.divergence if acc else False,
+            "imbalance": imb.imbalance if imb else 0.0,
+            "imbalance_signal": imb.signal if imb else "neutral",
+            "momentum_signal": mom.signal if mom else "neutral",
+            "n_blocks": len(self.block_trades),
+            "smart_ratio": float(np.mean([f.smart_ratio for f in self.flow_classification])) if self.flow_classification else 0.0,
+        }
+
     def analyze(self) -> Dict[str, Any]:
         prices = self.trades[self.price_col].values.astype(float)
         volumes = self.trades[self.volume_col].values.astype(float)

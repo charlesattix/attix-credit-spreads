@@ -254,6 +254,14 @@ class TestPipeline:
         analyzer.analyze()
         assert analyzer.vpin_result is not None
 
+    def test_get_summary(self):
+        analyzer = _make_analyzer()
+        summary = analyzer.get_summary()
+        assert "vpin" in summary
+        assert "toxicity" in summary
+        assert "imbalance_signal" in summary
+        assert summary["n_blocks"] > 0
+
     def test_missing_price_col_raises(self):
         df = pd.DataFrame({"vol": [100, 200]})
         with pytest.raises(ValueError, match="Price column"):
