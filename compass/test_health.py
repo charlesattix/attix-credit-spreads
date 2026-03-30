@@ -107,7 +107,7 @@ class TestHealthAnalyzer:
         try:
             source = filepath.read_text(encoding="utf-8")
             tree = ast.parse(source)
-        except (SyntaxError, UnicodeDecodeError):
+        except (SyntaxError, UnicodeDecodeError, FileNotFoundError, OSError):
             return TestFileInfo(
                 str(filepath), filepath.stem, 0, 0, 0, False, 0, 0, 0.0)
 
