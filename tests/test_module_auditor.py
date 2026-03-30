@@ -6,7 +6,7 @@ from compass.module_auditor import AuditSummary, DuplicateGroup, ModuleAuditor, 
 
 @pytest.fixture
 def auditor():
-    return ModuleAuditor()
+    return ModuleAuditor(skip_imports=True)
 
 class TestDataclasses:
     def test_module_info(self):

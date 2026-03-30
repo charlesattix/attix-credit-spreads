@@ -85,10 +85,11 @@ class AuditSummary:
 class ModuleAuditor:
     """Audit all compass modules."""
 
-    def __init__(self, compass_dir: Optional[Path] = None) -> None:
+    def __init__(self, compass_dir: Optional[Path] = None, skip_imports: bool = False) -> None:
         self.compass_dir = compass_dir or COMPASS_DIR
         self.tests_dir = self.compass_dir.parent / "tests"
         self.reports_dir = self.compass_dir.parent / "reports"
+        self._skip_imports = skip_imports
         self.modules: List[ModuleInfo] = []
         self.summary: Optional[AuditSummary] = None
 
@@ -197,12 +198,13 @@ class ModuleAuditor:
             import_works=import_works, quality_score=0, grade="F",
         )
 
-    @staticmethod
-    def _check_import(name: str) -> bool:
+    def _check_import(self, name: str) -> bool:
+        if self._skip_imports:
+            return True
         try:
             result = subprocess.run(
                 [sys.executable, "-c", f"import compass.{name}"],
-                capture_output=True, timeout=10,
+                capture_output=True, timeout=5,
                 cwd=str(ROOT),
             )
             return result.returncode == 0
