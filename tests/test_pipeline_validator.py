@@ -435,7 +435,8 @@ class TestHTMLReport:
             out = Path(tmpdir) / "r.html"
             PipelineValidator.generate_report(result, out)
             content = out.read_text()
-            assert "RANGE_VIOLATION" in content or "remediation" in content.lower()
+            # Dirty data should trigger the kill switch
+            assert "TRIGGERED" in content or "FAILED" in content
 
     def test_default_path(self, clean_trades):
         pv = PipelineValidator(clean_trades, max_drawdown=0.99)
