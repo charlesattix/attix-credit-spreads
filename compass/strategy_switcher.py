@@ -257,16 +257,17 @@ class StrategySwitcher:
         # Check guards
         blocked = False
         reason = ""
-        if new_regime == self._current_regime:
+        is_first = self._current_regime is None
+        if not is_first and new_regime == self._current_regime:
             blocked = True
             reason = "same_regime"
-        elif self._in_cooldown(dt):
+        elif not is_first and self._in_cooldown(dt):
             blocked = True
             reason = "cooldown"
-        elif self._exceeds_frequency(dt):
+        elif not is_first and self._exceeds_frequency(dt):
             blocked = True
             reason = "max_frequency"
-        elif not self._check_hysteresis(new_regime, dt):
+        elif not is_first and not self._check_hysteresis(new_regime, dt):
             blocked = True
             reason = "hysteresis"
 
