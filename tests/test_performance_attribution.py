@@ -11,7 +11,9 @@ from compass.performance_attribution import (
     BrinsonAttribution,
     FactorDecomposition,
     ExperimentContribution,
+    PeriodAttribution,
     SkillTestResult,
+    StrategyDecomposition,
     TRADING_DAYS,
 )
 
@@ -389,3 +391,149 @@ class TestReport:
         for section in ["Factor Waterfall", "Rolling Factor", "Skill vs Luck",
                          "Experiment Contributions", "Brinson"]:
             assert section in html
+
+    def test_strategy_section(self, tmp_path):
+        pa = PerformanceAttribution()
+        fd = FactorDecomposition(total_return=0.05, market=0.03)
+        trades = _trades_df(60)
+        strat = pa.strategy_decomposition(trades)
+        out = tmp_path / "strat.html"
+        pa.generate_report(fd, strategy_decomp=strat, output_path=str(out))
+        html = out.read_text()
+        assert "Strategy Decomposition" in html
+
+    def test_period_section(self, tmp_path):
+        pa = PerformanceAttribution()
+        port = _returns(200)
+        mkt = _market(200)
+        fd = pa.factor_attribution(port, mkt)
+        periods = pa.period_attribution(port, mkt, freq="M")
+        out = tmp_path / "period.html"
+        pa.generate_report(fd, period_attrs=periods, output_path=str(out))
+        html = out.read_text()
+        assert "Period Attribution" in html
+
+
+# ===========================================================================
+# Strategy decomposition
+# ===========================================================================
+
+def _trades_df(n: int = 50, seed: int = 42) -> pd.DataFrame:
+    """Generate synthetic trades with strategy types."""
+    rng = np.random.default_rng(seed)
+    return pd.DataFrame({
+        "strategy_type": rng.choice(["credit_spread", "iron_condor", "straddle"], n),
+        "pnl": rng.normal(50, 200, n),
+        "entry_date": pd.bdate_range("2024-01-02", periods=n),
+    })
+
+
+class TestStrategyDecomposition:
+    def test_basic(self):
+        trades = _trades_df(60)
+        result = PerformanceAttribution.strategy_decomposition(trades)
+        assert len(result) > 0
+        assert all(isinstance(s, StrategyDecomposition) for s in result)
+
+    def test_sorted_by_pnl(self):
+        trades = _trades_df(100)
+        result = PerformanceAttribution.strategy_decomposition(trades)
+        pnls = [s.total_pnl for s in result]
+        assert pnls == sorted(pnls, reverse=True)
+
+    def test_contribution_sums_to_one(self):
+        trades = _trades_df(100)
+        result = PerformanceAttribution.strategy_decomposition(trades)
+        total = sum(s.contribution_pct for s in result)
+        assert total == pytest.approx(1.0, abs=0.01)
+
+    def test_win_rate_bounded(self):
+        trades = _trades_df(100)
+        result = PerformanceAttribution.strategy_decomposition(trades)
+        for s in result:
+            assert 0.0 <= s.win_rate <= 1.0
+
+    def test_trade_counts_sum(self):
+        trades = _trades_df(80)
+        result = PerformanceAttribution.strategy_decomposition(trades)
+        assert sum(s.n_trades for s in result) == 80
+
+    def test_empty_trades(self):
+        result = PerformanceAttribution.strategy_decomposition(pd.DataFrame())
+        assert result == []
+
+    def test_custom_columns(self):
+        df = pd.DataFrame({
+            "strat": ["CS", "IC", "CS"],
+            "profit": [100, -50, 200],
+        })
+        result = PerformanceAttribution.strategy_decomposition(
+            df, strategy_col="strat", pnl_col="profit"
+        )
+        assert len(result) == 2
+        cs = [s for s in result if s.strategy == "CS"][0]
+        assert cs.total_pnl == 300.0
+
+    def test_single_strategy(self):
+        df = pd.DataFrame({
+            "strategy_type": ["credit_spread"] * 10,
+            "pnl": [100.0] * 10,
+        })
+        result = PerformanceAttribution.strategy_decomposition(df)
+        assert len(result) == 1
+        assert result[0].contribution_pct == pytest.approx(1.0)
+
+
+# ===========================================================================
+# Period attribution
+# ===========================================================================
+
+class TestPeriodAttribution:
+    def test_monthly(self):
+        port = _returns(200)
+        mkt = _market(200)
+        pa = PerformanceAttribution()
+        periods = pa.period_attribution(port, mkt, freq="M")
+        assert len(periods) > 0
+        assert all(isinstance(p, PeriodAttribution) for p in periods)
+
+    def test_quarterly(self):
+        port = _returns(300)
+        mkt = _market(300)
+        pa = PerformanceAttribution()
+        periods = pa.period_attribution(port, mkt, freq="Q")
+        assert len(periods) > 0
+        # Quarterly should have fewer periods than monthly
+        monthly = pa.period_attribution(port, mkt, freq="M")
+        assert len(periods) < len(monthly)
+
+    def test_period_labels(self):
+        port = _returns(200)
+        mkt = _market(200)
+        pa = PerformanceAttribution()
+        periods = pa.period_attribution(port, mkt, freq="M")
+        for p in periods:
+            assert isinstance(p.period_label, str)
+            assert len(p.period_label) > 0
+
+    def test_dates_set(self):
+        port = _returns(200)
+        mkt = _market(200)
+        pa = PerformanceAttribution()
+        periods = pa.period_attribution(port, mkt, freq="M")
+        for p in periods:
+            assert p.start_date <= p.end_date
+
+    def test_empty_returns(self):
+        port = pd.Series(dtype=float)
+        mkt = pd.Series(dtype=float)
+        pa = PerformanceAttribution()
+        assert pa.period_attribution(port, mkt) == []
+
+    def test_n_trades_positive(self):
+        port = _returns(200)
+        mkt = _market(200)
+        pa = PerformanceAttribution()
+        periods = pa.period_attribution(port, mkt, freq="M")
+        for p in periods:
+            assert p.n_trades >= 2

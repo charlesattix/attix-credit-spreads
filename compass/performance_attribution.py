@@ -65,6 +65,30 @@ class ExperimentContribution:
 
 
 @dataclass
+class StrategyDecomposition:
+    """P&L attribution for one strategy type."""
+    strategy: str
+    total_pnl: float
+    n_trades: int
+    avg_pnl: float
+    win_rate: float
+    contribution_pct: float  # fraction of total portfolio P&L
+
+
+@dataclass
+class PeriodAttribution:
+    """Attribution for a calendar period (month or quarter)."""
+    period_label: str
+    start_date: pd.Timestamp
+    end_date: pd.Timestamp
+    total_return: float
+    n_trades: int
+    market_contribution: float
+    selection_contribution: float
+    residual: float
+
+
+@dataclass
 class SkillTestResult:
     """Bootstrap significance test for alpha."""
     observed_alpha: float
@@ -324,7 +348,107 @@ class PerformanceAttribution:
         return aligned_w * returns_ts
 
     # ------------------------------------------------------------------
-    # 5. Skill vs luck (bootstrap)
+    # 5. Per-strategy decomposition
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def strategy_decomposition(
+        trades: pd.DataFrame,
+        strategy_col: str = "strategy_type",
+        pnl_col: str = "pnl",
+    ) -> List[StrategyDecomposition]:
+        """Decompose portfolio P&L by strategy type.
+
+        Args:
+            trades: DataFrame with at least strategy_type and pnl columns.
+            strategy_col: Column name for strategy type.
+            pnl_col: Column name for P&L.
+        """
+        if trades.empty or strategy_col not in trades.columns:
+            return []
+
+        total_pnl = trades[pnl_col].sum()
+        results: List[StrategyDecomposition] = []
+
+        for strat, grp in trades.groupby(strategy_col):
+            strat_pnl = float(grp[pnl_col].sum())
+            n = len(grp)
+            wins = int((grp[pnl_col] > 0).sum())
+            results.append(StrategyDecomposition(
+                strategy=str(strat),
+                total_pnl=strat_pnl,
+                n_trades=n,
+                avg_pnl=strat_pnl / n if n > 0 else 0.0,
+                win_rate=wins / n if n > 0 else 0.0,
+                contribution_pct=strat_pnl / total_pnl if abs(total_pnl) > 1e-12 else 0.0,
+            ))
+
+        return sorted(results, key=lambda s: s.total_pnl, reverse=True)
+
+    # ------------------------------------------------------------------
+    # 6. Time-period attribution (monthly / quarterly)
+    # ------------------------------------------------------------------
+
+    def period_attribution(
+        self,
+        portfolio_returns: pd.Series,
+        market_returns: pd.Series,
+        freq: str = "M",
+    ) -> List[PeriodAttribution]:
+        """Attribute returns by calendar period.
+
+        Args:
+            portfolio_returns: Daily return series.
+            market_returns: Daily market return series.
+            freq: 'M' for monthly, 'Q' for quarterly.
+        """
+        aligned = pd.concat(
+            [portfolio_returns.rename("port"), market_returns.rename("mkt")],
+            axis=1,
+        ).dropna()
+
+        if aligned.empty:
+            return []
+
+        rf_daily = self.risk_free_rate / TRADING_DAYS
+        aligned["excess"] = aligned["port"] - rf_daily
+        aligned["mkt_excess"] = aligned["mkt"] - rf_daily
+
+        results: List[PeriodAttribution] = []
+        for period_key, grp in aligned.groupby(aligned.index.to_period(freq)):
+            if len(grp) < 2:
+                continue
+
+            total_ret = float(grp["excess"].sum())
+            mkt_contrib = float(grp["mkt_excess"].sum())
+
+            # Simple regression for selection alpha within period
+            ya = grp["excess"].values
+            xa = grp["mkt_excess"].values
+            xa_c = np.column_stack([np.ones(len(ya)), xa])
+            try:
+                betas, _, _, _ = np.linalg.lstsq(xa_c, ya, rcond=None)
+                alpha_contrib = float(betas[0] * len(ya))
+            except np.linalg.LinAlgError:
+                alpha_contrib = 0.0
+
+            residual = total_ret - mkt_contrib - alpha_contrib
+
+            results.append(PeriodAttribution(
+                period_label=str(period_key),
+                start_date=grp.index[0],
+                end_date=grp.index[-1],
+                total_return=total_ret,
+                n_trades=len(grp),
+                market_contribution=mkt_contrib,
+                selection_contribution=alpha_contrib,
+                residual=residual,
+            ))
+
+        return results
+
+    # ------------------------------------------------------------------
+    # 7. Skill vs luck (bootstrap)
     # ------------------------------------------------------------------
 
     def skill_test(
@@ -570,6 +694,43 @@ class PerformanceAttribution:
         parts.append("</svg>")
         return "\n".join(parts)
 
+    @staticmethod
+    def _strategy_html(decomp: Optional[List[StrategyDecomposition]]) -> str:
+        if not decomp:
+            return ""
+        rows = []
+        for s in decomp:
+            rows.append(
+                f"<tr><td style='text-align:left'>{s.strategy}</td>"
+                f"<td>{s.n_trades}</td><td>${s.total_pnl:,.2f}</td>"
+                f"<td>${s.avg_pnl:,.2f}</td><td>{s.win_rate:.1%}</td>"
+                f"<td>{s.contribution_pct:.1%}</td></tr>"
+            )
+        return f"""
+<h2>Strategy Decomposition</h2>
+<table><tr><th style='text-align:left'>Strategy</th><th>Trades</th>
+<th>Total P&L</th><th>Avg P&L</th><th>Win Rate</th><th>Contribution</th></tr>
+{''.join(rows)}</table>"""
+
+    @staticmethod
+    def _period_html(periods: Optional[List[PeriodAttribution]]) -> str:
+        if not periods:
+            return ""
+        rows = []
+        for p in periods:
+            rows.append(
+                f"<tr><td style='text-align:left'>{p.period_label}</td>"
+                f"<td>{p.total_return:+.4%}</td><td>{p.n_trades}</td>"
+                f"<td>{p.market_contribution:+.4%}</td>"
+                f"<td>{p.selection_contribution:+.4%}</td>"
+                f"<td>{p.residual:+.4%}</td></tr>"
+            )
+        return f"""
+<h2>Period Attribution</h2>
+<table><tr><th style='text-align:left'>Period</th><th>Return</th><th>Days</th>
+<th>Market</th><th>Selection</th><th>Residual</th></tr>
+{''.join(rows)}</table>"""
+
     def generate_report(
         self,
         factor_decomp: FactorDecomposition,
@@ -577,6 +738,8 @@ class PerformanceAttribution:
         skill_result: Optional[SkillTestResult] = None,
         experiment_contribs: Optional[List[ExperimentContribution]] = None,
         brinson: Optional[BrinsonAttribution] = None,
+        strategy_decomp: Optional[List[StrategyDecomposition]] = None,
+        period_attrs: Optional[List[PeriodAttribution]] = None,
         output_path: str = "reports/performance_attribution.html",
     ) -> str:
         """Full HTML attribution report."""
@@ -683,6 +846,8 @@ tr:nth-child(even) {{ background: #f9f9f9; }}
 {exp_svg}
 {exp_table}
 {skill_html}
+{self._strategy_html(strategy_decomp)}
+{self._period_html(period_attrs)}
 </body></html>"""
 
         path.write_text(html, encoding="utf-8")
