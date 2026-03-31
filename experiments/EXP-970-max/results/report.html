@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"/><title>EXP-970: Walk-Forward Validation</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:1100px;margin:0 auto;padding:20px;background:#0d1117;color:#c9d1d9}
+h1,h2,h3{color:#58a6ff}.meta{color:#8b949e}
+.hero{background:#161b22;border:2px solid #3fb950;border-radius:12px;padding:24px;text-align:center;margin:20px 0}
+.hero .big{font-size:2em;font-weight:800;color:#3fb950}.hero .sub{color:#8b949e;margin-top:6px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:20px 0}
+.c{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:10px;text-align:center}
+.c .l{color:#8b949e;font-size:.8em}.c .v{color:#f0f6fc;font-weight:600;font-size:1.1em}
+table{width:100%;border-collapse:collapse;margin:12px 0}th,td{padding:6px 10px;text-align:right;border-bottom:1px solid #21262d}th{color:#8b949e;background:#161b22}
+.chart{width:100%;max-width:750px;margin:16px auto;display:block}.st{fill:#58a6ff;font-size:13px}
+.warn{background:#161b22;border-left:4px solid #d29922;padding:12px 16px;margin:16px 0;color:#d29922}
+</style></head><body>
+<h1>EXP-970: Walk-Forward Validation</h1>
+<div class="hero">
+<div class="big">VALIDATED: 36.4% CAGR at 2.5x (DD 5.6%)</div>
+<div class="sub">3.5x achieves 45.8% at 7.8% DD | Correlation -0.02 ± 0.16 — UNSTABLE</div>
+</div>
+
+<div class="cards">
+<div class="c"><div class="l">2.5x CAGR</div><div class="v">36.4%</div></div>
+<div class="c"><div class="l">2.5x Worst DD</div><div class="v">5.6%</div></div>
+<div class="c"><div class="l">3.5x CAGR</div><div class="v">45.8%</div></div>
+<div class="c"><div class="l">3.5x Worst DD</div><div class="v">7.8%</div></div>
+<div class="c"><div class="l">Avg Correlation</div><div class="v">-0.02</div></div>
+<div class="c"><div class="l">Corr Stable?</div><div class="v" style="color:#f85149">NO</div></div>
+<div class="c"><div class="l">All Years Prof (2.5x)</div><div class="v" style="color:#3fb950">YES</div></div>
+<div class="c"><div class="l">2.5x Margin</div><div class="v">50.0%</div></div>
+</div>
+
+<svg viewBox="0 0 700 200" class="chart"><text x="350" y="20" text-anchor="middle" class="st">Equity at 2.5x ($)</text><path d="M55.0,170.0 L153.3,154.4 L251.7,119.1 L350.0,99.5 L448.3,82.6 L546.7,56.3 L645.0,35.0" fill="none" stroke="#3fb950" stroke-width="2.5"/><text x="153" y="195" text-anchor="middle" font-size="9" fill="#8b949e">2020</text><text x="252" y="195" text-anchor="middle" font-size="9" fill="#8b949e">2021</text><text x="350" y="195" text-anchor="middle" font-size="9" fill="#8b949e">2022</text><text x="448" y="195" text-anchor="middle" font-size="9" fill="#8b949e">2023</text><text x="547" y="195" text-anchor="middle" font-size="9" fill="#8b949e">2024</text><text x="645" y="195" text-anchor="middle" font-size="9" fill="#8b949e">2025</text></svg>
+
+<h2>Leverage Comparison</h2>
+<table><tr><th>Leverage</th><th>CAGR</th><th>Worst DD</th><th>Avg Sharpe</th><th>Avg ρ</th><th>All Prof</th><th>Margin</th><th>Worst Year</th></tr><tr><td>1.0x</td><td>18.7%</td><td>2.3%</td><td>4.63</td><td>-0.02</td><td>✓</td><td>20.0%</td><td>2025 (10.3%)</td></tr><tr><td>1.5x</td><td>25.3%</td><td>3.4%</td><td>4.56</td><td>-0.02</td><td>✓</td><td>30.0%</td><td>2025 (12.4%)</td></tr><tr><td>2.0x</td><td>31.1%</td><td>4.5%</td><td>4.47</td><td>-0.02</td><td>✓</td><td>40.0%</td><td>2025 (14.0%)</td></tr><tr style='color:#3fb950;font-weight:700'><td>2.5x</td><td>36.4%</td><td>5.6%</td><td>4.38</td><td>-0.02</td><td>✓</td><td>50.0%</td><td>2025 (15.3%)</td></tr><tr><td>3.0x</td><td>41.2%</td><td>6.7%</td><td>4.28</td><td>-0.02</td><td>✓</td><td>60.0%</td><td>2025 (16.5%)</td></tr><tr><td>3.5x</td><td>45.8%</td><td>7.8%</td><td>4.19</td><td>-0.02</td><td>✓</td><td>70.0%</td><td>2025 (17.6%)</td></tr></table>
+
+<h2>Per-Year at 2.5x (Recommended)</h2>
+<table><tr><th>Year</th><th>CS Trades</th><th>CS PnL</th><th>Vol PnL</th><th>Combined</th><th>Return</th><th>DD</th><th>ρ</th><th>CS WR</th></tr><tr><td>2020</td><td>25</td><td>$33,439</td><td>$29,178</td><td>$62,616</td><td>62.6%</td><td>5.6%</td><td>0.21</td><td>84.0%</td></tr><tr><td>2021</td><td>48</td><td>$115,643</td><td>$26,497</td><td>$142,140</td><td>87.4%</td><td>4.8%</td><td>0.02</td><td>100.0%</td></tr><tr><td>2022</td><td>19</td><td>$23,035</td><td>$55,910</td><td>$78,945</td><td>25.9%</td><td>3.1%</td><td>-0.01</td><td>84.2%</td></tr><tr><td>2023</td><td>31</td><td>$31,999</td><td>$35,990</td><td>$67,989</td><td>17.7%</td><td>3.2%</td><td>-0.19</td><td>87.1%</td></tr><tr><td>2024</td><td>32</td><td>$43,571</td><td>$62,529</td><td>$106,100</td><td>23.5%</td><td>2.0%</td><td>-0.24</td><td>93.8%</td></tr><tr><td>2025</td><td>30</td><td>$44,239</td><td>$41,285</td><td>$85,523</td><td>15.3%</td><td>1.0%</td><td>0.11</td><td>93.3%</td></tr></table>
+
+<h2>Per-Year at 3.5x (100% CAGR Target)</h2>
+<table><tr><th>Year</th><th>CS PnL</th><th>Vol PnL</th><th>Combined</th><th>Return</th><th>DD</th><th>DD Source</th></tr><tr><td>2020</td><td>$46,814</td><td>$40,849</td><td>$87,663</td><td>87.7%</td><td>7.8%</td><td>47.7% CS</td></tr><tr><td>2021</td><td>$161,610</td><td>$42,809</td><td>$204,420</td><td>108.9%</td><td>6.7%</td><td>0.0% CS</td></tr><tr><td>2022</td><td>$31,240</td><td>$100,703</td><td>$131,943</td><td>33.7%</td><td>4.3%</td><td>0.0% CS</td></tr><tr><td>2023</td><td>$43,179</td><td>$68,813</td><td>$111,991</td><td>21.4%</td><td>4.2%</td><td>16.1% CS</td></tr><tr><td>2024</td><td>$58,870</td><td>$123,265</td><td>$182,135</td><td>28.6%</td><td>3.1%</td><td>0.0% CS</td></tr><tr><td>2025</td><td>$58,927</td><td>$84,777</td><td>$143,704</td><td>17.6%</td><td>1.2%</td><td>14.0% CS</td></tr></table>
+
+<h2>Correlation Stability</h2>
+<p>Leg correlation across all years: <strong>-0.02 ± 0.16</strong> (range [-0.24, 0.21])</p>
+<p>WARNING: Correlation shows instability — decorrelation benefit may not persist.</p>
+
+<div class="warn">
+<strong>Leverage Stress Warning:</strong> If correlations spike to ρ=0.5 during a crisis, 3.5x drawdown could reach ~15-18%. The 2.5x level provides a larger safety buffer.
+</div>
+
+</body></html>
