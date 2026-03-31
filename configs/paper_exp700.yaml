@@ -76,8 +76,8 @@ strategy:
 # ============================================================================
 ml_filter:
   enabled: true
-  model_path: "ml/models/ensemble_model_20260324.joblib"
-  feature_stats_path: "ml/models/ensemble_model_20260324.feature_stats.json"
+  model_path: "ml/models/ensemble_model_20260331.joblib"
+  feature_stats_path: "ml/models/ensemble_model_20260331.feature_stats.json"
 
   # Flat threshold (fallback when type not in type_thresholds)
   probability_threshold: 0.65
