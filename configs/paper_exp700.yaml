@@ -79,8 +79,17 @@ ml_filter:
   model_path: "ml/models/ensemble_model_20260324.joblib"
   feature_stats_path: "ml/models/ensemble_model_20260324.feature_stats.json"
 
-  # Threshold locked on 2024 validation (blind-tested on 2025 holdout)
+  # Flat threshold (fallback when type not in type_thresholds)
   probability_threshold: 0.65
+
+  # Regime-aware per-type thresholds (override flat threshold)
+  # bear_call: 0.35 — max historical prob was 0.616; 0.35 → 82% WR in backtest
+  # iron_condor: 0.60 — validated on 2024 holdout
+  # bull_put: 0.65 — original threshold, unchanged
+  type_thresholds:
+    bull_put_spread: 0.65
+    iron_condor: 0.60
+    bear_call_spread: 0.35
 
   # Fail-safe: if model unavailable, allow trade through (True) or block (False)
   fail_open: true

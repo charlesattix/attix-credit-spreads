@@ -380,9 +380,11 @@ def _size_contracts(account_size: float, risk_pct: float, spread_width: float, c
 # ─────────────────────────────────────────────────────────────────────────────
 
 class EnsembleFilter:
-    def __init__(self, model_path: Path, stats_path: Path, threshold: float, fail_open: bool):
-        self.threshold = threshold
-        self.fail_open = fail_open
+    def __init__(self, model_path: Path, stats_path: Path, threshold: float, fail_open: bool,
+                 type_thresholds: Optional[Dict[str, float]] = None):
+        self.threshold       = threshold
+        self.type_thresholds = type_thresholds or {}
+        self.fail_open       = fail_open
         self._model = None
         self._feature_names: List[str] = []
         self._feature_means: List[float] = []
@@ -417,17 +419,23 @@ class EnsembleFilter:
     def feature_means(self) -> List[float]:
         return self._feature_means
 
-    def predict(self, feature_vec: np.ndarray, log_features: bool = False) -> Tuple[float, bool]:
+    def predict(self, feature_vec: np.ndarray, log_features: bool = False,
+                strategy_type: str = "") -> Tuple[float, bool]:
         if not self._loaded or self._model is None:
             logger.warning("EnsembleFilter: model unavailable — fail_open=%s", self.fail_open)
             return (0.5, self.fail_open)
         try:
+            # Resolve threshold: type-specific overrides the flat default
+            threshold = self.type_thresholds.get(strategy_type, self.threshold)
             feat_df = pd.DataFrame(feature_vec.reshape(1, -1), columns=self._feature_names)
             prob = float(self._model.predict_batch(feat_df)[0])
-            approved = prob >= self.threshold
+            approved = prob >= threshold
             if log_features:
                 logger.info("ML features: %s", json.dumps({k: round(v, 4) for k, v in zip(self._feature_names, feature_vec.tolist())}))
-            logger.info("EnsembleFilter: prob=%.4f threshold=%.2f → %s", prob, self.threshold, "APPROVED" if approved else "REJECTED")
+            logger.info(
+                "EnsembleFilter: prob=%.4f threshold=%.2f (type=%s) → %s",
+                prob, threshold, strategy_type or "default", "APPROVED" if approved else "REJECTED",
+            )
             return (prob, approved)
         except Exception as exc:
             logger.error("EnsembleFilter predict error: %s", exc, exc_info=True)
@@ -474,9 +482,12 @@ class EXP700Scanner:
         if not stats_path.is_absolute():
             stats_path = ROOT / stats_path
 
-        self.ml_filter    = EnsembleFilter(model_path, stats_path,
-                                           float(ml.get("probability_threshold", _ML_DEFAULTS["probability_threshold"])),
-                                           bool(ml.get("fail_open", _ML_DEFAULTS["fail_open"])))
+        self.ml_filter    = EnsembleFilter(
+            model_path, stats_path,
+            float(ml.get("probability_threshold", _ML_DEFAULTS["probability_threshold"])),
+            bool(ml.get("fail_open", _ML_DEFAULTS["fail_open"])),
+            type_thresholds=ml.get("type_thresholds") or {},
+        )
         self.log_features = bool(ml.get("log_features", _ML_DEFAULTS["log_features"]))
 
         self._alpaca = None
@@ -564,12 +575,15 @@ class EXP700Scanner:
             feature_means=self.ml_filter.feature_means,
         )
 
-        ml_prob, ml_approved = self.ml_filter.predict(feature_vec, log_features=self.log_features)
+        ml_prob, ml_approved = self.ml_filter.predict(
+            feature_vec, log_features=self.log_features, strategy_type=spread_type
+        )
         d["ml_probability"] = round(ml_prob, 4)
         d["ml_approved"]    = ml_approved
 
+        effective_threshold = self.ml_filter.type_thresholds.get(spread_type, self.ml_filter.threshold)
         if not ml_approved:
-            d["reason"] = f"ml_rejected: prob={ml_prob:.4f} < {self.ml_filter.threshold:.2f}"; return d
+            d["reason"] = f"ml_rejected: prob={ml_prob:.4f} < {effective_threshold:.2f} ({spread_type})"; return d
 
         opp = {"ticker": ticker, "type": spread_type, "expiration": expiration,
                "short_strike": short_strike, "long_strike": long_strike,

@@ -389,3 +389,79 @@ class TestStraddleSignalToOpportunity:
         assert "call_long_strike" not in opp
         assert "call_strike" in opp
         assert "put_strike" in opp
+
+
+class TestSpreadWidthInOpportunity:
+    """Regression tests for the spread_width KeyError (EXP-503 bug)."""
+
+    def test_bull_put_spread_width_present(self):
+        """spread_width must be present and correct for bull put spreads."""
+        sig = _make_credit_spread_signal()
+        opp = signal_to_opportunity(sig, current_price=550.0)
+        assert "spread_width" in opp
+        assert opp["spread_width"] == 10.0  # 540 - 530
+
+    def test_bear_call_spread_width_present(self):
+        """spread_width must be present and correct for bear call spreads."""
+        exp = datetime(2026, 4, 17, tzinfo=timezone.utc)
+        sig = Signal(
+            strategy_name="CreditSpreadStrategy",
+            ticker="QQQ",
+            direction=TradeDirection.SHORT,
+            legs=[
+                TradeLeg(LegType.SHORT_CALL, 490.0, exp),
+                TradeLeg(LegType.LONG_CALL, 500.0, exp),
+            ],
+            net_credit=1.20,
+            max_loss=8.80,
+            dte=30,
+        )
+        opp = signal_to_opportunity(sig, current_price=480.0)
+        assert "spread_width" in opp
+        assert opp["spread_width"] == 10.0  # 500 - 490
+
+    def test_iron_condor_spread_width_present(self):
+        """spread_width must be present for iron condors (put-side width)."""
+        sig = _make_iron_condor_signal()
+        opp = signal_to_opportunity(sig, current_price=550.0)
+        assert "spread_width" in opp
+        assert opp["spread_width"] == 12.0  # 530 - 518
+
+    def test_straddle_spread_width_present(self):
+        """spread_width must be present (0) for straddles — no strike pair."""
+        exp = datetime(2026, 4, 17, tzinfo=timezone.utc)
+        sig = Signal(
+            strategy_name="StraddleStrangleStrategy",
+            ticker="SPY",
+            direction=TradeDirection.SHORT,
+            legs=[
+                TradeLeg(LegType.SHORT_CALL, 555.0, exp),
+                TradeLeg(LegType.SHORT_PUT, 545.0, exp),
+            ],
+            net_credit=2.00,
+            max_loss=6.00,
+            dte=5,
+            metadata={"spread_type": "short_strangle"},
+        )
+        opp = signal_to_opportunity(sig, current_price=550.0)
+        assert "spread_width" in opp
+        assert opp["spread_width"] == 0.0  # straddle/strangle has no width
+
+    def test_straddle_spread_width_from_metadata(self):
+        """spread_width can be passed via metadata for straddles if needed."""
+        exp = datetime(2026, 4, 17, tzinfo=timezone.utc)
+        sig = Signal(
+            strategy_name="StraddleStrangleStrategy",
+            ticker="SPY",
+            direction=TradeDirection.SHORT,
+            legs=[
+                TradeLeg(LegType.SHORT_CALL, 555.0, exp),
+                TradeLeg(LegType.SHORT_PUT, 545.0, exp),
+            ],
+            net_credit=2.00,
+            max_loss=6.00,
+            dte=5,
+            metadata={"spread_type": "short_strangle", "spread_width": 10.0},
+        )
+        opp = signal_to_opportunity(sig, current_price=550.0)
+        assert opp["spread_width"] == 10.0

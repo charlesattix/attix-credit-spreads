@@ -86,11 +86,20 @@ def signal_to_opportunity(signal: Signal, current_price: float) -> Dict:
             elif "long" in leg.leg_type.value:
                 long_strike = leg.strike
 
+    # Compute spread_width: width of the short/long strike pair.
+    # For straddle/strangle and protective_put there is no defined spread width;
+    # fall back to metadata or 0 so alert_generator never receives a missing key.
+    if is_straddle_strangle or spread_type == "protective_put":
+        _spread_width = float(signal.metadata.get("spread_width", 0))
+    else:
+        _spread_width = abs(short_strike - long_strike)
+
     opp: Dict = {
         "ticker": signal.ticker,
         "type": spread_type,
         "short_strike": short_strike,
         "long_strike": long_strike,
+        "spread_width": _spread_width,
         "expiration": signal.expiration.strftime("%Y-%m-%d") if signal.expiration else "",
         "credit": signal.net_credit,
         "max_loss": signal.max_loss,

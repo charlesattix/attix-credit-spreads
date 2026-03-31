@@ -10,6 +10,7 @@ Design principles:
 
 import hashlib
 import logging
+import os
 import time
 from datetime import datetime, timezone
 from typing import Dict, Optional
@@ -43,6 +44,14 @@ class ExecutionEngine:
         self.alpaca = alpaca_provider
         self.db_path = db_path
         self.config = config or {}
+
+        # Derive experiment identity from DB path so client_order_ids are
+        # namespaced per experiment.  Two experiments scanning the same
+        # strike/expiry on the same day must never share a DB key.
+        # e.g. data/pilotai_exp600.db → "exp600", data/pilotai_champion.db → "champion"
+        _db = db_path or ""
+        _base = os.path.basename(_db).replace("pilotai_", "").replace(".db", "")
+        self._exp_id = _base if _base else "unk"
         # PARTIAL #8: atomic_ic_execution flag — reserved for future Alpaca 4-leg OTO support
         self._atomic_ic = bool(
             self.config.get("execution", {}).get("atomic_ic_execution", False)
@@ -143,9 +152,19 @@ class ExecutionEngine:
         credit = float(opp.get("credit", opp.get("credit_per_spread", 0)) or 0)
         contracts = int(opp.get("contracts", 1))
 
-        # Build deterministic client_order_id (hash of key fields for idempotency)
-        raw_id = f"{ticker}-{spread_type}-{expiration}-{short_strike}-{long_strike}"
-        client_id = "cs-" + hashlib.sha256(raw_id.encode()).hexdigest()[:16]
+        # Build deterministic client_order_id.  Experiment ID is included in
+        # the hash input so two experiments scanning the same strike/expiry
+        # always produce different DB keys — preventing cross-experiment
+        # dedup collisions.  Format: cs-{exp_id}-{sha256[:12]}
+        raw_id = f"{self._exp_id}-{ticker}-{spread_type}-{expiration}-{short_strike}-{long_strike}"
+        client_id = f"cs-{self._exp_id}-" + hashlib.sha256(raw_id.encode()).hexdigest()[:12]
+
+        # Alpaca permanently tracks client_order_id and rejects reuse, even for
+        # orders that were rejected or cancelled.  Generate a unique submission
+        # tag per scan attempt by appending a millisecond timestamp suffix.
+        # client_id (the hash) remains the stable DB key; alpaca_client_id is
+        # used exclusively for the actual Alpaca API calls.
+        alpaca_client_id = f"{client_id}-{int(time.time() * 1000) % 10_000_000:07d}"
 
         # Bug #3 fix: defense-in-depth duplicate check before submitting.
         # If dedup layer fails (Bug #2) the same opportunity can arrive again.
@@ -186,20 +205,20 @@ class ExecutionEngine:
             "credit": credit,
             "contracts": contracts,
             "entry_date": datetime.now(timezone.utc).isoformat(),
-            "alpaca_client_order_id": client_id,
+            "alpaca_client_order_id": alpaca_client_id,
         }
         # For iron condors, preserve per-wing strikes in metadata so PositionMonitor
         # can build OCC symbols for all 4 legs when pricing and closing.
-        # Fix 1: Also store wing client_order_ids now (deterministic: client_id + suffix)
-        # so the reconciler can look up each wing without guessing.
+        # Wing order IDs use alpaca_client_id (not client_id) so they are unique
+        # to this submission attempt and won't collide if the trade is retried.
         spread_lower = spread_type.lower()
         if "condor" in spread_lower:
             trade_record["put_short_strike"] = round(float(opp.get("put_short_strike", short_strike) or short_strike), 2)
             trade_record["put_long_strike"] = round(float(opp.get("put_long_strike", long_strike) or long_strike), 2)
             trade_record["call_short_strike"] = round(float(opp.get("call_short_strike", short_strike) or short_strike), 2)
             trade_record["call_long_strike"] = round(float(opp.get("call_long_strike", long_strike) or long_strike), 2)
-            trade_record["alpaca_put_order_id"] = client_id + "-put"
-            trade_record["alpaca_call_order_id"] = client_id + "-call"
+            trade_record["alpaca_put_order_id"] = alpaca_client_id + "-put"
+            trade_record["alpaca_call_order_id"] = alpaca_client_id + "-call"
         elif "straddle" in spread_lower or "strangle" in spread_lower:
             trade_record["call_strike"] = round(float(opp.get("call_strike", 0) or 0), 2)
             trade_record["put_strike"] = round(float(opp.get("put_strike", 0) or 0), 2)
@@ -268,9 +287,9 @@ class ExecutionEngine:
         # Submit to Alpaca
         try:
             if "condor" in spread_type.lower():
-                result = self._submit_iron_condor(opp, contracts, credit, client_id)
+                result = self._submit_iron_condor(opp, contracts, credit, alpaca_client_id)
             elif "straddle" in spread_type.lower() or "strangle" in spread_type.lower():
-                result = self._submit_straddle(opp, contracts, credit, client_id)
+                result = self._submit_straddle(opp, contracts, credit, alpaca_client_id)
             else:
                 result = self.alpaca.submit_credit_spread(
                     ticker=ticker,
@@ -280,7 +299,7 @@ class ExecutionEngine:
                     spread_type=spread_type,
                     contracts=contracts,
                     limit_price=credit if credit > 0 else None,
-                    client_order_id=client_id,
+                    client_order_id=alpaca_client_id,
                 )
 
             if result.get("status") == "submitted":

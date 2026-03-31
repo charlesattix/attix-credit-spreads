@@ -85,14 +85,26 @@ STRATEGY_DATA: Dict[str, Dict] = {
         "profile": "VIX-gated — vix_max_entry=35 cuts 2020 crash losses, consistent returns",
     },
     "EXP-305": {
-        "label": "EXP-305 COMPASS Multi-Underlying (Top-2, 65%)",
+        "label": "EXP-305 COMPASS (Corrected — SPY-only effective)",
         "short": "EXP-305",
-        "source": "Deterministic portfolio backtest (SPY + sector ETFs)",
-        "annual_returns": [0.9650, 0.6974, 0.7403, 0.4291, 0.4994, 0.9063],
-        "max_drawdowns":  [-0.167, -0.120, -0.100, -0.120, -0.130, -0.167],
-        "sharpe_ratios":  [2.50, 2.20, 2.50, 2.00, 2.00, 2.20],
-        "win_rates":      [83.0, 90.0, 80.0, 85.0, 85.0, 91.0],
-        "profile": "Multi-underlying — COMPASS universe (XLE, XLK, SOXX, XLF) + SPY",
+        "source": "Deterministic backtest 2026-03-26 (current code). Sector ETFs generated 0 trades "
+                  "2020-2023 due to sparse options data (SOXX: 2 expirations/yr, XLC: 0 contracts). "
+                  "Original +70.6% claim (March 8 run) NOT reproducible. Corrected avg: +54.6%.",
+        # Corrected returns from ml_filter_exp305_trades_cache.json (2026-03-26 run)
+        # 2020-2023: SPY at 50% allocation only (sectors = 0 trades, 50% capital idle)
+        # 2024: SPY 50% + XLF 25% + XLI 25% (only year with sector trades)
+        # 2025: SPY 100% (no sectors met 65% leading_pct threshold)
+        "annual_returns": [0.5370, 0.2960, 0.9850, 0.0270, 0.1500, 1.2820],
+        # Per-year max drawdowns estimated from 50% capital deployment rule.
+        # Overall reported max DD = -30.4% (2025, full capital deployed).
+        "max_drawdowns":  [-0.250, -0.080, -0.150, -0.100, -0.130, -0.304],
+        # Sharpe ratios recalculated from corrected returns + estimated per-year vol
+        "sharpe_ratios":  [1.50, 2.50, 3.50, 0.50, 1.20, 2.50],
+        # Win rates from actual trades cache (2020=77%, 2021=95%, 2022=71%, 2023=73%, 2024=83.5%, 2025=83%)
+        "win_rates":      [77.0, 95.0, 71.0, 73.0, 83.5, 83.0],
+        "profile": "SPY-only effective — COMPASS sector ETFs have insufficient options data (SOXX sparse, "
+                   "XLC missing entirely). 50% capital idle 2020-2023. Corrected avg +54.6% vs claimed +70.6%. "
+                   "2022 is outstanding (+98.5%) due to SPY bear calls in bear market.",
     },
 }
 
@@ -595,7 +607,7 @@ def write_report(
         "EXP-126": "MC P50 — deterministic was +53%; VIX spikes fire IC circuit breaker",
         "EXP-154": "MC P50 — 5% risk cap limits crash exposure; CB protects",
         "EXP-520": "VIX gate (vix_max_entry=35) cut DD from -61.6% to -14.4%; still +70.9%!",
-        "EXP-305": "COMPASS 2020: SOXX+XLK sectors led; tech recovered fastest",
+        "EXP-305": "CORRECTED: SPY at 50% alloc only (SOXX/XLK had 0 trades — data sparse). -42.8pp vs original claim.",
     }
     for sid, sdata in STRATEGY_DATA.items():
         ret_2020 = sdata["annual_returns"][0]
@@ -615,7 +627,7 @@ def write_report(
         "EXP-126": "MC P50 +3.4%; deterministic was +79%! Bear calls vs falling SPY",
         "EXP-154": "MC P50 +23%; IC-NEUTRAL outperforms — bear year IC misses, prevents big losses",
         "EXP-520": "+24.1% despite bear year — VIX gate prevents new entries when VIX>35",
-        "EXP-305": "COMPASS correctly allocated to XLE (energy +71.2%); +74% in down market!",
+        "EXP-305": "CORRECTED +98.5%: SPY bear calls at 50% alloc (XLE had 0 trades — sparse data). +24.5pp above original claim.",
     }
     for sid, sdata in STRATEGY_DATA.items():
         ret_2022 = sdata["annual_returns"][2]
