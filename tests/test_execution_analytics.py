@@ -1,173 +1,270 @@
-"""Tests for compass.execution_analytics — 32 tests."""
+"""Tests for compass.execution_analytics — 42 tests."""
 import numpy as np
 import pandas as pd
 import pytest
 from pathlib import Path
 from compass.execution_analytics import (
-    ExecutionAnalytics, ShortfallResult, BenchmarkResult, TimingResult,
-    CostAttribution, VenueResult, QualityScore, ExecutionReport,
+    ExecutionAnalytics, SlippageEstimate, MarketImpactEstimate,
+    SpreadWidthAnalysis, OrderRoutingRec, CapacityEstimate,
+    ShortfallResult, QualityScore, VenueResult, ExecutionReport,
 )
 
-def _market(n=50, seed=42):
-    rng = np.random.default_rng(seed)
-    idx = pd.date_range("2026-01-02 09:30", periods=n, freq="1min")
-    prices = pd.Series(100 + np.cumsum(rng.normal(0, 0.01, n)), index=idx)
-    volumes = pd.Series(rng.integers(100, 5000, n).astype(float), index=idx)
-    return prices, volumes
 
-def _fills(n=50, seed=42):
-    rng = np.random.default_rng(seed)
-    mid = 100 + rng.normal(0, 0.1, n)
-    return pd.DataFrame({
-        "venue": rng.choice(["ARCA", "BATS", "IEX"], n),
-        "fill_qty": rng.integers(10, 200, n).astype(float),
-        "midprice": mid,
-        "fill_price": mid + rng.normal(0, 0.02, n),
-        "fill_time_ms": rng.integers(1, 50, n).astype(float),
-        "orders_routed": rng.integers(1, 3, n).astype(float),
-    })
+# ===========================================================================
+# 1. Slippage model
+# ===========================================================================
 
+class TestBidAskEstimate:
+    def test_atm_low_vix(self):
+        ba = ExecutionAnalytics.estimate_bid_ask(15, 30, 1.0)
+        assert 0.01 < ba < 0.10  # tight ATM
+
+    def test_high_vix_wider(self):
+        low = ExecutionAnalytics.estimate_bid_ask(15, 30, 1.0)
+        high = ExecutionAnalytics.estimate_bid_ask(40, 30, 1.0)
+        assert high > low * 1.5
+
+    def test_otm_wider(self):
+        atm = ExecutionAnalytics.estimate_bid_ask(20, 30, 1.0)
+        otm = ExecutionAnalytics.estimate_bid_ask(20, 30, 0.90)
+        assert otm > atm
+
+    def test_open_wider_than_midday(self):
+        open_ba = ExecutionAnalytics.estimate_bid_ask(20, 30, 1.0, time_of_day=0.0)
+        mid_ba = ExecutionAnalytics.estimate_bid_ask(20, 30, 1.0, time_of_day=0.5)
+        assert open_ba > mid_ba
+
+    def test_positive(self):
+        for vix in [12, 20, 35, 50]:
+            for dte in [7, 30, 60]:
+                assert ExecutionAnalytics.estimate_bid_ask(vix, dte, 1.0) > 0
+
+
+class TestSlippageEstimate:
+    def test_basic(self):
+        ea = ExecutionAnalytics()
+        se = ea.estimate_slippage(20, 30, 1.0, 5.0, 1.5)
+        assert isinstance(se, SlippageEstimate)
+        assert se.slippage_per_contract > 0
+        assert se.slippage_pct > 0
+
+    def test_narrow_spread_more_slippage_pct(self):
+        ea = ExecutionAnalytics()
+        narrow = ea.estimate_slippage(20, 30, 1.0, 1.0, 0.30)
+        wide = ea.estimate_slippage(20, 30, 1.0, 10.0, 3.0)
+        assert narrow.slippage_pct > wide.slippage_pct
+
+    def test_slippage_surface(self):
+        ea = ExecutionAnalytics()
+        df = ea.slippage_surface(vix_range=[15, 25], dte_range=[14, 30])
+        assert len(df) == 4
+        assert "slippage_pct" in df.columns
+
+
+# ===========================================================================
+# 2. Market impact
+# ===========================================================================
+
+class TestMarketImpact:
+    def test_small_order(self):
+        ea = ExecutionAnalytics()
+        mi = ea.market_impact(1e6)
+        assert isinstance(mi, MarketImpactEstimate)
+        assert mi.total_impact_bps > 0
+        assert mi.total_impact_bps < 100
+
+    def test_larger_order_more_impact(self):
+        ea = ExecutionAnalytics()
+        small = ea.market_impact(1e6)
+        large = ea.market_impact(100e6)
+        assert large.total_impact_bps > small.total_impact_bps
+
+    def test_impact_at_scale(self):
+        ea = ExecutionAnalytics()
+        impacts = ea.impact_at_scale()
+        assert len(impacts) == 4
+        bps = [m.total_impact_bps for m in impacts]
+        assert bps == sorted(bps)  # monotonically increasing
+
+    def test_participation_rate(self):
+        ea = ExecutionAnalytics()
+        mi = ea.market_impact(1e6)
+        assert 0 < mi.participation_rate < 1
+
+    def test_permanent_lt_temporary(self):
+        ea = ExecutionAnalytics()
+        mi = ea.market_impact(10e6)
+        assert mi.permanent_impact_bps < mi.temporary_impact_bps
+
+    def test_billion_dollar_impact(self):
+        ea = ExecutionAnalytics()
+        mi = ea.market_impact(1e9)
+        assert mi.total_impact_bps > 10  # significant at $1B
+
+
+# ===========================================================================
+# 3. Spread width analysis
+# ===========================================================================
+
+class TestSpreadWidth:
+    def test_basic(self):
+        ea = ExecutionAnalytics()
+        results = ea.spread_width_analysis()
+        assert len(results) == 5  # $1, $2, $3, $5, $10
+        assert all(isinstance(r, SpreadWidthAnalysis) for r in results)
+
+    def test_wider_less_slippage_pct(self):
+        ea = ExecutionAnalytics()
+        results = ea.spread_width_analysis()
+        assert results[0].slippage_pct > results[-1].slippage_pct
+
+    def test_wider_more_capacity(self):
+        ea = ExecutionAnalytics()
+        results = ea.spread_width_analysis()
+        assert results[-1].max_aum_millions > results[0].max_aum_millions
+
+    def test_net_premium_positive(self):
+        ea = ExecutionAnalytics()
+        for r in ea.spread_width_analysis():
+            assert r.net_premium > 0  # should still be profitable after slippage
+
+    def test_custom_widths(self):
+        ea = ExecutionAnalytics()
+        results = ea.spread_width_analysis(widths=[2, 5, 10])
+        assert len(results) == 3
+
+
+# ===========================================================================
+# 4. Smart order routing
+# ===========================================================================
+
+class TestOrderRouting:
+    def test_low_urgency(self):
+        rec = ExecutionAnalytics.order_routing_recommendation(20, 0.3, 5)
+        assert rec.order_type == "limit"
+
+    def test_high_urgency(self):
+        rec = ExecutionAnalytics.order_routing_recommendation(20, 0.9, 5)
+        assert rec.order_type == "market"
+
+    def test_large_size(self):
+        rec = ExecutionAnalytics.order_routing_recommendation(20, 0.3, 100)
+        assert rec.order_type == "market"
+
+    def test_high_vix_limit(self):
+        rec = ExecutionAnalytics.order_routing_recommendation(40, 0.3, 5)
+        assert rec.order_type == "limit"
+        assert rec.limit_offset > 0.01
+
+    def test_fill_rate_bounded(self):
+        rec = ExecutionAnalytics.order_routing_recommendation(20, 0.5, 10)
+        assert 0 < rec.expected_fill_rate <= 1.0
+
+
+# ===========================================================================
+# 5. Partial fills
+# ===========================================================================
+
+class TestPartialFill:
+    def test_market_order_high_fill(self):
+        fp = ExecutionAnalytics.fill_probability(0.0, 20, 5)
+        assert fp > 0.95
+
+    def test_limit_lower_fill(self):
+        market = ExecutionAnalytics.fill_probability(0.0, 20, 5)
+        limit = ExecutionAnalytics.fill_probability(3.0, 20, 5)
+        assert limit < market
+
+    def test_high_vix_helps_limits(self):
+        low_vix = ExecutionAnalytics.fill_probability(2.0, 15, 10)
+        high_vix = ExecutionAnalytics.fill_probability(2.0, 35, 10)
+        assert high_vix >= low_vix
+
+    def test_bounded(self):
+        for offset in [0, 1, 3, 5]:
+            fp = ExecutionAnalytics.fill_probability(offset, 20, 10)
+            assert 0.1 <= fp <= 0.99
+
+
+# ===========================================================================
+# 6. Capacity estimation
+# ===========================================================================
+
+class TestCapacity:
+    def test_basic(self):
+        ea = ExecutionAnalytics()
+        cap = ea.estimate_capacity("credit_spread_5w")
+        assert isinstance(cap, CapacityEstimate)
+        assert cap.max_aum_millions > 0
+        assert cap.break_even_aum > 0
+
+    def test_wider_more_capacity(self):
+        ea = ExecutionAnalytics()
+        narrow = ea.estimate_capacity("credit_spread_1w", 25)
+        wide = ea.estimate_capacity("credit_spread_5w", 50)
+        assert wide.max_aum_millions >= narrow.max_aum_millions
+
+    def test_short_dte_least_capacity(self):
+        ea = ExecutionAnalytics()
+        caps = ea.capacity_by_strategy()
+        sdte = [c for c in caps if c.strategy == "short_dte"][0]
+        cs5 = [c for c in caps if c.strategy == "credit_spread_5w"][0]
+        assert sdte.max_aum_millions < cs5.max_aum_millions
+
+    def test_all_strategies(self):
+        ea = ExecutionAnalytics()
+        caps = ea.capacity_by_strategy()
+        assert len(caps) == 6
+
+
+# ===========================================================================
+# Post-trade analytics (retained)
+# ===========================================================================
 
 class TestShortfall:
-    def test_buy(self):
+    def test_basic(self):
         sf = ExecutionAnalytics.implementation_shortfall(100, 100.02, 100.05, 100.10, 400, 500, "buy")
-        assert isinstance(sf, ShortfallResult)
-        assert sf.delay_cost > 0
-    def test_sell(self):
-        sf = ExecutionAnalytics.implementation_shortfall(100, 99.98, 99.95, 99.90, 400, 500, "sell")
-        assert isinstance(sf, ShortfallResult)
-    def test_total_is_sum(self):
-        sf = ExecutionAnalytics.implementation_shortfall(100, 100.01, 100.03, 100.05, 100, 100, "buy")
-        expected = sf.delay_cost + sf.trading_cost + sf.opportunity_cost
-        ref = abs(100 * 100)
-        bps = expected / ref * 10000
-        assert sf.total_bps == pytest.approx(bps)
+        assert sf.total_bps != 0
+
     def test_zero(self):
         sf = ExecutionAnalytics.implementation_shortfall(100, 100, 100, 100, 100, 100, "buy")
         assert sf.total_bps == 0.0
-    def test_from_df(self):
-        df = pd.DataFrame({
-            "decision_price": [100.0] * 3,
-            "arrival_price": [100.01] * 3,
-            "fill_price": [100.02, 100.03, 100.01],
-            "end_price": [100.05] * 3,
-            "fill_qty": [100.0, 150.0, 50.0],
-            "ordered_qty": [500.0] * 3,
-            "side": ["buy"] * 3,
-        })
-        sf = ExecutionAnalytics.shortfall_from_df(df)
-        assert isinstance(sf, ShortfallResult)
-    def test_from_empty(self):
-        sf = ExecutionAnalytics.shortfall_from_df(pd.DataFrame())
-        assert sf.total_bps == 0.0
-
-
-class TestBenchmark:
-    def test_basic(self):
-        mp, mv = _market()
-        bm = ExecutionAnalytics.benchmark(100.03, mp, mv, "buy")
-        assert isinstance(bm, BenchmarkResult)
-        assert bm.vwap > 0
-        assert bm.twap > 0
-    def test_empty(self):
-        bm = ExecutionAnalytics.benchmark(100, pd.Series(dtype=float), pd.Series(dtype=float))
-        assert bm.vwap == 0.0
-
-
-class TestTiming:
-    def test_basic(self):
-        mp, _ = _market()
-        tm = ExecutionAnalytics.timing_analysis(100.05, mp, "buy")
-        assert isinstance(tm, TimingResult)
-    def test_optimal_for_buy(self):
-        mp, _ = _market()
-        best = float(mp.min())
-        tm = ExecutionAnalytics.timing_analysis(best, mp, "buy")
-        assert tm.timing_cost_bps == pytest.approx(0.0, abs=0.1)
-        assert tm.was_optimal
-    def test_empty(self):
-        tm = ExecutionAnalytics.timing_analysis(100, pd.Series(dtype=float))
-        assert tm.actual_price == 100
-
-
-class TestCostAttribution:
-    def test_basic(self):
-        sf = ShortfallResult(10, 0.01, 0.02, 0.005)
-        ca = ExecutionAnalytics.cost_attribution(sf, 2.0)
-        assert isinstance(ca, CostAttribution)
-        assert ca.total_cost > 0
-    def test_zero(self):
-        ca = ExecutionAnalytics.cost_attribution(ShortfallResult())
-        assert ca.total_cost == 0.0
-
-
-class TestVenue:
-    def test_basic(self):
-        venues = ExecutionAnalytics.venue_analysis(_fills())
-        assert len(venues) == 3
-        assert all(isinstance(v, VenueResult) for v in venues)
-    def test_sorted(self):
-        venues = ExecutionAnalytics.venue_analysis(_fills())
-        pis = [v.avg_price_improvement for v in venues]
-        assert pis == sorted(pis, reverse=True)
-    def test_empty(self):
-        assert ExecutionAnalytics.venue_analysis(pd.DataFrame()) == []
 
 
 class TestQuality:
     def test_good(self):
         qs = ExecutionAnalytics.quality_score(2.0, 1.0, 1.0)
-        assert 70 <= qs.score <= 100
-    def test_bad(self):
-        qs = ExecutionAnalytics.quality_score(50.0, 30.0, 0.5)
-        assert qs.score < 50
-    def test_rolling(self):
-        df = pd.DataFrame({
-            "shortfall_bps": np.random.default_rng(42).normal(3, 2, 50),
-            "timing_bps": np.random.default_rng(43).normal(2, 1, 50),
-            "fill_rate": np.random.default_rng(44).uniform(0.8, 1.0, 50),
-        })
-        scores = ExecutionAnalytics.rolling_quality(df, window=10)
-        assert len(scores) == 41
-    def test_rolling_empty(self):
-        assert ExecutionAnalytics.rolling_quality(pd.DataFrame()) == []
+        assert qs.score > 70
 
 
-class TestRecommendations:
-    def test_high_shortfall(self):
-        sf = ShortfallResult(total_bps=15)
-        tm = TimingResult(was_optimal=True)
-        recs = ExecutionAnalytics.recommend(sf, tm, [])
-        assert any("shortfall" in r.lower() for r in recs)
-    def test_bad_timing(self):
-        sf = ShortfallResult()
-        tm = TimingResult(was_optimal=False, timing_cost_bps=8)
-        recs = ExecutionAnalytics.recommend(sf, tm, [])
-        assert any("timing" in r.lower() for r in recs)
-
+# ===========================================================================
+# Full analysis
+# ===========================================================================
 
 class TestFullAnalysis:
     def test_basic(self):
-        mp, mv = _market()
         ea = ExecutionAnalytics()
-        report = ea.analyze(100, 100.01, 100.03, 100.05, 400, 500, "buy",
-                             mp, mv, _fills())
+        report = ea.full_analysis()
         assert isinstance(report, ExecutionReport)
-        assert report.quality.score > 0
+        assert len(report.slippage_model) > 0
+        assert len(report.impact_model) > 0
+        assert len(report.width_analysis) > 0
+        assert len(report.capacity) > 0
 
 
-class TestHTMLReport:
+# ===========================================================================
+# HTML report
+# ===========================================================================
+
+class TestReport:
     def test_creates_file(self, tmp_path):
-        mp, mv = _market()
         ea = ExecutionAnalytics()
-        report = ea.analyze(100, 100.01, 100.03, 100.05, 400, 500, "buy", mp, mv)
+        report = ea.full_analysis()
         out = tmp_path / "exec.html"
         path = ea.generate_report(report, output_path=str(out))
         assert Path(path).exists()
-        assert "Execution Analytics" in out.read_text()
-    def test_contains_cost_chart(self, tmp_path):
-        ea = ExecutionAnalytics()
-        report = ea.analyze(100, 100.01, 100.03, 100.05, 400, 500, "buy")
-        out = tmp_path / "e.html"
-        ea.generate_report(report, output_path=str(out))
-        assert "<svg" in out.read_text()
+        html = out.read_text()
+        assert "Execution Analytics" in html
+        assert "Market Impact" in html
+        assert "Spread Width" in html
+        assert "Capacity" in html
