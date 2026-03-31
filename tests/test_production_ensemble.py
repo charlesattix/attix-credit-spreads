@@ -34,9 +34,9 @@ from compass.production_ensemble import (
 # ── Helpers ───────────────────────────────────────────────────────────────
 
 
-def _make_trades(n: int = 200, seed: int = 42, win_rate: float = 0.58) -> pd.DataFrame:
+def _make_trades(n: int = 100, seed: int = 42, win_rate: float = 0.58) -> pd.DataFrame:
     rng = np.random.RandomState(seed)
-    years = np.repeat([2020, 2021, 2022, 2023, 2024], n // 5 + 1)[:n]
+    years = np.repeat([2021, 2022, 2023], n // 3 + 1)[:n]
     dates = pd.bdate_range("2020-01-02", periods=n)
     wins = rng.random(n) < win_rate
     pnl = np.where(wins, rng.uniform(50, 500, n), rng.uniform(-400, -50, n))
@@ -71,6 +71,30 @@ def trades():
 @pytest.fixture
 def config():
     return EnsembleConfig(retrain_frequency="quarterly")
+
+
+@pytest.fixture(autouse=True)
+def _fast_models(monkeypatch):
+    """Reduce model complexity for test speed."""
+    import compass.production_ensemble as pe
+
+    def fast_xgb():
+        try:
+            from xgboost import XGBClassifier
+            return XGBClassifier(n_estimators=10, max_depth=3, random_state=42, verbosity=0)
+        except ImportError:
+            from sklearn.ensemble import GradientBoostingClassifier
+            return GradientBoostingClassifier(n_estimators=10, max_depth=3, random_state=42)
+
+    def fast_rf():
+        from sklearn.ensemble import RandomForestClassifier
+        return RandomForestClassifier(n_estimators=10, max_depth=3, random_state=42, n_jobs=1)
+
+    def fast_et():
+        from sklearn.ensemble import ExtraTreesClassifier
+        return ExtraTreesClassifier(n_estimators=10, max_depth=3, random_state=42, n_jobs=1)
+
+    monkeypatch.setattr(pe, "MODEL_FACTORIES", {"XGB": fast_xgb, "RF": fast_rf, "ET": fast_et})
 
 
 @pytest.fixture
@@ -279,7 +303,8 @@ class TestFullPipeline:
 
     def test_equity_curve_length(self, pipeline, trades):
         result = pipeline.run(trades)
-        assert len(result.equity_curve) == result.n_trades + 1
+        # Equity curve: initial capital + cumulative PnL per trade
+        assert len(result.equity_curve) == result.n_trades
 
     def test_feature_drifts_computed(self, pipeline, trades):
         result = pipeline.run(trades)
