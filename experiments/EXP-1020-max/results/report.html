@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"/><title>EXP-1020: 0-DTE Mean Reversion</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:1000px;margin:0 auto;padding:20px;background:#0d1117;color:#c9d1d9}
+h1,h2{color:#58a6ff}.meta{color:#8b949e}
+.hero{background:#161b22;border:2px solid #d29922;border-radius:12px;padding:24px;text-align:center;margin:20px 0}
+.hero .big{font-size:2em;font-weight:800;color:#d29922}.hero .sub{color:#8b949e}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:20px 0}
+.c{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:10px;text-align:center}
+.c .l{color:#8b949e;font-size:.8em}.c .v{color:#f0f6fc;font-weight:600;font-size:1.1em}
+table{width:100%;border-collapse:collapse;margin:12px 0}th,td{padding:6px 10px;text-align:right;border-bottom:1px solid #21262d}th{color:#8b949e;background:#161b22}
+</style></head><body>
+<h1>EXP-1020: 0-DTE Mean Reversion</h1>
+<div class="hero">
+<div class="big">PARTIAL</div>
+<div class="sub">59 trades &middot; 0.82 trades/month &middot; 0-DTE credit spreads against large moves</div>
+</div>
+<div class="cards">
+<div class="c"><div class="l">CAGR</div><div class="v">0.9%</div></div>
+<div class="c"><div class="l">Sharpe</div><div class="v">2.95</div></div>
+<div class="c"><div class="l">Max DD</div><div class="v">2.5%</div></div>
+<div class="c"><div class="l">Win Rate</div><div class="v">67.8%</div></div>
+<div class="c"><div class="l">PF</div><div class="v">1.50</div></div>
+<div class="c"><div class="l">Avg PnL</div><div class="v">$89</div></div>
+<div class="c"><div class="l">Trades/Month</div><div class="v">0.82</div></div>
+<div class="c"><div class="l">Corr EXP-880</div><div class="v">-0.35</div></div>
+</div>
+<h2>Direction Breakdown</h2>
+<div class="cards">
+<div class="c"><div class="l">Bull Put (dip buying)</div><div class="v">26 trades, 65.4% WR</div></div>
+<div class="c"><div class="l">Bear Call (rally fading)</div><div class="v">33 trades, 69.7% WR</div></div>
+</div>
+<h2>Success Criteria</h2>
+<table><tr><th style="text-align:left">Criterion</th><th>Target</th><th>Actual</th><th>Met</th></tr><tr><td style='text-align:left'>win_rate_above_55</td><td>0.55</td><td>0.68</td><td><span style="color:#3fb950">&#10003;</span></td></tr><tr><td style='text-align:left'>sharpe_above_2</td><td>2.00</td><td>2.95</td><td><span style="color:#3fb950">&#10003;</span></td></tr><tr><td style='text-align:left'>max_dd_below_5</td><td>5.00</td><td>2.45</td><td><span style="color:#3fb950">&#10003;</span></td></tr><tr><td style='text-align:left'>trades_per_month_above_4</td><td>4.00</td><td>0.82</td><td><span style="color:#f85149">&#10007;</span></td></tr><tr><td style='text-align:left'>correlation_below_0.2</td><td>0.20</td><td>0.35</td><td><span style="color:#f85149">&#10007;</span></td></tr></table>
+<h2>Per-Year</h2>
+<table><tr><th>Year</th><th>Trades</th><th>PnL</th><th>Return</th><th>Win Rate</th><th>Profitable</th></tr><tr><td>2020</td><td>10</td><td>$87</td><td>0.1%</td><td>60.0%</td><td><span style="color:#3fb950">&#10003;</span></td></tr><tr><td>2021</td><td>13</td><td>$12</td><td>0.0%</td><td>61.5%</td><td><span style="color:#3fb950">&#10003;</span></td></tr><tr><td>2022</td><td>7</td><td>$1,422</td><td>1.4%</td><td>71.4%</td><td><span style="color:#3fb950">&#10003;</span></td></tr><tr><td>2023</td><td>7</td><td>$834</td><td>0.8%</td><td>71.4%</td><td><span style="color:#3fb950">&#10003;</span></td></tr><tr><td>2024</td><td>9</td><td>$2,212</td><td>2.2%</td><td>77.8%</td><td><span style="color:#3fb950">&#10003;</span></td></tr><tr><td>2025</td><td>13</td><td>$684</td><td>0.7%</td><td>69.2%</td><td><span style="color:#3fb950">&#10003;</span></td></tr></table>
+</body></html>
