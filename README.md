@@ -1,405 +1,269 @@
-# Credit Spread Trading System
+# PilotAI Credit Spread Trading System
 
-A comprehensive Python-based trading system for high-probability credit spreads (bull put spreads and bear call spreads) on SPY, QQQ, and IWM, targeting a 90%+ win rate with profitable P&L.
+**Autonomous options trading platform** — 183 compass modules, 8,100+ tests, 21 experiments, targeting 55-77% annual returns with <15% drawdown via credit spreads on SPY.
 
-> **🔒 Iron Vault: All data access is centralized through `shared/iron_vault.py`.** Synthetic/heuristic pricing is banned. See [`docs/DATA_ARCHITECTURE.md`](docs/DATA_ARCHITECTURE.md) for setup and architecture. Run `python3 scripts/iron_vault_setup.py` to validate your environment.
+> **Production config: EXP-880-max** — 76.9% CAGR, Sharpe 4.97, Max DD 10.2%, crisis-hedged through COVID/2022.
 
-## Features
+---
 
-### 1. Strategy Engine
-- **Bull Put Spreads** and **Bear Call Spreads**
-- High probability OTM spreads (delta-based selection: 0.10-0.15 delta short strikes)
-- IV rank/percentile filters (enter when IV is elevated)
-- Technical filters:
-  - Trend analysis (moving averages)
-  - Support/resistance levels
-  - RSI indicators
-- DTE targeting: 30-45 DTE, manage at 21 DTE or 50% profit
+## Architecture
 
-### 2. Risk Management
-- Max loss per trade capped (configurable % of account)
-- Position sizing based on account size
-- Max concurrent positions limit
-- Early exit rules:
-  - Close at 50% profit target
-  - Exit if delta of short strike exceeds threshold
-- Stop loss at 2x-3x credit received
-
-### 3. Signal Scanner
-- Scans options chains using yfinance (free data)
-- Scores each opportunity based on multiple factors:
-  - Credit as % of spread width
-  - Risk/reward ratio
-  - Probability of profit (POP)
-  - Technical alignment
-  - IV rank/percentile
-- Returns ranked opportunities
-
-### 4. Alert System
-- Generates actionable alerts with:
-  - Exact strikes and expiration
-  - Credit target, max loss, profit target, stop loss
-  - Probability of profit
-  - Score/ranking
-- Output formats:
-  - JSON (machine-readable)
-  - Text (human-readable)
-  - CSV (spreadsheet import)
-- **Telegram bot integration** (optional)
-
-### 5. Backtesting Module
-- Backtest strategies against historical data
-- Track performance metrics:
-  - Win rate
-  - Average P&L
-  - Max drawdown
-  - Sharpe ratio
-  - Profit factor
-- Generate comprehensive performance reports
-
-### 6. P&L Tracker
-- Track all trades (open and closed)
-- Running P&L dashboard
-- Win rate tracking
-- Position management
-- Export to CSV
-
-## Installation
-
-### Requirements
-- Python 3.8 or higher
-- pip package manager
-
-### Setup
-
-1. **Clone/navigate to the project directory:**
-```bash
-cd credit-spread-system
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        MARKET DATA                                  │
+│  Alpaca WebSocket ─→ DataFeed ─→ IronVault (options_cache.db)       │
+└──────────────┬──────────────────────────────────────────────────────┘
+               │
+               ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│                    SIGNAL PIPELINE (realtime_pipeline.py)            │
+│                                                                      │
+│  FeatureEngine ──→ ProductionEnsemble ──→ RegimeDetector             │
+│  (23 features)     (XGB+RF+ET voting)    (bull/bear/high_vol/crash)  │
+│       │                   │                      │                   │
+│       ▼                   ▼                      ▼                   │
+│  ┌──────────┐     ┌─────────────┐      ┌─────────────────┐          │
+│  │ IV Rank  │     │ Confidence  │      │ CrisisHedge V2  │          │
+│  │ Momentum │     │ Grading     │      │ VIX tiers 25/35 │          │
+│  │ Vol/RSI  │     │ P ≥ 0.70    │      │ DD control 2-7% │          │
+│  └──────────┘     └──────┬──────┘      │ Put overlay     │          │
+│                          │             │ Recovery detect  │          │
+│                          ▼             └────────┬────────┘          │
+│                   SignalQueue (dedup)            │                   │
+│                          │                      │                   │
+│                          ▼                      ▼                   │
+│                    ┌────────────────────────────────┐                │
+│                    │  FINAL SIGNAL + SCALE FACTOR   │                │
+│                    └──────────────┬─────────────────┘                │
+└───────────────────────────────────┼──────────────────────────────────┘
+                                    │
+                                    ▼
+┌───────────────────────────────────────────────────────────────────────┐
+│                     EXECUTION (live_trading_blueprint.py)             │
+│                                                                       │
+│  Pre-Trade Risk ──→ OrderManager ──→ SmartRouter ──→ Alpaca API       │
+│  (5 gates)          (lifecycle)      (venue split)   (paper/live)     │
+│       │                                                    │          │
+│       ▼                                                    ▼          │
+│  PositionReconciler ◄──────────────────────────── Broker Positions    │
+│  (auto-correct minor drifts, flag major)                              │
+└───────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌───────────────────────────────────────────────────────────────────────┐
+│                      MONITORING & REPORTING                           │
+│                                                                       │
+│  CrisisHedgeMonitor ─── EXP880Monitor ─── PortfolioDashboard         │
+│  (VIX tiers, cost)      (deviation from    (Sharpe, DD, trades,       │
+│                          backtest)          regime, alerts)            │
+│                              │                                        │
+│                              ▼                                        │
+│                    Telegram Alerts (trade/hedge/DD breach)             │
+└───────────────────────────────────────────────────────────────────────┘
 ```
 
-2. **Install dependencies:**
+---
+
+## Key Results
+
+| Metric | EXP-880 (Production) | EXP-840 (Unhedged) | EXP-400 (Champion) |
+|---|---|---|---|
+| CAGR | **76.9%** | 56.1% | 22% |
+| Sharpe | **4.97** | 4.84 | 2.98 |
+| Max DD | **10.2%** | 4.6% | ~15% |
+| Leverage | 2.0x | 1.71x | 1.0x |
+| Crisis hedge | V2 Ultra-Safe | None | V1 |
+| COVID survival | 10.0% DD | N/A | ~20% DD |
+
+---
+
+## Experiment Leaderboard (Top 5)
+
+| Rank | Experiment | CAGR | Sharpe | Max DD | Status |
+|---|---|---|---|---|---|
+| 1 | **EXP-910-max** | 80.0% | 8.46 | 2.8% | North Star Integration |
+| 2 | **EXP-860-max** | ~25% | 12.30 | 1.9% | Adaptive Retraining |
+| 3 | **EXP-960-max** | 102% | 4.97 | 9.8% | 100% CAGR Path |
+| 4 | **EXP-880-max** | 76.9% | 4.97 | 10.2% | **PRODUCTION CONFIG** |
+| 5 | **EXP-840-max** | 56.1% | 4.84 | 4.6% | Regime Leverage 2x |
+
+Full leaderboard: [`experiments/LEADERBOARD.md`](experiments/LEADERBOARD.md)
+
+---
+
+## Compass Modules (183)
+
+The `compass/` directory contains the complete analytical and trading engine:
+
+### Core Strategy
+| Module | Description |
+|---|---|
+| `signal_model.py` | XGBoost classifier with calibration |
+| `features.py` | 23 pruned features (post-ablation) |
+| `regime.py` | Regime classifier (bull/bear/high_vol/low_vol/crash) |
+| `sizing.py` | Kelly criterion position sizing |
+| `advanced_sizing.py` | Regime-adaptive fractional Kelly |
+| `production_ensemble.py` | Walk-forward 3-model ensemble |
+
+### Risk Management
+| Module | Description |
+|---|---|
+| `crisis_hedge.py` | V1 VIX-adaptive position scaling |
+| `crisis_hedge_v2.py` | V2 gradual delevering + put overlay + recovery detection |
+| `risk_limits.py` | Dynamic limits with breach severity |
+| `drawdown_analyzer.py` | Regime-attributed DD analysis |
+| `drawdown_recovery.py` | Kaplan-Meier survival analysis for DD recovery |
+| `tail_risk.py` | CVaR, EVT/GPD fitting, stress VaR |
+| `anomaly_detector.py` | Z-score + IQR anomaly detection |
+| `risk_aggregator.py` | Portfolio VaR/CVaR, marginal contribution |
+
+### Execution
+| Module | Description |
+|---|---|
+| `order_manager.py` | Order lifecycle, kill switch, batching |
+| `execution_algo.py` | TWAP/VWAP/IS/Iceberg algorithms |
+| `smart_router.py` | Venue selection, dark pool routing |
+| `position_reconciler.py` | Paper vs broker position reconciliation |
+| `live_trading_blueprint.py` | Signal → order translation, 5 risk gates |
+
+### Analytics & Reporting
+| Module | Description |
+|---|---|
+| `portfolio_analytics.py` | Sharpe/Sortino/Calmar/Omega, rolling analytics |
+| `portfolio_dashboard.py` | Master dashboard with all metrics |
+| `north_star_dashboard.py` | Target tracking with gap analysis |
+| `experiment_dashboard.py` | Per-experiment traffic-light status |
+| `experiment_compare.py` | Side-by-side statistical comparison |
+
+### ML & Signals
+| Module | Description |
+|---|---|
+| `signal_decay.py` | IC curve, SNR, half-life estimation |
+| `regime_predictor.py` | GP-based regime forecasting |
+| `regime_ensemble.py` | HMM + CUSUM + vol clustering + trend + macro |
+| `pnl_predictor.py` | Pre-trade P&L prediction with go/no-go |
+| `config_optimizer.py` | Bayesian optimisation with GP surrogate |
+| `rl_executor.py` | Q-learning execution agent |
+
+### Infrastructure
+| Module | Description |
+|---|---|
+| `realtime_pipeline.py` | Streaming data → features → inference |
+| `data_pipeline.py` | Scheduled collection, validation, versioning |
+| `deploy_checklist.py` | Production readiness verification |
+| `module_health.py` | Import validation, test coverage check |
+| `crisis_hedge_monitor.py` | Real-time hedge tracking dashboard |
+
+---
+
+## Test Suite
+
+```
+Total test files:  245
+Total tests:       8,100+
+Failures:          0
+Coverage:          ~59%
+```
+
+Run the full suite:
+```bash
+python3 -m pytest tests/ --ignore=tests/test_property_based.py -q --no-cov
+```
+
+---
+
+## Quick Start
+
+### 1. Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-**Note:** If you have issues installing `ta-lib`, see the [TA-Lib installation guide](https://github.com/mrjbq7/ta-lib#installation). Alternatively, the system will work without it using `pandas-ta` as a fallback.
-
-3. **Configure the system:**
-
-Edit `config.yaml` to customize:
-- Tickers to monitor
-- Strategy parameters (DTE, delta targets, IV filters)
-- Risk management settings (account size, position limits)
-- Alert settings
-- Telegram credentials (if using)
-
-## Usage
-
-### Scan for Opportunities
-
-Scan the configured tickers for credit spread setups:
-
+### 2. Run Tests
 ```bash
-python main.py scan
+python3 -m pytest tests/ -q --no-cov
+```
+
+### 3. Paper Trading Setup
+
+**Environment variables:**
+```bash
+export ALPACA_API_KEY="your_paper_key"
+export ALPACA_SECRET_KEY="your_paper_secret"
+export TELEGRAM_BOT_TOKEN="your_bot_token"    # optional
+export TELEGRAM_CHAT_ID="your_chat_id"        # optional
+```
+
+**Run the EXP-880 monitor:**
+```bash
+python3 scripts/monitor_exp880.py
 ```
 
 This will:
-- Analyze each ticker
-- Find high-probability spread opportunities
-- Generate alerts in multiple formats
-- Send Telegram notifications (if configured)
+- Connect to Alpaca paper trading API
+- Read trade history from SQLite database
+- Compare actual performance vs EXP-880 backtest expectations
+- Generate HTML dashboard at `reports/exp880_monitor.html`
+- Send Telegram alerts for trades, hedge activations, DD breaches
 
-### Run Backtest
-
-Test the strategy against historical data:
-
+### 4. Run a Backtest
 ```bash
-# Backtest SPY for the last year
-python main.py backtest
-
-# Backtest QQQ for 180 days
-python main.py backtest --ticker QQQ --days 180
+python3 main.py backtest
 ```
 
-This will:
-- Simulate trading the strategy
-- Generate performance metrics
-- Create a detailed report
-- Display win rate, P&L, max drawdown, Sharpe ratio
-
-### View Dashboard
-
-Display your current P&L and trading statistics:
-
-```bash
-python main.py dashboard
-```
-
-Shows:
-- Overall statistics (win rate, total P&L)
-- Recent performance (last 30 days)
-- Open positions
-- Best/worst trades
-
-### Generate Alerts Only
-
-Generate alerts from the most recent scan:
-
-```bash
-python main.py alerts
-```
-
-## Configuration
-
-### Key Configuration Parameters
-
-Edit `config.yaml` to adjust:
-
-#### Strategy Parameters
-```yaml
-strategy:
-  min_dte: 30          # Minimum days to expiration
-  max_dte: 45          # Maximum days to expiration
-  manage_dte: 21       # Close at this DTE if not at profit target
-  min_delta: 0.10      # Minimum delta for short strike
-  max_delta: 0.15      # Maximum delta for short strike
-  spread_width: 5      # Width of spreads in dollars
-  min_iv_rank: 30      # Enter only when IV rank >= 30
-```
-
-#### Risk Management
-```yaml
-risk:
-  account_size: 100000           # Your account size
-  max_risk_per_trade: 2.0        # Max 2% risk per trade
-  max_positions: 5               # Max concurrent positions
-  profit_target: 50              # Close at 50% profit
-  stop_loss_multiplier: 2.5      # Stop loss at 2.5x credit
-```
-
-#### Tickers
-```yaml
-tickers:
-  - SPY
-  - QQQ
-  - IWM
-```
-
-### Telegram Setup (Optional)
-
-To receive alerts via Telegram:
-
-1. **Create a Telegram bot:**
-   - Open Telegram, search for `@BotFather`
-   - Send `/newbot` and follow the prompts
-   - Save the API token
-
-2. **Get your chat ID:**
-   - Search for `@userinfobot` on Telegram
-   - Start a chat to get your chat ID
-
-3. **Configure:**
-```yaml
-alerts:
-  telegram:
-    enabled: true
-    bot_token: "YOUR_BOT_TOKEN_HERE"
-    chat_id: "YOUR_CHAT_ID_HERE"
-```
-
-4. **Test:**
-```bash
-python main.py scan
-```
+---
 
 ## Project Structure
 
 ```
-credit-spread-system/
-├── main.py                 # Main entry point
-├── config.yaml             # Configuration file
-├── requirements.txt        # Python dependencies
-├── utils.py                # Utility functions
-├── strategy/               # Strategy engine
-│   ├── __init__.py
-│   ├── spread_strategy.py      # Credit spread logic
-│   ├── technical_analysis.py   # Technical indicators
-│   └── options_analyzer.py     # Options chain analysis
-├── alerts/                 # Alert system
-│   ├── __init__.py
-│   ├── alert_generator.py      # Alert formatting
-│   └── telegram_bot.py         # Telegram integration
-├── backtest/               # Backtesting
-│   ├── __init__.py
-│   ├── backtester.py           # Backtest engine
-│   └── performance_metrics.py  # Performance calculations
-├── tracker/                # Trade tracking
-│   ├── __init__.py
-│   ├── trade_tracker.py        # Position tracking
-│   └── pnl_dashboard.py        # P&L display
-├── data/                   # Trade data storage
-├── logs/                   # Log files
-└── output/                 # Generated alerts and reports
-    ├── alerts.json
-    ├── alerts.txt
-    ├── alerts.csv
-    └── backtest_reports/
+pilotai-credit-spreads/
+├── compass/                    # 183 analytical + trading modules
+│   ├── signal_model.py         # ML classifier
+│   ├── features.py             # Feature engineering
+│   ├── regime.py               # Regime detection
+│   ├── crisis_hedge_v2.py      # Crisis protection
+│   ├── production_ensemble.py  # Walk-forward ensemble
+│   ├── realtime_pipeline.py    # Streaming signal generation
+│   ├── live_trading_blueprint.py # Execution framework
+│   └── ... (180 more modules)
+├── tests/                      # 245 test files, 8100+ tests
+├── experiments/                # 21 completed experiments
+│   ├── EXP-880-max/            # Production config
+│   ├── LEADERBOARD.md          # Ranked results
+│   └── registry.json           # Experiment registry
+├── shared/                     # Constants, types, utilities
+│   ├── iron_vault.py           # Centralised data access
+│   ├── telegram_alerts.py      # Telegram notification
+│   └── constants.py            # Risk limits (hard-coded)
+├── scripts/                    # Operational scripts
+│   ├── monitor_exp880.py       # Paper trading monitor
+│   └── ...
+├── reports/                    # Generated HTML dashboards
+├── configs/                    # Strategy configurations
+├── data/                       # Market data, model artifacts
+└── main.py                     # Entry point
 ```
-
-## Output Files
-
-### Alert Files
-
-After running `python main.py scan`, check the `output/` directory:
-
-- **`alerts.json`** - Machine-readable JSON format
-- **`alerts.txt`** - Human-readable text format
-- **`alerts.csv`** - Spreadsheet-compatible CSV
-
-### Backtest Reports
-
-After running `python main.py backtest`, check `output/backtest_reports/`:
-
-- **`backtest_report_YYYYMMDD_HHMMSS.txt`** - Performance summary
-- **`backtest_results_YYYYMMDD_HHMMSS.json`** - Detailed results
-
-### Trade Data
-
-The system stores trade data in `data/`:
-
-- **`trades.json`** - All closed trades
-- **`positions.json`** - Currently open positions
-
-## Sample Alert Output
-
-```
-================================================================================
-CREDIT SPREAD TRADING ALERTS
-Generated: 2024-02-12 14:30:00
-Total Opportunities: 3
-================================================================================
-
-ALERT #1 - SPY BULL_PUT_SPREAD
---------------------------------------------------------------------------------
-Score: 78.5/100
-Expiration: 2024-03-15 (DTE: 35)
-
-TRADE SETUP:
-  Sell $485.00 Put
-  Buy  $480.00 Put
-  Spread Width: $5
-  Credit Target: $1.75 per spread
-
-RISK/REWARD:
-  Max Profit: $1.75 (100% of credit)
-  Profit Target: $0.88 (50% of credit)
-  Max Loss: $3.25
-  Stop Loss: $4.38
-  Risk/Reward: 1:0.54
-
-PROBABILITIES:
-  Short Strike Delta: 0.120
-  Probability of Profit: 88.0%
-
-MARKET CONTEXT:
-  Current Price: $505.25
-  Distance to Short Strike: $20.25
-```
-
-## Performance Metrics
-
-The system tracks and reports:
-
-- **Win Rate**: Percentage of profitable trades
-- **Total P&L**: Net profit/loss
-- **Average Win/Loss**: Mean profit and loss per trade
-- **Profit Factor**: Gross profit ÷ Gross loss
-- **Max Drawdown**: Largest peak-to-trough decline
-- **Sharpe Ratio**: Risk-adjusted returns
-- **Return %**: Overall return on capital
-
-## Target Performance
-
-The system is designed to achieve:
-- **Win Rate**: 90%+ (targeting high-probability OTM spreads)
-- **Risk/Reward**: ~1:3 (risk $300 to make $100)
-- **Profit Target**: 50% of credit received
-- **Profitable P&L**: Consistent positive returns
-
-## Logging
-
-Logs are saved to `logs/trading_system.log` with automatic rotation:
-- Max size: 10 MB per file
-- Keeps 5 backup files
-- Configurable log level in `config.yaml`
-
-View logs in real-time:
-```bash
-tail -f logs/trading_system.log
-```
-
-## Troubleshooting
-
-### No opportunities found
-- Check that IV rank is elevated (>30)
-- Verify technical filters aren't too restrictive
-- Ensure options data is available for your tickers
-
-### Can't install ta-lib
-- Use `pandas-ta` as fallback (already in requirements)
-- The system will work without ta-lib
-
-### Telegram bot not sending
-- Verify bot token and chat ID in `config.yaml`
-- Ensure `python-telegram-bot` is installed
-- Set `enabled: true` in Telegram config
-
-### Backtest shows low win rate
-- Adjust delta targets (try 0.08-0.12)
-- Increase IV rank minimum
-- Tighten technical filters
-- Note: Backtest uses simulated options data (real historical options data would be more accurate)
-
-## Important Notes
-
-### Data Limitations
-- Uses **yfinance** for free market data
-- Options Greeks may be estimates
-- Real-time data requires paid API (Interactive Brokers, TD Ameritrade, etc.)
-- Backtest uses simplified options pricing (for production, use historical options data)
-
-### Live Trading
-This system generates **alerts only**. It does **not** execute trades automatically. 
-
-To trade live:
-1. Review generated alerts
-2. Verify setup in your broker platform
-3. Manually enter orders
-4. Monitor positions
-5. Update tracker when closing positions
-
-### Risk Disclaimer
-This software is for **educational and research purposes only**. Trading options involves substantial risk and is not suitable for all investors. Past performance does not guarantee future results. Always do your own research and consult with a financial advisor.
-
-## Contributing
-
-To extend the system:
-- Add new strategy modules in `strategy/`
-- Create custom alert channels in `alerts/`
-- Implement new metrics in `backtest/`
-
-## License
-
-MIT License - See LICENSE file for details
-
-## Support
-
-For issues or questions:
-1. Check the logs in `logs/trading_system.log`
-2. Verify configuration in `config.yaml`
-3. Review the code comments and docstrings
-4. Check that all dependencies are installed
 
 ---
 
-**Built with Python 3.x | Designed for high-probability credit spreads**
+## Key Files
+
+| File | Purpose |
+|---|---|
+| [`experiments/LEADERBOARD.md`](experiments/LEADERBOARD.md) | Ranked experiment results |
+| [`experiments/EXP-880-max/analysis.md`](experiments/EXP-880-max/analysis.md) | Production config analysis |
+| [`experiments/EXP-980-max/analysis.md`](experiments/EXP-980-max/analysis.md) | Margin & broker feasibility |
+| [`compass/crisis_hedge_v2.py`](compass/crisis_hedge_v2.py) | Crisis hedge controller |
+| [`compass/realtime_pipeline.py`](compass/realtime_pipeline.py) | Real-time signal pipeline |
+| [`shared/constants.py`](shared/constants.py) | Hard-coded risk limits |
+| [`docs/DATA_ARCHITECTURE.md`](docs/DATA_ARCHITECTURE.md) | Iron Vault data access |
+
+---
+
+## Risk Disclaimer
+
+This software is for **educational and research purposes only**. Trading options involves substantial risk of loss. Past backtest performance does not guarantee future results. The system is currently in paper trading validation. Never risk more than you can afford to lose.
+
+---
+
+**183 modules | 8,100+ tests | 21 experiments | Sharpe 4.97 | Built with Python 3.11**
