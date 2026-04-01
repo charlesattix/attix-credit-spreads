@@ -1,6 +1,6 @@
 # PilotAI Credit Spread Trading System
 
-**Autonomous options trading platform** — 183 compass modules, 8,100+ tests, 21 experiments, targeting 55-77% annual returns with <15% drawdown via credit spreads on SPY.
+**Autonomous options trading platform** — 184 compass modules, 8,500+ tests, 21 experiments, targeting 55-77% annual returns with <15% drawdown via credit spreads on SPY.
 
 > **Production config: EXP-880-max** — 76.9% CAGR, Sharpe 4.97, Max DD 10.2%, crisis-hedged through COVID/2022.
 
@@ -91,7 +91,7 @@ Full leaderboard: [`experiments/LEADERBOARD.md`](experiments/LEADERBOARD.md)
 
 ---
 
-## Compass Modules (183)
+## Compass Modules (184)
 
 The `compass/` directory contains the complete analytical and trading engine:
 
@@ -159,8 +159,8 @@ The `compass/` directory contains the complete analytical and trading engine:
 ## Test Suite
 
 ```
-Total test files:  245
-Total tests:       8,100+
+Total test files:  247
+Total tests:       8,500+
 Failures:          0
 Coverage:          ~59%
 ```
@@ -225,8 +225,8 @@ pilotai-credit-spreads/
 │   ├── production_ensemble.py  # Walk-forward ensemble
 │   ├── realtime_pipeline.py    # Streaming signal generation
 │   ├── live_trading_blueprint.py # Execution framework
-│   └── ... (180 more modules)
-├── tests/                      # 245 test files, 8100+ tests
+│   └── ... (177 more modules)
+├── tests/                      # 247 test files, 8500+ tests
 ├── experiments/                # 21 completed experiments
 │   ├── EXP-880-max/            # Production config
 │   ├── LEADERBOARD.md          # Ranked results
@@ -266,4 +266,4 @@ This software is for **educational and research purposes only**. Trading options
 
 ---
 
-**183 modules | 8,100+ tests | 21 experiments | Sharpe 4.97 | Built with Python 3.11**
+**184 modules | 8,500+ tests | 21 experiments | Sharpe 4.97 | Built with Python 3.11**
