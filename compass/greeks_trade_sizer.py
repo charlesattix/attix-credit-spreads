@@ -286,7 +286,7 @@ class GreeksTradeSizer:
         """Backtest Greeks sizing vs fixed vs Kelly on historical trades."""
         n = len(trades_df)
         if n == 0:
-            return BacktestResult(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, [])
+            return BacktestResult(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, [])
 
         cfg = self.config
         bt_trades: List[BacktestTrade] = []
