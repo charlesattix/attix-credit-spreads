@@ -327,7 +327,7 @@ class VRPHarvester:
                 i += 1
                 continue
 
-            iv_entry = ts.steepest + ts.tenors[0].implied_vol  # use optimal tenor's IV
+            iv_entry = ts.steepest_vrp + ts.tenors[0].implied_vol  # use optimal tenor's IV
             for t in ts.tenors:
                 if t.tenor == tenor_name:
                     iv_entry = t.implied_vol
