@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"/><title>Smart Execution</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:900px;margin:0 auto;padding:20px;background:#0d1117;color:#c9d1d9}
+h1,h2{color:#58a6ff}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:20px 0}
+.c{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:12px;text-align:center}
+.c .l{color:#8b949e;font-size:.8em}.c .v{color:#f0f6fc;font-weight:600;font-size:1.2em}
+table{width:100%;border-collapse:collapse;margin:12px 0}th,td{padding:6px 10px;text-align:right;border-bottom:1px solid #21262d}th{color:#8b949e;background:#161b22}
+</style></head><body>
+<h1>Smart Execution Engine</h1>
+<div class="cards">
+<div class="c"><div class="l">Best Algorithm</div><div class="v">vwap</div></div>
+<div class="c"><div class="l">Savings vs Naive</div><div class="v">72.70 bps</div></div>
+<div class="c"><div class="l">Scenarios Tested</div><div class="v">6400</div></div>
+</div>
+<h2>Algorithm Comparison</h2>
+<table><tr><th style="text-align:left">Algorithm</th><th>Avg Cost</th><th>Fill Rate</th></tr><tr><td style='text-align:left'>naive</td><td>83.03 bps</td><td>100.0%</td></tr><tr><td style='text-align:left'>twap</td><td>16.83 bps</td><td>93.3%</td></tr><tr><td style='text-align:left'>vwap</td><td>10.34 bps</td><td>92.7%</td></tr><tr><td style='text-align:left'>adaptive</td><td>25.16 bps</td><td>94.2%</td></tr></table>
+</body></html>
