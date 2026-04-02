@@ -193,7 +193,7 @@ def hrp_cluster(corr: pd.DataFrame, n_clusters: int = 3) -> List[HRPCluster]:
         return [HRPCluster(i, [names[i]], 0.0, 0.0) for i in range(n)]
 
     # Distance matrix: d = sqrt(0.5 * (1 - corr))
-    dist = np.sqrt(0.5 * (1 - corr.values))
+    dist = np.sqrt(0.5 * (1 - corr.values.copy()))
     np.fill_diagonal(dist, 0)
 
     # Greedy clustering: assign each to nearest cluster seed
@@ -375,7 +375,7 @@ def walk_forward_oos(
     Decay depends on n strategies and correlation stability.
     """
     n_strats = len(north_star.strategies)
-    avg_corr = corr.loc[north_star.strategies, north_star.strategies].values
+    avg_corr = corr.loc[north_star.strategies, north_star.strategies].values.copy()
     np.fill_diagonal(avg_corr, 0)
     mean_corr = avg_corr.sum() / max(n_strats * (n_strats - 1), 1)
 

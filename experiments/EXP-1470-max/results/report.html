@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"/><title>Optimal Portfolio V3</title>
+<style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:1100px;margin:0 auto;padding:20px;background:#0d1117;color:#c9d1d9}h1,h2,h3{color:#58a6ff}
+.hero{background:#161b22;border:2px solid #3fb950;border-radius:12px;padding:24px;text-align:center;margin:20px 0}.hero .big{font-size:2em;font-weight:800;color:#3fb950}.hero .sub{color:#8b949e}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:20px 0}.c{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:10px;text-align:center}.c .l{color:#8b949e;font-size:.8em}.c .v{color:#f0f6fc;font-weight:600;font-size:1.1em}
+table{width:100%;border-collapse:collapse;margin:12px 0}th,td{padding:6px 10px;text-align:right;border-bottom:1px solid #21262d}th{color:#8b949e;background:#161b22}</style></head><body>
+<h1>Optimal Portfolio V3 — North Star Synthesis</h1>
+<div class="hero">
+<div class="big">100% CAGR ACHIEVABLE</div>
+<div class="sub">4 strategies &middot; Base: 27.9% CAGR, 1.6% DD &middot; OOS Sharpe: 12.08</div>
+</div>
+
+<div class="cards">
+<div class="c"><div class="l">NS Base CAGR</div><div class="v">27.9%</div></div>
+<div class="c"><div class="l">NS Base DD</div><div class="v">1.6%</div></div>
+<div class="c"><div class="l">NS Sharpe</div><div class="v">17.21</div></div>
+<div class="c"><div class="l">Leverage for 100%</div><div class="v">3.59x</div></div>
+<div class="c"><div class="l">CAGR at DD&lt;12%</div><div class="v">206.5%</div></div>
+<div class="c"><div class="l">OOS Sharpe</div><div class="v">12.08</div></div>
+<div class="c"><div class="l">Strategies</div><div class="v">11</div></div>
+<div class="c"><div class="l">Clusters</div><div class="v">3</div></div>
+</div>
+
+<h2>North Star Allocation</h2>
+<table><tr><th style="text-align:left">Strategy</th><th>Weight</th></tr><tr><td style='text-align:left'>ML-CS-860</td><td>40.5%</td></tr><tr><td style='text-align:left'>Regime-Lev</td><td>20.9%</td></tr><tr><td style='text-align:left'>Intraday-MR</td><td>20.5%</td></tr><tr><td style='text-align:left'>Combined-750</td><td>18.1%</td></tr></table>
+
+<h2>Tiered Portfolios</h2>
+<table><tr><th style="text-align:left">Tier</th><th>CAGR</th><th>DD</th><th>Sharpe</th><th>Div Ratio</th><th style="text-align:left">Top Weights</th></tr><tr><td style='text-align:left'>conservative</td><td>17.2%</td><td>1.1%</td><td>15.98</td><td>1.72x</td><td style='text-align:left;font-size:.8em'>Intraday-MR: 38%, ML-CS-860: 30%, VWAP-Exec: 15%, Regime-Lev: 8%, Combined-750: 3%</td></tr><tr><td style='text-align:left'>balanced</td><td>26.3%</td><td>1.7%</td><td>15.90</td><td>1.56x</td><td style='text-align:left;font-size:.8em'>ML-CS-860: 24%, VWAP-Exec: 23%, Regime-Lev: 22%, Combined-750: 15%, Intraday-MR: 8%</td></tr><tr><td style='text-align:left'>aggressive</td><td>30.9%</td><td>1.9%</td><td>16.02</td><td>1.58x</td><td style='text-align:left;font-size:.8em'>Combined-750: 28%, Intraday-MR: 27%, Regime-Lev: 26%, ML-CS-860: 10%, Crisis-Hedge: 3%</td></tr></table>
+
+<h2>Strategy Catalog (11)</h2>
+<table><tr><th style="text-align:left">Strategy</th><th>Source</th><th>CAGR</th><th>DD</th><th>Sharpe</th><th>Category</th></tr><tr><td style='text-align:left'>ML-CS-860</td><td>EXP-860</td><td>21.5%</td><td>1.9%</td><td>12.30</td><td>credit_spread</td></tr><tr><td style='text-align:left'>Ensemble-3</td><td>EXP-810</td><td>15.0%</td><td>3.6%</td><td>10.49</td><td>signal</td></tr><tr><td style='text-align:left'>Intraday-MR</td><td>EXP-1000</td><td>10.6%</td><td>1.2%</td><td>9.92</td><td>intraday</td></tr><tr><td style='text-align:left'>Combined-750</td><td>EXP-750</td><td>29.2%</td><td>2.8%</td><td>5.06</td><td>combined</td></tr><tr><td style='text-align:left'>ML-CS-880</td><td>EXP-880</td><td>76.9%</td><td>10.2%</td><td>4.97</td><td>credit_spread</td></tr><tr><td style='text-align:left'>Crisis-Hedge</td><td>EXP-880+hedge</td><td>76.9%</td><td>10.2%</td><td>4.97</td><td>hedged</td></tr><tr><td style='text-align:left'>Regime-Lev</td><td>EXP-840</td><td>56.0%</td><td>4.5%</td><td>4.84</td><td>leveraged</td></tr><tr><td style='text-align:left'>VWAP-Exec</td><td>EXP-1160</td><td>2.2%</td><td>0.5%</td><td>3.00</td><td>execution</td></tr><tr><td style='text-align:left'>0DTE-Reversion</td><td>EXP-1020</td><td>0.9%</td><td>2.5%</td><td>2.95</td><td>intraday</td></tr><tr><td style='text-align:left'>Vol-Harvest</td><td>EXP-740</td><td>15.2%</td><td>6.8%</td><td>2.55</td><td>vol_harvest</td></tr><tr><td style='text-align:left'>Momentum-Protect</td><td>EXP-1370</td><td>-5.0%</td><td>39.0%</td><td>0.50</td><td>protection</td></tr></table>
+
+<h2>HRP Clusters</h2>
+<table><tr><th>Cluster</th><th style="text-align:left">Members</th><th>Avg Corr</th><th>Size</th></tr><tr><td>0</td><td style='text-align:left'>Intraday-MR, 0DTE-Reversion, VWAP-Exec, Momentum-Protect</td><td>0.22</td><td>4</td></tr><tr><td>1</td><td style='text-align:left'>ML-CS-880, ML-CS-860, Regime-Lev, Crisis-Hedge</td><td>0.42</td><td>6</td></tr><tr><td>2</td><td style='text-align:left'>Vol-Harvest</td><td>1.00</td><td>1</td></tr></table>
+
+</body></html>
