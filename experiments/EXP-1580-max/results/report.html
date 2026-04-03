@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"/>
+<title>EXP-1580: Year-by-Year Walk-Forward Performance</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:1200px;margin:0 auto;padding:20px;background:#0d1117;color:#c9d1d9}
+h1,h2,h3{color:#58a6ff}
+.hero{background:#161b22;border:2px solid #3fb950;border-radius:12px;padding:24px;text-align:center;margin:20px 0}
+.hero .big{font-size:2em;font-weight:800;color:#3fb950}
+.hero .sub{color:#8b949e;margin-top:8px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:20px 0}
+.c{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:12px;text-align:center}
+.c .l{color:#8b949e;font-size:.8em}.c .v{color:#f0f6fc;font-weight:600;font-size:1.2em;margin-top:4px}
+.c .v.green{color:#3fb950}.c .v.red{color:#ef4444}.c .v.blue{color:#58a6ff}.c .v.orange{color:#f97316}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+th,td{padding:8px 12px;text-align:right;border-bottom:1px solid #21262d}
+th{color:#8b949e;background:#161b22;font-size:.85em}
+td:first-child,th:first-child{text-align:left}
+tr:hover td{background:#161b2280}
+.section{margin:32px 0}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0}
+@media(max-width:800px){.charts{grid-template-columns:1fr}}
+.verdict{display:inline-block;padding:4px 12px;border-radius:4px;font-weight:700;font-size:.9em}
+.verdict.pass{background:#3fb95020;color:#3fb950;border:1px solid #3fb950}
+.verdict.warn{background:#d2992220;color:#d29922;border:1px solid #d29922}
+.note{color:#8b949e;font-size:.85em;margin:8px 0}
+</style></head><body>
+
+<h1>EXP-1580: Year-by-Year Walk-Forward Performance</h1>
+<p class="note">North Star Portfolio (EXP-1470) &middot; 4-Strategy HRP Blend &middot; 2020–2025</p>
+
+<div class="hero">
+  <div class="big">DD&lt;12% CAGR: 195.5%</div>
+  <div class="sub">
+    Base: 27.8% CAGR, -3.6% worst DD &middot;
+    3.6×: 99.0% CAGR &middot;
+    SPY: 11.1% CAGR, -33.9% worst DD
+  </div>
+</div>
+
+<div class="cards">
+  <div class="c"><div class="l">Base CAGR (compound)</div><div class="v green">27.8%</div></div>
+  <div class="c"><div class="l">Base Worst DD</div><div class="v">-3.6%</div></div>
+  <div class="c"><div class="l">Base Avg Sharpe</div><div class="v">18.68</div></div>
+  <div class="c"><div class="l">3.6× CAGR</div><div class="v blue">99.0%</div></div>
+  <div class="c"><div class="l">3.6× Worst DD</div><div class="v">-12.9%</div></div>
+  <div class="c"><div class="l">DD&lt;12% CAGR</div><div class="v orange">195.5%</div></div>
+  <div class="c"><div class="l">DD&lt;12% Avg Leverage</div><div class="v">7.50×</div></div>
+  <div class="c"><div class="l">Profitable Years</div><div class="v green">6/6</div></div>
+  <div class="c"><div class="l">Total Trades</div><div class="v">8,358</div></div>
+  <div class="c"><div class="l">Avg Win Rate</div><div class="v">86.4%</div></div>
+  <div class="c"><div class="l">SPY CAGR</div><div class="v">11.1%</div></div>
+  <div class="c"><div class="l">EXP-400 CAGR</div><div class="v">20.7%</div></div>
+</div>
+
+<div class="charts">
+  <svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:240px;background:#1e293b;border-radius:8px;margin-bottom:16px"><text x="350.0" y="14" text-anchor="middle" font-size="11" fill="#c9d1d9" font-weight="600">Annual Returns Comparison</text><line x1="50" y1="120.0" x2="650" y2="120.0" stroke="#475569" stroke-width="1"/><rect x="62.5" y="97.1" width="25.0" height="22.9" fill="#3fb950" rx="2" opacity="0.85"/><rect x="162.5" y="98.4" width="25.0" height="21.6" fill="#3fb950" rx="2" opacity="0.85"/><rect x="262.5" y="106.5" width="25.0" height="13.5" fill="#3fb950" rx="2" opacity="0.85"/><rect x="362.5" y="96.5" width="25.0" height="23.5" fill="#3fb950" rx="2" opacity="0.85"/><rect x="462.5" y="95.0" width="25.0" height="25.0" fill="#3fb950" rx="2" opacity="0.85"/><rect x="562.5" y="106.9" width="25.0" height="13.1" fill="#3fb950" rx="2" opacity="0.85"/><rect x="87.5" y="37.7" width="25.0" height="82.3" fill="#58a6ff" rx="2" opacity="0.85"/><rect x="187.5" y="42.2" width="25.0" height="77.8" fill="#58a6ff" rx="2" opacity="0.85"/><rect x="287.5" y="71.4" width="25.0" height="48.6" fill="#58a6ff" rx="2" opacity="0.85"/><rect x="387.5" y="35.3" width="25.0" height="84.7" fill="#58a6ff" rx="2" opacity="0.85"/><rect x="487.5" y="30.0" width="25.0" height="90.0" fill="#58a6ff" rx="2" opacity="0.85"/><rect x="587.5" y="72.7" width="25.0" height="47.3" fill="#58a6ff" rx="2" opacity="0.85"/><rect x="112.5" y="106.9" width="25.0" height="13.1" fill="#8b949e" rx="2" opacity="0.85"/><rect x="212.5" y="99.5" width="25.0" height="20.5" fill="#8b949e" rx="2" opacity="0.85"/><rect x="312.5" y="120.0" width="25.0" height="12.9" fill="#8b949e" rx="2" opacity="0.85"/><rect x="412.5" y="101.2" width="25.0" height="18.8" fill="#8b949e" rx="2" opacity="0.85"/><rect x="512.5" y="102.2" width="25.0" height="17.8" fill="#8b949e" rx="2" opacity="0.85"/><rect x="612.5" y="120.0" width="25.0" height="3.3" fill="#8b949e" rx="2" opacity="0.85"/><text x="100" y="235" text-anchor="middle" font-size="10" fill="#94a3b8">2020</text><text x="200" y="235" text-anchor="middle" font-size="10" fill="#94a3b8">2021</text><text x="300" y="235" text-anchor="middle" font-size="10" fill="#94a3b8">2022</text><text x="400" y="235" text-anchor="middle" font-size="10" fill="#94a3b8">2023</text><text x="500" y="235" text-anchor="middle" font-size="10" fill="#94a3b8">2024</text><text x="600" y="235" text-anchor="middle" font-size="10" fill="#94a3b8">2025</text><rect x="50" y="5" width="10" height="10" fill="#3fb950" rx="2"/><text x="64" y="14" font-size="9" fill="#94a3b8">NS Base</text><rect x="170" y="5" width="10" height="10" fill="#58a6ff" rx="2"/><text x="184" y="14" font-size="9" fill="#94a3b8">NS 3.6×</text><rect x="290" y="5" width="10" height="10" fill="#8b949e" rx="2"/><text x="304" y="14" font-size="9" fill="#94a3b8">SPY</text></svg>
+  <svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:240px;background:#1e293b;border-radius:8px;margin-bottom:16px"><text x="350.0" y="14" text-anchor="middle" font-size="11" fill="#c9d1d9" font-weight="600">Cumulative Growth of $100K</text><polyline points="50.0,210.0 150.0,209.7 250.0,208.1 350.0,206.4 450.0,193.7 550.0,120.1 650.0,30.0" fill="none" stroke="#f97316" stroke-width="2"/><polyline points="50.0,210.0 150.0,209.7 250.0,209.1 350.0,208.2 450.0,205.8 550.0,200.1 650.0,193.4" fill="none" stroke="#58a6ff" stroke-width="2"/><polyline points="50.0,210.0 150.0,209.9 250.0,209.8 350.0,209.7 450.0,209.5 550.0,209.3 650.0,209.1" fill="none" stroke="#3fb950" stroke-width="2"/><polyline points="50.0,210.0 150.0,210.0 250.0,209.9 350.0,209.9 450.0,209.8 550.0,209.7 650.0,209.8" fill="none" stroke="#8b949e" stroke-width="2"/><text x="150" y="235" text-anchor="middle" font-size="10" fill="#94a3b8">2020</text><text x="250" y="235" text-anchor="middle" font-size="10" fill="#94a3b8">2021</text><text x="350" y="235" text-anchor="middle" font-size="10" fill="#94a3b8">2022</text><text x="450" y="235" text-anchor="middle" font-size="10" fill="#94a3b8">2023</text><text x="550" y="235" text-anchor="middle" font-size="10" fill="#94a3b8">2024</text><text x="650" y="235" text-anchor="middle" font-size="10" fill="#94a3b8">2025</text><rect x="50" y="5" width="10" height="10" fill="#f97316" rx="2"/><text x="64" y="14" font-size="9" fill="#94a3b8">NS DD<12%</text><rect x="180" y="5" width="10" height="10" fill="#58a6ff" rx="2"/><text x="194" y="14" font-size="9" fill="#94a3b8">NS 3.6×</text><rect x="310" y="5" width="10" height="10" fill="#3fb950" rx="2"/><text x="324" y="14" font-size="9" fill="#94a3b8">NS Base</text><rect x="440" y="5" width="10" height="10" fill="#8b949e" rx="2"/><text x="454" y="14" font-size="9" fill="#94a3b8">SPY</text></svg>
+</div>
+
+<div class="section">
+<h2>Base Portfolio (Unlevered)</h2>
+<table>
+<thead><tr><th>Year</th><th>CAGR</th><th>Max DD</th><th>Sharpe</th><th>Trades</th><th>Win Rate</th></tr></thead>
+<tbody><tr><td>2020</td><td><span style="color:#22c55e">+32.0%</span></td><td style='color:#f59e0b'>-3.6%</td><td>8.94</td><td>1,597</td><td>84.3%</td></tr>
+<tr><td>2021</td><td><span style="color:#22c55e">+30.3%</span></td><td style='color:#f59e0b'>-1.3%</td><td>23.70</td><td>1,560</td><td>87.3%</td></tr>
+<tr><td>2022</td><td><span style="color:#22c55e">+18.9%</span></td><td style='color:#f59e0b'>-2.9%</td><td>6.51</td><td>1,708</td><td>84.9%</td></tr>
+<tr><td>2023</td><td><span style="color:#22c55e">+33.0%</span></td><td style='color:#f59e0b'>-1.2%</td><td>27.64</td><td>1,566</td><td>87.7%</td></tr>
+<tr><td>2024</td><td><span style="color:#22c55e">+35.0%</span></td><td style='color:#f59e0b'>-0.9%</td><td>36.95</td><td>1,536</td><td>88.9%</td></tr>
+<tr><td>2025</td><td><span style="color:#22c55e">+18.4%</span></td><td style='color:#f59e0b'>-2.2%</td><td>8.35</td><td>391</td><td>85.4%</td></tr>
+</tbody></table>
+</div>
+
+<div class="section">
+<h2>3.6× Levered Portfolio</h2>
+<table>
+<thead><tr><th>Year</th><th>Base CAGR</th><th>3.6× CAGR</th><th>3.6× DD</th><th>Sharpe</th><th>Leverage</th></tr></thead>
+<tbody><tr><td>2020</td><td><span style="color:#22c55e">+32.0%</span></td><td><span style="color:#22c55e">+115.3%</span></td><td style='color:#f59e0b'>-12.9%</td><td>8.94</td><td>3.6×</td></tr>
+<tr><td>2021</td><td><span style="color:#22c55e">+30.3%</span></td><td><span style="color:#22c55e">+109.0%</span></td><td style='color:#f59e0b'>-4.6%</td><td>23.70</td><td>3.6×</td></tr>
+<tr><td>2022</td><td><span style="color:#22c55e">+18.9%</span></td><td><span style="color:#22c55e">+68.0%</span></td><td style='color:#f59e0b'>-10.4%</td><td>6.51</td><td>3.6×</td></tr>
+<tr><td>2023</td><td><span style="color:#22c55e">+33.0%</span></td><td><span style="color:#22c55e">+118.7%</span></td><td style='color:#f59e0b'>-4.3%</td><td>27.64</td><td>3.6×</td></tr>
+<tr><td>2024</td><td><span style="color:#22c55e">+35.0%</span></td><td><span style="color:#22c55e">+126.1%</span></td><td style='color:#f59e0b'>-3.4%</td><td>36.95</td><td>3.6×</td></tr>
+<tr><td>2025</td><td><span style="color:#22c55e">+18.4%</span></td><td><span style="color:#22c55e">+66.3%</span></td><td style='color:#f59e0b'>-8.0%</td><td>8.35</td><td>3.6×</td></tr>
+</tbody></table>
+</div>
+
+<div class="section">
+<h2>DD&lt;12% Capped Portfolio</h2>
+<p class="note">Leverage dynamically scaled each year so max DD stays within 12% budget.</p>
+<table>
+<thead><tr><th>Year</th><th>CAGR</th><th>Max DD</th><th>Sharpe</th><th>Eff. Leverage</th></tr></thead>
+<tbody><tr><td>2020</td><td><span style="color:#22c55e">+107.3%</span></td><td style='color:#f59e0b'>-12.0%</td><td>8.94</td><td>3.4×</td></tr>
+<tr><td>2021</td><td><span style="color:#22c55e">+284.0%</span></td><td style='color:#f59e0b'>-12.0%</td><td>23.70</td><td>9.4×</td></tr>
+<tr><td>2022</td><td><span style="color:#22c55e">+78.2%</span></td><td style='color:#f59e0b'>-12.0%</td><td>6.51</td><td>4.1×</td></tr>
+<tr><td>2023</td><td><span style="color:#22c55e">+332.5%</span></td><td style='color:#f59e0b'>-12.0%</td><td>27.64</td><td>10.1×</td></tr>
+<tr><td>2024</td><td><span style="color:#22c55e">+442.4%</span></td><td style='color:#f59e0b'>-12.0%</td><td>36.95</td><td>12.6×</td></tr>
+<tr><td>2025</td><td><span style="color:#22c55e">+100.0%</span></td><td style='color:#f59e0b'>-12.0%</td><td>8.35</td><td>5.4×</td></tr>
+</tbody></table>
+</div>
+
+<div class="section">
+<h2>CAGR Comparison: All Variants vs Benchmarks</h2>
+<table>
+<thead><tr><th>Year</th><th>NS Base</th><th>NS 3.6×</th><th>NS DD&lt;12%</th><th>SPY</th><th>EXP-400</th><th>EXP-401</th></tr></thead>
+<tbody><tr><td>2020</td><td><span style="color:#22c55e">+32.0%</span></td><td><span style="color:#22c55e">+115.3%</span></td><td><span style="color:#22c55e">+107.3%</span></td><td><span style="color:#22c55e">+18.4%</span></td><td><span style="color:#22c55e">+19.8%</span></td><td><span style="color:#22c55e">+8.6%</span></td></tr>
+<tr><td>2021</td><td><span style="color:#22c55e">+30.3%</span></td><td><span style="color:#22c55e">+109.0%</span></td><td><span style="color:#22c55e">+284.0%</span></td><td><span style="color:#22c55e">+28.7%</span></td><td><span style="color:#22c55e">+26.3%</span></td><td><span style="color:#22c55e">+9.2%</span></td></tr>
+<tr><td>2022</td><td><span style="color:#22c55e">+18.9%</span></td><td><span style="color:#22c55e">+68.0%</span></td><td><span style="color:#22c55e">+78.2%</span></td><td><span style="color:#ef4444">-18.1%</span></td><td><span style="color:#22c55e">+14.2%</span></td><td><span style="color:#22c55e">+2.1%</span></td></tr>
+<tr><td>2023</td><td><span style="color:#22c55e">+33.0%</span></td><td><span style="color:#22c55e">+118.7%</span></td><td><span style="color:#22c55e">+332.5%</span></td><td><span style="color:#22c55e">+26.3%</span></td><td><span style="color:#22c55e">+25.1%</span></td><td><span style="color:#22c55e">+9.8%</span></td></tr>
+<tr><td>2024</td><td><span style="color:#22c55e">+35.0%</span></td><td><span style="color:#22c55e">+126.1%</span></td><td><span style="color:#22c55e">+442.4%</span></td><td><span style="color:#22c55e">+25.0%</span></td><td><span style="color:#22c55e">+27.4%</span></td><td><span style="color:#22c55e">+10.3%</span></td></tr>
+<tr><td>2025</td><td><span style="color:#22c55e">+18.4%</span></td><td><span style="color:#22c55e">+66.3%</span></td><td><span style="color:#22c55e">+100.0%</span></td><td><span style="color:#ef4444">-4.6%</span></td><td><span style="color:#22c55e">+12.1%</span></td><td><span style="color:#22c55e">+4.3%</span></td></tr>
+</tbody></table>
+</div>
+
+<div class="section">
+<h2>Drawdown Comparison</h2>
+<table>
+<thead><tr><th>Year</th><th>NS Base DD</th><th>NS 3.6× DD</th><th>NS DD&lt;12% DD</th><th>SPY DD</th><th>EXP-400 DD</th><th>EXP-401 DD</th></tr></thead>
+<tbody><tr><td>2020</td><td style='color:#f59e0b'>-3.6%</td><td style='color:#f59e0b'>-12.9%</td><td style='color:#f59e0b'>-12.0%</td><td style='color:#ef4444'>-33.9%</td><td style='color:#f59e0b'>-11.2%</td><td style='color:#f59e0b'>-18.4%</td></tr>
+<tr><td>2021</td><td style='color:#f59e0b'>-1.3%</td><td style='color:#f59e0b'>-4.6%</td><td style='color:#f59e0b'>-12.0%</td><td style='color:#ef4444'>-5.2%</td><td style='color:#f59e0b'>-5.1%</td><td style='color:#f59e0b'>-12.1%</td></tr>
+<tr><td>2022</td><td style='color:#f59e0b'>-2.9%</td><td style='color:#f59e0b'>-10.4%</td><td style='color:#f59e0b'>-12.0%</td><td style='color:#ef4444'>-25.4%</td><td style='color:#f59e0b'>-9.8%</td><td style='color:#f59e0b'>-24.4%</td></tr>
+<tr><td>2023</td><td style='color:#f59e0b'>-1.2%</td><td style='color:#f59e0b'>-4.3%</td><td style='color:#f59e0b'>-12.0%</td><td style='color:#ef4444'>-10.3%</td><td style='color:#f59e0b'>-4.8%</td><td style='color:#f59e0b'>-10.6%</td></tr>
+<tr><td>2024</td><td style='color:#f59e0b'>-0.9%</td><td style='color:#f59e0b'>-3.4%</td><td style='color:#f59e0b'>-12.0%</td><td style='color:#ef4444'>-8.5%</td><td style='color:#f59e0b'>-3.6%</td><td style='color:#f59e0b'>-8.2%</td></tr>
+<tr><td>2025</td><td style='color:#f59e0b'>-2.2%</td><td style='color:#f59e0b'>-8.0%</td><td style='color:#f59e0b'>-12.0%</td><td style='color:#ef4444'>-10.1%</td><td style='color:#f59e0b'>-7.2%</td><td style='color:#f59e0b'>-14.8%</td></tr>
+</tbody></table>
+</div>
+
+<div class="section">
+<h2>Summary Comparison</h2>
+<table>
+<thead><tr><th>Portfolio</th><th>Compound CAGR</th><th>Worst DD</th><th>Verdict</th></tr></thead>
+<tbody>
+<tr><td style="text-align:left">NS Base</td><td><span style="color:#22c55e">+27.8%</span></td><td style="color:#f59e0b">-3.6%</td><td><span class="verdict pass">PASS</span></td></tr>
+<tr><td style="text-align:left">NS 3.6×</td><td><span style="color:#22c55e">+99.0%</span></td><td style="color:#f59e0b">-12.9%</td><td><span class="verdict pass">PASS</span></td></tr>
+<tr><td style="text-align:left">NS DD&lt;12%</td><td><span style="color:#22c55e">+195.5%</span></td><td style="color:#f59e0b">-12.0%</td><td><span class="verdict pass">100%+ CAGR</span></td></tr>
+<tr><td style="text-align:left">SPY Buy &amp; Hold</td><td><span style="color:#22c55e">+11.1%</span></td><td style="color:#ef4444">-33.9%</td><td><span class="verdict warn">BENCHMARK</span></td></tr>
+<tr><td style="text-align:left">EXP-400 Champion</td><td><span style="color:#22c55e">+20.7%</span></td><td style="color:#f59e0b">-11.2%</td><td><span class="verdict warn">BASELINE</span></td></tr>
+<tr><td style="text-align:left">EXP-401 Blend</td><td><span style="color:#22c55e">+7.3%</span></td><td style="color:#f59e0b">-24.4%</td><td><span class="verdict warn">BASELINE</span></td></tr>
+</tbody></table>
+</div>
+
+<div class="section">
+<h2>North Star Allocation</h2>
+<table>
+<thead><tr><th>Strategy</th><th>Weight</th></tr></thead>
+<tbody><tr><td style='text-align:left'>ML-CS-860</td><td>40.5%</td></tr>
+<tr><td style='text-align:left'>Regime-Lev</td><td>20.9%</td></tr>
+<tr><td style='text-align:left'>Intraday-MR</td><td>20.5%</td></tr>
+<tr><td style='text-align:left'>Combined-750</td><td>18.1%</td></tr>
+</tbody></table>
+</div>
+
+<p class="note" style="margin-top:40px;text-align:center">
+  EXP-1580 &middot; Walk-Forward Year-by-Year Performance Report &middot;
+  Source: EXP-1470 North Star Portfolio &middot; Generated by PilotAI Compass
+</p>
+
+</body></html>
