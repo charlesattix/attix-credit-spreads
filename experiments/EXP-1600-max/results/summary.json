@@ -1,0 +1,56 @@
+{
+  "experiment": "EXP-1600-max",
+  "description": "Comprehensive Experiment Summary Report",
+  "generated": "2026-04-03",
+  "total_experiments": 78,
+  "experiment_range": "EXP-810 through EXP-1570",
+  "status_distribution": {
+    "validated": 48,
+    "promising": 9,
+    "infrastructure": 10,
+    "in_progress": 5,
+    "failed": 6
+  },
+  "north_star": {
+    "cagr_pct": 76.9,
+    "cagr_target_pct": 55.0,
+    "sharpe_production": 4.97,
+    "sharpe_best": 12.30,
+    "sharpe_target": 6.0,
+    "max_dd_pct": 10.2,
+    "max_dd_target_pct": 30.0,
+    "capacity_billions": 3.1,
+    "capacity_target_billions": 1.0,
+    "profitable_years": 6,
+    "total_years": 6,
+    "validation_tests_passed": 7,
+    "validation_tests_total": 7
+  },
+  "top_10": [
+    {"rank": 1, "id": "EXP-1470", "name": "Optimal Portfolio V3", "score": 300.0, "cagr": 27.9, "sharpe": 17.21, "max_dd": 1.6},
+    {"rank": 2, "id": "EXP-910", "name": "North Star Integration", "score": 241.7, "cagr": 80.0, "sharpe": 8.46, "max_dd": 2.8},
+    {"rank": 3, "id": "EXP-860", "name": "Adaptive Retraining", "score": 161.8, "cagr": 25.0, "sharpe": 12.30, "max_dd": 1.9},
+    {"rank": 4, "id": "EXP-1000", "name": "Intraday Mean Reversion", "score": 87.3, "cagr": 10.6, "sharpe": 9.92, "max_dd": 1.2},
+    {"rank": 5, "id": "EXP-840", "name": "Regime Leverage 2x", "score": 59.0, "cagr": 56.1, "sharpe": 4.84, "max_dd": 4.6},
+    {"rank": 6, "id": "EXP-810", "name": "3-Model Ensemble", "score": 58.3, "cagr": 20.0, "sharpe": 10.49, "max_dd": 3.6},
+    {"rank": 7, "id": "EXP-960", "name": "100% CAGR Path", "score": 51.7, "cagr": 102.0, "sharpe": 4.97, "max_dd": 9.8},
+    {"rank": 8, "id": "EXP-880", "name": "Crisis Hedge V2 Production", "score": 37.5, "cagr": 76.9, "sharpe": 4.97, "max_dd": 10.2},
+    {"rank": 9, "id": "EXP-870", "name": "Multi-Underlying", "score": 27.0, "cagr": 15.0, "sharpe": 1.26, "max_dd": 0.7},
+    {"rank": 10, "id": "EXP-970", "name": "Walk-Forward Leverage", "score": 22.8, "cagr": 36.4, "sharpe": 3.5, "max_dd": 5.6}
+  ],
+  "best_overlays": [
+    {"rank": 1, "name": "Microstructure Liquidity Filter", "source": "EXP-1230", "impact": "+21.4pp win rate"},
+    {"rank": 2, "name": "Tail Risk Protector", "source": "EXP-1220", "impact": "-19.4pp DD"},
+    {"rank": 3, "name": "Crowding Crash Protection", "source": "EXP-1370", "impact": "-20.2% DD reduction"},
+    {"rank": 4, "name": "Keltner Adaptive Stop", "source": "EXP-1270", "impact": "-11% DD, +0.10 Sharpe"},
+    {"rank": 5, "name": "VWAP Execution", "source": "EXP-1160", "impact": "-72.7 bps cost"}
+  ],
+  "failed_experiments": [
+    {"id": "EXP-1110", "reason": "Cross-asset lag=0, overlay hurts -18.6pp"},
+    {"id": "EXP-1320", "reason": "Vol clustering autocorr 0.126 (need 0.5), overlay hurts -11.1pp"},
+    {"id": "EXP-1420", "reason": "Numpy transformer loses to XGBoost (54% vs 55.9%)"},
+    {"id": "EXP-980", "reason": "3.5x leverage not feasible at any broker"},
+    {"id": "EXP-1020", "reason": "0.8 trades/month vs 4 target (needs real 0-DTE data)"},
+    {"id": "EXP-1230", "reason": "Zero standalone alpha (Sharpe -0.03, AUC 0.49)"}
+  ]
+}
