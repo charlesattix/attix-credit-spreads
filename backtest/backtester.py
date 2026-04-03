@@ -1727,7 +1727,10 @@ class Backtester:
         _used_daily_fallback = False
         if prices is None and use_intraday:
             _used_daily_fallback = True
-            prices, short_strike, long_strike = _try_offsets(daily=True)
+            # Try original strike with daily data first, then offsets
+            prices = _get_prices(short_strike, long_strike, daily=True)
+            if prices is None:
+                prices, short_strike, long_strike = _try_offsets(daily=True)
 
         if prices is None:
             logger.debug(
