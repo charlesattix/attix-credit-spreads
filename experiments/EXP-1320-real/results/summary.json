@@ -1,0 +1,93 @@
+{
+  "experiment": "EXP-1320-real",
+  "data_source": "IronVault (options_cache.db) \u2014 real intraday bars",
+  "synthetic_data_used": false,
+  "vol_clustering": {
+    "n_sessions": 1500,
+    "avg_autocorrelation": 0.0964,
+    "expansion_auc": 0.4313,
+    "standalone_sharpe": -14.096,
+    "signals": {
+      "sell_premium": 215,
+      "avoid": 8,
+      "neutral": 1277
+    }
+  },
+  "overlay": {
+    "sell_prem_wr": 0.6667,
+    "avoid_wr": 0.0,
+    "improvement_pp": 66.67,
+    "sell_prem_trades": 3,
+    "avoid_trades": 1
+  },
+  "overall": {
+    "n_trades": 41,
+    "total_pnl": 512.0,
+    "win_rate": 0.9024,
+    "max_dd": 0.0037,
+    "sharpe": 0.919,
+    "cagr": 0.0009,
+    "avg_pnl": 12.49,
+    "years": 5.8
+  },
+  "yearly": {
+    "2020": {
+      "n_trades": 7,
+      "total_pnl": 20.0,
+      "win_rate": 0.8571,
+      "max_dd": 0.0029,
+      "sharpe": 0.057,
+      "annual_return": 0.0002
+    },
+    "2021": {
+      "n_trades": 6,
+      "total_pnl": 222.0,
+      "win_rate": 1.0,
+      "max_dd": 0.0,
+      "sharpe": 10.369,
+      "annual_return": 0.0022
+    },
+    "2022": {
+      "n_trades": 6,
+      "total_pnl": -234.0,
+      "win_rate": 0.6667,
+      "max_dd": 0.0037,
+      "sharpe": -0.681,
+      "annual_return": -0.0023
+    },
+    "2023": {
+      "n_trades": 7,
+      "total_pnl": 258.0,
+      "win_rate": 1.0,
+      "max_dd": 0.0,
+      "sharpe": 4.483,
+      "annual_return": 0.0026
+    },
+    "2024": {
+      "n_trades": 5,
+      "total_pnl": 162.0,
+      "win_rate": 1.0,
+      "max_dd": 0.0,
+      "sharpe": 7.289,
+      "annual_return": 0.0016
+    },
+    "2025": {
+      "n_trades": 10,
+      "total_pnl": 84.0,
+      "win_rate": 0.9,
+      "max_dd": 0.0024,
+      "sharpe": 0.302,
+      "annual_return": 0.0008
+    }
+  },
+  "comparison_to_synthetic": {
+    "synthetic_autocorrelation": 0.1258,
+    "real_autocorrelation": 0.0964,
+    "synthetic_auc": 0.2916,
+    "real_auc": 0.4313,
+    "synthetic_sharpe": 3.047,
+    "real_standalone_sharpe": -14.096,
+    "synthetic_overlay_pp": -11.1,
+    "real_overlay_pp": 66.67
+  }
+}

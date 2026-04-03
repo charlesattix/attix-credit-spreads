@@ -1,0 +1,177 @@
+{
+  "experiment": "EXP-1270-real",
+  "data_source": "IronVault (options_cache.db)",
+  "synthetic_data_used": false,
+  "overall": {
+    "n_trades": 41,
+    "total_pnl": -274.0,
+    "win_rate": 0.9024,
+    "max_dd": 0.0115,
+    "sharpe": -0.249,
+    "cagr": -0.0005,
+    "avg_pnl": -6.68,
+    "years": 5.8
+  },
+  "yearly": {
+    "2020": {
+      "n_trades": 7,
+      "total_pnl": 20.0,
+      "win_rate": 0.8571,
+      "max_dd": 0.0029,
+      "sharpe": 0.057,
+      "annual_return": 0.0002,
+      "avg_pnl": 2.86
+    },
+    "2021": {
+      "n_trades": 6,
+      "total_pnl": 222.0,
+      "win_rate": 1.0,
+      "max_dd": 0.0,
+      "sharpe": 10.369,
+      "annual_return": 0.0022,
+      "avg_pnl": 37.0
+    },
+    "2022": {
+      "n_trades": 6,
+      "total_pnl": -1020.0,
+      "win_rate": 0.6667,
+      "max_dd": 0.0115,
+      "sharpe": -1.033,
+      "annual_return": -0.0102,
+      "avg_pnl": -170.0
+    },
+    "2023": {
+      "n_trades": 7,
+      "total_pnl": 258.0,
+      "win_rate": 1.0,
+      "max_dd": 0.0,
+      "sharpe": 4.483,
+      "annual_return": 0.0026,
+      "avg_pnl": 36.86
+    },
+    "2024": {
+      "n_trades": 5,
+      "total_pnl": 162.0,
+      "win_rate": 1.0,
+      "max_dd": 0.0,
+      "sharpe": 7.289,
+      "annual_return": 0.0016,
+      "avg_pnl": 32.4
+    },
+    "2025": {
+      "n_trades": 10,
+      "total_pnl": 84.0,
+      "win_rate": 0.9,
+      "max_dd": 0.0024,
+      "sharpe": 0.302,
+      "annual_return": 0.0008,
+      "avg_pnl": 8.4
+    }
+  },
+  "best_stop_strategy": {
+    "name": "trailing_regime",
+    "total_pnl": 1099.2,
+    "win_rate": 0.9024,
+    "sharpe": 4.338,
+    "stop_rate": 0.0976
+  },
+  "all_strategies": {
+    "fixed_2.0x": {
+      "total_pnl": 992.0,
+      "win_rate": 0.9024,
+      "sharpe": 3.392,
+      "stop_rate": 0.0976
+    },
+    "fixed_2.5x": {
+      "total_pnl": 873.0,
+      "win_rate": 0.9024,
+      "sharpe": 2.562,
+      "stop_rate": 0.0976
+    },
+    "fixed_3.0x": {
+      "total_pnl": 754.0,
+      "win_rate": 0.9024,
+      "sharpe": 1.934,
+      "stop_rate": 0.0976
+    },
+    "fixed_3.5x": {
+      "total_pnl": 635.0,
+      "win_rate": 0.9024,
+      "sharpe": 1.445,
+      "stop_rate": 0.0976
+    },
+    "fixed_4.0x": {
+      "total_pnl": 526.0,
+      "win_rate": 0.9024,
+      "sharpe": 1.085,
+      "stop_rate": 0.0976
+    },
+    "fixed_5.0x": {
+      "total_pnl": 438.0,
+      "win_rate": 0.9024,
+      "sharpe": 0.843,
+      "stop_rate": 0.0244
+    },
+    "atr_based": {
+      "total_pnl": 817.79,
+      "win_rate": 0.9024,
+      "sharpe": 2.249,
+      "stop_rate": 0.0976
+    },
+    "vix_scaled": {
+      "total_pnl": 674.29,
+      "win_rate": 0.9024,
+      "sharpe": 1.587,
+      "stop_rate": 0.0976
+    },
+    "time_decay": {
+      "total_pnl": 642.86,
+      "win_rate": 0.9024,
+      "sharpe": 1.452,
+      "stop_rate": 0.0976
+    },
+    "regime_specific": {
+      "total_pnl": 876.0,
+      "win_rate": 0.9024,
+      "sharpe": 2.552,
+      "stop_rate": 0.0976
+    },
+    "trailing_regime": {
+      "total_pnl": 1099.2,
+      "win_rate": 0.9024,
+      "sharpe": 4.338,
+      "stop_rate": 0.0976
+    }
+  },
+  "comparison_to_synthetic": {
+    "synthetic_sharpe": 5.25,
+    "real_sharpe": -0.249,
+    "synthetic_max_dd": 0.032,
+    "real_max_dd": 0.0115,
+    "synthetic_return": 1.631,
+    "real_cagr": -0.0005
+  },
+  "regime_optimals": [
+    {
+      "regime": "neutral",
+      "best_strategy": "trailing_regime",
+      "pnl": 551.6,
+      "win_rate": 0.9444,
+      "n_trades": 18
+    },
+    {
+      "regime": "high_vol",
+      "best_strategy": "trailing_regime",
+      "pnl": 175.6,
+      "win_rate": 0.75,
+      "n_trades": 8
+    },
+    {
+      "regime": "bull",
+      "best_strategy": "fixed_2.0x",
+      "pnl": 258.0,
+      "win_rate": 0.9167,
+      "n_trades": 12
+    }
+  ]
+}
