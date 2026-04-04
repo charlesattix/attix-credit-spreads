@@ -1,0 +1,487 @@
+{
+  "generated": "2026-04-04T19:47:15.457241",
+  "baseline": {
+    "n": 53,
+    "pnl": 3171.0,
+    "sharpe": 2.448,
+    "wr": 0.9623,
+    "dd": 0.0018,
+    "cagr": 0.0055,
+    "spy_corr": -0.3191,
+    "yearly": {
+      "2020": {
+        "n": 9,
+        "pnl": 1884.0,
+        "wr": 1.0,
+        "dd": 0.0,
+        "sharpe": 1.582
+      },
+      "2021": {
+        "n": 10,
+        "pnl": 318.0,
+        "wr": 1.0,
+        "dd": 0.0,
+        "sharpe": 7.446
+      },
+      "2022": {
+        "n": 6,
+        "pnl": 537.0,
+        "wr": 1.0,
+        "dd": 0.0,
+        "sharpe": 2.98
+      },
+      "2023": {
+        "n": 10,
+        "pnl": 144.0,
+        "wr": 0.9,
+        "dd": 0.0008,
+        "sharpe": 1.284
+      },
+      "2024": {
+        "n": 11,
+        "pnl": 219.0,
+        "wr": 1.0,
+        "dd": 0.0,
+        "sharpe": 5.528
+      },
+      "2025": {
+        "n": 7,
+        "pnl": 69.0,
+        "wr": 0.8571,
+        "dd": 0.0018,
+        "sharpe": 0.306
+      }
+    }
+  },
+  "multi_ticker": [
+    {
+      "ticker": "SPY",
+      "n": 53,
+      "pnl": 3171.0,
+      "sharpe": 2.448,
+      "wr": 0.9623,
+      "spy_corr": -0.3191
+    },
+    {
+      "ticker": "XLF",
+      "n": 45,
+      "pnl": 552.0,
+      "sharpe": 3.731,
+      "wr": 0.9333,
+      "spy_corr": 0.348
+    },
+    {
+      "ticker": "XLI",
+      "n": 21,
+      "pnl": 699.0,
+      "sharpe": 5.692,
+      "wr": 1.0,
+      "spy_corr": 0.3224
+    },
+    {
+      "ticker": "TLT",
+      "n": 4,
+      "pnl": 138.0,
+      "sharpe": 0.706,
+      "wr": 0.75,
+      "spy_corr": 0.0
+    },
+    {
+      "ticker": "GLD",
+      "n": 24,
+      "pnl": 96.0,
+      "sharpe": 0.265,
+      "wr": 0.875,
+      "spy_corr": 0.3103
+    },
+    {
+      "ticker": "QQQ",
+      "n": 9,
+      "pnl": 1092.0,
+      "sharpe": 3.644,
+      "wr": 1.0,
+      "spy_corr": 0.0
+    }
+  ],
+  "walk_forward": {
+    "combined_n": 33,
+    "combined_sharpe": 2.812,
+    "combined_pnl": 951.0,
+    "windows": [
+      {
+        "is_period": "2020-2021",
+        "oos_period": "2022",
+        "is_n": 19,
+        "is_pnl": 2202.0,
+        "is_wr": 1.0,
+        "oos_n": 5,
+        "oos_pnl": 498.0,
+        "oos_wr": 1.0,
+        "oos_sharpe": 2.875
+      },
+      {
+        "is_period": "2021-2022",
+        "oos_period": "2023",
+        "is_n": 16,
+        "is_pnl": 837.0,
+        "is_wr": 1.0,
+        "oos_n": 10,
+        "oos_pnl": 174.0,
+        "oos_wr": 0.9,
+        "oos_sharpe": 1.519
+      },
+      {
+        "is_period": "2022-2023",
+        "oos_period": "2024",
+        "is_n": 15,
+        "is_pnl": 672.0,
+        "is_wr": 0.9333,
+        "oos_n": 11,
+        "oos_pnl": 210.0,
+        "oos_wr": 1.0,
+        "oos_sharpe": 5.111
+      },
+      {
+        "is_period": "2023-2024",
+        "oos_period": "2025",
+        "is_n": 21,
+        "is_pnl": 384.0,
+        "is_wr": 0.9524,
+        "oos_n": 7,
+        "oos_pnl": 69.0,
+        "oos_wr": 0.8571,
+        "oos_sharpe": 0.306
+      }
+    ]
+  },
+  "sensitivity": [
+    {
+      "label": "Baseline (ratio\u22651.15)",
+      "n": 53,
+      "pnl": 3171.0,
+      "sharpe": 2.448,
+      "wr": 0.9623,
+      "dd": 0.0018,
+      "params": {
+        "contango_threshold": 1.15,
+        "otm_pct": 0.94,
+        "width": 5.0,
+        "profit_pct": 0.5,
+        "stop_mult": 3.0,
+        "entry_days_before": 25,
+        "min_interval": 14,
+        "risk_pct": 0.015,
+        "max_contracts": 3
+      }
+    },
+    {
+      "label": "Loose (ratio\u22651.05)",
+      "n": 53,
+      "pnl": 3171.0,
+      "sharpe": 2.448,
+      "wr": 0.9623,
+      "dd": 0.0018,
+      "params": {
+        "contango_threshold": 1.05,
+        "otm_pct": 0.94,
+        "width": 5.0,
+        "profit_pct": 0.5,
+        "stop_mult": 3.0,
+        "entry_days_before": 25,
+        "min_interval": 14,
+        "risk_pct": 0.015,
+        "max_contracts": 3
+      }
+    },
+    {
+      "label": "Tight (ratio\u22651.25)",
+      "n": 53,
+      "pnl": 3171.0,
+      "sharpe": 2.448,
+      "wr": 0.9623,
+      "dd": 0.0018,
+      "params": {
+        "contango_threshold": 1.25,
+        "otm_pct": 0.94,
+        "width": 5.0,
+        "profit_pct": 0.5,
+        "stop_mult": 3.0,
+        "entry_days_before": 25,
+        "min_interval": 14,
+        "risk_pct": 0.015,
+        "max_contracts": 3
+      }
+    },
+    {
+      "label": "Very Tight (ratio\u22651.35)",
+      "n": 53,
+      "pnl": 3171.0,
+      "sharpe": 2.448,
+      "wr": 0.9623,
+      "dd": 0.0018,
+      "params": {
+        "contango_threshold": 1.35,
+        "otm_pct": 0.94,
+        "width": 5.0,
+        "profit_pct": 0.5,
+        "stop_mult": 3.0,
+        "entry_days_before": 25,
+        "min_interval": 14,
+        "risk_pct": 0.015,
+        "max_contracts": 3
+      }
+    },
+    {
+      "label": "Closer OTM (96%)",
+      "n": 54,
+      "pnl": 3339.0,
+      "sharpe": 2.327,
+      "wr": 0.9444,
+      "dd": 0.005,
+      "params": {
+        "contango_threshold": 1.15,
+        "otm_pct": 0.96,
+        "width": 5.0,
+        "profit_pct": 0.5,
+        "stop_mult": 3.0,
+        "entry_days_before": 25,
+        "min_interval": 14,
+        "risk_pct": 0.015,
+        "max_contracts": 3
+      }
+    },
+    {
+      "label": "Further OTM (92%)",
+      "n": 49,
+      "pnl": 3057.0,
+      "sharpe": 2.451,
+      "wr": 1.0,
+      "dd": 0.0,
+      "params": {
+        "contango_threshold": 1.15,
+        "otm_pct": 0.92,
+        "width": 5.0,
+        "profit_pct": 0.5,
+        "stop_mult": 3.0,
+        "entry_days_before": 25,
+        "min_interval": 14,
+        "risk_pct": 0.015,
+        "max_contracts": 3
+      }
+    },
+    {
+      "label": "Narrow $3 spread",
+      "n": 40,
+      "pnl": 2782.0,
+      "sharpe": 2.51,
+      "wr": 0.925,
+      "dd": 0.0027,
+      "params": {
+        "contango_threshold": 1.15,
+        "otm_pct": 0.94,
+        "width": 3.0,
+        "profit_pct": 0.5,
+        "stop_mult": 3.0,
+        "entry_days_before": 25,
+        "min_interval": 14,
+        "risk_pct": 0.015,
+        "max_contracts": 3
+      }
+    },
+    {
+      "label": "Wide $10 spread",
+      "n": 53,
+      "pnl": 2365.0,
+      "sharpe": 1.743,
+      "wr": 0.9434,
+      "dd": 0.0013,
+      "params": {
+        "contango_threshold": 1.15,
+        "otm_pct": 0.94,
+        "width": 10.0,
+        "profit_pct": 0.5,
+        "stop_mult": 3.0,
+        "entry_days_before": 25,
+        "min_interval": 14,
+        "risk_pct": 0.015,
+        "max_contracts": 3
+      }
+    },
+    {
+      "label": "Quick profit (40%)",
+      "n": 53,
+      "pnl": 3000.0,
+      "sharpe": 2.31,
+      "wr": 0.9623,
+      "dd": 0.0018,
+      "params": {
+        "contango_threshold": 1.15,
+        "otm_pct": 0.94,
+        "width": 5.0,
+        "profit_pct": 0.4,
+        "stop_mult": 3.0,
+        "entry_days_before": 25,
+        "min_interval": 14,
+        "risk_pct": 0.015,
+        "max_contracts": 3
+      }
+    },
+    {
+      "label": "Patient profit (65%)",
+      "n": 53,
+      "pnl": 3471.0,
+      "sharpe": 2.673,
+      "wr": 0.9623,
+      "dd": 0.0018,
+      "params": {
+        "contango_threshold": 1.15,
+        "otm_pct": 0.94,
+        "width": 5.0,
+        "profit_pct": 0.65,
+        "stop_mult": 3.0,
+        "entry_days_before": 25,
+        "min_interval": 14,
+        "risk_pct": 0.015,
+        "max_contracts": 3
+      }
+    },
+    {
+      "label": "Tight stop (2x)",
+      "n": 53,
+      "pnl": 3024.0,
+      "sharpe": 2.312,
+      "wr": 0.9434,
+      "dd": 0.0032,
+      "params": {
+        "contango_threshold": 1.15,
+        "otm_pct": 0.94,
+        "width": 5.0,
+        "profit_pct": 0.5,
+        "stop_mult": 2.0,
+        "entry_days_before": 25,
+        "min_interval": 14,
+        "risk_pct": 0.015,
+        "max_contracts": 3
+      }
+    },
+    {
+      "label": "Wide stop (5x)",
+      "n": 53,
+      "pnl": 3486.0,
+      "sharpe": 2.759,
+      "wr": 1.0,
+      "dd": 0.0,
+      "params": {
+        "contango_threshold": 1.15,
+        "otm_pct": 0.94,
+        "width": 5.0,
+        "profit_pct": 0.5,
+        "stop_mult": 5.0,
+        "entry_days_before": 25,
+        "min_interval": 14,
+        "risk_pct": 0.015,
+        "max_contracts": 3
+      }
+    },
+    {
+      "label": "Shorter hold (entry 18d)",
+      "n": 82,
+      "pnl": -2733.0,
+      "sharpe": -0.458,
+      "wr": 0.9024,
+      "dd": 0.0066,
+      "params": {
+        "contango_threshold": 1.15,
+        "otm_pct": 0.94,
+        "width": 5.0,
+        "profit_pct": 0.5,
+        "stop_mult": 3.0,
+        "entry_days_before": 18,
+        "min_interval": 14,
+        "risk_pct": 0.015,
+        "max_contracts": 3
+      }
+    },
+    {
+      "label": "Longer hold (entry 32d)",
+      "n": 50,
+      "pnl": 558.0,
+      "sharpe": 0.365,
+      "wr": 0.94,
+      "dd": 0.0075,
+      "params": {
+        "contango_threshold": 1.15,
+        "otm_pct": 0.94,
+        "width": 5.0,
+        "profit_pct": 0.5,
+        "stop_mult": 3.0,
+        "entry_days_before": 32,
+        "min_interval": 14,
+        "risk_pct": 0.015,
+        "max_contracts": 3
+      }
+    },
+    {
+      "label": "Frequent (interval 10d)",
+      "n": 59,
+      "pnl": 3321.0,
+      "sharpe": 2.426,
+      "wr": 0.9661,
+      "dd": 0.0018,
+      "params": {
+        "contango_threshold": 1.15,
+        "otm_pct": 0.94,
+        "width": 5.0,
+        "profit_pct": 0.5,
+        "stop_mult": 3.0,
+        "entry_days_before": 25,
+        "min_interval": 10,
+        "risk_pct": 0.015,
+        "max_contracts": 3
+      }
+    },
+    {
+      "label": "Rare (interval 21d)",
+      "n": 48,
+      "pnl": 2787.0,
+      "sharpe": 2.187,
+      "wr": 0.9583,
+      "dd": 0.0018,
+      "params": {
+        "contango_threshold": 1.15,
+        "otm_pct": 0.94,
+        "width": 5.0,
+        "profit_pct": 0.5,
+        "stop_mult": 3.0,
+        "entry_days_before": 25,
+        "min_interval": 21,
+        "risk_pct": 0.015,
+        "max_contracts": 3
+      }
+    }
+  ],
+  "regime_filter": {
+    "unfiltered": {
+      "n": 53,
+      "sharpe": 2.448,
+      "pnl": 3171.0
+    },
+    "filtered": {
+      "n": 48,
+      "sharpe": 2.204,
+      "pnl": 2844.0
+    }
+  },
+  "capacity": {
+    "avg_daily_volume": 1288,
+    "median_trade_volume": 67106,
+    "fill_limit_pct": 0.05,
+    "max_contracts_per_trade": 3355,
+    "notional_per_contract": 500.0,
+    "max_notional_per_trade": 1677500,
+    "max_capital_at_1_5pct_risk": 105684610,
+    "avg_credit": 0.275,
+    "avg_max_loss_per_contract": 472.51,
+    "institutional_viable": 1
+  }
+}
