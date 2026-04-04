@@ -1,0 +1,330 @@
+{
+  "generated": "2026-04-04T17:44:36.569247",
+  "data_source": "IronVault (options_cache.db)",
+  "oos_period": "2023-2025",
+  "kill_criteria": "<20 OOS trades OR negative OOS Sharpe",
+  "strategies": [
+    {
+      "name": "Cross-Asset: XLI\u2192SPY",
+      "desc": "Sell SPY put spreads when XLI 20-day momentum > 3%",
+      "n_trades": 68,
+      "oos_trades": 32,
+      "total_pnl": 2832.0,
+      "win_rate": 0.9559,
+      "max_dd": 0.0043,
+      "sharpe": 4.606,
+      "oos_sharpe": 9.1,
+      "oos_pnl": 1245.0,
+      "cagr": 0.0049,
+      "spy_corr": 0.0361,
+      "killed": false,
+      "kill_reason": "",
+      "yearly": {
+        "2020": {
+          "n": 14,
+          "pnl": 327.0,
+          "wr": 0.7857,
+          "dd": 0.0043,
+          "sharpe": 0.644,
+          "ret": 0.0033
+        },
+        "2021": {
+          "n": 14,
+          "pnl": 648.0,
+          "wr": 1.0,
+          "dd": 0.0,
+          "sharpe": 7.427,
+          "ret": 0.0065
+        },
+        "2022": {
+          "n": 8,
+          "pnl": 612.0,
+          "wr": 1.0,
+          "dd": 0.0,
+          "sharpe": 7.869,
+          "ret": 0.0061
+        },
+        "2023": {
+          "n": 11,
+          "pnl": 309.0,
+          "wr": 1.0,
+          "dd": 0.0,
+          "sharpe": 9.794,
+          "ret": 0.0031
+        },
+        "2024": {
+          "n": 12,
+          "pnl": 375.0,
+          "wr": 1.0,
+          "dd": 0.0,
+          "sharpe": 5.726,
+          "ret": 0.0037
+        },
+        "2025": {
+          "n": 9,
+          "pnl": 561.0,
+          "wr": 1.0,
+          "dd": 0.0,
+          "sharpe": 6.628,
+          "ret": 0.0056
+        }
+      }
+    },
+    {
+      "name": "Vol Term Structure",
+      "desc": "Sell SPY front-month puts when term structure contango ratio > 1.15",
+      "n_trades": 53,
+      "oos_trades": 28,
+      "total_pnl": 3171.0,
+      "win_rate": 0.9623,
+      "max_dd": 0.0018,
+      "sharpe": 2.448,
+      "oos_sharpe": 1.779,
+      "oos_pnl": 432.0,
+      "cagr": 0.0055,
+      "spy_corr": -0.3191,
+      "killed": false,
+      "kill_reason": "",
+      "yearly": {
+        "2020": {
+          "n": 9,
+          "pnl": 1884.0,
+          "wr": 1.0,
+          "dd": 0.0,
+          "sharpe": 1.582,
+          "ret": 0.0188
+        },
+        "2021": {
+          "n": 10,
+          "pnl": 318.0,
+          "wr": 1.0,
+          "dd": 0.0,
+          "sharpe": 7.446,
+          "ret": 0.0032
+        },
+        "2022": {
+          "n": 6,
+          "pnl": 537.0,
+          "wr": 1.0,
+          "dd": 0.0,
+          "sharpe": 2.98,
+          "ret": 0.0054
+        },
+        "2023": {
+          "n": 10,
+          "pnl": 144.0,
+          "wr": 0.9,
+          "dd": 0.0008,
+          "sharpe": 1.284,
+          "ret": 0.0014
+        },
+        "2024": {
+          "n": 11,
+          "pnl": 219.0,
+          "wr": 1.0,
+          "dd": 0.0,
+          "sharpe": 5.528,
+          "ret": 0.0022
+        },
+        "2025": {
+          "n": 7,
+          "pnl": 69.0,
+          "wr": 0.8571,
+          "dd": 0.0018,
+          "sharpe": 0.306,
+          "ret": 0.0007
+        }
+      }
+    },
+    {
+      "name": "XLF Earnings Season",
+      "desc": "Sell XLF put spreads 3-4 weeks before quarterly bank earnings",
+      "n_trades": 35,
+      "oos_trades": 19,
+      "total_pnl": 1640.0,
+      "win_rate": 0.9429,
+      "max_dd": 0.002,
+      "sharpe": 4.687,
+      "oos_sharpe": 6.031,
+      "oos_pnl": 1270.0,
+      "cagr": 0.003,
+      "spy_corr": 0.3575,
+      "killed": true,
+      "kill_reason": "Only 19 OOS trades (<20)",
+      "yearly": {
+        "2020": {
+          "n": 6,
+          "pnl": 270.0,
+          "wr": 1.0,
+          "dd": 0.0,
+          "sharpe": 6.708,
+          "ret": 0.0027
+        },
+        "2021": {
+          "n": 5,
+          "pnl": 220.0,
+          "wr": 1.0,
+          "dd": 0.0,
+          "sharpe": 7.333,
+          "ret": 0.0022
+        },
+        "2022": {
+          "n": 5,
+          "pnl": -120.0,
+          "wr": 0.6,
+          "dd": 0.0003,
+          "sharpe": -0.523,
+          "ret": -0.0012
+        },
+        "2023": {
+          "n": 6,
+          "pnl": 410.0,
+          "wr": 1.0,
+          "dd": 0.0,
+          "sharpe": 2.738,
+          "ret": 0.0041
+        },
+        "2024": {
+          "n": 7,
+          "pnl": 400.0,
+          "wr": 1.0,
+          "dd": 0.0,
+          "sharpe": 6.827,
+          "ret": 0.004
+        },
+        "2025": {
+          "n": 6,
+          "pnl": 460.0,
+          "wr": 1.0,
+          "dd": 0.0,
+          "sharpe": 3.036,
+          "ret": 0.0046
+        }
+      }
+    },
+    {
+      "name": "Sector Rotation: XLF/XLI",
+      "desc": "Sell put spreads on stronger of XLF vs XLI (40-day relative strength)",
+      "n_trades": 23,
+      "oos_trades": 13,
+      "total_pnl": 1390.0,
+      "win_rate": 0.8696,
+      "max_dd": 0.0069,
+      "sharpe": 1.236,
+      "oos_sharpe": -0.081,
+      "oos_pnl": -80.0,
+      "cagr": 0.0027,
+      "spy_corr": 0.2752,
+      "killed": true,
+      "kill_reason": "Only 13 OOS trades (<20)",
+      "yearly": {
+        "2020": {
+          "n": 3,
+          "pnl": 390.0,
+          "wr": 1.0,
+          "dd": 0.0,
+          "sharpe": 6.245,
+          "ret": 0.0039
+        },
+        "2021": {
+          "n": 6,
+          "pnl": 1000.0,
+          "wr": 1.0,
+          "dd": 0.0,
+          "sharpe": 2.297,
+          "ret": 0.01
+        },
+        "2022": {
+          "n": 1,
+          "pnl": 80.0,
+          "wr": 1.0,
+          "dd": 0.0,
+          "sharpe": 80.0,
+          "ret": 0.0008
+        },
+        "2023": {
+          "n": 3,
+          "pnl": -350.0,
+          "wr": 0.6667,
+          "dd": 0.0,
+          "sharpe": -0.388,
+          "ret": -0.0035
+        },
+        "2024": {
+          "n": 4,
+          "pnl": 300.0,
+          "wr": 1.0,
+          "dd": 0.0,
+          "sharpe": 3.223,
+          "ret": 0.003
+        },
+        "2025": {
+          "n": 6,
+          "pnl": -30.0,
+          "wr": 0.6667,
+          "dd": 0.0039,
+          "sharpe": -0.05,
+          "ret": -0.0003
+        }
+      }
+    },
+    {
+      "name": "Correlation Breakdown: TLT-SPY",
+      "desc": "Sell SPY puts when TLT-SPY 30-day corr goes positive (reversion bet)",
+      "n_trades": 32,
+      "oos_trades": 23,
+      "total_pnl": 1293.0,
+      "win_rate": 0.9688,
+      "max_dd": 0.0025,
+      "sharpe": 2.896,
+      "oos_sharpe": 6.306,
+      "oos_pnl": 789.0,
+      "cagr": 0.0028,
+      "spy_corr": 0.0225,
+      "killed": false,
+      "kill_reason": "",
+      "yearly": {
+        "2021": {
+          "n": 4,
+          "pnl": 174.0,
+          "wr": 1.0,
+          "dd": 0.0,
+          "sharpe": 2.629,
+          "ret": 0.0017
+        },
+        "2022": {
+          "n": 5,
+          "pnl": 330.0,
+          "wr": 0.8,
+          "dd": 0.0025,
+          "sharpe": 0.715,
+          "ret": 0.0033
+        },
+        "2023": {
+          "n": 9,
+          "pnl": 207.0,
+          "wr": 1.0,
+          "dd": 0.0,
+          "sharpe": 8.398,
+          "ret": 0.0021
+        },
+        "2024": {
+          "n": 7,
+          "pnl": 150.0,
+          "wr": 1.0,
+          "dd": 0.0,
+          "sharpe": 11.275,
+          "ret": 0.0015
+        },
+        "2025": {
+          "n": 7,
+          "pnl": 432.0,
+          "wr": 1.0,
+          "dd": 0.0,
+          "sharpe": 4.882,
+          "ret": 0.0043
+        }
+      }
+    }
+  ]
+}
