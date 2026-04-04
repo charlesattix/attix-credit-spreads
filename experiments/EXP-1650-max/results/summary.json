@@ -1,0 +1,233 @@
+{
+  "experiment": "EXP-1650",
+  "data_source": "IronVault (options_cache.db)",
+  "synthetic_data": false,
+  "key_finding": "IV overstatement at ETF level: MIXED (ratio 0.96\u00d7)",
+  "combined": {
+    "n_trades": 50,
+    "total_pnl": 2854.5,
+    "win_rate": 0.8,
+    "max_dd": 0.0095,
+    "sharpe": 1.551,
+    "oos_n": 29,
+    "oos_sharpe": 0.589,
+    "oos_pnl": 766.0,
+    "avg_iv_crush_pct": 5.1,
+    "avg_realized_move_pct": 3.42,
+    "iv_overstatement_ratio": 0.961
+  },
+  "per_ticker": {
+    "XLF": {
+      "name": "Financials",
+      "n_trades": 13,
+      "total_pnl": 1160.0,
+      "win_rate": 0.8462,
+      "sharpe": 1.426,
+      "max_dd": 0.0043,
+      "avg_iv_crush_pct": 14.96,
+      "avg_realized_move_pct": 3.06,
+      "iv_overstatement_ratio": 1.182,
+      "is_n": 5,
+      "is_sharpe": 17.226,
+      "oos_n": 8,
+      "oos_sharpe": 0.315,
+      "oos_pnl": 247.0,
+      "by_quarter": {
+        "Q1": {
+          "n": 2,
+          "pnl": 297.0,
+          "wr": 1.0,
+          "avg_crush": 46.66
+        },
+        "Q2": {
+          "n": 4,
+          "pnl": 795.0,
+          "wr": 1.0,
+          "avg_crush": 55.27
+        },
+        "Q3": {
+          "n": 3,
+          "pnl": -655.0,
+          "wr": 0.3333,
+          "avg_crush": -104.33
+        },
+        "Q4": {
+          "n": 4,
+          "pnl": 723.0,
+          "wr": 1.0,
+          "avg_crush": 48.26
+        }
+      },
+      "yearly": {
+        "2020": {
+          "n": 1,
+          "pnl": 221.0,
+          "wr": 1.0,
+          "dd": 0.0,
+          "sharpe": 221.0,
+          "avg_crush": 50.0
+        },
+        "2021": {
+          "n": 3,
+          "pnl": 522.0,
+          "wr": 1.0,
+          "dd": 0.0,
+          "sharpe": 21.527,
+          "avg_crush": 48.4
+        },
+        "2022": {
+          "n": 1,
+          "pnl": 170.0,
+          "wr": 1.0,
+          "dd": 0.0,
+          "sharpe": 170.0,
+          "avg_crush": 40.0
+        },
+        "2023": {
+          "n": 4,
+          "pnl": 232.0,
+          "wr": 0.75,
+          "dd": 0.0043,
+          "sharpe": 0.351,
+          "avg_crush": 1.26
+        },
+        "2024": {
+          "n": 4,
+          "pnl": 15.0,
+          "wr": 0.75,
+          "dd": 0.0038,
+          "sharpe": 0.029,
+          "avg_crush": -11.45
+        }
+      }
+    },
+    "XLK": {
+      "name": "Technology",
+      "n_trades": 0,
+      "total_pnl": 0.0,
+      "win_rate": 0.0,
+      "sharpe": 0.0,
+      "max_dd": 0.0,
+      "avg_iv_crush_pct": 0.0,
+      "avg_realized_move_pct": 0.0,
+      "iv_overstatement_ratio": 0.0,
+      "is_n": 0,
+      "is_sharpe": 0.0,
+      "oos_n": 0,
+      "oos_sharpe": 0.0,
+      "oos_pnl": 0.0,
+      "by_quarter": {},
+      "yearly": {}
+    },
+    "XLE": {
+      "name": "Energy",
+      "n_trades": 0,
+      "total_pnl": 0.0,
+      "win_rate": 0.0,
+      "sharpe": 0.0,
+      "max_dd": 0.0,
+      "avg_iv_crush_pct": 0.0,
+      "avg_realized_move_pct": 0.0,
+      "iv_overstatement_ratio": 0.0,
+      "is_n": 0,
+      "is_sharpe": 0.0,
+      "oos_n": 0,
+      "oos_sharpe": 0.0,
+      "oos_pnl": 0.0,
+      "by_quarter": {},
+      "yearly": {}
+    },
+    "XLF-AllMonth": {
+      "name": "Financials All-Month",
+      "n_trades": 37,
+      "total_pnl": 1694.5,
+      "win_rate": 0.7838,
+      "sharpe": 1.019,
+      "max_dd": 0.0091,
+      "avg_iv_crush_pct": 1.64,
+      "avg_realized_move_pct": 3.55,
+      "iv_overstatement_ratio": 0.894,
+      "is_n": 16,
+      "is_sharpe": 0.907,
+      "oos_n": 21,
+      "oos_sharpe": 0.484,
+      "oos_pnl": 519.0,
+      "by_quarter": {
+        "Q1": {
+          "n": 2,
+          "pnl": 297.0,
+          "wr": 1.0,
+          "avg_crush": 46.66
+        },
+        "Q2": {
+          "n": 4,
+          "pnl": 795.0,
+          "wr": 1.0,
+          "avg_crush": 55.27
+        },
+        "Q3": {
+          "n": 3,
+          "pnl": -655.0,
+          "wr": 0.3333,
+          "avg_crush": -104.33
+        },
+        "Q4": {
+          "n": 4,
+          "pnl": 723.0,
+          "wr": 1.0,
+          "avg_crush": 48.26
+        }
+      },
+      "yearly": {
+        "2020": {
+          "n": 4,
+          "pnl": -688.0,
+          "wr": 0.5,
+          "dd": 0.0091,
+          "sharpe": -0.743,
+          "avg_crush": -69.84
+        },
+        "2021": {
+          "n": 4,
+          "pnl": 912.0,
+          "wr": 1.0,
+          "dd": 0.0,
+          "sharpe": 4.199,
+          "avg_crush": 56.49
+        },
+        "2022": {
+          "n": 8,
+          "pnl": 951.5,
+          "wr": 0.875,
+          "dd": 0.0056,
+          "sharpe": 1.206,
+          "avg_crush": 27.8
+        },
+        "2023": {
+          "n": 9,
+          "pnl": 674.0,
+          "wr": 0.7778,
+          "dd": 0.0043,
+          "sharpe": 0.966,
+          "avg_crush": -4.47
+        },
+        "2024": {
+          "n": 8,
+          "pnl": 80.0,
+          "wr": 0.75,
+          "dd": 0.0038,
+          "sharpe": 0.129,
+          "avg_crush": -3.2
+        },
+        "2025": {
+          "n": 4,
+          "pnl": -235.0,
+          "wr": 0.75,
+          "dd": 0.0051,
+          "sharpe": -0.389,
+          "avg_crush": -10.65
+        }
+      }
+    }
+  }
+}
