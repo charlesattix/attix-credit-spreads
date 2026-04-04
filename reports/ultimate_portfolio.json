@@ -1,0 +1,697 @@
+{
+  "strategy_names": [
+    "Cross-Asset Pairs",
+    "EXP-1220 Dynamic",
+    "TLT Iron Condors",
+    "Vol Term Structure"
+  ],
+  "solo_metrics": {
+    "Cross-Asset Pairs": {
+      "cagr_pct": 0.88,
+      "sharpe": 3.15,
+      "max_dd_pct": 0.12,
+      "calmar": 7.59,
+      "sortino": 1.06,
+      "vol_pct": 0.28,
+      "total_ret_pct": 5.4,
+      "n_days": 1507
+    },
+    "EXP-1220 Dynamic": {
+      "cagr_pct": 58.89,
+      "sharpe": 4.09,
+      "max_dd_pct": 7.58,
+      "calmar": 7.77,
+      "sortino": 7.26,
+      "vol_pct": 11.49,
+      "total_ret_pct": 1494.21,
+      "n_days": 1507
+    },
+    "TLT Iron Condors": {
+      "cagr_pct": 8.83,
+      "sharpe": 2.69,
+      "max_dd_pct": 0.0,
+      "calmar": 0,
+      "sortino": 2.69,
+      "vol_pct": 3.17,
+      "total_ret_pct": 65.89,
+      "n_days": 1507
+    },
+    "Vol Term Structure": {
+      "cagr_pct": 0.52,
+      "sharpe": 1.9,
+      "max_dd_pct": 0.0,
+      "calmar": 0,
+      "sortino": 1.9,
+      "vol_pct": 0.27,
+      "total_ret_pct": 3.15,
+      "n_days": 1507
+    }
+  },
+  "correlations": {
+    "Cross-Asset Pairs": {
+      "Cross-Asset Pairs": 1.0,
+      "EXP-1220 Dynamic": 0.008,
+      "TLT Iron Condors": 0.099,
+      "Vol Term Structure": 0.168
+    },
+    "EXP-1220 Dynamic": {
+      "Cross-Asset Pairs": 0.008,
+      "EXP-1220 Dynamic": 1.0,
+      "TLT Iron Condors": -0.038,
+      "Vol Term Structure": -0.01
+    },
+    "TLT Iron Condors": {
+      "Cross-Asset Pairs": 0.099,
+      "EXP-1220 Dynamic": -0.038,
+      "TLT Iron Condors": 1.0,
+      "Vol Term Structure": -0.004
+    },
+    "Vol Term Structure": {
+      "Cross-Asset Pairs": 0.168,
+      "EXP-1220 Dynamic": -0.01,
+      "TLT Iron Condors": -0.004,
+      "Vol Term Structure": 1.0
+    }
+  },
+  "best_portfolio": {
+    "method": "cagr_95",
+    "weights": {
+      "Cross-Asset Pairs": 0.0167,
+      "EXP-1220 Dynamic": 0.95,
+      "TLT Iron Condors": 0.0167,
+      "Vol Term Structure": 0.0167
+    },
+    "metrics": {
+      "cagr_pct": 55.56,
+      "sharpe": 4.1,
+      "max_dd_pct": 7.21,
+      "calmar": 7.71,
+      "sortino": 7.29,
+      "vol_pct": 10.92,
+      "total_ret_pct": 1304.63,
+      "n_days": 1507
+    }
+  },
+  "walk_forward": {
+    "n_windows": 8,
+    "train_days": 504,
+    "test_days": 126,
+    "windows": [
+      {
+        "train_start": "2020-01-02",
+        "test_start": "2021-12-31",
+        "test_end": "2022-07-01",
+        "weights": {
+          "Cross-Asset Pairs": 0.25,
+          "EXP-1220 Dynamic": 0.25,
+          "TLT Iron Condors": 0.25,
+          "Vol Term Structure": 0.25
+        },
+        "train_metrics": {
+          "cagr_pct": 16.77,
+          "sharpe": 6.19,
+          "max_dd_pct": 0.52,
+          "calmar": 32.53,
+          "sortino": 12.83,
+          "vol_pct": 2.51,
+          "total_ret_pct": 36.34,
+          "n_days": 504
+        },
+        "test_metrics": {
+          "cagr_pct": 3.2,
+          "sharpe": 1.74,
+          "max_dd_pct": 0.67,
+          "calmar": 4.8,
+          "sortino": 2.01,
+          "vol_pct": 1.82,
+          "total_ret_pct": 1.59,
+          "n_days": 126
+        }
+      },
+      {
+        "train_start": "2020-07-02",
+        "test_start": "2022-07-05",
+        "test_end": "2022-12-30",
+        "weights": {
+          "Cross-Asset Pairs": 0.25,
+          "EXP-1220 Dynamic": 0.25,
+          "TLT Iron Condors": 0.25,
+          "Vol Term Structure": 0.25
+        },
+        "train_metrics": {
+          "cagr_pct": 14.22,
+          "sharpe": 5.36,
+          "max_dd_pct": 0.67,
+          "calmar": 21.32,
+          "sortino": 10.34,
+          "vol_pct": 2.49,
+          "total_ret_pct": 30.46,
+          "n_days": 504
+        },
+        "test_metrics": {
+          "cagr_pct": 12.16,
+          "sharpe": 2.71,
+          "max_dd_pct": 1.91,
+          "calmar": 6.36,
+          "sortino": 5.61,
+          "vol_pct": 4.26,
+          "total_ret_pct": 5.91,
+          "n_days": 126
+        }
+      },
+      {
+        "train_start": "2020-12-31",
+        "test_start": "2023-01-03",
+        "test_end": "2023-07-05",
+        "weights": {
+          "Cross-Asset Pairs": 0.25,
+          "EXP-1220 Dynamic": 0.25,
+          "TLT Iron Condors": 0.25,
+          "Vol Term Structure": 0.25
+        },
+        "train_metrics": {
+          "cagr_pct": 13.69,
+          "sharpe": 4.19,
+          "max_dd_pct": 1.91,
+          "calmar": 7.16,
+          "sortino": 7.98,
+          "vol_pct": 3.07,
+          "total_ret_pct": 29.25,
+          "n_days": 504
+        },
+        "test_metrics": {
+          "cagr_pct": 20.97,
+          "sharpe": 4.32,
+          "max_dd_pct": 0.98,
+          "calmar": 21.5,
+          "sortino": 8.97,
+          "vol_pct": 4.44,
+          "total_ret_pct": 9.99,
+          "n_days": 126
+        }
+      },
+      {
+        "train_start": "2021-07-02",
+        "test_start": "2023-07-06",
+        "test_end": "2024-01-03",
+        "weights": {
+          "Cross-Asset Pairs": 0.25,
+          "EXP-1220 Dynamic": 0.25,
+          "TLT Iron Condors": 0.25,
+          "Vol Term Structure": 0.25
+        },
+        "train_metrics": {
+          "cagr_pct": 13.87,
+          "sharpe": 3.75,
+          "max_dd_pct": 1.91,
+          "calmar": 7.25,
+          "sortino": 6.92,
+          "vol_pct": 3.48,
+          "total_ret_pct": 29.66,
+          "n_days": 504
+        },
+        "test_metrics": {
+          "cagr_pct": 13.75,
+          "sharpe": 4.04,
+          "max_dd_pct": 1.1,
+          "calmar": 12.52,
+          "sortino": 7.01,
+          "vol_pct": 3.2,
+          "total_ret_pct": 6.65,
+          "n_days": 126
+        }
+      },
+      {
+        "train_start": "2021-12-31",
+        "test_start": "2024-01-04",
+        "test_end": "2024-07-05",
+        "weights": {
+          "Cross-Asset Pairs": 0.25,
+          "EXP-1220 Dynamic": 0.25,
+          "TLT Iron Condors": 0.25,
+          "Vol Term Structure": 0.25
+        },
+        "train_metrics": {
+          "cagr_pct": 12.34,
+          "sharpe": 3.25,
+          "max_dd_pct": 1.91,
+          "calmar": 6.45,
+          "sortino": 5.9,
+          "vol_pct": 3.6,
+          "total_ret_pct": 26.21,
+          "n_days": 504
+        },
+        "test_metrics": {
+          "cagr_pct": 20.42,
+          "sharpe": 6.63,
+          "max_dd_pct": 0.4,
+          "calmar": 50.6,
+          "sortino": 15.27,
+          "vol_pct": 2.81,
+          "total_ret_pct": 9.74,
+          "n_days": 126
+        }
+      },
+      {
+        "train_start": "2022-07-05",
+        "test_start": "2024-07-08",
+        "test_end": "2025-01-03",
+        "weights": {
+          "Cross-Asset Pairs": 0.25,
+          "EXP-1220 Dynamic": 0.25,
+          "TLT Iron Condors": 0.25,
+          "Vol Term Structure": 0.25
+        },
+        "train_metrics": {
+          "cagr_pct": 16.76,
+          "sharpe": 4.15,
+          "max_dd_pct": 1.91,
+          "calmar": 8.76,
+          "sortino": 8.1,
+          "vol_pct": 3.75,
+          "total_ret_pct": 36.33,
+          "n_days": 504
+        },
+        "test_metrics": {
+          "cagr_pct": 12.94,
+          "sharpe": 5.49,
+          "max_dd_pct": 0.33,
+          "calmar": 39.8,
+          "sortino": 9.56,
+          "vol_pct": 2.22,
+          "total_ret_pct": 6.27,
+          "n_days": 126
+        }
+      },
+      {
+        "train_start": "2023-01-03",
+        "test_start": "2025-01-06",
+        "test_end": "2025-07-09",
+        "weights": {
+          "Cross-Asset Pairs": 0.25,
+          "EXP-1220 Dynamic": 0.25,
+          "TLT Iron Condors": 0.25,
+          "Vol Term Structure": 0.25
+        },
+        "train_metrics": {
+          "cagr_pct": 16.96,
+          "sharpe": 4.8,
+          "max_dd_pct": 1.1,
+          "calmar": 15.45,
+          "sortino": 8.75,
+          "vol_pct": 3.28,
+          "total_ret_pct": 36.8,
+          "n_days": 504
+        },
+        "test_metrics": {
+          "cagr_pct": 16.82,
+          "sharpe": 6.03,
+          "max_dd_pct": 0.39,
+          "calmar": 43.17,
+          "sortino": 13.27,
+          "vol_pct": 2.58,
+          "total_ret_pct": 8.08,
+          "n_days": 126
+        }
+      },
+      {
+        "train_start": "2023-07-06",
+        "test_start": "2025-07-10",
+        "test_end": "2025-12-30",
+        "weights": {
+          "Cross-Asset Pairs": 0.25,
+          "EXP-1220 Dynamic": 0.25,
+          "TLT Iron Condors": 0.25,
+          "Vol Term Structure": 0.25
+        },
+        "train_metrics": {
+          "cagr_pct": 15.95,
+          "sharpe": 5.43,
+          "max_dd_pct": 1.1,
+          "calmar": 14.53,
+          "sortino": 9.97,
+          "vol_pct": 2.73,
+          "total_ret_pct": 34.43,
+          "n_days": 504
+        },
+        "test_metrics": {
+          "cagr_pct": 16.62,
+          "sharpe": 5.5,
+          "max_dd_pct": 0.67,
+          "calmar": 24.71,
+          "sortino": 11.56,
+          "vol_pct": 2.81,
+          "total_ret_pct": 7.66,
+          "n_days": 121
+        }
+      }
+    ],
+    "metrics": {
+      "cagr_pct": 18.67,
+      "sharpe": 4.89,
+      "max_dd_pct": 1.91,
+      "calmar": 9.76,
+      "sortino": 9.91,
+      "vol_pct": 3.52,
+      "total_ret_pct": 71.27,
+      "n_days": 792
+    }
+  },
+  "monte_carlo": {
+    "n_simulations": 10000,
+    "horizon_days": 1507,
+    "block_size": 5,
+    "starting_capital": 100000,
+    "terminal_wealth": {
+      "mean": 1445115.47,
+      "median": 1405007.01,
+      "std": 362870.38,
+      "min": 588342.85,
+      "max": 3066325.37,
+      "percentiles": {
+        "p1": 786592.05,
+        "p5": 933335.48,
+        "p10": 1019035.86,
+        "p25": 1185146.37,
+        "p50": 1405007.01,
+        "p75": 1657859.39,
+        "p90": 1918970.21,
+        "p95": 2109883.43,
+        "p99": 2514036.22
+      }
+    },
+    "max_drawdown": {
+      "mean_pct": -5.71,
+      "median_pct": -5.49,
+      "worst_pct": -14.12,
+      "percentiles_pct": {
+        "p1": -9.7,
+        "p5": -8.1,
+        "p10": -7.4,
+        "p25": -6.41,
+        "p50": -5.49,
+        "p75": -4.8,
+        "p90": -4.3,
+        "p95": -4.05,
+        "p99": -3.68
+      }
+    },
+    "sharpe_ratio": {
+      "mean": 4.107,
+      "median": 4.108,
+      "std": 0.356,
+      "percentiles": {
+        "p1": 3.283,
+        "p5": 3.524,
+        "p10": 3.65,
+        "p25": 3.863,
+        "p50": 4.108,
+        "p75": 4.35,
+        "p90": 4.562,
+        "p95": 4.69,
+        "p99": 4.935
+      }
+    },
+    "prob_profit": 1.0,
+    "prob_ruin_50pct": 0.0
+  },
+  "crisis": [
+    {
+      "name": "COVID Crash (Feb-Mar 2020)",
+      "description": "S&P 500 fell ~34% in 23 trading days",
+      "n_days": 23,
+      "underlying_drawdown_pct": -34.52,
+      "portfolio_drawdown_pct": -51.78,
+      "max_drawdown_pct": -34.52,
+      "trough_value": 48216.02,
+      "spread_beta": 1.5,
+      "vix_start": 15.0,
+      "vix_peak": 82.0,
+      "vix_multiplier": 5.47,
+      "estimated_recovery_days": 411,
+      "hedged_portfolio_drawdown_pct": null,
+      "hedged_trough_value": null
+    },
+    {
+      "name": "2022 Bear Market",
+      "description": "S&P 500 fell ~25% over ~9 months (~190 trading days)",
+      "n_days": 190,
+      "underlying_drawdown_pct": -29.12,
+      "portfolio_drawdown_pct": -43.68,
+      "max_drawdown_pct": -31.06,
+      "trough_value": 56318.99,
+      "spread_beta": 1.5,
+      "vix_start": 17.0,
+      "vix_peak": 36.0,
+      "vix_multiplier": 2.12,
+      "estimated_recovery_days": 324,
+      "hedged_portfolio_drawdown_pct": null,
+      "hedged_trough_value": null
+    },
+    {
+      "name": "Flash Crash (Single Day)",
+      "description": "Sudden 10% drawdown in a single trading session",
+      "n_days": 1,
+      "underlying_drawdown_pct": -10.0,
+      "portfolio_drawdown_pct": -15.0,
+      "max_drawdown_pct": -10.0,
+      "trough_value": 85000.0,
+      "spread_beta": 1.5,
+      "vix_start": 15.0,
+      "vix_peak": 65.0,
+      "vix_multiplier": 4.33,
+      "estimated_recovery_days": 92,
+      "hedged_portfolio_drawdown_pct": null,
+      "hedged_trough_value": null
+    },
+    {
+      "name": "VIX Spike (15 \u2192 65)",
+      "description": "VIX quadruples over 5 days; credit spreads widen sharply",
+      "n_days": 5,
+      "underlying_drawdown_pct": -15.0,
+      "portfolio_drawdown_pct": -22.5,
+      "max_drawdown_pct": -15.0,
+      "trough_value": 77500.0,
+      "spread_beta": 1.5,
+      "vix_start": 15.0,
+      "vix_peak": 65.0,
+      "vix_multiplier": 4.33,
+      "estimated_recovery_days": 144,
+      "hedged_portfolio_drawdown_pct": null,
+      "hedged_trough_value": null
+    }
+  ],
+  "leverage_sweep": [
+    {
+      "cagr_pct": 24.92,
+      "sharpe": 4.1,
+      "max_dd_pct": 3.65,
+      "calmar": 6.82,
+      "sortino": 7.29,
+      "vol_pct": 5.46,
+      "total_ret_pct": 278.32,
+      "n_days": 1507,
+      "leverage": 0.5
+    },
+    {
+      "cagr_pct": 39.45,
+      "sharpe": 4.1,
+      "max_dd_pct": 5.44,
+      "calmar": 7.25,
+      "sortino": 7.29,
+      "vol_pct": 8.19,
+      "total_ret_pct": 630.68,
+      "n_days": 1507,
+      "leverage": 0.75
+    },
+    {
+      "cagr_pct": 55.56,
+      "sharpe": 4.1,
+      "max_dd_pct": 7.21,
+      "calmar": 7.71,
+      "sortino": 7.29,
+      "vol_pct": 10.92,
+      "total_ret_pct": 1304.63,
+      "n_days": 1507,
+      "leverage": 1.0
+    },
+    {
+      "cagr_pct": 69.68,
+      "sharpe": 4.1,
+      "max_dd_pct": 8.61,
+      "calmar": 8.1,
+      "sortino": 7.29,
+      "vol_pct": 13.1,
+      "total_ret_pct": 2261.45,
+      "n_days": 1507,
+      "leverage": 1.2
+    },
+    {
+      "cagr_pct": 93.11,
+      "sharpe": 4.1,
+      "max_dd_pct": 10.67,
+      "calmar": 8.72,
+      "sortino": 7.29,
+      "vol_pct": 16.38,
+      "total_ret_pct": 5019.11,
+      "n_days": 1507,
+      "leverage": 1.5
+    },
+    {
+      "cagr_pct": 101.57,
+      "sharpe": 4.1,
+      "max_dd_pct": 11.35,
+      "calmar": 8.95,
+      "sortino": 7.29,
+      "vol_pct": 17.47,
+      "total_ret_pct": 6515.46,
+      "n_days": 1507,
+      "leverage": 1.6
+    },
+    {
+      "cagr_pct": 110.38,
+      "sharpe": 4.1,
+      "max_dd_pct": 12.03,
+      "calmar": 9.17,
+      "sortino": 7.29,
+      "vol_pct": 18.56,
+      "total_ret_pct": 8442.94,
+      "n_days": 1507,
+      "leverage": 1.7
+    },
+    {
+      "cagr_pct": 119.54,
+      "sharpe": 4.1,
+      "max_dd_pct": 12.71,
+      "calmar": 9.41,
+      "sortino": 7.29,
+      "vol_pct": 19.65,
+      "total_ret_pct": 10923.93,
+      "n_days": 1507,
+      "leverage": 1.8
+    },
+    {
+      "cagr_pct": 139.0,
+      "sharpe": 4.1,
+      "max_dd_pct": 14.04,
+      "calmar": 9.9,
+      "sortino": 7.29,
+      "vol_pct": 21.84,
+      "total_ret_pct": 18216.55,
+      "n_days": 1507,
+      "leverage": 2.0
+    },
+    {
+      "cagr_pct": 194.88,
+      "sharpe": 4.1,
+      "max_dd_pct": 17.32,
+      "calmar": 11.25,
+      "sortino": 7.29,
+      "vol_pct": 27.29,
+      "total_ret_pct": 64256.46,
+      "n_days": 1507,
+      "leverage": 2.5
+    },
+    {
+      "cagr_pct": 262.75,
+      "sharpe": 4.1,
+      "max_dd_pct": 20.51,
+      "calmar": 12.81,
+      "sortino": 7.29,
+      "vol_pct": 32.75,
+      "total_ret_pct": 221984.36,
+      "n_days": 1507,
+      "leverage": 3.0
+    },
+    {
+      "cagr_pct": 444.04,
+      "sharpe": 4.1,
+      "max_dd_pct": 26.61,
+      "calmar": 16.69,
+      "sortino": 7.29,
+      "vol_pct": 43.67,
+      "total_ret_pct": 2507127.66,
+      "n_days": 1507,
+      "leverage": 4.0
+    },
+    {
+      "cagr_pct": 706.43,
+      "sharpe": 4.1,
+      "max_dd_pct": 32.37,
+      "calmar": 21.83,
+      "sortino": 7.29,
+      "vol_pct": 54.59,
+      "total_ret_pct": 26388605.81,
+      "n_days": 1507,
+      "leverage": 5.0
+    }
+  ],
+  "yearly": {
+    "2020": {
+      "cagr_pct": 46.41,
+      "sharpe": 5.01,
+      "max_dd_pct": 2.46,
+      "calmar": 18.9,
+      "sortino": 8.56,
+      "vol_pct": 7.68,
+      "total_ret_pct": 46.64,
+      "n_days": 253
+    },
+    "2021": {
+      "cagr_pct": 79.43,
+      "sharpe": 5.73,
+      "max_dd_pct": 1.71,
+      "calmar": 46.51,
+      "sortino": 12.97,
+      "vol_pct": 10.3,
+      "total_ret_pct": 79.43,
+      "n_days": 252
+    },
+    "2022": {
+      "cagr_pct": 20.18,
+      "sharpe": 1.6,
+      "max_dd_pct": 7.21,
+      "calmar": 2.8,
+      "sortino": 2.64,
+      "vol_pct": 11.91,
+      "total_ret_pct": 20.09,
+      "n_days": 251
+    },
+    "2023": {
+      "cagr_pct": 71.75,
+      "sharpe": 3.79,
+      "max_dd_pct": 4.17,
+      "calmar": 17.21,
+      "sortino": 6.88,
+      "vol_pct": 14.56,
+      "total_ret_pct": 71.02,
+      "n_days": 250
+    },
+    "2024": {
+      "cagr_pct": 58.82,
+      "sharpe": 4.91,
+      "max_dd_pct": 1.53,
+      "calmar": 38.34,
+      "sortino": 9.44,
+      "vol_pct": 9.52,
+      "total_ret_pct": 58.82,
+      "n_days": 252
+    },
+    "2025": {
+      "cagr_pct": 64.64,
+      "sharpe": 4.98,
+      "max_dd_pct": 2.54,
+      "calmar": 25.44,
+      "sortino": 10.13,
+      "vol_pct": 10.12,
+      "total_ret_pct": 63.67,
+      "n_days": 249
+    }
+  },
+  "target_check": {
+    "cagr_pass": "False",
+    "dd_pass": true,
+    "sharpe_pass": false,
+    "mc_dd_pass": true
+  }
+}
