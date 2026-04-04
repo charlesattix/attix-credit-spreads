@@ -1,0 +1,267 @@
+{
+  "generated": "2026-04-04T16:17:54.584960",
+  "data_source": "IronVault (options_cache.db)",
+  "synthetic_data": false,
+  "strategies": [
+    {
+      "name": "XLF Iron Condors",
+      "description": "Sell OTM put + call spreads on XLF, VIX<30 filter, $1-wide",
+      "n_trades": 53,
+      "total_pnl": 585.0,
+      "win_rate": 0.566,
+      "max_dd": 0.0136,
+      "sharpe": 0.554,
+      "cagr": 0.0011,
+      "spy_correlation": -0.1552,
+      "avg_pnl": 11.04,
+      "oos_sharpe_2023_2025": 2.277,
+      "oos_n_trades": 32,
+      "yearly": {
+        "2020": {
+          "n_trades": 5,
+          "total_pnl": -395.0,
+          "win_rate": 0.2,
+          "max_dd": 0.0059,
+          "sharpe": -0.992,
+          "return_pct": -0.004
+        },
+        "2021": {
+          "n_trades": 9,
+          "total_pnl": -670.0,
+          "win_rate": 0.1111,
+          "max_dd": 0.0096,
+          "sharpe": -1.459,
+          "return_pct": -0.0067
+        },
+        "2022": {
+          "n_trades": 7,
+          "total_pnl": 235.0,
+          "win_rate": 0.5714,
+          "max_dd": 0.0033,
+          "sharpe": 0.443,
+          "return_pct": 0.0024
+        },
+        "2023": {
+          "n_trades": 10,
+          "total_pnl": 605.0,
+          "win_rate": 0.7,
+          "max_dd": 0.0016,
+          "sharpe": 1.403,
+          "return_pct": 0.006
+        },
+        "2024": {
+          "n_trades": 13,
+          "total_pnl": 485.0,
+          "win_rate": 0.6923,
+          "max_dd": 0.0026,
+          "sharpe": 1.241,
+          "return_pct": 0.0049
+        },
+        "2025": {
+          "n_trades": 9,
+          "total_pnl": 325.0,
+          "win_rate": 0.8889,
+          "max_dd": 0.0,
+          "sharpe": 1.234,
+          "return_pct": 0.0032
+        }
+      },
+      "flagged_oos_sharpe_gt_1_5": true
+    },
+    {
+      "name": "SPY Calendar Spreads",
+      "description": "Buy back-month / sell front-month SPY puts, exploit term structure",
+      "n_trades": 62,
+      "total_pnl": -1304.6,
+      "win_rate": 0.3226,
+      "max_dd": 0.0345,
+      "sharpe": -0.418,
+      "cagr": -0.0023,
+      "spy_correlation": -0.7509,
+      "avg_pnl": -21.04,
+      "oos_sharpe_2023_2025": -0.624,
+      "oos_n_trades": 38,
+      "yearly": {
+        "2020": {
+          "n_trades": 3,
+          "total_pnl": -279.0,
+          "win_rate": 0.3333,
+          "max_dd": 0.006,
+          "sharpe": -0.435,
+          "return_pct": -0.0028
+        },
+        "2021": {
+          "n_trades": 14,
+          "total_pnl": -3.0,
+          "win_rate": 0.2857,
+          "max_dd": 0.0106,
+          "sharpe": -0.002,
+          "return_pct": -0.0
+        },
+        "2022": {
+          "n_trades": 7,
+          "total_pnl": 353.2,
+          "win_rate": 0.4286,
+          "max_dd": 0.0051,
+          "sharpe": 0.352,
+          "return_pct": 0.0035
+        },
+        "2023": {
+          "n_trades": 13,
+          "total_pnl": -1350.0,
+          "win_rate": 0.2308,
+          "max_dd": 0.0095,
+          "sharpe": -1.471,
+          "return_pct": -0.0135
+        },
+        "2024": {
+          "n_trades": 16,
+          "total_pnl": 1307.0,
+          "win_rate": 0.4375,
+          "max_dd": 0.0121,
+          "sharpe": 0.785,
+          "return_pct": 0.0131
+        },
+        "2025": {
+          "n_trades": 9,
+          "total_pnl": -1332.8,
+          "win_rate": 0.2222,
+          "max_dd": 0.0162,
+          "sharpe": -1.283,
+          "return_pct": -0.0133
+        }
+      },
+      "flagged_oos_sharpe_gt_1_5": false
+    },
+    {
+      "name": "XLF Momentum Spreads",
+      "description": "Sell OTM put spreads on XLF when 20d momentum > 2%, $1-wide",
+      "n_trades": 30,
+      "total_pnl": 495.0,
+      "win_rate": 1.0,
+      "max_dd": 0.0,
+      "sharpe": 15.728,
+      "cagr": 0.001,
+      "spy_correlation": -0.1534,
+      "avg_pnl": 16.5,
+      "oos_sharpe_2023_2025": 12.031,
+      "oos_n_trades": 18,
+      "yearly": {
+        "2020": {
+          "n_trades": 4,
+          "total_pnl": 80.0,
+          "win_rate": 1.0,
+          "max_dd": 0.0,
+          "sharpe": 5.657,
+          "return_pct": 0.0008
+        },
+        "2021": {
+          "n_trades": 5,
+          "total_pnl": 65.0,
+          "win_rate": 1.0,
+          "max_dd": 0.0,
+          "sharpe": 10.614,
+          "return_pct": 0.0006
+        },
+        "2022": {
+          "n_trades": 3,
+          "total_pnl": 45.0,
+          "win_rate": 1.0,
+          "max_dd": 0.0,
+          "sharpe": 5.196,
+          "return_pct": 0.0004
+        },
+        "2023": {
+          "n_trades": 6,
+          "total_pnl": 85.0,
+          "win_rate": 1.0,
+          "max_dd": 0.0,
+          "sharpe": 9.22,
+          "return_pct": 0.0008
+        },
+        "2024": {
+          "n_trades": 8,
+          "total_pnl": 140.0,
+          "win_rate": 1.0,
+          "max_dd": 0.0,
+          "sharpe": 7.0,
+          "return_pct": 0.0014
+        },
+        "2025": {
+          "n_trades": 4,
+          "total_pnl": 80.0,
+          "win_rate": 1.0,
+          "max_dd": 0.0,
+          "sharpe": 6.928,
+          "return_pct": 0.0008
+        }
+      },
+      "flagged_oos_sharpe_gt_1_5": true
+    },
+    {
+      "name": "VIX Mean-Reversion Puts",
+      "description": "Sell SPY put spreads only when VIX > 20, wider OTM when VIX > 30",
+      "n_trades": 20,
+      "total_pnl": 124.0,
+      "win_rate": 0.85,
+      "max_dd": 0.007,
+      "sharpe": 0.169,
+      "cagr": 0.0002,
+      "spy_correlation": 0.3562,
+      "avg_pnl": 6.2,
+      "oos_sharpe_2023_2025": 3.512,
+      "oos_n_trades": 6,
+      "yearly": {
+        "2020": {
+          "n_trades": 6,
+          "total_pnl": -120.0,
+          "win_rate": 0.8333,
+          "max_dd": 0.0043,
+          "sharpe": -0.24,
+          "return_pct": -0.0012
+        },
+        "2021": {
+          "n_trades": 3,
+          "total_pnl": 165.0,
+          "win_rate": 1.0,
+          "max_dd": 0.0,
+          "sharpe": 7.627,
+          "return_pct": 0.0016
+        },
+        "2022": {
+          "n_trades": 5,
+          "total_pnl": -390.0,
+          "win_rate": 0.6,
+          "max_dd": 0.0059,
+          "sharpe": -0.761,
+          "return_pct": -0.0039
+        },
+        "2023": {
+          "n_trades": 3,
+          "total_pnl": 141.0,
+          "win_rate": 1.0,
+          "max_dd": 0.0,
+          "sharpe": 5.875,
+          "return_pct": 0.0014
+        },
+        "2024": {
+          "n_trades": 1,
+          "total_pnl": 60.0,
+          "win_rate": 1.0,
+          "max_dd": 0.0,
+          "sharpe": 60.0,
+          "return_pct": 0.0006
+        },
+        "2025": {
+          "n_trades": 2,
+          "total_pnl": 268.0,
+          "win_rate": 1.0,
+          "max_dd": 0.0,
+          "sharpe": 2.68,
+          "return_pct": 0.0027
+        }
+      },
+      "flagged_oos_sharpe_gt_1_5": true
+    }
+  ]
+}
