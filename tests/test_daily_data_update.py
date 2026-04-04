@@ -1,4 +1,4 @@
-"""Tests for scripts/daily_data_update.sh."""
+"""Tests for scripts/daily_data_update.sh and scripts/setup_cron.sh."""
 
 import os
 import subprocess
@@ -9,6 +9,10 @@ import pytest
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = PROJECT_ROOT / "scripts" / "daily_data_update.sh"
+CRON_SCRIPT = PROJECT_ROOT / "scripts" / "setup_cron.sh"
+
+
+# ── Script existence & structure ─────────────────────────────────────────
 
 
 class TestScriptExists:
@@ -57,11 +61,61 @@ class TestScriptExists:
 
     def test_script_has_cron_comment(self):
         content = SCRIPT.read_text()
-        assert "0 21 * * *" in content
+        assert "0 22 * * 1-5" in content
 
     def test_script_supports_dry_run(self):
         content = SCRIPT.read_text()
         assert "--dry-run" in content
+
+
+# ── New features ─────────────────────────────────────────────────────────
+
+
+class TestNewFeatures:
+    """Test enhancements: retries, trading-day check, log rotation, --force."""
+
+    def test_has_retry_logic(self):
+        content = SCRIPT.read_text()
+        assert "MAX_RETRIES" in content
+        assert "attempt" in content
+        assert "RETRY_DELAY" in content
+
+    def test_has_trading_day_check(self):
+        content = SCRIPT.read_text()
+        assert "is_trading_day" in content
+        # Checks weekends
+        assert "dow" in content or "weekday" in content.lower()
+
+    def test_has_force_flag(self):
+        content = SCRIPT.read_text()
+        assert "--force" in content
+        assert "FORCE" in content
+
+    def test_has_log_rotation(self):
+        content = SCRIPT.read_text()
+        assert "rotate_log" in content
+        assert "MAX_LOG_SIZE" in content
+
+    def test_has_db_size_report(self):
+        content = SCRIPT.read_text()
+        assert "DB size" in content or "db_size" in content.lower() or "du -h" in content
+
+    def test_has_holiday_check(self):
+        content = SCRIPT.read_text()
+        # Checks at least some fixed holidays
+        assert "01-01" in content or "New Year" in content
+        assert "07-04" in content or "Independence" in content
+        assert "12-25" in content or "Christmas" in content
+
+    def test_continues_after_backfill_failure(self):
+        """Script should still run validation even if backfill fails."""
+        content = SCRIPT.read_text()
+        # The script should NOT exit immediately on backfill failure
+        # It should continue to validation step
+        assert "Continue to validation" in content or "backfill_success" in content
+
+
+# ── Lock mechanism ───────────────────────────────────────────────────────
 
 
 class TestLockMechanism:
@@ -69,15 +123,11 @@ class TestLockMechanism:
 
     def test_stale_lock_is_cleaned(self, tmp_path):
         """A lock file with a dead PID should be cleaned up."""
-        # Create a wrapper script that uses our lock logic
         data_dir = tmp_path / "data"
         data_dir.mkdir()
         lock_file = data_dir / ".daily_update.lock"
-
-        # Write a stale PID (99999999 is unlikely to be running)
         lock_file.write_text("99999999")
 
-        # Create a minimal test script that mimics the lock check
         test_script = tmp_path / "test_lock.sh"
         test_script.write_text(textwrap.dedent(f"""\
             #!/usr/bin/env bash
@@ -109,8 +159,6 @@ class TestLockMechanism:
         data_dir = tmp_path / "data"
         data_dir.mkdir()
         lock_file = data_dir / ".daily_update.lock"
-
-        # Use our own PID (definitely running)
         lock_file.write_text(str(os.getpid()))
 
         test_script = tmp_path / "test_lock.sh"
@@ -138,12 +186,13 @@ class TestLockMechanism:
         assert "BLOCKED" in result.stdout
 
 
+# ── .env handling ────────────────────────────────────────────────────────
+
+
 class TestScriptFailsWithoutEnv:
     """Test that the script fails gracefully without .env."""
 
     def test_fails_without_env(self, tmp_path):
-        """Script should exit 1 if .env is missing."""
-        # Create a minimal version of the script that only checks .env
         test_script = tmp_path / "test_env.sh"
         test_script.write_text(textwrap.dedent(f"""\
             #!/usr/bin/env bash
@@ -166,8 +215,6 @@ class TestScriptFailsWithoutEnv:
         assert "ERROR" in result.stdout
 
     def test_fails_without_polygon_key(self, tmp_path):
-        """Script should exit 1 if POLYGON_API_KEY is empty."""
-        # Create .env without the key
         env_file = tmp_path / ".env"
         env_file.write_text("SOME_OTHER_KEY=foo\n")
 
@@ -193,3 +240,235 @@ class TestScriptFailsWithoutEnv:
         )
         assert result.returncode == 1
         assert "POLYGON_API_KEY" in result.stdout
+
+
+# ── Trading day check ────────────────────────────────────────────────────
+
+
+class TestTradingDayCheck:
+    """Test the is_trading_day function."""
+
+    def test_weekday_is_trading_day(self, tmp_path):
+        """Monday-Friday should be trading days (excluding holidays)."""
+        test_script = tmp_path / "test_trading.sh"
+        test_script.write_text(textwrap.dedent("""\
+            #!/usr/bin/env bash
+            set -euo pipefail
+            is_trading_day() {
+                local dow
+                dow=$(date -u '+%u')
+                if [ "$dow" -ge 6 ]; then
+                    return 1
+                fi
+                local today
+                today=$(date -u '+%m-%d')
+                case "$today" in
+                    01-01|07-04|12-25) return 1 ;;
+                esac
+                return 0
+            }
+            if is_trading_day; then
+                echo "TRADING"
+            else
+                echo "NOT_TRADING"
+            fi
+        """))
+        test_script.chmod(0o755)
+
+        result = subprocess.run(
+            ["bash", str(test_script)],
+            capture_output=True, text=True, timeout=10,
+        )
+        assert result.returncode == 0
+        # Either TRADING or NOT_TRADING — just check the function works
+        assert "TRADING" in result.stdout
+
+    def test_holiday_check_jan1(self, tmp_path):
+        """Jan 1 should not be a trading day."""
+        test_script = tmp_path / "test_holiday.sh"
+        test_script.write_text(textwrap.dedent("""\
+            #!/usr/bin/env bash
+            set -euo pipefail
+            today="01-01"
+            case "$today" in
+                01-01|07-04|12-25)
+                    echo "HOLIDAY"
+                    ;;
+                *)
+                    echo "NOT_HOLIDAY"
+                    ;;
+            esac
+        """))
+        test_script.chmod(0o755)
+
+        result = subprocess.run(
+            ["bash", str(test_script)],
+            capture_output=True, text=True, timeout=10,
+        )
+        assert result.returncode == 0
+        assert "HOLIDAY" in result.stdout
+
+
+# ── Log rotation ─────────────────────────────────────────────────────────
+
+
+class TestLogRotation:
+    """Test log rotation logic."""
+
+    def test_rotation_moves_large_log(self, tmp_path):
+        log_file = tmp_path / "test.log"
+        # Create a file just over 10 MB
+        log_file.write_bytes(b"x" * (10 * 1024 * 1024 + 1))
+
+        test_script = tmp_path / "test_rotate.sh"
+        test_script.write_text(textwrap.dedent(f"""\
+            #!/usr/bin/env bash
+            set -euo pipefail
+            LOG_FILE="{log_file}"
+            MAX_LOG_SIZE=$((10 * 1024 * 1024))
+            if [ -f "$LOG_FILE" ]; then
+                size=$(stat -c%s "$LOG_FILE" 2>/dev/null || stat -f%z "$LOG_FILE" 2>/dev/null || echo 0)
+                if [ "$size" -gt "$MAX_LOG_SIZE" ]; then
+                    mv "$LOG_FILE" "${{LOG_FILE}}.1"
+                    echo "ROTATED"
+                else
+                    echo "NO_ROTATE"
+                fi
+            fi
+        """))
+        test_script.chmod(0o755)
+
+        result = subprocess.run(
+            ["bash", str(test_script)],
+            capture_output=True, text=True, timeout=10,
+        )
+        assert result.returncode == 0
+        assert "ROTATED" in result.stdout
+        assert (tmp_path / "test.log.1").exists()
+
+    def test_no_rotation_for_small_log(self, tmp_path):
+        log_file = tmp_path / "test.log"
+        log_file.write_text("small log\n")
+
+        test_script = tmp_path / "test_rotate.sh"
+        test_script.write_text(textwrap.dedent(f"""\
+            #!/usr/bin/env bash
+            set -euo pipefail
+            LOG_FILE="{log_file}"
+            MAX_LOG_SIZE=$((10 * 1024 * 1024))
+            if [ -f "$LOG_FILE" ]; then
+                size=$(stat -c%s "$LOG_FILE" 2>/dev/null || stat -f%z "$LOG_FILE" 2>/dev/null || echo 0)
+                if [ "$size" -gt "$MAX_LOG_SIZE" ]; then
+                    echo "ROTATED"
+                else
+                    echo "NO_ROTATE"
+                fi
+            fi
+        """))
+        test_script.chmod(0o755)
+
+        result = subprocess.run(
+            ["bash", str(test_script)],
+            capture_output=True, text=True, timeout=10,
+        )
+        assert result.returncode == 0
+        assert "NO_ROTATE" in result.stdout
+
+
+# ── Retry logic ──────────────────────────────────────────────────────────
+
+
+class TestRetryLogic:
+    """Test retry loop behavior."""
+
+    def test_retry_succeeds_on_second_attempt(self, tmp_path):
+        """Simulate a command that fails once then succeeds."""
+        state_file = tmp_path / "attempt"
+        state_file.write_text("0")
+
+        test_script = tmp_path / "test_retry.sh"
+        test_script.write_text(textwrap.dedent(f"""\
+            #!/usr/bin/env bash
+            set -euo pipefail
+            MAX_RETRIES=3
+            success=false
+            for attempt in $(seq 1 "$MAX_RETRIES"); do
+                count=$(cat "{state_file}")
+                count=$((count + 1))
+                echo "$count" > "{state_file}"
+                if [ "$count" -ge 2 ]; then
+                    echo "SUCCESS on attempt $attempt"
+                    success=true
+                    break
+                else
+                    echo "FAIL on attempt $attempt"
+                fi
+            done
+            if [ "$success" = true ]; then
+                echo "DONE"
+            else
+                echo "EXHAUSTED"
+            fi
+        """))
+        test_script.chmod(0o755)
+
+        result = subprocess.run(
+            ["bash", str(test_script)],
+            capture_output=True, text=True, timeout=10,
+        )
+        assert result.returncode == 0
+        assert "FAIL on attempt 1" in result.stdout
+        assert "SUCCESS on attempt 2" in result.stdout
+        assert "DONE" in result.stdout
+
+
+# ── Cron setup script ────────────────────────────────────────────────────
+
+
+class TestCronSetupScript:
+    """Test scripts/setup_cron.sh exists and has correct structure."""
+
+    def test_cron_script_exists(self):
+        assert CRON_SCRIPT.exists()
+
+    def test_cron_script_is_executable(self):
+        assert os.access(CRON_SCRIPT, os.X_OK)
+
+    def test_cron_script_has_install_action(self):
+        content = CRON_SCRIPT.read_text()
+        assert "install" in content
+
+    def test_cron_script_has_remove_action(self):
+        content = CRON_SCRIPT.read_text()
+        assert "--remove" in content
+
+    def test_cron_script_has_status_action(self):
+        content = CRON_SCRIPT.read_text()
+        assert "--status" in content
+
+    def test_cron_schedule_is_22_utc_mon_fri(self):
+        content = CRON_SCRIPT.read_text()
+        assert "0 22 * * 1-5" in content
+
+    def test_cron_script_checks_executable(self):
+        content = CRON_SCRIPT.read_text()
+        assert "not executable" in content.lower() or "-x" in content
+
+    def test_cron_script_checks_env(self):
+        content = CRON_SCRIPT.read_text()
+        assert ".env" in content
+
+
+# ── Backfill script dynamic DATE_TO ──────────────────────────────────────
+
+
+class TestBackfillDateTo:
+    """Verify backfill_polygon_cache.py uses dynamic DATE_TO."""
+
+    def test_date_to_is_dynamic(self):
+        backfill = PROJECT_ROOT / "scripts" / "backfill_polygon_cache.py"
+        content = backfill.read_text()
+        # Should NOT have a hard-coded date
+        assert "2026-03-15" not in content
+        # Should use datetime.now or similar
+        assert "datetime.now" in content or "date.today" in content

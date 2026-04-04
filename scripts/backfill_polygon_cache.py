@@ -51,7 +51,7 @@ SYMBOLS_PATH = DATA_DIR / "backfill_symbols_SPY.json"
 BASE_URL = "https://api.polygon.io"
 TICKER = "SPY"
 DATE_FROM = "2020-01-01"
-DATE_TO = "2026-03-15"
+DATE_TO = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 DTE_MIN = 7
 DTE_MAX = 60
 
