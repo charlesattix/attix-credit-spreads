@@ -1,0 +1,168 @@
+{
+  "experiment": "EXP-1220",
+  "leverage": 1.2,
+  "n_simulations": 10000,
+  "north_star_p5_dd_pct": 9.62,
+  "north_star_pass": true,
+  "summary": {
+    "historical": {
+      "n_days": 1507,
+      "starting_capital": 100000,
+      "sharpe": 3.541,
+      "max_drawdown_pct": -7.85,
+      "cagr_pct": 45.95,
+      "calmar": 5.855
+    },
+    "monte_carlo_confidence": {
+      "p5_terminal": 640591.99,
+      "p50_terminal": 956594.22,
+      "p95_terminal": 1426410.26,
+      "prob_profit_pct": 100.0,
+      "prob_ruin_pct": 0.0,
+      "median_max_dd_pct": -6.46
+    },
+    "worst_crisis": {
+      "name": "COVID Crash (Feb-Mar 2020)",
+      "portfolio_drawdown_pct": -51.78,
+      "hedged_portfolio_drawdown_pct": null,
+      "estimated_recovery_days": 479
+    },
+    "most_sensitive_parameter": "profit_target_pct",
+    "risk_rating": "MODERATE"
+  },
+  "tail_risk": {
+    "cvar_95_pct": -1.274,
+    "cvar_99_pct": -2.042,
+    "var_95_pct": -0.815,
+    "var_99_pct": -1.532,
+    "max_consecutive_losses": 5,
+    "longest_dd_duration_days": 55,
+    "skewness": 0.911,
+    "excess_kurtosis": 7.874,
+    "worst_day_pct": -3.459
+  },
+  "monte_carlo": {
+    "n_simulations": 10000,
+    "horizon_days": 1507,
+    "block_size": 5,
+    "starting_capital": 100000,
+    "terminal_wealth": {
+      "mean": 987379.93,
+      "median": 956594.22,
+      "std": 242676.44,
+      "min": 413809.31,
+      "max": 2316104.24,
+      "percentiles": {
+        "p1": 549592.51,
+        "p5": 640591.99,
+        "p10": 701457.81,
+        "p25": 816699.17,
+        "p50": 956594.22,
+        "p75": 1128598.91,
+        "p90": 1305750.15,
+        "p95": 1426410.26,
+        "p99": 1684836.91
+      }
+    },
+    "max_drawdown": {
+      "mean_pct": -6.73,
+      "median_pct": -6.46,
+      "worst_pct": -18.04,
+      "percentiles_pct": {
+        "p1": -11.67,
+        "p5": -9.62,
+        "p10": -8.72,
+        "p25": -7.53,
+        "p50": -6.46,
+        "p75": -5.63,
+        "p90": -5.02,
+        "p95": -4.73,
+        "p99": -4.34
+      }
+    },
+    "sharpe_ratio": {
+      "mean": 3.547,
+      "median": 3.547,
+      "std": 0.369,
+      "percentiles": {
+        "p1": 2.7,
+        "p5": 2.948,
+        "p10": 3.074,
+        "p25": 3.296,
+        "p50": 3.547,
+        "p75": 3.793,
+        "p90": 4.017,
+        "p95": 4.152,
+        "p99": 4.402
+      }
+    },
+    "prob_profit": 1.0,
+    "prob_ruin_50pct": 0.0
+  },
+  "crisis_scenarios": [
+    {
+      "name": "COVID Crash (Feb-Mar 2020)",
+      "description": "S&P 500 fell ~34% in 23 trading days",
+      "n_days": 23,
+      "underlying_drawdown_pct": -34.52,
+      "portfolio_drawdown_pct": -51.78,
+      "max_drawdown_pct": -34.52,
+      "trough_value": 48216.02,
+      "spread_beta": 1.5,
+      "vix_start": 15.0,
+      "vix_peak": 82.0,
+      "vix_multiplier": 5.47,
+      "estimated_recovery_days": 479,
+      "hedged_portfolio_drawdown_pct": null,
+      "hedged_trough_value": null
+    },
+    {
+      "name": "2022 Bear Market",
+      "description": "S&P 500 fell ~25% over ~9 months (~190 trading days)",
+      "n_days": 190,
+      "underlying_drawdown_pct": -29.12,
+      "portfolio_drawdown_pct": -43.68,
+      "max_drawdown_pct": -31.06,
+      "trough_value": 56318.99,
+      "spread_beta": 1.5,
+      "vix_start": 17.0,
+      "vix_peak": 36.0,
+      "vix_multiplier": 2.12,
+      "estimated_recovery_days": 377,
+      "hedged_portfolio_drawdown_pct": null,
+      "hedged_trough_value": null
+    },
+    {
+      "name": "Flash Crash (Single Day)",
+      "description": "Sudden 10% drawdown in a single trading session",
+      "n_days": 1,
+      "underlying_drawdown_pct": -10.0,
+      "portfolio_drawdown_pct": -15.0,
+      "max_drawdown_pct": -10.0,
+      "trough_value": 85000.0,
+      "spread_beta": 1.5,
+      "vix_start": 15.0,
+      "vix_peak": 65.0,
+      "vix_multiplier": 4.33,
+      "estimated_recovery_days": 107,
+      "hedged_portfolio_drawdown_pct": null,
+      "hedged_trough_value": null
+    },
+    {
+      "name": "VIX Spike (15 \u2192 65)",
+      "description": "VIX quadruples over 5 days; credit spreads widen sharply",
+      "n_days": 5,
+      "underlying_drawdown_pct": -15.0,
+      "portfolio_drawdown_pct": -22.5,
+      "max_drawdown_pct": -15.0,
+      "trough_value": 77500.0,
+      "spread_beta": 1.5,
+      "vix_start": 15.0,
+      "vix_peak": 65.0,
+      "vix_multiplier": 4.33,
+      "estimated_recovery_days": 168,
+      "hedged_portfolio_drawdown_pct": null,
+      "hedged_trough_value": null
+    }
+  ]
+}
