@@ -1,6 +1,6 @@
 # IronVault Data Inventory
 
-**Last Updated:** 2026-04-05 (post-backfill)
+**Last Updated:** 2026-04-05 (post-TLT backfill)
 **Database:** `data/options_cache.db` (976 MB)
 **Source:** Polygon.io historical options data
 
@@ -28,7 +28,7 @@
 | **GLD** | ~14,700+ | 250+ | 2020-01-17 | **2025-01-17** | **EXTENDED** — backfilled to Jan 2025 (was Oct 2024) |
 | **XLF** | 9,256 | 320 | 2020-01-03 | 2026-06-30 | **FULL** |
 | **QQQ** | ~12,200+ | 230+ | 2020-01-03 | **2025-12-19** | **EXTENDED** — backfilled from Apr 2023 to Dec 2025 |
-| **TLT** | 9,185 | 181 | 2020-01-17 | **2024-07-19** | **GAP** — missing Aug 2024+ |
+| **TLT** | ~10,700+ | 198 | 2020-01-17 | **2025-12-19** | **EXTENDED** — backfilled Aug 2024 to Dec 2025 |
 | **SOXX** | 3,460 | 70 | 2020-07-17 | 2026-06-18 | Partial |
 | **XLK** | 2,680 | 242 | 2020-01-17 | 2026-06-18 | Partial (few strikes) |
 | **XLE** | 1,757 | 181 | 2020-04-17 | 2026-06-30 | Partial (few strikes) |
@@ -41,7 +41,7 @@
 | QQQ | 392,739+ | 1,500+ | 2020-01-02 | 2025-12-19 |
 | XLF | 243,583 | 1,571 | 2020-01-02 | 2026-04-02 |
 | XLI | 200,761 | 1,571 | 2020-01-02 | 2026-04-02 |
-| TLT | 185,357 | 1,144 | 2020-01-02 | 2024-07-19 |
+| TLT | 293,446 | 1,501 | 2020-01-02 | **2025-12-19** |
 | GLD | 190,933+ | 1,200+ | 2020-01-02 | 2025-01-17 |
 | SOXX | 37,229 | 804 | 2020-02-06 | 2026-04-02 |
 | XLE | 20,542 | 1,359 | 2020-01-23 | 2026-04-02 |
@@ -76,12 +76,14 @@ No intraday data for other tickers.
 - **Remaining gap:** None for monthly expirations. Weekly expirations not backfilled.
 - **Severity:** RESOLVED for strategy backtesting purposes
 
-### 3. TLT Options — Missing Aug 2024 to Present (8 months)
+### 3. TLT Options — BACKFILLED (2026-04-05)
 
-- **Impact:** TLT Iron Condors and TLT-based pairs can't test recent data
-- **Size of gap:** ~8 months (~800 contracts)
-- **Severity:** MEDIUM — TLT data covers through Jul 2024 (4.5 years)
-- **Backfill estimate:** ~20 min
+- **Status:** Extended from Jul 2024 → Dec 2025 via `scripts/backfill_tlt.py`
+- **Method:** OCC symbol construction (strikes $70-$115, 17 monthly expirations, puts + calls)
+- **New data:** 1,564 contracts registered, 3,082 bars fetched from Polygon (0 errors)
+- **Coverage:** Now through Dec 2025 (198 expirations, 293,446 daily bars, 1,501 trading days)
+- **Remaining gap:** None for monthly expirations in the $70-$115 strike range
+- **Severity:** RESOLVED — TLT Iron Condors and TLT-based pairs can now be validated on 2024-2025 data
 
 ### 4. SPY Intraday — Missing Mar 2026 to Present
 
@@ -126,6 +128,8 @@ cannot enumerate new contracts. To backfill:
 | Script | Purpose | Status |
 |--------|---------|--------|
 | `scripts/backfill_polygon_cache.py` | SPY option daily bars | Complete (SPY up to date) |
+| `scripts/backfill_tlt.py` | TLT option backfill (OCC symbol construction) | **Complete** — Jul 2024 to Dec 2025 |
+| `scripts/backfill_gap.py` | Targeted gap backfill for existing contracts | Working |
 | `scripts/fetch_sector_options.py` | Multi-ticker option fetch | Available but needs Options tier |
 | `scripts/iron_vault_setup.py` | DB setup and validation | Working |
 
