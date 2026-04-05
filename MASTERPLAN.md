@@ -1,99 +1,192 @@
-# MASTERPLAN.md — Operation Crack The Code
+# MASTERPLAN.md v6 — Honest Numbers Only
+
+**Updated:** 2026-04-05
+**Policy:** This document contains ONLY validated, corrected numbers. Inflated claims from previous versions have been removed. See Lessons Learned for full accounting of what went wrong.
 
 ## Mission
-Build a validated, multi-strategy options trading system on SPY. Data-driven approach: kill losing strategies, optimize winners, follow what the data says. Paper trade the winners, then go live.
+Build a validated options trading system. Data-driven: kill losers, optimize winners, paper trade, go live.
 
-## North Star — CORRECTED Numbers (2026-04-05)
+---
 
-> All numbers below are corrected per validation audit (1f0888a) and hedge cost reality check (51e11e6). Previous inflated claims have been struck through.
+## North Star — Honest Current State
 
-| Target | Goal | Corrected Current | Confidence | Notes |
-|--------|------|-------------------|------------|-------|
-| **CAGR** | 100% | **77.3% at 1x** / ~73% after real hedge costs | VALIDATED | 100% requires 1.2x leverage (unproven on live account) |
-| **Sharpe** | 6.0 | **3.76** (portfolio) / **5.78** (EXP-1220 standalone) | VALIDATED | ~~9.09~~, ~~4.49~~ were inflated by formula bug |
-| **Max DD** | ≤12% | **6.6%** at 1x | VALIDATED | ~9% at 1.2x with real costs |
-| **COVID DD** | <12% | **6.6%** (validated) | VALIDATED | ~~0.8%~~ relied on simulated hedge payoff |
-| **All 6 years** | Yes | **6/6 profitable** | VALIDATED | Worst: 2022 at +14.8% (protected) |
-| **Multi-strategy** | Yes | **1 validated** (EXP-1220), 3 Grade A pending data refresh | PARTIAL | GLD/QQQ/TLT data gaps block multi-asset |
+| Target | Goal | Honest Current | Status |
+|--------|------|----------------|--------|
+| **CAGR** | 100% | **1.2%/yr** (trade-level, pre-utilization fix) | **NOT MET** — dilution bug in daily returns |
+| **Sharpe** | 6.0 | **1.26** (per-trade) / **3.85** (validated WF portfolio) | **NOT MET** — previous 5.78 used wrong annualization |
+| **Max DD** | ≤12% | **1.6%** (trade-level) / **11.3%** (1.6x WF) | **MET** at trade level |
+| **Win Rate** | — | **88%** (171 real IronVault trades) | **PROVEN** |
+| **6/6 years** | Yes | **Yes** (EXP-1220 walk-forward) | **MET** |
+| **Multi-strategy** | Yes | **1 proven** (EXP-1220), others pending data | **NOT MET** |
 
-### What Was Wrong
+### The Honest Bottom Line
 
-| Claim | Reported | Corrected | Root Cause |
-|-------|----------|-----------|------------|
-| Adaptive+Hedge Sharpe | 9.09 | **3.76** | Geometric CAGR in Sharpe formula (inflates 2.4× at high CAGR) + synthetic data |
-| v4 Sharpe | 3.94 | **3.69** | Same formula bug (1.07× inflation at 101% CAGR) |
-| v5 Sharpe | 4.49 | **~3.5** (estimated) | Same formula bug applies |
-| Hedge cost | 2%/yr | **4.36%/yr** | Real IronVault SPY put prices: 2020=5.3%, 2022=5.4%, 2025=7.3% |
-| Hedge "net negative" | Payoffs exceed cost | **Net cost ~2.4%/yr** | Payoff magnitudes were simulated (12× convex multiplier), not from real options |
-| VIX call hedge | 40% of budget | **UNVALIDATED** | VIX/UVXY/VXX not in IronVault database |
-| COVID DD (v5) | 0.8% | **~6.6%** (validated) | 0.8% required simulated hedge payoff during COVID |
+**What's real:** EXP-1220 generates 171 real trades over 5 years on IronVault data with 88% win rate, $43 avg PnL per trade, $7,372 total gross PnL on $100K. The alpha is genuine — real option prices, walk-forward validated.
+
+**What's broken:** When we convert these trades to a daily return series for portfolio metrics, 86% of days are zero-return (no trade exits). This dilution crushes the daily Sharpe from the per-trade 1.26 down to near-zero. **This is the capital utilization problem — the #1 blocker.**
+
+**What's wrong with previous claims:**
+- 77% CAGR / Sharpe 5.78 used per-trade Sharpe annualized with √(trades/yr) — valid for trade-level analysis but overstates daily-return Sharpe
+- The validated walk-forward portfolio (real data, 1.6x leverage) shows 101.6% CAGR / Sharpe 3.85 — but this uses EXP-1220's dynamic leverage overlay on SPY buy-and-hold, which is different from the credit spread trades
+- Hedge cost (4.36%/yr real) exceeds the credit spread alpha (1.5%/yr) by 3x
 
 > **🚫 NO SYNTHETIC DATA.** All pricing from `IronVault.instance()` → `data/options_cache.db`.
 
 ---
 
-## WHAT WE ACTUALLY HAVE (Corrected Performance)
+## Critical Issue: Capital Utilization (THE Blocker)
 
-### Validated — HIGH Confidence
+**The problem:** EXP-1220 credit spread trades only occupy capital on ~14% of trading days. On the other 86%, capital sits idle. When we compute daily portfolio returns:
+- Trade days: real P&L / capital → meaningful returns
+- Idle days: $0 / capital → 0% return
+- Daily Sharpe denominator includes all days → diluted to ~0
 
-| Scenario | CAGR | Sharpe | Max DD | Data Source | Confidence |
-|----------|------|--------|--------|-------------|------------|
-| **EXP-1220 at 1x, no hedge** | **77.3%** | **5.78** | 6.6% | Yahoo SPY/VIX 2019-2025 | HIGH |
-| **EXP-1220 at 1x, real hedge (4.4%/yr)** | **~73%** | **~5.4** | ~5-6% | IronVault SPY puts | HIGH |
-| **EXP-1220 at 1x, collar hedge (~1.3%/yr net)** | **~76%** | **~5.6** | ~6% | IronVault + `compass/smart_hedge.py` | MEDIUM-HIGH |
-| **Vol Term Structure (SPY)** | 0.55% | 2.81 OOS | 0.18% | IronVault SPY options | HIGH (Grade A) |
+**The fix (Phase 7):** Deploy idle capital productively:
+- Short-term Treasuries (risk-free ~5%/yr on idle days)
+- Overlapping positions (enter new trades before old ones expire)
+- Cash-secured puts (collect premium on idle capital)
+- Dynamic position count (scale from 1-5 concurrent positions)
 
-### Plausible — MEDIUM Confidence (requires leverage or stale data)
-
-| Scenario | CAGR | Sharpe | Max DD | Issue |
-|----------|------|--------|--------|-------|
-| EXP-1220 at 1.2x + collar | ~90% | ~3.7 | ~9% | Leverage not tested on real account |
-| EXP-1630 GLD/TLT relval | 1.9% base | 4.08 OOS | 1.7% | GLD data ends Mar 2024 (14mo gap) |
-| Cross-Asset Pairs | — | 5.06 OOS | — | QQQ data ends Apr 2023 (35mo gap) |
-| TLT Iron Condors | 10.2% | 2.69 | — | TLT data ends Jul 2024 (8mo gap) |
-
-### Invalidated — DO NOT USE
-
-| Claim | Why Wrong |
-|-------|-----------|
-| ~~Sharpe 9.09~~ | Synthetic data + wrong formula. Correct: 3.76 |
-| ~~COVID DD 0.8%~~ | Simulated hedge payoff. Real: 6.6% |
-| ~~Hedge cost 0.7%/yr net negative~~ | Real: 4.36%/yr. Net positive cost. |
-| ~~102% CAGR (adaptive+hedge)~~ | Built on synthetic np.random data |
-| ~~101% CAGR (v4)~~ | Based on 2% hedge cost; real cost is 4.36% → ~97% CAGR |
-
-### Smart Hedge Cost Reduction (`compass/smart_hedge.py`)
-
-Real SPY puts cost 4.36%/yr. Five cheaper alternatives:
-
-| Variant | Annual Cost | How |
-|---------|------------|-----|
-| A: VIX<15 puts only | ~2.0-2.5% | Buy only when VIX is cheap |
-| B: 5% put spreads | ~2.4% | Cap downside cost with long wing |
-| C: Dynamic budget | ~1.5-4% | Scale 0.5-3% with VIX |
-| **D: Collar** | **~1.3% net** | **Sell 3% OTM calls to fund puts (70% offset)** |
-| E: Quarterly selective | ~1.0% | Hedge only before FOMC/CPI/NFP |
-
-**Collar is the recommended production hedge**: ~1.3%/yr net cost, caps upside at ~3% per month but funds puts. Net CAGR impact: -1.3% vs -4.4% for naked puts.
+**Expected impact:** If idle capital earns even 3%/yr, total CAGR jumps from 1.2% to ~4.5%. With 3-5 concurrent positions, CAGR could reach 5-8%/yr at Sharpe >2.
 
 ---
 
-## DATA INVENTORY — Critical Gaps
+## What We Actually Have
 
-| Ticker | Options End | Gap | Impact | Fix |
-|--------|-----------|-----|--------|-----|
-| **SPY** | 2026-06-30 | None | — | Production-ready |
-| **XLF/XLI** | 2026-06-30 | None | — | Production-ready |
-| **GLD** | 2024-03-15 | **14 months** | Blocks EXP-1630 recent validation | Polygon Options tier ($200/mo) |
-| **QQQ** | 2023-04-21 | **35 months** | Blocks cross-asset pairs | Polygon Options tier |
-| **TLT** | 2024-07-19 | **8 months** | Blocks TLT ICs | Polygon Options tier |
-| **VIX/UVXY** | Not in DB | **Complete** | VIX call hedge unvalidated | Polygon Options tier |
+### PROVEN — Real IronVault Data
 
-**Implication:** Multi-asset strategies cannot be validated on recent data. SPY-only production path has no data gaps.
+| Metric | Value | Source |
+|--------|-------|--------|
+| Trade count | 171 | IronVault option_daily (2020-2025) |
+| Win rate | 88% | 150 wins / 171 trades |
+| Avg P&L per trade | $43 | After real bid-ask spreads |
+| Total gross P&L | $7,372 | On $100K capital |
+| Max trade DD | 1.6% | Per-trade drawdown |
+| Trade Sharpe | 1.26 | Per-trade risk-adjusted return |
+| Avg holding period | ~14 days | Credit spread expiration cycles |
+| Data quality | Real | IronVault SPY options, no synthetic |
+
+### VALIDATED but with CAVEATS
+
+| Metric | Value | Caveat |
+|--------|-------|--------|
+| Walk-forward portfolio CAGR | 101.6% at 1.6x | Uses dynamic leverage overlay, not just credit spreads |
+| Walk-forward Sharpe | 3.85 | Corrected formula (was 3.94 before bug fix) |
+| Walk-forward DD | 11.3% | At 1.6x leverage |
+| Vol Term Structure OOS Sharpe | 2.81 | Grade A walk-forward, but only 0.55% CAGR |
+| EXP-1630 GLD/TLT OOS Sharpe | 4.08 | Grade A, but GLD data ends Oct 2024 |
+
+### WRONG — Previously Claimed, Now Corrected
+
+| Previous Claim | Corrected Value | Root Cause |
+|----------------|-----------------|------------|
+| Sharpe 9.09 | **3.76** | Geometric CAGR in formula + synthetic data |
+| Sharpe 5.78 | **1.26** (trade) / **3.85** (WF portfolio) | Wrong annualization (√trades vs √252) |
+| CAGR 77% (EXP-1220) | **1.2%** (trade-level) | Per-trade CAGR ≠ portfolio CAGR with idle capital |
+| Hedge cost 2%/yr | **4.36%/yr** | Real IronVault SPY 5% OTM put prices |
+| Hedge "net negative" | **Net cost ~3%/yr** | Alpha ($1.5K/yr) < hedge ($4.4K/yr) |
+| COVID DD 0.8% | **6.6%** | Simulated payoff, not real options |
 
 ---
 
-## OOS INTEGRITY AUDIT
+## Data Inventory (Post-Backfill 2026-04-05)
+
+| Ticker | Last Expiration | Last Bar | Status |
+|--------|----------------|----------|--------|
+| **SPY** | 2026-06-30 | 2026-04-02 | **FULL** — production ready |
+| **XLF** | 2026-06-30 | 2026-04-02 | **FULL** |
+| **XLI** | 2026-06-18 | 2026-04-02 | **FULL** |
+| **TLT** | **2025-12-19** | **2025-12-19** | **BACKFILLED** — was Jul 2024, now Dec 2025 |
+| **GLD** | 2024-10-18 | 2024-10-18 | **PARTIAL** — extended +7mo, still 14mo gap |
+| **QQQ** | 2023-04-21 | 2023-04-21 | **GAP** — 32 months stale |
+| VIX/UVXY | Not in DB | — | **MISSING** — VIX call hedge unvalidated |
+
+**TLT is now unblocked** for TLT ICs and TLT-based pairs through Dec 2025.
+**GLD still blocked** — need Polygon Options tier ($200/mo) or more OCC symbol construction.
+**QQQ still blocked** — 32 months missing.
+
+---
+
+## Lessons Learned
+
+### Bug 1: Sharpe Formula (inflated all portfolio Sharpe by 1.07-2.4×)
+
+Used `CAGR / (vol * √252)` instead of `mean(daily_returns) / std(daily_returns) * √252`. At 100%+ CAGR, geometric vs arithmetic mean diverges significantly. Every portfolio Sharpe reported before commit `ff9dd15` was inflated.
+
+### Bug 2: Synthetic Data Contamination
+
+The "adaptive+hedge" portfolio (Sharpe 9.09) used `np.random.normal()` for daily returns instead of real market data. The artificially smooth synthetic returns produced impossible OOS Sharpe values (18.59 for one year). Multiple portfolio variants mixed real strategy results with synthetic daily return series.
+
+### Bug 3: Capital Dilution (86% zero-return days)
+
+EXP-1220 trades exit on ~171 days out of ~1,260 trading days. The daily return series is 86% zeros. Standard Sharpe, CAGR, and DD calculations on this series drastically understate the strategy's per-trade performance. The 77% CAGR claim used a framework that annualized per-trade returns differently — valid for comparing strategies but misleading as a portfolio CAGR.
+
+### Bug 4: Hedge Cost Underestimation (2.2× higher than assumed)
+
+Real IronVault SPY 5% OTM put prices average 4.36%/yr (range: 2.4% in calm 2023 to 7.3% in volatile 2025). The assumed 2%/yr flat budget was calibrated from academic estimates, not real market prices. Since the credit spread alpha is only ~1.5%/yr, the hedge costs more than the alpha it protects.
+
+### Bug 5: VIX Call Hedge Unvalidated
+
+40% of the tail risk hedge budget was allocated to VIX calls. VIX/UVXY/VXX options are not in the IronVault database. The entire VIX call component was modeled with assumptions — payoff multipliers, trigger thresholds — none backed by real data.
+
+### What We Actually Proved
+
+Despite the bugs, several things are genuinely validated:
+1. **EXP-1220 credit spread alpha exists**: 88% WR, $43/trade, 171 real trades
+2. **VIX mean-reversion is exploitable**: dynamic leverage based on VIX/TS/rvol works
+3. **Walk-forward holds**: EXP-1220 OOS years are consistently profitable
+4. **Multi-asset signals work**: EXP-1630, Vol Term Structure, Cross-Asset Pairs all Grade A
+5. **SPY options are infinitely liquid**: no execution capacity constraints
+6. **Infrastructure is solid**: IronVault, risk overlay, execution sim, paper harness all tested
+
+---
+
+## Phase Plan
+
+### Phase 7: Capital Utilization Fix (CRITICAL BLOCKER — NOW)
+
+**Goal:** Solve the 86% idle capital problem so daily-return metrics reflect the real alpha.
+
+| Task | Approach | Expected Impact |
+|------|----------|----------------|
+| 7.1 Overlap positions | Run 3-5 concurrent credit spread positions | 3-5× capital utilization |
+| 7.2 Idle capital deployment | Short-term T-bills on non-trade days (~5%/yr) | +4% CAGR on idle capital |
+| 7.3 Dynamic position count | Scale position count with regime (more in calm, fewer in crisis) | Better risk-adjusted returns |
+| 7.4 Re-compute portfolio metrics | Daily returns with utilization fix | Honest Sharpe/CAGR/DD |
+
+**Expected output:** CAGR 5-10%/yr (up from 1.2%), Sharpe 1.5-2.5 (up from diluted ~0), DD 3-5%.
+
+### Phase 8: Multi-Asset Validation with Real Data (NOW)
+
+**Goal:** Re-validate all multi-asset strategies with backfilled data.
+
+| Task | Data Status | Strategy |
+|------|-------------|----------|
+| 8.1 TLT IC validation (2024-2025) | **READY** (backfilled to Dec 2025) | TLT Iron Condors |
+| 8.2 TLT-XLF pair validation | **READY** (both tickers current) | Cross-Asset Pairs |
+| 8.3 GLD/TLT relval (EXP-1630) | PARTIAL (GLD ends Oct 2024) | GLD/TLT Relative Value |
+| 8.4 QQQ pairs | BLOCKED (QQQ ends Apr 2023) | TLT-QQQ, GLD-QQQ |
+| 8.5 Vol Term multi-ticker | **READY** (SPY/XLF current) | Vol Term Structure |
+
+### Phase 9: Honest Portfolio Construction (After 7 + 8)
+
+**Goal:** Build a portfolio using only strategies that survive Phase 7 and 8 validation.
+
+- Only include strategies with: Grade A/B OOS audit, real IronVault data, corrected Sharpe
+- Compute portfolio metrics with utilization-fixed daily returns
+- Use real hedge costs (4.36%/yr puts or 1.3%/yr collar)
+- Walk-forward validate the combined portfolio
+
+### Phase 10: Production Deployment (After 9)
+
+- Paper trade honest portfolio for 8 weeks
+- Compare paper P&L to backtest within ±30% tolerance
+- Seed $25K at 1x leverage
+- Scale only after 4+ weeks of real results
+
+---
+
+## OOS Integrity Audit
 
 | Grade | Count | Experiments |
 |-------|-------|-------------|
@@ -103,166 +196,93 @@ Real SPY puts cost 4.36%/yr. Five cheaper alternatives:
 | **C** | 1 | EXP-1640 Sector Momentum |
 | **D/F** | 5 | EXP-1320, EXP-1270, EXP-880, EXP-1470, EXP-1230 |
 
-**SPY-only strategies that are production-ready:** EXP-1220 (B+), Vol Term Structure (A).
-
 Full report: `reports/oos_integrity_audit.html`
 
 ---
 
-## PHASE PLAN (Corrected)
+## Current Priorities
 
-### Completed Phases (0-6)
+### 1. Fix Capital Utilization (Phase 7) — THE BLOCKER
+- [ ] Implement overlapping positions (3-5 concurrent)
+- [ ] Add T-bill returns on idle capital
+- [ ] Re-compute all portfolio metrics with fix
+- [ ] Validate: does utilization-adjusted CAGR reach 5%+?
 
-| Phase | Name | Status | Result |
-|-------|------|--------|--------|
-| 0-4 | Strategy Discovery → Regime Switching | ✅ DONE | Built foundation, found champion |
-| 5 | Final Validation | ⚠️ OBSOLETE | Synthetic data — invalidated |
-| 6 | Paper Trading v1 | 🔴 STALLED | EXP-400/401 have orphans. EXP-503/600 never deployed. Cron never installed. |
-| 6.5-8.99 | Real Data + Portfolio Optimization + Audit | ✅ DONE | IronVault deployed, 14 experiments audited, v4/v5 portfolios built, risk framework, execution sim |
+### 2. Validate TLT Strategies on Fresh Data (Phase 8)
+- [x] ~~TLT backfill~~ DONE (Jul 2024 → Dec 2025, 0 errors)
+- [ ] Re-run TLT IC walk-forward on 2024-2025 data
+- [ ] Re-run TLT-XLF pair validation
+- [ ] Update REGISTRY.md grades
 
-### Phase 7: SPY-Only Production Deployment (NEXT)
+### 3. Finish GLD/QQQ Backfill
+- [ ] GLD: construct OCC symbols for Nov 2024 → Dec 2025 (same method as TLT)
+- [ ] QQQ: construct OCC symbols for May 2023 → Dec 2025
+- [ ] Re-validate EXP-1630 and cross-asset pairs
 
-**Goal:** Paper trade EXP-1220 + collar hedge + Vol Term Structure on SPY only.
-**Why SPY-only:** No data gaps. Most liquid options in the world. No Polygon upgrade needed.
-
-| Step | Task | Duration | Blocker |
-|------|------|----------|---------|
-| 7.1 | Deploy paper harness (SPY-only mode) | 2-3 days | Mac Studio access, Alpaca keys |
-| 7.2 | Configure: EXP-1220 overlay + collar hedge (`smart_hedge.py` variant D) + Vol Term on SPY | 1 day | None |
-| 7.3 | Install cron, verify Telegram alerts | 1 day | None |
-| 7.4 | Paper trade 8 weeks (target: 30+ trades) | 8 weeks | Time |
-| 7.5 | Review: fill rate >90%, DD <15%, P&L matches backtest ±20% | 1 week | Carlos sign-off |
-| 7.6 | Seed $25K at 1.0x leverage | 1 day | Funding |
-| 7.7 | Monitor live for 4 weeks | 4 weeks | Time |
-| 7.8 | Scale: increase capital, optionally add 1.2x leverage | Ongoing | Confidence from real P&L |
-
-**Expected paper results (SPY-only):**
-- EXP-1220 at 1x + collar: ~76% CAGR, Sharpe ~5.6, DD ~6%
-- Vol Term adds ~0.5% CAGR with negative SPY correlation (-0.32)
-- Total paper period: ~14 weeks to first real trade
-
-### Phase 8: Multi-Asset Expansion (BLOCKED on data)
-
-**Goal:** Add GLD/TLT/QQQ strategies once data is current.
-**Blocker:** Polygon Options tier upgrade (~$200/mo) + 3hr backfill.
-
-| Step | Task | Prerequisite |
-|------|------|--------------|
-| 8.1 | Upgrade Polygon to Options tier | Carlos approval ($200/mo) |
-| 8.2 | Backfill GLD (14mo), QQQ (35mo), TLT (8mo), VIX options | Polygon upgrade |
-| 8.3 | Re-validate EXP-1630 GLD/TLT on 2024-2026 data | Backfill complete |
-| 8.4 | Re-validate cross-asset pairs on 2023-2026 data | Backfill complete |
-| 8.5 | Re-validate TLT ICs on 2024-2026 data | Backfill complete |
-| 8.6 | Validate VIX call hedge with real option prices | VIX options backfilled |
-| 8.7 | Paper trade multi-asset portfolio (8 weeks) | All re-validations pass |
-| 8.8 | Go live with multi-asset | Paper results confirm |
-
-**Expected if data validates:** 5-strategy portfolio with ~12% additional diversification benefit. Capacity limited by GLD liquidity ($1-10M sweet spot).
+### 4. Hedge Cost Resolution
+- [ ] Decide: no hedge (1.2% CAGR) vs selective VIX<15 puts (~2%/yr) vs collar (1.3%/yr)
+- [ ] At current alpha (1.5%/yr), only selective or collar hedges are cost-viable
 
 ---
 
-## CURRENT PRIORITIES
+## Infrastructure
 
-### 1. Deploy SPY-Only Paper Trading (Phase 7.1-7.3)
-- [ ] Install cron on Mac Studio
-- [ ] Create `.env.ultimate` with Alpaca paper credentials
-- [ ] Configure: EXP-1220 + collar hedge + Vol Term (SPY only)
-- [ ] Deploy and verify Telegram alerts
-- [ ] Start 8-week clock
-
-### 2. Correct All Inflated Numbers
-- [x] ~~Sharpe 9.09 → 3.76~~ DONE (1f0888a)
-- [x] ~~Hedge cost 2% → 4.36%~~ DONE (51e11e6)
-- [x] ~~Data gaps documented~~ DONE (678b764)
-- [x] ~~Honest assessment for Carlos~~ DONE (`reports/honest_assessment.html`)
-- [x] ~~MASTERPLAN corrected~~ DONE (this commit)
-
-### 3. Evaluate Polygon Upgrade ($200/mo)
-- [ ] Carlos decision: is multi-asset expansion worth $200/mo?
-- [ ] If yes: backfill GLD/QQQ/TLT/VIX in ~3 hours
-- [ ] If no: stay SPY-only (perfectly viable at 73-77% CAGR)
-
----
-
-## CAPACITY
-
-SPY-only path has no liquidity constraints (3.1M contracts/day). Scales to billions.
-
-| AUM | Exec Cost | Hedge Cost | Total Drag | Net CAGR (est.) |
-|-----|-----------|-----------|------------|-----------------|
-| $100K | ~0.5% | ~1.3% (collar) | ~1.8% | ~75% |
-| $1M | ~1% | ~1.3% | ~2.3% | ~74% |
-| $10M | ~2% | ~1.3% | ~3.3% | ~73% |
-| $100M | ~5% | ~1.3% | ~6.3% | ~70% |
-
-SPY options are the most liquid in the world. Execution costs are minimal even at $100M.
-
----
-
-## INFRASTRUCTURE
-
-### Production-Ready (SPY-Only)
 ```
+Data (IronVault):
+├── data/options_cache.db          ← ~1 GB, SPY/XLF/XLI current, TLT backfilled
+├── shared/iron_vault.py           ← Single data provider
+├── scripts/backfill_tlt.py        ← TLT backfill (OCC construction, Polygon Starter)
+├── scripts/backfill_gap.py        ← Targeted gap backfill
+└── scripts/daily_data_update.sh   ← Cron-ready
+
 Strategy:
-├── compass/tail_risk_hedge.py        ← EXP-1220 core (Sharpe 5.78)
-├── compass/smart_hedge.py            ← 5 cost-efficient hedge variants (collar = 1.3%/yr)
-├── compass/vol_term_structure_deep_dive.py ← Vol Term on SPY (Sharpe 2.81 OOS)
-├── compass/dynamic_leverage.py       ← VIX/TS/rvol-based leverage (0.3-1.8×)
-└── compass/risk_overlay.py           ← 5-layer risk management (71 tests)
+├── compass/tail_risk_hedge.py     ← EXP-1220 core (171 trades, 88% WR)
+├── compass/smart_hedge.py         ← 5 cost-efficient hedge variants
+├── compass/gld_tlt_relval.py      ← EXP-1630 (Grade A, needs GLD refresh)
+├── compass/vol_term_structure_deep_dive.py ← Grade A
+└── compass/risk_overlay.py        ← 5-layer risk management (71 tests)
 
 Execution:
-├── compass/paper_trading_v4.py       ← Paper harness (61 tests)
-├── compass/paper_trading_engine.py   ← Core engine (57 tests)
-├── compass/prod_monitor.py           ← Production monitoring (87 tests)
-├── compass/live_bridge.py            ← Signal → Order translation
-├── shared/circuit_breaker.py         ← Kill switch
-└── shared/telegram_alerts.py         ← Alerting
+├── compass/paper_trading_v4.py    ← Paper harness (61 tests)
+├── compass/execution_simulator.py ← Fill probability, degradation (69 tests)
+├── compass/prod_monitor.py        ← Monitoring (87 tests)
+└── shared/circuit_breaker.py      ← Kill switch
 
-Data:
-├── shared/iron_vault.py              ← Single data provider
-├── data/options_cache.db             ← 948 MB (SPY current to 2026-06)
-└── scripts/daily_data_update.sh      ← Cron-ready
-```
-
-### Pending Multi-Asset (Phase 8)
-```
-├── compass/gld_tlt_relval.py         ← EXP-1630 (Grade A, needs GLD data refresh)
-├── compass/exp1630_optimizer.py      ← Multi-pair optimizer
-├── compass/iron_condor_optimizer.py  ← TLT/XLI ICs (needs data refresh)
-└── reports/execution_feasibility.html ← $1-10M capacity analysis
+Validation:
+├── compass/oos_integrity_audit.py ← 14 experiments graded A-F
+├── compass/experiment_runner.py   ← Automated pipeline (77 tests)
+├── reports/honest_assessment.html ← Carlos honest report
+└── REGISTRY.md                    ← Master scorecard
 ```
 
 ---
 
-## TIMELINE
+## Timeline
 
 | Date | Milestone |
 |------|-----------|
 | 2026-04-03 | Operation Real Data: IronVault deployed, 3/6 strategies killed |
-| 2026-04-04 | EXP-1220 validated (Sharpe 5.78), new strategies discovered |
-| 2026-04-05 | Validation audit: Sharpe 9.09 → 3.76, hedge cost 4.36%/yr |
-| 2026-04-05 | Honest assessment for Carlos. Smart hedge (collar @ 1.3%/yr). |
-| **2026-04-07** | **(Next) Deploy SPY-only paper trading** |
-| 2026-04-14 | Paper trading stable, first week of data |
-| 2026-06-09 | Phase 7 complete (8-week paper validation) |
-| 2026-06-16 | Go/no-go: seed $25K at 1.0x |
-| 2026-07-14 | 4 weeks live monitoring → scale decision |
-| TBD | Phase 8: multi-asset expansion (pending Polygon upgrade) |
+| 2026-04-04 | EXP-1220 validated, new strategies discovered |
+| 2026-04-05 | Validation audit: 5 bugs found, all numbers corrected |
+| 2026-04-05 | TLT backfilled to Dec 2025. GLD extended to Oct 2024. |
+| 2026-04-05 | Honest assessment: 1.2% trade-level CAGR, dilution bug identified |
+| **NOW** | **Phase 7: Capital utilization fix (THE blocker)** |
+| **NOW** | **Phase 8: Multi-asset validation with fresh TLT data** |
+| TBD | Phase 9: Honest portfolio construction |
+| TBD | Phase 10: Paper trading → live |
 
 ---
 
-## RULES
+## Rules
 
-1. **Every experiment gets an ID** — EXP-NNN format
-2. **Walk-forward required** — param:trade ratio <0.20, no look-ahead
-3. **Paper before live** — 8+ weeks paper validation minimum
-4. **Follow the data** — kill losers fast, double down on winners
-5. **🚫 NO SYNTHETIC DATA** — IronVault only. Cache miss → skip trade.
-6. **Real data trumps synthetic** — trust real, kill synthetic
-7. **No inflated claims** — use corrected Sharpe formula, real hedge costs
-8. **OOS Grade A or B required** for production deployment
-9. **MASTERPLAN is sacred** — single source of truth
+1. **🚫 NO SYNTHETIC DATA** — IronVault only. Cache miss → skip trade.
+2. **No inflated claims** — corrected Sharpe formula, real hedge costs, honest CAGR
+3. **Walk-forward required** — Grade A/B audit before production
+4. **Paper before live** — 8+ weeks validation
+5. **Capital utilization must be solved** — no portfolio metrics without it
+6. **Real data trumps everything** — if model says X and data says Y, data wins
+7. **MASTERPLAN is honest** — single source of truth, warts and all
 
 ---
 
-*Victory is not won by the sword alone — it is won by the plan behind it.*
+*The truth doesn't care about our timeline. Build on what's real.*

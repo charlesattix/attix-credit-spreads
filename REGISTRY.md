@@ -6,41 +6,39 @@
 
 ---
 
-## Summary — Portfolio-Level Stats
+## Summary — CORRECTED Portfolio-Level Stats (2026-04-05)
 
-| Metric | Value | Source |
-|--------|-------|--------|
-| Best real-data Sharpe | **5.78** | EXP-1220-real (tail risk protection) |
-| Best real-data OOS Sharpe | **8.58** | XLI Iron Condors (OOS walk-forward) |
-| Best real-data CAGR (single strat) | **18.77%** | XLI Iron Condors (optimized) |
-| Best real-data combination | Sharpe **4.10**, CAGR 55.6%, DD 7.2% | Ultimate Portfolio (EXP-1220 + ICs + pairs + vol) |
-| EXP-1630 optimized multi-pair | CAGR **12.6%**, DD 9.3% | 4 pairs at 3% risk / 1.25x leverage |
-| Strategies validated on real IronVault data | **13** | 880/1220/1230/1270/1320/1470-real + 1630/1640/1650 + cross-pairs/vol-term/TLT-IC/XLF-IC |
-| Strategies paper trading live | **4** | EXP-400, 401, 503, 600 |
-| Infrastructure modules (production-ready) | **215 / 233** (92%) | EXP-1490 audit |
-| Total tests passing | **1000+** | across all modules |
-| Flagship (EXP-880) real-data result | **BANKRUPT** (−104% return) | EXP-880-real |
-| North Star (EXP-1470) real-data result | **0.42% CAGR** (vs 207% synthetic) | EXP-1470-real |
+> **Warning:** Previous summary stats used inflated numbers. Corrections below per validation audit (1f0888a), hedge cost reality (51e11e6), and EXP-1220 truth report (1ef262a).
 
-### Real-Data Validated Strategies — The Only Ones That Matter
+| Metric | Previous Claim | Corrected | Source |
+|--------|---------------|-----------|--------|
+| EXP-1220 trade-level Sharpe | ~~5.78~~ | **1.26** (per-trade) | 171 real IronVault trades |
+| EXP-1220 trade-level CAGR | ~~77%~~ | **1.2%/yr** (pre-utilization fix) | $7,372 over 5yr on $100K |
+| EXP-1220 walk-forward portfolio | ~~Sharpe 3.94~~ | **Sharpe 3.85** (corrected formula) | Dynamic leverage on SPY |
+| Best portfolio Sharpe | ~~9.09~~ | **3.85** | Walk-forward validated |
+| Hedge cost | ~~2%/yr~~ | **4.36%/yr** | Real IronVault SPY put prices |
+| Real-data validated | 13 | **13** (unchanged) | OOS audit report |
+| EXP-880 | BANKRUPT | BANKRUPT (unchanged) | −104% return on real data |
 
-| Strategy | Real Sharpe | OOS Sharpe | Real CAGR | Real DD | SPY Corr | Trades | WF Status | Verdict |
-|----------|-------------|------------|-----------|---------|----------|--------|-----------|---------|
-| EXP-1220-real Tail Risk | 5.78 | 5.78 | ~55% | 6.6% | low | daily | Confirmed | **LIVE** |
-| EXP-1630 GLD/TLT RelVal | 2.19 | **4.08** | 1.9% (base) | 1.7% | 0.03 | 63 | **WF 13.4x** | **LIVE** |
-| EXP-1630 Optimized Multi-Pair | 1.35 | — | **12.6%** | 9.3% | ~0.01 | 174 | 3/4 win + | **LIVE** |
-| Cross-Asset Pairs | 2.90 | **5.06** | — | — | ~0.02 | 32 | All win + | **LIVE** |
-| Vol Term Structure | 2.45 | **2.81** | 0.55% | 0.18% | −0.32 | 53 | All 4 win + | **LIVE** |
-| TLT Iron Condors | 2.69 | — | **10.2%** | — | — | 43 | 6yr positive | **PROMISING** |
-| XLI Iron Condors | — | **8.58** | **18.77%** | 10.3% | — | 40 | WF 2.2x | **PROMISING** |
-| TLT-XLF Pair (new) | — | 0.96 | 5.5% | — | 0.37 | 57 | Moderate | **PROMISING** |
-| EXP-1650 Earnings VC | 1.55 | 0.59 | modest | 0.95% | — | 50 | Moderate deg. | **PROMISING** |
-| EXP-1230-real Microstructure | 0.89 | — | — | — | — | daily | Partial | **MARGINAL** |
-| EXP-1640 Sector Momentum | 0.64 | −0.12 | 0.3% | 0.8% | 0.04 | 19 | OOS fails | **MARGINAL** |
-| EXP-1270-real Adaptive Stop | −0.25 | 4.34 | −0.05% | 1.2% | — | 41 | Mixed | **MARGINAL** |
-| EXP-880-real Crisis Hedge | 0.41 | — | −104% | 106% | — | 262 | Failed | **DEAD** |
-| EXP-1320-real Vol Cluster | 0.92 | — | 0.09% | 0.37% | — | 41 | Limited | **MARGINAL** |
-| EXP-1470-real North Star | ~0 | — | 0.42% | — | — | 19 | Very limited | **DEAD** |
+### Real-Data Validated Strategies — CORRECTED Grades
+
+| Strategy | Trade Sharpe | OOS Sharpe | CAGR | DD | Trades | Audit | Verdict | Data Status |
+|----------|-------------|------------|------|----|--------|-------|---------|-------------|
+| **EXP-1220 Tail Risk** | **1.26** | — | 1.2% (trade) | 1.6% | 171 | B+ | **ALPHA PROVEN** (utilization fix needed) | SPY: current |
+| **EXP-1630 GLD/TLT RelVal** | 2.19 | **4.08** | 1.9% | 1.7% | 63 | A | **PROVEN** | GLD: ends Oct 2024 |
+| **Vol Term Structure** | 2.45 | **2.81** | 0.55% | 0.18% | 53 | A | **PROVEN** | SPY/XLF: current |
+| **Cross-Asset Pairs** | 2.90 | **5.06** | — | — | 32 | A- | **PROVEN** | QQQ: ends Apr 2023 |
+| **TLT Iron Condors** | 2.69 | — | 10.2% | — | 43 | B | **PROMISING** | **TLT: backfilled to Dec 2025** |
+| **XLI Iron Condors** | 5.19 | 2.68 | 18.8% | 10.3% | 58 | B+ | **PROMISING** | XLI: current |
+| EXP-1630-opt Multi-Pair | 1.35 | — | 12.6% | 9.3% | 174 | B | PROMISING | Mixed data status |
+| TLT-XLF Pair | — | 0.96 | 5.5% | — | 57 | — | PROMISING | **Both tickers current** |
+| EXP-1650 Earnings VC | 1.55 | 0.59 | modest | 0.95% | 28 | B- | MARGINAL | XLF: current |
+| EXP-1640 Sector Mom | 0.64 | −0.12 | 0.3% | 0.8% | 19 | C | MARGINAL | XLF: current |
+| EXP-1230 Microstructure | 0.89 | — | — | — | — | D | **DEAD** (AUC 0.511) | — |
+| EXP-1270 Adaptive Stop | −0.25 | — | −0.05% | 1.2% | 41 | D | **DEAD** | — |
+| EXP-1320 Vol Cluster | 0.92 | — | 0.09% | 0.37% | 41 | D | **DEAD** | — |
+| EXP-880 Crisis Hedge | 0.41 | — | −104% | 106% | 262 | F | **DEAD** | — |
+| EXP-1470 North Star | ~0 | — | 0.42% | — | 19 | F | **DEAD** | — |
 
 ---
 
