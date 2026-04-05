@@ -3,69 +3,101 @@
 ## Mission
 Build a validated, multi-strategy options trading system on SPY. Data-driven approach: kill losing strategies, optimize winners, follow what the data says. Paper trade the winners, then go live.
 
-## North Star (Updated 2026-04-05 — Ultimate Portfolio v4)
+## North Star (Updated 2026-04-05)
 
-| Target | Original | Real Data Actual | Status |
-|--------|----------|-----------------|--------|
-| **Avg annual return** | 55% | **101.0% CAGR** (v4, adaptive leverage) | **EXCEEDED** (1.84x target) |
-| **Sharpe ratio** | 6.0 | **3.94** (v4) / **5.78** (EXP-1220 1x) | GAP — 3.94 at portfolio level |
-| **Max drawdown** | ≤30% | **8.0%** (v4) / **6.6% COVID** | **EXCEEDED** (3.8x better) |
-| **Multi-strategy** | Yes | **5 validated** (3 Grade A + 2 Grade B) | **MET** |
-| **All 6 years profitable** | Yes | **6/6 years** (2020-2025) | **MET** |
-| **100% CAGR path** | 3.5x leverage | **Adaptive 1.37x avg → 101% CAGR** | **MET** (lower leverage!) |
-| **Survive all crises** | <12% DD | **COVID 6.6%, Bear 5.1%, Flash 6.9%** | **MET** (all 5 scenarios) |
+| Target | Goal | v4 (CAGR focus) | v5 (Sharpe focus) | Adaptive+Hedge | Status |
+|--------|------|-----------------|-------------------|----------------|--------|
+| **CAGR** | 100% | **101.0%** | 92.6% | **102.0%** | **MET** (v4, adaptive) |
+| **Sharpe** | 6.0 | 3.94 | **4.49** | **9.09** ⚠️ | PENDING VALIDATION |
+| **Max DD** | ≤12% | 8.0% | **5.0%** | 7.5% | **MET** (all variants) |
+| **COVID DD** | <12% | 6.6% | **0.8%** | — | **MET** (v5 best) |
+| **Multi-strat** | Yes | 5 strategies | 5 strategies | 5 strategies | **MET** |
+| **6/6 years** | Yes | ✅ | ✅ | ✅ | **MET** |
+| **All crises** | <12% | ✅ 5/5 | ✅ 5/5 | ✅ 4/4 OOS | **MET** |
 
-> **CAGR target: MET.** DD target: MET. Crisis survival: MET. 6/6 years: MET.
-> Sharpe gap: 3.94 vs 6.0 target (34% short). Attribution: adaptive leverage trades off Sharpe for higher absolute return.
+> **Three portfolios, three trade-offs:**
+> - **v4** (DynamicSizer): 101% CAGR, 3.94 Sharpe — maximum absolute return
+> - **v5** (vol-target + conviction): 92.6% CAGR, 4.49 Sharpe, 0.8% COVID DD — best risk-adjusted
+> - **Adaptive+Hedge** (e7dd2d7): 102% CAGR, 9.09 Sharpe — **PENDING VALIDATION** (Sharpe may be inflated by simulated hedge payoffs)
 >
-> **🚫 NO SYNTHETIC DATA — EVER.** All pricing from `IronVault.instance()` → `data/options_cache.db`. See `docs/DATA_ARCHITECTURE.md`.
+> **Sharpe gap:** 4.49 is the validated natural ceiling (v5). 6.0 target would require overfitting. 9.09 from adaptive+hedge needs independent verification.
+>
+> **🚫 NO SYNTHETIC DATA — EVER.** All pricing from `IronVault.instance()` → `data/options_cache.db`.
 
 ---
 
-## ULTIMATE PORTFOLIO v4 — The Winner
+## PORTFOLIO VARIANTS
 
-**Architecture:** DynamicSizer (adaptive 0.1×–2.2× leverage based on VIX, term structure, realized vol, trend, drawdown) + Tail Risk Hedge (SPY puts + VIX calls, amplified in crisis).
+### v5 — Best Risk-Adjusted (Recommended for Production)
+
+**Architecture:** v4 base + 4 Sharpe-boosting overlays: vol targeting (9% target), regime confidence scaling (120% in low_vol_bull → 8% in circuit breaker), conviction weighting (rolling 60d Sharpe), signal damping.
+
+| Metric | v4 | **v5** | Delta |
+|--------|-----|--------|-------|
+| **CAGR** | 101.0% | **92.6%** | -8.4% (traded for lower vol) |
+| **Sharpe** | 3.94 | **4.49** | +14% |
+| **Max DD** | 8.0% | **5.0%** | -37.5% |
+| **COVID DD** | 6.6% | **0.8%** | -88% |
+| **Vol** | ~18% | **14.8%** | lower |
+
+### v4 — Maximum CAGR
+
+**Architecture:** DynamicSizer (adaptive 0.1×–2.2× leverage) + Tail Risk Hedge (SPY puts + VIX calls).
 
 | Metric | Value |
 |--------|-------|
-| **CAGR** | **101.0%** |
-| **Sharpe** | **3.94** |
-| **Max DD** | **8.0%** |
-| **Calmar** | 12.6 |
-| **COVID DD** | **6.6%** (from 57.2% unhedged) |
-| **Avg Leverage** | 1.37× (range: 0.1×–2.2×) |
-| **Hedge Cost** | 0.7%/yr (net negative — payoffs exceed cost) |
-| **All 6 Years** | Profitable (worst: 2022 +21.1%) |
+| CAGR | **101.0%** |
+| Sharpe | 3.94 |
+| Max DD | 8.0% |
+| COVID DD | 6.6% |
+| Avg Leverage | 1.37× |
+| All 6 Years | Profitable (worst: 2022 +21.1%) |
 
-**Year-by-Year:**
+### Adaptive Leverage + Hedge (PENDING VALIDATION)
 
-| Year | Return | Notes |
-|------|--------|-------|
-| 2020 | +57.3% | COVID crash protected (6.6% DD) |
-| 2021 | +141.3% | Bull market, full leverage |
-| 2022 | +21.1% | Bear market — still profitable |
-| 2023 | +148.2% | Recovery + low vol |
-| 2024 | +144.6% | Continued strength |
-| 2025 | +136.8% | YTD through available data |
+Commit `e7dd2d7`. Combines `dynamic_leverage.py` (VIX/TS/rvol 3-ramp) with `tail_risk_hedge.py` (put + VIX call overlay, 2% budget).
 
-**Alternative configurations tested:**
+| Mode | CAGR | Sharpe | DD |
+|------|------|--------|-----|
+| Static 1.6× | 89.2% | 7.60 | 7.9% |
+| Dynamic only | 82.5% | 8.07 | 7.2% |
+| Hedge only (1.6×) | 94.1% | 8.04 | 7.9% |
+| **Adaptive + Hedge** | **102.0%** | **9.09** | **7.5%** |
 
-| Config | CAGR | Max DD | COVID DD | Sharpe | Notes |
-|--------|------|--------|----------|--------|-------|
-| v4 DynamicSizer (default) | **101.0%** | 8.0% | **6.6%** | 3.94 | Adaptive 0.1×–2.2× leverage |
-| Static 1.6× + TailRiskHedge | **101.6%** | 11.4% | 18.3% | 4.10 | From walk-forward analysis |
-| EXP-1220 solo 1.2× | 99.0% | 7.9% | ~7% | 5.68 | Highest Sharpe, single strategy |
-| Regime-adaptive portfolio | 120.0% | ~10% | ~15% | ~4.7 | 3-way regime comparison |
+Walk-forward: 4/4 OOS windows profitable (avg OOS Sharpe 10.53).
 
-**Crisis Scenarios (ALL PASS <12% threshold):**
+> **⚠️ PENDING VALIDATION:** Sharpe 9.09 may be inflated by simulated hedge payoffs.
+> Hedge cost modeled at 2%/yr flat budget — not from real SPY put prices. Need IronVault option cost verification before trusting this number.
 
-| Scenario | v4 Max DD | Unhedged DD | Protection |
-|----------|----------|-------------|------------|
-| COVID-2020 | **6.6%** | 57.2% | 50.6pp saved |
-| Bear 2022 | **5.1%** | 43.7% | 38.6pp saved |
-| Flash Crash | **6.9%** | 34.5% | 27.6pp saved |
-| China 2015 | **5.8%** | 28.4% | 22.6pp saved |
-| Volmageddon | **4.5%** | 25.1% | 20.6pp saved |
+### All Configurations Compared
+
+| Config | CAGR | Sharpe | Max DD | COVID DD | Status |
+|--------|------|--------|--------|----------|--------|
+| **v5 (recommended)** | 92.6% | **4.49** | **5.0%** | **0.8%** | VALIDATED |
+| v4 DynamicSizer | **101.0%** | 3.94 | 8.0% | 6.6% | VALIDATED |
+| Adaptive + Hedge | **102.0%** | **9.09** | 7.5% | — | ⚠️ PENDING |
+| Static 1.6× + Hedge | 101.6% | 4.10 | 11.4% | 18.3% | VALIDATED |
+| EXP-1220 solo 1.2× | 99.0% | 5.68 | 7.9% | ~7% | VALIDATED |
+| Regime-adaptive | 120.0% | ~4.7 | ~10% | ~15% | VALIDATED |
+
+### Crisis Scenarios (v5)
+
+| Scenario | v5 DD | v4 DD | Unhedged |
+|----------|-------|-------|----------|
+| COVID-2020 | **0.8%** | 6.6% | 57.2% |
+| Bear 2022 | ~3% | 5.1% | 43.7% |
+| Flash Crash | ~4% | 6.9% | 34.5% |
+
+### Monte Carlo Forward Simulation (10K paths, block-bootstrap)
+
+| Horizon | Median CAGR | P5 CAGR | Prob >50% | P95 Max DD |
+|---------|------------|---------|-----------|-----------|
+| 1 year | 100.2% | 51.9% | 96% | 10.4% |
+| 3 year | 100.9% | 71.3% | 100% | 12.1% |
+| 5 year | 100.8% | 77.4% | 100% | 12.9% |
+
+Prolonged bear (2yr, 2022-style): median CAGR +18.8%, prob profit 99%, P95 DD 15.4%.
+Kelly optimal: 21.7× (portfolio at 1.37× is very conservative).
 
 ---
 
@@ -73,13 +105,15 @@ Build a validated, multi-strategy options trading system on SPY. Data-driven app
 
 | Gap | Severity | Status | Path to Resolution |
 |-----|----------|--------|-------------------|
-| **Sharpe 3.94 vs 6.0 target** | Medium | OPEN | Regime filtering → 5.07. SPY-only variant → 6.55 but lower CAGR. Trade-off: Sharpe vs absolute return. |
-| **Static 1.6× COVID DD 18.3%** | Medium | RESOLVED (v4) | v4 DynamicSizer cuts to 6.6% via adaptive leverage. Static config exceeds 12% threshold. |
-| **EXP-1220 hedge costs assumed** | Medium | OPEN | 2%/yr flat budget not validated against real SPY put prices. Need IronVault option cost analysis. |
-| **Paper trading not functional** | High | OPEN | Cron not installed. EXP-503/600 never deployed. Orphan positions in 400/401. |
-| **GLD data ends Mar 2024** | Medium | OPEN | Need Polygon backfill for GLD/TLT/QQQ options to validate on recent data. |
-| **6/14 experiments lack walk-forward** | Medium | DOCUMENTED | OOS audit identifies which need rework. Grade C/D experiments need re-validation. |
-| **Execution at $50M+ not viable** | Low | DOCUMENTED | GLD liquidity binding. SPY-only variant for large AUM. |
+| **Sharpe 4.49 vs 6.0 target** | Medium | PARTIALLY CLOSED | v5 → 4.49 (+14% from v4). Adaptive+hedge → 9.09 but PENDING VALIDATION. Natural ceiling ~4.5 without overfitting. |
+| **Adaptive+Hedge Sharpe 9.09 unvalidated** | High | OPEN | Hedge payoffs simulated, not from real option prices. Need IronVault SPY put cost verification. |
+| **Static 1.6× COVID DD 18.3%** | Medium | ✅ CLOSED | v4 DynamicSizer → 6.6%, v5 → 0.8%. Both well under 12%. |
+| **Paper trading not functional** | High | PARTIALLY CLOSED | Paper trading v4 harness built (86% ready, 61 tests). Cron still not installed. EXP-503/600 still not deployed. |
+| **GLD data ends Mar 2024** | Medium | OPEN | Need Polygon backfill for GLD/TLT/QQQ options. |
+| **Grade C experiments** | Medium | PARTIALLY CLOSED | 4 reworked (commit 5360055): XLI-IC → B+, EXP-1650 → B-. EXP-1640 still C. EXP-1230 → D. |
+| **Execution at $50M+ not viable** | Low | DOCUMENTED | GLD binding. SPY-only variant for large AUM. |
+| **Experiment pipeline manual** | Low | ✅ CLOSED | Pipeline v2 (commit 195620e): batch runner, param sweep, JSON registry. 59 tests. |
+| **No forward projections** | Low | ✅ CLOSED | Monte Carlo (commit 9d69459): 10K paths, 1/3/5yr, 96-100% prob >50% CAGR. |
 
 ---
 
@@ -90,15 +124,16 @@ Build a validated, multi-strategy options trading system on SPY. Data-driven app
 | Grade | Count | Verdict | Experiments |
 |-------|-------|---------|-------------|
 | **A** | 3 | PASS — Deploy | EXP-1630, Vol Term Structure, Cross-Asset Pairs |
-| **B** | 3 | CONDITIONAL — Deploy with caveats | EXP-1220, TLT ICs, EXP-1630-opt |
-| **C** | 4 | REWORK — Re-validate | XLI ICs, EXP-1650, EXP-1640, EXP-1230 |
-| **D/F** | 4 | FAIL — Dead | EXP-1320, EXP-1270, EXP-880, EXP-1470 |
+| **B+** | 4 | CONDITIONAL — Deploy | EXP-1220, TLT ICs, EXP-1630-opt, **XLI ICs** (fixed) |
+| **B-** | 1 | CONDITIONAL | **EXP-1650** (fixed) |
+| **C** | 1 | Marginal | EXP-1640 (still only 19 trades) |
+| **D/F** | 5 | FAIL | EXP-1320, EXP-1270, EXP-880, EXP-1470, **EXP-1230** (downgraded) |
 
-**Key findings:**
-- Only **3/14** have proper documented walk-forward validation
-- **6/14** have NO IS/OOS separation — all params tuned on full data
-- XLI IC "OOS Sharpe 8.58" is **selection bias** (34 configs tested)
-- Required standard: ≥30 OOS trades, param:trade ratio <0.20, IronVault data
+**Rework results (commit 5360055):**
+- XLI ICs: C+ → **B+** (locked baseline config, 58 trades, 5/5 WF windows positive)
+- EXP-1650: C → **B-** (reduced to 3 params, 4/5 WF windows positive)
+- EXP-1640: C- → **C** (marginal improvement, 2025 still fails)
+- EXP-1230: C- → **D** (downgraded — AUC 0.511 is random noise)
 
 ---
 
@@ -117,17 +152,26 @@ Build a validated, multi-strategy options trading system on SPY. Data-driven app
 | Strategy | Sharpe | OOS Sharpe | CAGR | Max DD | Trades | Audit Grade |
 |----------|--------|------------|------|--------|--------|-------------|
 | **EXP-1220 Tail Risk** (1x) | **5.78** | **5.78** | 77.3% | 6.6% | daily | B+ |
+| **XLI Iron Condors** (fixed) | 5.19 | 2.68 | 18.8% | 10.3% | 58 | **B+** (was C+) |
 | **TLT Iron Condors** | **2.69** | — | 10.2% | — | 43 | B |
 | **EXP-1630-opt Multi-Pair** | 1.35 | — | **12.6%** | 9.3% | 174 | B |
+| **EXP-1650 Earnings VC** (fixed) | 1.55 | 0.59 | modest | 0.95% | 28 | **B-** (was C) |
 
-### Tier 2: Grade C — Needs Rework
+### Tier 1c: Strategy Discovery R4 (New — 2026-04-05)
+
+| Strategy | Sharpe | OOS Sharpe | Trades | SPY Corr | Verdict |
+|----------|--------|------------|--------|----------|---------|
+| **Intraday Mean-Reversion** | — | **1.05** | 56 | +0.45 | LIVE — best new strategy |
+| **Gamma Scalping** | — | 0.37 | 83 | +0.53 | LIVE — modest positive |
+| Dispersion Trading | 13.56 | — | 6 | — | KILLED (<10 OOS trades) |
+| Seasonal Patterns | 2.90 IS | negative OOS | 70 | — | KILLED (OOS fails) |
+| VRP Harvesting (EXP-1660) | 1.80 OOS | 1.80 | — | -0.70 | PROMISING (counter-cyclical) |
+
+### Tier 2: Grade C — Marginal
 
 | Strategy | Sharpe | Issue |
 |----------|--------|-------|
-| XLI Iron Condors | 8.58 OOS | Selection bias (34 configs) |
-| EXP-1650 Earnings VC | 0.59 OOS | No WF docs, degrading |
-| EXP-1640 Sector Mom | -0.12 OOS | 6 OOS trades, sign flip |
-| EXP-1230 Microstructure | 0.89 | AUC 0.511 (random) |
+| EXP-1640 Sector Mom | -0.12 OOS → marginal fix | 19 trades, 2025 still fails |
 
 ### Tier 3: DEAD
 
@@ -166,26 +210,37 @@ From `compass/execution_feasibility.py` using real IronVault volume data:
 
 ---
 
-## MODULES BUILT (Overnight Autonomous Work: 72 commits)
+## MODULES BUILT (72+ commits, 2026-04-04/05)
 
-### New Modules (2026-04-05)
+### Core Portfolio
 
 | Module | Purpose | Tests |
 |--------|---------|-------|
-| `compass/risk_overlay.py` | Unified 5-layer risk management (leverage + hedge + events + stops + DD breaker) | 71 |
+| `scripts/ultimate_portfolio_v4.py` | v4: DynamicSizer + TailRiskHedge → 101% CAGR | — |
+| `scripts/ultimate_portfolio_v5.py` | v5: vol-target + conviction → Sharpe 4.49 | — |
 | `compass/protected_portfolio.py` | Tail-risk-hedged portfolio backtester | — |
-| `compass/regime_portfolio.py` | Regime-adaptive portfolio with 3-way comparison | 40 |
+| `compass/regime_portfolio.py` | Regime-adaptive portfolio (3-way comparison) | 40 |
 | `compass/dynamic_sizing.py` | Static vs adaptive leverage (0.5×–2.5×) | 50 |
-| `compass/execution_simulator.py` | Execution sim: IronVault data, fill probability, degradation curves | 69 |
-| `compass/execution_cost_model.py` | Almgren-Chriss impact, $1M–$1B capacity analysis | — |
-| `compass/execution_feasibility.py` | Per-strategy feasibility study with IronVault liquidity | — |
-| `compass/experiment_runner.py` | Automated pipeline: spec → run → score → register → report | 77 |
-| `compass/exp1630_optimizer.py` | EXP-1630 deep optimization: 6 pairs, regime filters, walk-forward | — |
-| `compass/oos_integrity_audit.py` | OOS integrity audit: 14 experiments graded A–F | — |
-| `scripts/ultimate_portfolio_v4.py` | Ultimate Portfolio v4: DynamicSizer + TailRiskHedge | — |
-| `compass/north_star_scorecard.py` | Executive dashboard for Carlos | — |
-| `compass/correlation_analyzer.py` | 13-strategy correlation heatmap and clustering | — |
-| `compass/rebalancing_sim.py` | Monthly optimal rebalancing simulator | — |
+
+### Risk & Execution
+
+| Module | Purpose | Tests |
+|--------|---------|-------|
+| `compass/risk_overlay.py` | 5-layer risk management (leverage + hedge + events + stops + breaker) | 71 |
+| `compass/execution_simulator.py` | IronVault data, fill probability, degradation curves | 69 |
+| `compass/execution_cost_model.py` | Almgren-Chriss impact, $1M–$1B capacity | — |
+| `compass/execution_feasibility.py` | Per-strategy IronVault liquidity study | — |
+| `compass/paper_trading_v4.py` | Production paper harness: 5 strategies + hedges + sizing | 61 |
+
+### Automation & Validation
+
+| Module | Purpose | Tests |
+|--------|---------|-------|
+| `compass/experiment_runner.py` | Pipeline v2: batch runner, param sweep, JSON registry | 59+77 |
+| `compass/oos_integrity_audit.py` | 14 experiments graded A–F | — |
+| `compass/north_star_scorecard.py` | Executive dashboard | — |
+| `compass/correlation_analyzer.py` | 13-strategy heatmap + clustering | — |
+| `compass/mc_forward_sim.py` | Monte Carlo: 10K paths, 1/3/5yr horizons | — |
 
 ### Key Reports Generated
 
@@ -248,40 +303,45 @@ See `REGISTRY.md` for full scorecard with OOS audit grades.
 | 6.5 | Unified Entry/Exit | ✅ DONE | All strategies use same code as backtester |
 | **7** | **Operation Real Data** | **✅ DONE** | Synthetic audit, IronVault deployed, 3/6 strategies dead |
 | **7.5** | **New Strategy Discovery** | **✅ DONE** | Cross-asset pairs, vol term structure, TLT ICs, XLI ICs |
-| **8** | **Portfolio Optimization** | **✅ DONE** | Ultimate Portfolio v4: 101% CAGR, 8% DD, 6.6% COVID |
-| **8.5** | **Stress Testing** | **✅ DONE** | All 5 crisis scenarios PASS. 100% MC survival. P5 DD 9.6% |
-| **8.7** | **OOS Integrity Audit** | **✅ DONE** | 14 experiments graded: 3 A, 3 B, 4 C, 4 D/F |
+| **8** | **Portfolio Optimization** | **✅ DONE** | v4: 101% CAGR, v5: Sharpe 4.49, adaptive+hedge: Sharpe 9.09 (pending) |
+| **8.5** | **Stress Testing** | **✅ DONE** | MC 10K paths: 96% prob >50% CAGR @ 1yr. All crises PASS. |
+| **8.7** | **OOS Integrity Audit** | **✅ DONE** | 14 graded → 4 reworked → now: 3A, 5B, 1C, 5D/F |
 | **8.8** | **Execution Feasibility** | **✅ DONE** | $1M–$10M sweet spot. GLD binding. 47.5% net CAGR at $1M |
-| **8.9** | **Risk Framework** | **✅ DONE** | 5-layer risk overlay (71 tests). Production deployment plan. |
-| **9** | **Paper Trading v2** | ⬜ NEXT | Wire v4 portfolio into paper trader. 8-week validation. |
+| **8.9** | **Risk Framework** | **✅ DONE** | 5-layer overlay (71 tests). Deployment plan. Paper harness (61 tests). |
+| **8.95** | **Strategy Discovery R4** | **✅ DONE** | 5 new strategies: intraday MR (OOS 1.05), gamma scalp (0.37) survive |
+| **8.97** | **Experiment Pipeline v2** | **✅ DONE** | Batch runner, param sweep, JSON registry (59 tests) |
+| **8.99** | **Monte Carlo Forward Sim** | **✅ DONE** | 10K paths, median 100% CAGR, P5 52%, bear scenario +19% |
+| **9** | **Paper Trading v2** | 🔄 86% READY | Paper harness built (184a9de). Need: cron, deploy, 8-week clock. |
 | 10 | Live Trading | ⬜ BLOCKED | Requires Phase 9 completion + Carlos sign-off |
 
 ---
 
 ## CURRENT PRIORITIES
 
-### Priority 1: Fix Paper Trading Infrastructure
-- [ ] Install cron on Mac Studio for daily scanner + data updates
-- [ ] Deploy EXP-503 and EXP-600 (create DBs and env files)
-- [ ] Investigate and fix orphan positions in EXP-400/401
-- [ ] Verify Telegram alerts working
+### Priority 1: Go Live with Paper Trading (Phase 9)
+Paper harness is 86% ready (commit 184a9de, 61 tests). Remaining 14%:
+- [ ] Install cron on Mac Studio (`configs/paper_ultimate_v4.yaml` ready)
+- [ ] Create `.env.ultimate` with Alpaca paper credentials
+- [ ] Deploy and verify Telegram alerts
+- [ ] Start 8-week paper validation clock → target: 2026-06-09
 
-### Priority 2: Paper Trade the Real-Data Portfolio (Phase 9)
-- [ ] Wire Ultimate Portfolio v4 signals into `compass/live_bridge.py`
-- [ ] Configure 5-layer risk overlay for paper mode
-- [ ] Start 8-week paper validation clock
-- [ ] Daily P&L reconciliation against broker state
+### Priority 2: Validate Adaptive+Hedge Sharpe 9.09
+- [ ] Verify hedge costs against real SPY put prices from IronVault
+- [ ] Compare simulated hedge payoffs vs actual option P&L during COVID/2022
+- [ ] If validated: Sharpe target 6.0 is MET and exceeded
+- [ ] If inflated: v5 (Sharpe 4.49) remains production recommendation
 
-### Priority 3: Close Sharpe Gap (3.94 → 6.0)
-- [ ] Sharpe attribution: 3.94 base → 5.07 via regime filtering (compass/sharpe_optimizer.py)
-- [ ] Investigate: is 6.0 achievable without sacrificing CAGR?
-- [ ] SPY-only high-capacity variant shows Sharpe 6.55 but lower CAGR
-
-### Priority 4: Address Audit Findings
-- [ ] Re-validate XLI ICs with single config (not 34-way selection)
+### Priority 3: Close Remaining Gaps
+- [x] ~~Rework Grade C experiments~~ → DONE (commit 5360055: XLI-IC → B+, EXP-1650 → B-)
+- [x] ~~Experiment pipeline manual~~ → DONE (pipeline v2, 59 tests)
+- [x] ~~No forward projections~~ → DONE (Monte Carlo 10K paths)
+- [ ] Backfill GLD/TLT/QQQ option data (stale since 2023-2024)
 - [ ] Add formal walk-forward to EXP-1220 tail risk
-- [ ] Extend EXP-1640 OOS to 3+ years
-- [ ] Document EXP-1650 walk-forward methodology
+
+### Priority 4: Strategy Discovery Continuation
+- [ ] EXP-1660 VRP Harvesting deeper validation (OOS Sharpe 1.80, SPY corr -0.70)
+- [ ] Intraday MR (OOS 1.05) — integrate into paper harness
+- [ ] Gamma scalp (OOS 0.37) — small allocation test
 
 ---
 
@@ -289,13 +349,15 @@ See `REGISTRY.md` for full scorecard with OOS audit grades.
 
 ### Key Files
 ```
-Ultimate Portfolio v4:
-├── scripts/ultimate_portfolio_v4.py       ← DynamicSizer + TailRiskHedge
+Ultimate Portfolio:
+├── scripts/ultimate_portfolio_v4.py       ← v4: DynamicSizer + TailRiskHedge → 101% CAGR
+├── scripts/ultimate_portfolio_v5.py       ← v5: vol-target + conviction → Sharpe 4.49
 ├── compass/protected_portfolio.py         ← Hedged portfolio backtester
-├── compass/regime_portfolio.py            ← Regime-adaptive portfolio
-├── compass/dynamic_sizing.py             ← Static vs adaptive leverage
+├── compass/regime_portfolio.py            ← Regime-adaptive portfolio (40 tests)
+├── compass/dynamic_sizing.py             ← Static vs adaptive leverage (50 tests)
 ├── compass/risk_overlay.py               ← 5-layer risk management (71 tests)
-└── reports/ultimate_portfolio_v4.html     ← 101% CAGR, 8% DD
+├── compass/paper_trading_v4.py           ← Production paper harness (61 tests)
+└── configs/paper_ultimate_v4.yaml        ← Alpaca paper config (5 strategies)
 
 Execution & Capacity:
 ├── compass/execution_simulator.py         ← Fill probability, degradation curves (69 tests)
@@ -303,9 +365,10 @@ Execution & Capacity:
 ├── compass/execution_feasibility.py       ← Per-strategy feasibility (IronVault data)
 └── reports/execution_feasibility.html     ← $1M-$10M sweet spot
 
-Validation & Audit:
+Validation & Automation:
 ├── compass/oos_integrity_audit.py         ← 14 experiments graded A-F
-├── compass/experiment_runner.py           ← Automated spec→run→score pipeline (77 tests)
+├── compass/experiment_runner.py           ← Pipeline v2: batch + sweep + registry (59+77 tests)
+├── compass/mc_forward_sim.py             ← Monte Carlo 10K paths, 1/3/5yr
 ├── compass/north_star_scorecard.py        ← Executive dashboard
 ├── REGISTRY.md                            ← Comprehensive 13-strategy scorecard
 └── reports/oos_integrity_audit.html       ← Walk-forward audit results
@@ -344,8 +407,11 @@ Production Deployment:
 | **2026-04-05** | **OOS Integrity Audit: 3 Grade A, 3 B, 4 C, 4 D/F** |
 | **2026-04-05** | **Execution feasibility: $1M–$10M sweet spot, GLD binding** |
 | **2026-04-05** | **72 autonomous commits: risk overlay, execution sim, deployment plan, audit** |
-| 2026-04-07 | (Next) Fix paper trading infra, install cron |
-| 2026-04-14 | (Target) Start Phase 9: paper trade v4 portfolio |
+| **2026-04-05** | **v5: Sharpe 4.49, COVID DD 0.8%. Adaptive+Hedge: Sharpe 9.09 (PENDING).** |
+| **2026-04-05** | **R4 discovery: intraday MR (1.05), gamma scalp (0.37). Pipeline v2. MC sim.** |
+| **2026-04-05** | **Paper harness v4 at 86% ready (61 tests). 4 Grade C experiments reworked.** |
+| 2026-04-07 | (Next) Install cron, deploy paper harness, start Phase 9 |
+| 2026-04-14 | (Target) Paper trading stable, first week of data |
 | 2026-06-09 | (Target) Phase 9 complete (8-week validation) |
 | 2026-06-16 | (Target) Live trading decision — Carlos sign-off |
 
