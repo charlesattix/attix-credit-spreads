@@ -265,27 +265,34 @@ class AlpacaClient:
             return {}
 
     def submit_spread_order(self, short_symbol: str, long_symbol: str,
-                            contracts: int, credit: float) -> Optional[str]:
+                            contracts: int, credit: float,
+                            short_bid: float = 0, long_ask: float = 0,
+                            ) -> Optional[str]:
         """Submit a credit spread as TWO SEPARATE leg orders.
 
-        FIX 1: Alpaca paper doesn't support multi-leg options via BRACKET.
-        Submit: (a) STO short put at limit, (b) BTO long put at limit.
-        Returns comma-separated order IDs: "short_id,long_id".
+        Uses ACTUAL bid/ask from option snapshots:
+          - Short leg limit = short_bid (sell at bid for immediate fill)
+          - Long leg limit = long_ask (buy at ask for immediate fill)
+          - Net credit = short_bid - long_ask
+
+        Args:
+            short_bid: Real bid price of the short put (from snapshot).
+            long_ask:  Real ask price of the long put (from snapshot).
         """
         if self.dry_run:
             ts = datetime.now().strftime('%H%M%S')
             order_id = f"DRY-S-{ts},DRY-L-{ts}"
             log.info(f"[DRY-RUN] Would submit:")
-            log.info(f"  Leg 1 (STO): SELL {short_symbol} × {contracts}")
-            log.info(f"  Leg 2 (BTO): BUY  {long_symbol} × {contracts}")
-            log.info(f"  Net credit target: ${credit:.2f}")
+            log.info(f"  Leg 1 (STO): SELL {short_symbol} × {contracts} @ ${short_bid:.2f} (bid)")
+            log.info(f"  Leg 2 (BTO): BUY  {long_symbol} × {contracts} @ ${long_ask:.2f} (ask)")
+            log.info(f"  Net credit: ${short_bid - long_ask:.2f}")
             return order_id
 
         self._ensure_client()
         try:
             from alpaca.trading.requests import LimitOrderRequest, OrderSide, TimeInForce
 
-            # Leg 1: Sell-to-Open the short put
+            # Leg 1: STO short put at its bid price
             short_order = self._trading_client.submit_order(
                 LimitOrderRequest(
                     symbol=short_symbol,
@@ -293,14 +300,12 @@ class AlpacaClient:
                     side=OrderSide.SELL,
                     type="limit",
                     time_in_force=TimeInForce.DAY,
-                    limit_price=round(credit * 0.7, 2),  # short leg gets ~70% of credit
+                    limit_price=round(short_bid, 2),
                 )
             )
-            log.info(f"Short leg submitted: {short_order.id} (STO {short_symbol})")
+            log.info(f"Short leg submitted: {short_order.id} (STO {short_symbol} @ ${short_bid:.2f})")
 
-            # Leg 2: Buy-to-Open the long put (protective leg)
-            long_price = round(credit * 0.7 - credit, 2)  # net = short - long = credit
-            long_price = max(0.01, abs(long_price))  # long put costs money
+            # Leg 2: BTO long put at its ask price
             long_order = self._trading_client.submit_order(
                 LimitOrderRequest(
                     symbol=long_symbol,
@@ -308,10 +313,10 @@ class AlpacaClient:
                     side=OrderSide.BUY,
                     type="limit",
                     time_in_force=TimeInForce.DAY,
-                    limit_price=long_price,
+                    limit_price=round(long_ask, 2),
                 )
             )
-            log.info(f"Long leg submitted: {long_order.id} (BTO {long_symbol})")
+            log.info(f"Long leg submitted: {long_order.id} (BTO {long_symbol} @ ${long_ask:.2f})")
 
             return f"{short_order.id},{long_order.id}"
         except Exception as e:
@@ -548,29 +553,23 @@ def run_scan(config: dict, state: dict, client: AlpacaClient, dry_run: bool):
     long_data = next((c for c in chain if abs(c["strike"] - long_strike) < 1.01), None)
 
     if short_data and long_data:
-        # FIX 3: Use real bid/ask — credit = short bid - long ask
         short_bid = short_data.get("bid", 0.0)
         long_ask = long_data.get("ask", 0.0)
-        if short_bid > 0 and long_ask > 0:
-            estimated_credit = max(0, short_bid - long_ask)
-        elif short_bid > 0:
-            # No long quote — use mid estimate
-            estimated_credit = short_bid * 0.6
-        else:
-            # FIX 3: No real quotes available — skip trade
-            log.info("SKIP: No real bid/ask quotes available for selected strikes")
+        if short_bid <= 0 or long_ask <= 0:
+            log.info("SKIP: No real bid/ask quotes for selected strikes")
             return
+        estimated_credit = max(0, short_bid - long_ask)
     else:
-        # FIX 3: Can't find matching strikes in chain — skip
         log.info(f"SKIP: Strikes {short_strike}/{long_strike} not found in option chain")
         return
 
     min_credit = spread_cfg["min_credit"]
     if estimated_credit < min_credit:
-        log.info(f"SKIP: Credit ${estimated_credit:.2f} < min ${min_credit:.2f}")
+        log.info(f"SKIP: Credit ${estimated_credit:.2f} < min ${min_credit:.2f} "
+                 f"(short bid=${short_bid:.2f}, long ask=${long_ask:.2f})")
         return
 
-    log.info(f"Estimated credit: ${estimated_credit:.2f}")
+    log.info(f"Credit: ${estimated_credit:.2f} (short bid=${short_bid:.2f}, long ask=${long_ask:.2f})")
 
     # Size position
     acct = client.get_account()
@@ -602,7 +601,10 @@ def run_scan(config: dict, state: dict, client: AlpacaClient, dry_run: bool):
     log.info(f"{'[DRY-RUN] ' if dry_run else ''}Submitting: SELL {short_sym} / BUY {long_sym} "
              f"× {contracts} @ ${estimated_credit:.2f}")
 
-    order_id = client.submit_spread_order(short_sym, long_sym, contracts, estimated_credit)
+    order_id = client.submit_spread_order(
+        short_sym, long_sym, contracts, estimated_credit,
+        short_bid=short_bid, long_ask=long_ask,
+    )
 
     if order_id:
         # Record position
