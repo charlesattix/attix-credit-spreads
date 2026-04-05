@@ -86,6 +86,9 @@ class ExperimentSpec:
     custom_runner: Optional[Any] = None  # callable(spec) -> Dict
     description: str = ""
     data_source: str = "ironvault"   # "ironvault" or "synthetic"
+    # Documentation fields
+    hypothesis: str = ""            # what we expect and why
+    success_criteria: Dict[str, Any] = field(default_factory=dict)  # e.g. {"min_oos_sharpe": 1.0}
 
 
 @dataclass
@@ -391,6 +394,35 @@ def estimate_capacity(ticker: str, avg_contracts: int = 5) -> str:
 # Main runner
 # ═══════════════════════════════════════════════════════════════════════════
 
+def _check_success_criteria(criteria: Dict[str, Any], result: ExperimentResult) -> None:
+    """Check custom success criteria from the spec. Appends to verdict."""
+    passed = []
+    failed = []
+    metric_map = {
+        "min_sharpe": ("sharpe", True),
+        "min_oos_sharpe": ("oos_sharpe", True),
+        "min_cagr": ("cagr", True),
+        "max_dd": ("max_dd", False),
+        "min_trades": ("n_trades", True),
+        "min_win_rate": ("win_rate", True),
+        "max_spy_corr": ("spy_corr", False),
+    }
+    for key, threshold in criteria.items():
+        if key in metric_map:
+            attr, higher_is_better = metric_map[key]
+            val = getattr(result, attr, 0)
+            if attr == "spy_corr":
+                val = abs(val)
+            if higher_is_better:
+                ok = val >= threshold
+            else:
+                ok = val <= threshold
+            (passed if ok else failed).append(f"{key}: {val:.3f} vs {threshold}")
+
+    if failed:
+        result.verdict += f" | Custom criteria: {len(passed)}/{len(passed)+len(failed)} passed"
+
+
 class ExperimentRunner:
     """Orchestrates end-to-end experiment execution."""
 
@@ -445,6 +477,10 @@ class ExperimentRunner:
 
             # North Star evaluation
             evaluate_north_star(result)
+
+            # Check custom success criteria
+            if spec.success_criteria:
+                _check_success_criteria(spec.success_criteria, result)
 
         except Exception as e:
             result.errors.append(f"{type(e).__name__}: {e}")
@@ -621,6 +657,263 @@ class ExperimentRunner:
 
         registry_path.write_text(content + update_block, encoding="utf-8")
         logger.info("Updated REGISTRY.md with %s", result.spec.experiment_id)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Batch runner
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+class BatchRunner:
+    """Run multiple experiments and rank results."""
+
+    def __init__(self):
+        self.runner = ExperimentRunner()
+
+    def run_batch(
+        self,
+        specs: List[ExperimentSpec],
+        output_dir: Optional[Path] = None,
+        rank_by: str = "sharpe",
+    ) -> List[ExperimentResult]:
+        """Run all specs, generate reports, rank by metric.
+
+        Args:
+            specs: List of experiment specifications.
+            output_dir: Directory for reports. None = reports/.
+            rank_by: "sharpe", "cagr", "oos_sharpe", or "tier".
+
+        Returns:
+            Results sorted by rank_by (best first).
+        """
+        if output_dir is None:
+            output_dir = ROOT / "reports"
+        output_dir = Path(output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        results: List[ExperimentResult] = []
+        for i, spec in enumerate(specs, 1):
+            logger.info("[%d/%d] Running %s ...", i, len(specs), spec.experiment_id)
+            result = self.runner.run(spec)
+            results.append(result)
+
+            # Auto-generate per-experiment report
+            report_name = f"{spec.experiment_id.lower().replace('-', '_')}_auto.html"
+            self.runner.generate_report(result, output_dir / report_name)
+
+            json_name = f"{spec.experiment_id.lower().replace('-', '_')}_auto.json"
+            self.runner.save_json(result, output_dir / json_name)
+
+            logger.info("  %s: Sharpe=%.2f, CAGR=%.1%%, Tier=%d",
+                        spec.experiment_id, result.sharpe,
+                        result.cagr * 100, result.tier)
+
+        # Sort
+        key_map = {
+            "sharpe": lambda r: r.sharpe,
+            "cagr": lambda r: r.cagr,
+            "oos_sharpe": lambda r: r.oos_sharpe,
+            "tier": lambda r: (-r.tier, r.sharpe),  # lower tier is better
+        }
+        sort_fn = key_map.get(rank_by, key_map["sharpe"])
+        results.sort(key=sort_fn, reverse=True)
+
+        # Generate batch summary report
+        self._generate_batch_report(results, output_dir / "batch_summary.html")
+
+        return results
+
+    def _generate_batch_report(self, results: List[ExperimentResult],
+                                output_path: Path) -> None:
+        """Generate HTML summary comparing all experiments in the batch."""
+        rows = ""
+        for i, r in enumerate(results, 1):
+            tc = {1: "#3fb950", 2: "#d29922", 3: "#f59e0b", 4: "#ef4444"}.get(r.tier, "#8b949e")
+            rows += (
+                f'<tr><td>{i}</td>'
+                f'<td style="text-align:left"><strong>{r.spec.experiment_id}</strong></td>'
+                f'<td style="text-align:left">{r.spec.name}</td>'
+                f'<td>{r.spec.ticker}</td>'
+                f'<td>{r.n_trades}</td>'
+                f'<td style="color:{"#3fb950" if r.cagr > 0 else "#ef4444"}">{r.cagr:.1%}</td>'
+                f'<td><strong>{r.sharpe:.2f}</strong></td>'
+                f'<td>{r.max_dd:.1%}</td>'
+                f'<td>{r.oos_sharpe:.2f}</td>'
+                f'<td>{r.spy_corr:.3f}</td>'
+                f'<td style="color:{tc}">Tier {r.tier}</td>'
+                f'<td>{r.run_time_seconds:.1f}s</td></tr>\n'
+            )
+
+        ts = datetime.utcnow().strftime("%Y-%m-%d %H:%M")
+        html = f"""<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"/>
+<title>Batch Experiment Summary</title>
+<style>
+body{{font-family:-apple-system,sans-serif;max-width:1200px;margin:0 auto;padding:20px;background:#0d1117;color:#c9d1d9}}
+h1{{color:#58a6ff;font-size:1.4rem}}
+table{{width:100%;border-collapse:collapse;font-size:.82rem;margin:16px 0}}
+th,td{{padding:5px 8px;text-align:right;border-bottom:1px solid #21262d}}
+th{{background:#161b22;color:#8b949e;font-size:.72rem}}
+td:first-child,th:first-child{{text-align:center}}
+.note{{color:#8b949e;font-size:.82rem}}
+</style></head><body>
+<h1>Batch Experiment Summary</h1>
+<p class="note">{len(results)} experiments &bull; Ranked by Sharpe &bull; {ts}</p>
+<table>
+<thead><tr><th>#</th><th>ID</th><th>Name</th><th>Ticker</th><th>Trades</th>
+<th>CAGR</th><th>Sharpe</th><th>Max DD</th><th>OOS SR</th><th>SPY Corr</th>
+<th>Tier</th><th>Time</th></tr></thead>
+<tbody>{rows}</tbody></table>
+</body></html>"""
+        output_path.write_text(html, encoding="utf-8")
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Parameter sweep
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+@dataclass
+class SweepResult:
+    """One point in a parameter sweep."""
+    params: Dict[str, Any]
+    sharpe: float = 0.0
+    cagr: float = 0.0
+    max_dd: float = 0.0
+    oos_sharpe: float = 0.0
+    n_trades: int = 0
+    tier: int = 4
+
+
+class ParameterSweep:
+    """Grid search over parameter space for a single strategy."""
+
+    def __init__(self):
+        self.runner = ExperimentRunner()
+
+    def sweep(
+        self,
+        base_spec: ExperimentSpec,
+        param_grid: Dict[str, List[Any]],
+        rank_by: str = "oos_sharpe",
+    ) -> List[SweepResult]:
+        """Run grid search over param combinations.
+
+        Args:
+            base_spec: Template spec (experiment_id, name, etc.).
+            param_grid: {"param_name": [val1, val2, ...], ...}.
+            rank_by: Metric to sort results by.
+
+        Returns:
+            List of SweepResult sorted by rank_by (best first).
+        """
+        import itertools
+        keys = sorted(param_grid.keys())
+        values = [param_grid[k] for k in keys]
+        combos = list(itertools.product(*values))
+
+        logger.info("Parameter sweep: %d combinations for %s",
+                     len(combos), base_spec.experiment_id)
+
+        results: List[SweepResult] = []
+        for i, combo in enumerate(combos):
+            param_dict = dict(zip(keys, combo))
+
+            # Clone spec with new params
+            merged_params = {**base_spec.params, **param_dict}
+            spec = ExperimentSpec(
+                experiment_id=f"{base_spec.experiment_id}_sweep_{i}",
+                name=f"{base_spec.name} ({', '.join(f'{k}={v}' for k, v in param_dict.items())})",
+                strategy_type=base_spec.strategy_type,
+                ticker=base_spec.ticker,
+                start_date=base_spec.start_date,
+                end_date=base_spec.end_date,
+                capital=base_spec.capital,
+                params=merged_params,
+                config_overrides=base_spec.config_overrides,
+                validation=base_spec.validation,
+                oos_start_year=base_spec.oos_start_year,
+                custom_runner=base_spec.custom_runner,
+                description=base_spec.description,
+                data_source=base_spec.data_source,
+                hypothesis=base_spec.hypothesis,
+                success_criteria=base_spec.success_criteria,
+            )
+
+            try:
+                result = self.runner.run(spec)
+                results.append(SweepResult(
+                    params=param_dict,
+                    sharpe=result.sharpe,
+                    cagr=result.cagr,
+                    max_dd=result.max_dd,
+                    oos_sharpe=result.oos_sharpe,
+                    n_trades=result.n_trades,
+                    tier=result.tier,
+                ))
+            except Exception as e:
+                logger.warning("Sweep combo %d failed: %s", i, e)
+                results.append(SweepResult(params=param_dict))
+
+        # Sort
+        key_map = {
+            "sharpe": lambda r: r.sharpe,
+            "cagr": lambda r: r.cagr,
+            "oos_sharpe": lambda r: r.oos_sharpe,
+        }
+        results.sort(key=key_map.get(rank_by, key_map["oos_sharpe"]), reverse=True)
+
+        return results
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# JSON registry integration
+# ═══════════════════════════════════════════════════════════════════════════
+
+REGISTRY_JSON = ROOT / "experiments" / "registry.json"
+
+
+def update_json_registry(result: ExperimentResult,
+                          path: Optional[Path] = None) -> None:
+    """Add or update experiment in experiments/registry.json."""
+    path = path or REGISTRY_JSON
+    if path.exists():
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            data = {"schema_version": "3.0", "last_updated": "", "experiments": {}}
+    else:
+        data = {"schema_version": "3.0", "last_updated": "", "experiments": {}}
+
+    exp_id = result.spec.experiment_id
+    data["last_updated"] = datetime.utcnow().strftime("%Y-%m-%d")
+    data["experiments"][exp_id] = {
+        "id": exp_id,
+        "name": result.spec.name,
+        "strategy_type": result.spec.strategy_type,
+        "ticker": result.spec.ticker,
+        "status": {1: "live_ready", 2: "promising", 3: "marginal", 4: "dead"}.get(result.tier, "unknown"),
+        "data_source": result.data_source,
+        "created_date": result.timestamp[:10] if result.timestamp else "",
+        "metrics": {
+            "n_trades": result.n_trades,
+            "sharpe": result.sharpe,
+            "oos_sharpe": result.oos_sharpe,
+            "cagr": round(result.cagr, 4),
+            "max_dd": round(result.max_dd, 4),
+            "win_rate": round(result.win_rate, 4),
+            "spy_corr": round(result.spy_corr, 4),
+        },
+        "tier": result.tier,
+        "verdict": result.verdict,
+        "capacity": result.estimated_capacity,
+        "hypothesis": result.spec.hypothesis,
+        "description": result.spec.description,
+    }
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2, default=str), encoding="utf-8")
+    logger.info("Updated registry.json with %s", exp_id)
 
 
 # ═══════════════════════════════════════════════════════════════════════════

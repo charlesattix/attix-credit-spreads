@@ -1,5 +1,6 @@
 """Tests for compass/experiment_runner.py — the automated experiment pipeline."""
 
+import json
 import math
 import sys
 from datetime import datetime
@@ -19,9 +20,14 @@ from compass.experiment_runner import (
     ExperimentRunner,
     NorthStarCheck,
     WalkForwardWindow,
+    SweepResult,
+    BatchRunner,
+    ParameterSweep,
     NORTH_STAR,
     _sharpe,
     _cagr,
+    _check_success_criteria,
+    update_json_registry,
     _max_dd,
     _spy_correlation,
     build_default_config,
@@ -571,3 +577,245 @@ class TestNorthStarThresholds:
         assert NORTH_STAR["min_sharpe"] > 0
         assert 0.0 < NORTH_STAR["max_dd"] < 1.0
         assert NORTH_STAR["min_trades"] > 0
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ExperimentSpec new fields
+# ═══════════════════════════════════════════════════════════════════════════
+
+class TestExperimentSpecNewFields:
+    def test_hypothesis_field(self):
+        spec = ExperimentSpec(
+            experiment_id="EXP-X", name="Test",
+            strategy_type="custom", ticker="SPY",
+            hypothesis="VRP is positive on average and decays predictably",
+        )
+        assert "VRP" in spec.hypothesis
+
+    def test_success_criteria_field(self):
+        spec = ExperimentSpec(
+            experiment_id="EXP-X", name="Test",
+            strategy_type="custom", ticker="SPY",
+            success_criteria={"min_oos_sharpe": 1.0, "max_dd": 0.10},
+        )
+        assert spec.success_criteria["min_oos_sharpe"] == 1.0
+        assert spec.success_criteria["max_dd"] == 0.10
+
+    def test_defaults_empty(self):
+        spec = ExperimentSpec(
+            experiment_id="EXP-X", name="Test",
+            strategy_type="custom", ticker="SPY",
+        )
+        assert spec.hypothesis == ""
+        assert spec.success_criteria == {}
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Success criteria tests
+# ═══════════════════════════════════════════════════════════════════════════
+
+class TestSuccessCriteria:
+    def _make_result(self, **kwargs):
+        spec = ExperimentSpec(
+            experiment_id="EXP-SC", name="Test",
+            strategy_type="custom", ticker="SPY",
+        )
+        result = ExperimentResult(spec=spec, verdict="TIER 2")
+        for k, v in kwargs.items():
+            setattr(result, k, v)
+        return result
+
+    def test_all_criteria_pass(self):
+        result = self._make_result(sharpe=3.0, oos_sharpe=2.0, cagr=0.50)
+        _check_success_criteria({"min_sharpe": 2.0, "min_oos_sharpe": 1.0}, result)
+        # Should not add failure message
+        assert "0/" not in result.verdict
+
+    def test_criteria_fail(self):
+        result = self._make_result(sharpe=0.5, cagr=0.02)
+        _check_success_criteria({"min_sharpe": 2.0, "min_cagr": 0.50}, result)
+        assert "Custom criteria" in result.verdict
+
+    def test_dd_criteria(self):
+        result = self._make_result(max_dd=0.05)
+        _check_success_criteria({"max_dd": 0.10}, result)
+        assert "0/" not in result.verdict  # passes
+
+    def test_empty_criteria(self):
+        result = self._make_result()
+        _check_success_criteria({}, result)
+        assert result.verdict == "TIER 2"  # unchanged
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# JSON registry tests
+# ═══════════════════════════════════════════════════════════════════════════
+
+class TestJsonRegistry:
+    def _make_result(self):
+        spec = ExperimentSpec(
+            experiment_id="EXP-REG-TEST", name="Registry Test",
+            strategy_type="custom", ticker="SPY",
+            hypothesis="Test hypothesis",
+        )
+        return ExperimentResult(
+            spec=spec, n_trades=30, total_pnl=5000, cagr=0.15,
+            sharpe=2.5, max_dd=0.05, win_rate=0.70,
+            spy_corr=0.10, oos_sharpe=1.8, tier=2,
+            verdict="TIER 2", timestamp="2026-04-05T12:00:00",
+            estimated_capacity="$100M",
+        )
+
+    def test_create_new_registry(self, tmp_path):
+        result = self._make_result()
+        path = tmp_path / "registry.json"
+        update_json_registry(result, path)
+        assert path.exists()
+        data = json.loads(path.read_text())
+        assert "EXP-REG-TEST" in data["experiments"]
+        exp = data["experiments"]["EXP-REG-TEST"]
+        assert exp["name"] == "Registry Test"
+        assert exp["metrics"]["sharpe"] == 2.5
+        assert exp["tier"] == 2
+        assert exp["hypothesis"] == "Test hypothesis"
+
+    def test_update_existing_registry(self, tmp_path):
+        path = tmp_path / "registry.json"
+        existing = {"schema_version": "3.0", "experiments": {
+            "EXP-OLD": {"id": "EXP-OLD", "name": "Old"}
+        }}
+        path.write_text(json.dumps(existing))
+
+        result = self._make_result()
+        update_json_registry(result, path)
+
+        data = json.loads(path.read_text())
+        assert "EXP-OLD" in data["experiments"]
+        assert "EXP-REG-TEST" in data["experiments"]
+
+    def test_overwrite_same_id(self, tmp_path):
+        path = tmp_path / "registry.json"
+        result = self._make_result()
+        update_json_registry(result, path)
+        # Update again with new sharpe
+        result.sharpe = 5.0
+        update_json_registry(result, path)
+        data = json.loads(path.read_text())
+        assert data["experiments"]["EXP-REG-TEST"]["metrics"]["sharpe"] == 5.0
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Batch runner tests
+# ═══════════════════════════════════════════════════════════════════════════
+
+class TestBatchRunner:
+    def _make_runner_spec(self, exp_id, pnl):
+        def runner(spec):
+            return {
+                "n_trades": 20, "total_pnl": pnl, "cagr": pnl / 100000,
+                "sharpe": pnl / 5000, "max_dd": 0.05, "win_rate": 0.70,
+                "trades": [{"entry_date": f"2022-{m:02d}-15",
+                             "exit_date": f"2022-{m:02d}-20", "pnl": pnl / 12}
+                           for m in range(1, 13)],
+                "yearly": {2022: {"n": 12, "pnl": pnl, "wr": 0.70, "sharpe": pnl / 5000}},
+            }
+        return ExperimentSpec(
+            experiment_id=exp_id, name=f"Test {exp_id}",
+            strategy_type="custom", ticker="SPY",
+            custom_runner=runner, validation="none",
+        )
+
+    def test_batch_runs_all(self, tmp_path):
+        specs = [
+            self._make_runner_spec("EXP-A", 10000),
+            self._make_runner_spec("EXP-B", 5000),
+            self._make_runner_spec("EXP-C", 20000),
+        ]
+        batch = BatchRunner()
+        batch.runner._spy_df = pd.DataFrame(
+            {"Close": np.random.normal(400, 10, 1000)},
+            index=pd.date_range("2020-01-01", periods=1000),
+        )
+        results = batch.run_batch(specs, output_dir=tmp_path, rank_by="sharpe")
+        assert len(results) == 3
+        # Should be sorted by sharpe (highest first)
+        assert results[0].sharpe >= results[1].sharpe >= results[2].sharpe
+
+    def test_batch_generates_summary(self, tmp_path):
+        specs = [self._make_runner_spec("EXP-X", 8000)]
+        batch = BatchRunner()
+        batch.runner._spy_df = pd.DataFrame(
+            {"Close": [400] * 500},
+            index=pd.date_range("2020-01-01", periods=500),
+        )
+        batch.run_batch(specs, output_dir=tmp_path)
+        summary = tmp_path / "batch_summary.html"
+        assert summary.exists()
+        html = summary.read_text()
+        assert "EXP-X" in html
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Parameter sweep tests
+# ═══════════════════════════════════════════════════════════════════════════
+
+class TestParameterSweep:
+    def test_sweep_returns_results(self):
+        def custom(spec):
+            w = spec.params.get("spread_width", 5)
+            return {
+                "n_trades": 20, "total_pnl": w * 100,
+                "cagr": w * 0.01, "sharpe": w * 0.5,
+                "max_dd": 0.05, "win_rate": 0.70,
+                "trades": [{"entry_date": "2022-06-15", "exit_date": "2022-06-20",
+                            "pnl": w * 10}],
+                "yearly": {2022: {"n": 1, "pnl": w * 100, "wr": 1.0, "sharpe": w}},
+            }
+
+        base = ExperimentSpec(
+            experiment_id="EXP-SWEEP", name="Sweep Test",
+            strategy_type="custom", ticker="SPY",
+            custom_runner=custom, validation="none",
+        )
+        sweep = ParameterSweep()
+        sweep.runner._spy_df = pd.DataFrame(
+            {"Close": [400] * 500},
+            index=pd.date_range("2020-01-01", periods=500),
+        )
+        results = sweep.sweep(base, {"spread_width": [3, 5, 10]}, rank_by="sharpe")
+
+        assert len(results) == 3
+        # Width 10 should have highest sharpe (w * 0.5)
+        assert results[0].params["spread_width"] == 10
+
+    def test_sweep_grid_combinations(self):
+        call_count = [0]
+
+        def custom(spec):
+            call_count[0] += 1
+            return {
+                "n_trades": 10, "total_pnl": 1000, "cagr": 0.01,
+                "sharpe": 1.0, "max_dd": 0.02, "win_rate": 0.60,
+                "trades": [{"entry_date": "2022-06-15", "exit_date": "2022-06-20", "pnl": 100}],
+                "yearly": {},
+            }
+
+        base = ExperimentSpec(
+            experiment_id="EXP-GRID", name="Grid Test",
+            strategy_type="custom", ticker="SPY",
+            custom_runner=custom, validation="none",
+        )
+        sweep = ParameterSweep()
+        sweep.runner._spy_df = pd.DataFrame(
+            {"Close": [400] * 200},
+            index=pd.date_range("2020-01-01", periods=200),
+        )
+        results = sweep.sweep(base, {"width": [3, 5], "dte": [14, 30]})
+        assert len(results) == 4  # 2 × 2 grid
+        assert call_count[0] == 4
+
+    def test_sweep_result_dataclass(self):
+        sr = SweepResult(params={"a": 1}, sharpe=2.5, cagr=0.15)
+        assert sr.params == {"a": 1}
+        assert sr.sharpe == 2.5
+        assert sr.tier == 4  # default
