@@ -25,7 +25,7 @@
 |--------|-----------|-------------|-----------|----------|--------|
 | **SPY** | 193,272 | 646 | 2020-01-29 | 2026-06-30 | **FULL** — weeklies + monthlies |
 | **XLI** | 17,287 | 320 | 2020-01-03 | 2026-06-18 | **FULL** |
-| **GLD** | 12,515 | 188 | 2020-01-17 | **2024-03-15** | **GAP** — missing Apr 2024+ |
+| **GLD** | ~13,100+ | 200+ | 2020-01-17 | **2024-06-07+** | **BACKFILLING** — actively fetching to Dec 2025 |
 | **XLF** | 9,256 | 320 | 2020-01-03 | 2026-06-30 | **FULL** |
 | **QQQ** | 9,194 | 98 | 2020-01-03 | **2023-04-21** | **GAP** — missing May 2023+ |
 | **TLT** | 9,185 | 181 | 2020-01-17 | **2024-07-19** | **GAP** — missing Aug 2024+ |
@@ -60,12 +60,13 @@ No intraday data for other tickers.
 
 ## Critical Data Gaps
 
-### 1. GLD Options — Missing Apr 2024 to Present (14 months)
+### 1. GLD Options — BACKFILL IN PROGRESS
 
-- **Impact:** EXP-1630 GLD/TLT RelVal strategy can only backtest to Mar 2024
-- **Size of gap:** ~14 months of monthly expirations (~14 × 100 strikes = ~1,400 contracts)
-- **Severity:** HIGH — blocks walk-forward validation on recent data
-- **Backfill estimate:** ~30 min at 5 API calls/sec
+- **Status:** Actively fetching via `fetch_sector_options.py`
+- **Progress:** Extended from 2024-03-15 → 2024-06-07+ (and growing)
+- **Target:** Through Dec 2025 (~8,290 total contracts)
+- **Rate:** ~200 contracts per 5 minutes (~2,400/hr)
+- **ETA:** ~3 hours from start for complete coverage
 
 ### 2. QQQ Options — Missing May 2023 to Present (35 months)
 
