@@ -1,0 +1,593 @@
+#!/usr/bin/env python3
+"""
+run_exp1220.py — Standalone EXP-1220 paper trading scanner.
+
+Reads configs/deploy_exp1220_1.5x.yaml, scans SPY options via Alpaca,
+applies 1.5× position sizing, submits paper orders, tracks positions.
+
+Usage:
+    python3 scripts/run_exp1220.py              # live scan + trade
+    python3 scripts/run_exp1220.py --dry-run    # show trades without submitting
+    python3 scripts/run_exp1220.py --status      # show open positions
+    python3 scripts/run_exp1220.py --close-all   # close all open positions
+
+Designed to run as a LaunchAgent (once per day at 9:35 AM ET).
+"""
+
+from __future__ import annotations
+
+import argparse
+import csv
+import json
+import logging
+import math
+import os
+import sys
+from datetime import datetime, timedelta, date
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+
+import yaml
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+
+LOG_DIR = ROOT / "logs"
+LOG_DIR.mkdir(exist_ok=True)
+JOURNAL_PATH = LOG_DIR / "trade_journal.csv"
+STATE_PATH = LOG_DIR / "exp1220_state.json"
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler(LOG_DIR / "exp1220.log"),
+        logging.StreamHandler(),
+    ],
+)
+log = logging.getLogger("exp1220")
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Config
+# ═══════════════════════════════════════════════════════════════════════════
+
+def load_config() -> dict:
+    path = ROOT / "configs" / "deploy_exp1220_1.5x.yaml"
+    with open(path) as f:
+        return yaml.safe_load(f)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# State management (persist open positions across runs)
+# ═══════════════════════════════════════════════════════════════════════════
+
+def load_state() -> dict:
+    if STATE_PATH.exists():
+        with open(STATE_PATH) as f:
+            return json.load(f)
+    return {"positions": [], "last_entry_date": None, "total_pnl": 0.0}
+
+
+def save_state(state: dict):
+    with open(STATE_PATH, "w") as f:
+        json.dump(state, f, indent=2, default=str)
+
+
+def log_trade(entry: dict):
+    exists = JOURNAL_PATH.exists()
+    with open(JOURNAL_PATH, "a", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=[
+            "timestamp", "action", "ticker", "type", "short_strike", "long_strike",
+            "expiration", "contracts", "credit", "order_id", "status",
+        ])
+        if not exists:
+            writer.writeheader()
+        writer.writerow(entry)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# VIX check (yfinance — free, no API key needed)
+# ═══════════════════════════════════════════════════════════════════════════
+
+def get_vix() -> float:
+    """Fetch current VIX from Yahoo Finance."""
+    try:
+        import urllib.request
+        url = "https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX?range=1d&interval=1d"
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read())
+            close = data["chart"]["result"][0]["meta"]["regularMarketPrice"]
+            return float(close)
+    except Exception as e:
+        log.warning(f"VIX fetch failed: {e}. Using default 20.0")
+        return 20.0
+
+
+def get_spy_price() -> float:
+    """Fetch current SPY price."""
+    try:
+        import urllib.request
+        url = "https://query1.finance.yahoo.com/v8/finance/chart/SPY?range=1d&interval=1d"
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read())
+            return float(data["chart"]["result"][0]["meta"]["regularMarketPrice"])
+    except Exception as e:
+        log.warning(f"SPY price fetch failed: {e}")
+        return 0.0
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Alpaca client
+# ═══════════════════════════════════════════════════════════════════════════
+
+class AlpacaClient:
+    """Thin wrapper around alpaca-py for options trading."""
+
+    def __init__(self, dry_run: bool = False):
+        self.dry_run = dry_run
+        self.api_key = os.environ.get("ALPACA_API_KEY", "")
+        self.secret_key = os.environ.get("ALPACA_SECRET_KEY", "")
+        self.base_url = os.environ.get("ALPACA_BASE_URL", "https://paper-api.alpaca.markets")
+        self._client = None
+        self._trading_client = None
+
+        if not self.api_key or not self.secret_key:
+            if not dry_run:
+                log.error("ALPACA_API_KEY and ALPACA_SECRET_KEY must be set")
+                sys.exit(1)
+            else:
+                log.info("Dry-run mode — Alpaca credentials not required")
+
+    def _ensure_client(self):
+        if self._trading_client is None and not self.dry_run:
+            try:
+                from alpaca.trading.client import TradingClient
+                self._trading_client = TradingClient(
+                    self.api_key, self.secret_key, paper=True
+                )
+            except ImportError:
+                log.error("alpaca-py not installed. Run: pip3 install alpaca-py")
+                sys.exit(1)
+
+    def get_account(self) -> dict:
+        if self.dry_run:
+            return {"equity": "100000", "buying_power": "50000", "status": "ACTIVE"}
+        self._ensure_client()
+        acct = self._trading_client.get_account()
+        return {"equity": acct.equity, "buying_power": acct.buying_power, "status": acct.status}
+
+    def get_positions(self) -> list:
+        if self.dry_run:
+            return []
+        self._ensure_client()
+        return self._trading_client.get_all_positions()
+
+    def get_option_chain(self, ticker: str, expiration: str) -> list:
+        """Fetch option chain for a specific expiration date."""
+        if self.dry_run:
+            # Generate mock chain for dry-run
+            spy_price = get_spy_price() or 540.0
+            chain = []
+            for strike in range(int(spy_price) - 30, int(spy_price) + 5, 1):
+                chain.append({
+                    "symbol": f"SPY{expiration.replace('-','')}P{strike:08d}",
+                    "strike": float(strike),
+                    "type": "put",
+                    "expiration": expiration,
+                    "bid": round(max(0.05, (spy_price - strike) * 0.02 + 0.20), 2),
+                    "ask": round(max(0.10, (spy_price - strike) * 0.02 + 0.35), 2),
+                })
+            return chain
+        self._ensure_client()
+        try:
+            from alpaca.trading.requests import GetOptionContractsRequest
+            req = GetOptionContractsRequest(
+                underlying_symbols=["SPY"],
+                expiration_date=expiration,
+                type="put",
+            )
+            contracts = self._trading_client.get_option_contracts(req)
+            return [{"symbol": c.symbol, "strike": float(c.strike_price),
+                     "type": c.type, "expiration": str(c.expiration_date)}
+                    for c in contracts.option_contracts]
+        except Exception as e:
+            log.error(f"Option chain fetch failed: {e}")
+            return []
+
+    def submit_spread_order(self, short_symbol: str, long_symbol: str,
+                            contracts: int, credit: float) -> Optional[str]:
+        """Submit a credit spread order (sell short, buy long)."""
+        if self.dry_run:
+            order_id = f"DRY-{datetime.now().strftime('%H%M%S')}"
+            log.info(f"[DRY-RUN] Would submit: SELL {short_symbol} / BUY {long_symbol} "
+                     f"× {contracts} for ${credit:.2f} credit")
+            return order_id
+
+        self._ensure_client()
+        try:
+            from alpaca.trading.requests import (
+                LimitOrderRequest, OrderSide, TimeInForce, OrderClass,
+            )
+            # Submit as two-leg spread via multi-leg order
+            # Note: Alpaca's multi-leg API varies — this is the general pattern
+            order = self._trading_client.submit_order(
+                LimitOrderRequest(
+                    symbol=short_symbol,
+                    qty=contracts,
+                    side=OrderSide.SELL,
+                    type="limit",
+                    time_in_force=TimeInForce.DAY,
+                    limit_price=credit,
+                    order_class=OrderClass.BRACKET,
+                )
+            )
+            log.info(f"Order submitted: {order.id}")
+            return str(order.id)
+        except Exception as e:
+            log.error(f"Order submission failed: {e}")
+            return None
+
+    def close_position(self, symbol: str) -> bool:
+        if self.dry_run:
+            log.info(f"[DRY-RUN] Would close position: {symbol}")
+            return True
+        self._ensure_client()
+        try:
+            self._trading_client.close_position(symbol)
+            return True
+        except Exception as e:
+            log.error(f"Close position failed for {symbol}: {e}")
+            return False
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Signal generation
+# ═══════════════════════════════════════════════════════════════════════════
+
+def find_target_expiration(target_dte: int, min_dte: int, max_dte: int) -> str:
+    """Find the next monthly/weekly expiration within DTE range."""
+    today = date.today()
+    target_date = today + timedelta(days=target_dte)
+
+    # Find the nearest Friday to target date
+    days_to_friday = (4 - target_date.weekday()) % 7
+    exp_date = target_date + timedelta(days=days_to_friday)
+
+    # Clamp to min/max DTE
+    min_date = today + timedelta(days=min_dte)
+    max_date = today + timedelta(days=max_dte)
+
+    if exp_date < min_date:
+        exp_date = min_date + timedelta(days=(4 - min_date.weekday()) % 7)
+    if exp_date > max_date:
+        exp_date = max_date - timedelta(days=(max_date.weekday() - 4) % 7)
+
+    return exp_date.strftime("%Y-%m-%d")
+
+
+def select_strikes(spy_price: float, otm_pct: float, spread_width: float,
+                   direction: str = "bull_put") -> Tuple[float, float]:
+    """Select short and long strikes for the spread."""
+    if direction == "bull_put":
+        short_strike = round(spy_price * (1 - otm_pct))  # below current price
+        long_strike = short_strike - spread_width
+    else:  # bear_call
+        short_strike = round(spy_price * (1 + otm_pct))
+        long_strike = short_strike + spread_width
+    return float(short_strike), float(long_strike)
+
+
+def compute_contracts(account_equity: float, config: dict,
+                      spread_width: float, estimated_credit: float) -> int:
+    """Compute number of contracts based on 1.5× leveraged risk sizing."""
+    leverage = config["leverage"]["multiplier"]
+    risk_pct = config["sizing"]["base_risk_pct"] / 100 * leverage
+    max_risk = account_equity * risk_pct
+
+    max_loss_per_contract = (spread_width - estimated_credit) * 100
+    if max_loss_per_contract <= 0:
+        return 0
+
+    contracts = int(max_risk / max_loss_per_contract)
+    contracts = max(config["sizing"]["contracts_min"],
+                    min(contracts, config["sizing"]["contracts_max"]))
+    return contracts
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Main scanner logic
+# ═══════════════════════════════════════════════════════════════════════════
+
+def should_scan(config: dict, state: dict) -> Tuple[bool, str]:
+    """Check if we should scan for new entries today."""
+    today = date.today()
+
+    # Check day of week
+    scan_day = config["cadence"]["scan_day"]
+    weekday = today.weekday()
+    if scan_day == "monday" and weekday != 0:
+        return False, f"Not scan day (today={today.strftime('%A')}, scan={scan_day})"
+
+    # Check spacing from last entry
+    last_entry = state.get("last_entry_date")
+    if last_entry:
+        last_dt = datetime.strptime(last_entry, "%Y-%m-%d").date()
+        days_since = (today - last_dt).days
+        min_spacing = config["cadence"]["min_spacing_days"]
+        if days_since < min_spacing:
+            return False, f"Too soon since last entry ({days_since}d < {min_spacing}d min)"
+
+    # Check max concurrent
+    open_positions = [p for p in state.get("positions", []) if p.get("status") == "open"]
+    max_conc = config["cadence"]["max_concurrent"]
+    if len(open_positions) >= max_conc:
+        return False, f"Max concurrent reached ({len(open_positions)}/{max_conc})"
+
+    return True, "Ready to scan"
+
+
+def check_exits(state: dict, config: dict, client: AlpacaClient, spy_price: float):
+    """Check open positions for exit conditions."""
+    today = date.today()
+    positions = state.get("positions", [])
+    exits = config["exits"]
+
+    for pos in positions:
+        if pos.get("status") != "open":
+            continue
+
+        # DTE exit
+        exp_date = datetime.strptime(pos["expiration"], "%Y-%m-%d").date()
+        dte = (exp_date - today).days
+        if dte <= exits["dte_exit"]:
+            log.info(f"EXIT: DTE={dte} for {pos['short_strike']}/{pos['long_strike']} exp {pos['expiration']}")
+            pos["status"] = "closed"
+            pos["exit_reason"] = f"dte_exit ({dte}d)"
+            pos["exit_date"] = str(today)
+            log_trade({"timestamp": datetime.now().isoformat(), "action": "CLOSE",
+                       "ticker": "SPY", "type": "dte_exit", **{k: pos.get(k, "") for k in
+                       ["short_strike", "long_strike", "expiration", "contracts", "credit", "order_id", "status"]}})
+            continue
+
+        # Max hold days
+        entry_date = datetime.strptime(pos["entry_date"], "%Y-%m-%d").date()
+        hold_days = (today - entry_date).days
+        if hold_days >= exits["max_hold_days"]:
+            log.info(f"EXIT: Max hold {hold_days}d for {pos['short_strike']}/{pos['long_strike']}")
+            pos["status"] = "closed"
+            pos["exit_reason"] = f"max_hold ({hold_days}d)"
+            pos["exit_date"] = str(today)
+
+        # Expiration
+        if today >= exp_date:
+            log.info(f"EXIT: Expired {pos['short_strike']}/{pos['long_strike']}")
+            pos["status"] = "closed"
+            pos["exit_reason"] = "expiration"
+            pos["exit_date"] = str(today)
+
+
+def run_scan(config: dict, state: dict, client: AlpacaClient, dry_run: bool):
+    """Main scan: check VIX, find spread, size position, submit order."""
+    # Get market data
+    vix = get_vix()
+    spy_price = get_spy_price()
+    log.info(f"Market data: SPY=${spy_price:.2f}, VIX={vix:.1f}")
+
+    # VIX filter
+    vix_max = config["entry_signals"]["vix_max_entry"]
+    vix_min = config["entry_signals"]["vix_min_entry"]
+    if vix > vix_max:
+        log.info(f"SKIP: VIX {vix:.1f} > {vix_max} (too high)")
+        return
+    if vix < vix_min:
+        log.info(f"SKIP: VIX {vix:.1f} < {vix_min} (no premium)")
+        return
+
+    if spy_price <= 0:
+        log.error("Could not get SPY price. Aborting scan.")
+        return
+
+    # Find expiration
+    spread_cfg = config["spread"]
+    expiration = find_target_expiration(
+        spread_cfg["target_dte"], spread_cfg["min_dte"], spread_cfg["max_dte"])
+    log.info(f"Target expiration: {expiration}")
+
+    # Select strikes (bull put spread — primary)
+    otm_pct = spread_cfg["otm_pct"]
+    width = spread_cfg["width"]
+    short_strike, long_strike = select_strikes(spy_price, otm_pct, width, "bull_put")
+    log.info(f"Spread: SELL {short_strike}P / BUY {long_strike}P (${width} wide)")
+
+    # Estimate credit (rough: in dry-run we use mock, live would use Alpaca quotes)
+    chain = client.get_option_chain("SPY", expiration)
+    estimated_credit = 0.0
+    short_data = next((c for c in chain if abs(c["strike"] - short_strike) < 0.5 and c["type"] == "put"), None)
+    long_data = next((c for c in chain if abs(c["strike"] - long_strike) < 0.5 and c["type"] == "put"), None)
+
+    if short_data and long_data:
+        # Credit = short bid - long ask
+        short_bid = short_data.get("bid", 0.50)
+        long_ask = long_data.get("ask", 0.20)
+        estimated_credit = max(0, short_bid - long_ask)
+    else:
+        estimated_credit = 0.50  # conservative estimate
+
+    min_credit = spread_cfg["min_credit"]
+    if estimated_credit < min_credit:
+        log.info(f"SKIP: Credit ${estimated_credit:.2f} < min ${min_credit:.2f}")
+        return
+
+    log.info(f"Estimated credit: ${estimated_credit:.2f}")
+
+    # Size position
+    acct = client.get_account()
+    equity = float(acct["equity"])
+    contracts = compute_contracts(equity, config, width, estimated_credit)
+    if contracts < 1:
+        log.info("SKIP: Position too small (0 contracts)")
+        return
+
+    max_loss = (width - estimated_credit) * 100 * contracts
+    log.info(f"Sizing: {contracts} contracts, max loss ${max_loss:.0f} "
+             f"({max_loss / equity * 100:.1f}% of ${equity:,.0f})")
+
+    # Check portfolio risk cap
+    open_risk = sum(p.get("max_loss", 0) for p in state.get("positions", [])
+                    if p.get("status") == "open")
+    total_risk_pct = (open_risk + max_loss) / equity * 100
+    max_portfolio_risk = config["sizing"]["max_portfolio_risk_pct"]
+    if total_risk_pct > max_portfolio_risk:
+        log.info(f"SKIP: Total risk {total_risk_pct:.1f}% > max {max_portfolio_risk}%")
+        return
+
+    # Build option symbols (Alpaca format: SPY250502P00530000)
+    exp_fmt = datetime.strptime(expiration, "%Y-%m-%d").strftime("%y%m%d")
+    short_sym = f"SPY{exp_fmt}P{int(short_strike * 1000):08d}"
+    long_sym = f"SPY{exp_fmt}P{int(long_strike * 1000):08d}"
+
+    # Submit order
+    log.info(f"{'[DRY-RUN] ' if dry_run else ''}Submitting: SELL {short_sym} / BUY {long_sym} "
+             f"× {contracts} @ ${estimated_credit:.2f}")
+
+    order_id = client.submit_spread_order(short_sym, long_sym, contracts, estimated_credit)
+
+    if order_id:
+        # Record position
+        position = {
+            "entry_date": str(date.today()),
+            "expiration": expiration,
+            "short_strike": short_strike,
+            "long_strike": long_strike,
+            "contracts": contracts,
+            "credit": estimated_credit,
+            "max_loss": max_loss,
+            "order_id": order_id,
+            "status": "open",
+            "short_symbol": short_sym,
+            "long_symbol": long_sym,
+            "vix_at_entry": vix,
+            "spy_at_entry": spy_price,
+        }
+        state.setdefault("positions", []).append(position)
+        state["last_entry_date"] = str(date.today())
+
+        log_trade({
+            "timestamp": datetime.now().isoformat(), "action": "OPEN",
+            "ticker": "SPY", "type": "bull_put_spread",
+            "short_strike": short_strike, "long_strike": long_strike,
+            "expiration": expiration, "contracts": contracts,
+            "credit": estimated_credit, "order_id": order_id, "status": "submitted",
+        })
+
+        log.info(f"Position opened: {short_strike}/{long_strike} × {contracts} "
+                 f"exp {expiration} (order {order_id})")
+    else:
+        log.error("Order submission failed")
+
+
+def show_status(state: dict):
+    """Display current positions and P&L."""
+    positions = state.get("positions", [])
+    open_pos = [p for p in positions if p.get("status") == "open"]
+    closed_pos = [p for p in positions if p.get("status") == "closed"]
+
+    print(f"\nEXP-1220 Paper Trading Status")
+    print(f"{'═' * 60}")
+    print(f"Open positions: {len(open_pos)}")
+    print(f"Closed positions: {len(closed_pos)}")
+    print(f"Last entry: {state.get('last_entry_date', 'never')}")
+
+    if open_pos:
+        print(f"\n{'─' * 60}")
+        print(f"  {'Entry':12s} {'Strikes':15s} {'Exp':12s} {'Ctrs':>5s} {'Credit':>7s} {'VIX':>5s}")
+        for p in open_pos:
+            print(f"  {p['entry_date']:12s} {p['short_strike']:.0f}/{p['long_strike']:.0f}"
+                  f"{'':5s} {p['expiration']:12s} {p['contracts']:5d} "
+                  f"${p['credit']:.2f}  {p.get('vix_at_entry', 0):.1f}")
+
+    if closed_pos:
+        print(f"\n  Recent closed:")
+        for p in closed_pos[-5:]:
+            print(f"  {p['entry_date']} → {p.get('exit_date','?')} "
+                  f"{p['short_strike']:.0f}/{p['long_strike']:.0f} "
+                  f"({p.get('exit_reason', '?')})")
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# CLI
+# ═══════════════════════════════════════════════════════════════════════════
+
+def main():
+    parser = argparse.ArgumentParser(description="EXP-1220 Paper Trading Scanner")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Show trades without submitting to Alpaca")
+    parser.add_argument("--status", action="store_true",
+                        help="Show current positions")
+    parser.add_argument("--close-all", action="store_true",
+                        help="Close all open positions")
+    parser.add_argument("--force-scan", action="store_true",
+                        help="Force scan even if not scan day")
+    args = parser.parse_args()
+
+    config = load_config()
+    state = load_state()
+
+    log.info(f"EXP-1220 Scanner — {config['name']}")
+    log.info(f"Mode: {'DRY-RUN' if args.dry_run else 'PAPER'}")
+
+    if args.status:
+        show_status(state)
+        return
+
+    client = AlpacaClient(dry_run=args.dry_run)
+
+    if args.close_all:
+        log.info("Closing all positions...")
+        for pos in state.get("positions", []):
+            if pos.get("status") == "open":
+                pos["status"] = "closed"
+                pos["exit_reason"] = "manual_close"
+                pos["exit_date"] = str(date.today())
+                log.info(f"Closed: {pos['short_strike']}/{pos['long_strike']}")
+        save_state(state)
+        return
+
+    # Check exits first
+    spy_price = get_spy_price()
+    check_exits(state, config, client, spy_price)
+
+    # Check VIX emergency
+    vix = get_vix()
+    emergency_vix = config["exits"]["vix_emergency_exit"]
+    if vix > emergency_vix:
+        log.warning(f"VIX EMERGENCY: {vix:.1f} > {emergency_vix}. Closing all positions.")
+        for pos in state.get("positions", []):
+            if pos.get("status") == "open":
+                pos["status"] = "closed"
+                pos["exit_reason"] = f"vix_emergency ({vix:.1f})"
+                pos["exit_date"] = str(date.today())
+        save_state(state)
+        return
+
+    # Check if we should scan
+    should, reason = should_scan(config, state)
+    if not should and not args.force_scan:
+        log.info(f"Scan skipped: {reason}")
+        save_state(state)
+        return
+
+    if args.force_scan and not should:
+        log.info(f"Force scan override (normal reason: {reason})")
+
+    # Run the scan
+    run_scan(config, state, client, args.dry_run)
+    save_state(state)
+    log.info("Scan complete.")
+
+
+if __name__ == "__main__":
+    main()

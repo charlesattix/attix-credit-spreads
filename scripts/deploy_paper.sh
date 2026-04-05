@@ -95,43 +95,10 @@ start_trading() {
     echo -e "  Hedge:    None"
     echo -e "  Log:      $LOG_DIR/paper_trading.log"
 
-    # Launch the paper trading monitor
+    # Launch the standalone EXP-1220 scanner
     cd "$PROJECT_DIR"
-    PYTHONPATH="$PROJECT_DIR" nohup python3 -c "
-import sys, time, yaml, logging
-from pathlib import Path
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s %(levelname)s %(message)s',
-    handlers=[
-        logging.FileHandler('$LOG_DIR/paper_trading.log'),
-        logging.StreamHandler(),
-    ]
-)
-log = logging.getLogger('paper_trading')
-
-with open('$CONFIG') as f:
-    config = yaml.safe_load(f)
-
-log.info('EXP-1220 Paper Trading Started')
-log.info(f'Config: {config[\"name\"]}')
-log.info(f'Leverage: {config[\"leverage\"][\"multiplier\"]}x static')
-log.info(f'Cadence: {config[\"cadence\"][\"frequency\"]}')
-log.info(f'Max concurrent: {config[\"cadence\"][\"max_concurrent\"]}')
-
-# Import the paper trading engine
-try:
-    from compass.paper_trading_v4 import PaperTradingEngine
-    engine = PaperTradingEngine(config)
-    engine.run()
-except ImportError:
-    log.warning('PaperTradingEngine not available — running in monitor-only mode')
-    log.info('Monitor mode: checking positions every 60s')
-    while True:
-        time.sleep(60)
-        log.info('Heartbeat — paper trading monitor alive')
-" >> "$LOG_DIR/paper_trading.log" 2>&1 &
+    PYTHONPATH="$PROJECT_DIR" nohup python3 scripts/run_exp1220.py \
+        >> "$LOG_DIR/paper_trading.log" 2>&1 &
 
     echo $! > "$PID_FILE"
     echo -e "${GREEN}Started with PID $(cat "$PID_FILE")${NC}"
