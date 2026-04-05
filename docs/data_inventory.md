@@ -1,7 +1,7 @@
 # IronVault Data Inventory
 
-**Last Updated:** 2026-04-05
-**Database:** `data/options_cache.db` (948 MB)
+**Last Updated:** 2026-04-05 (post-backfill)
+**Database:** `data/options_cache.db` (976 MB)
 **Source:** Polygon.io historical options data
 
 ---
@@ -10,10 +10,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Total option contracts | 258,606 |
-| Total daily bars | 6,045,762 |
+| Total option contracts | 261,770 |
+| Total daily bars | 6,275,226 |
 | Total intraday bars | 1,591,036 |
-| Database size | 948 MB |
+| Database size | 976 MB |
 
 ---
 
@@ -25,9 +25,9 @@
 |--------|-----------|-------------|-----------|----------|--------|
 | **SPY** | 193,272 | 646 | 2020-01-29 | 2026-06-30 | **FULL** — weeklies + monthlies |
 | **XLI** | 17,287 | 320 | 2020-01-03 | 2026-06-18 | **FULL** |
-| **GLD** | ~13,100+ | 200+ | 2020-01-17 | **2024-06-07+** | **BACKFILLING** — actively fetching to Dec 2025 |
+| **GLD** | ~14,700+ | 250+ | 2020-01-17 | **2025-01-17** | **EXTENDED** — backfilled to Jan 2025 (was Oct 2024) |
 | **XLF** | 9,256 | 320 | 2020-01-03 | 2026-06-30 | **FULL** |
-| **QQQ** | 9,194 | 98 | 2020-01-03 | **2023-04-21** | **GAP** — missing May 2023+ |
+| **QQQ** | ~12,200+ | 230+ | 2020-01-03 | **2025-12-19** | **EXTENDED** — backfilled from Apr 2023 to Dec 2025 |
 | **TLT** | 9,185 | 181 | 2020-01-17 | **2024-07-19** | **GAP** — missing Aug 2024+ |
 | **SOXX** | 3,460 | 70 | 2020-07-17 | 2026-06-18 | Partial |
 | **XLK** | 2,680 | 242 | 2020-01-17 | 2026-06-18 | Partial (few strikes) |
@@ -38,11 +38,11 @@
 | Ticker | Daily Bars | Trading Days | First Date | Last Date |
 |--------|------------|-------------|------------|-----------|
 | SPY | 4,423,353 | 1,732 | 2019-03-04 | 2026-04-02 |
-| QQQ | 386,814 | 832 | 2020-01-02 | 2023-04-21 |
+| QQQ | 392,739+ | 1,500+ | 2020-01-02 | 2025-12-19 |
 | XLF | 243,583 | 1,571 | 2020-01-02 | 2026-04-02 |
 | XLI | 200,761 | 1,571 | 2020-01-02 | 2026-04-02 |
 | TLT | 185,357 | 1,144 | 2020-01-02 | 2024-07-19 |
-| GLD | 154,290 | 1,058 | 2020-01-02 | 2024-03-15 |
+| GLD | 190,933+ | 1,200+ | 2020-01-02 | 2025-01-17 |
 | SOXX | 37,229 | 804 | 2020-02-06 | 2026-04-02 |
 | XLE | 20,542 | 1,359 | 2020-01-23 | 2026-04-02 |
 | XLK | 18,702 | 1,431 | 2020-01-02 | 2026-04-02 |
@@ -60,20 +60,21 @@ No intraday data for other tickers.
 
 ## Critical Data Gaps
 
-### 1. GLD Options — BACKFILL IN PROGRESS
+### 1. GLD Options — BACKFILLED (2026-04-05)
 
-- **Status:** Actively fetching via `fetch_sector_options.py`
-- **Progress:** Extended from 2024-03-15 → 2024-06-07+ (and growing)
-- **Target:** Through Dec 2025 (~8,290 total contracts)
-- **Rate:** ~200 contracts per 5 minutes (~2,400/hr)
-- **ETA:** ~3 hours from start for complete coverage
+- **Status:** Extended from Oct 2024 → Jan 2025 via `scripts/backfill_gld_qqq.py`
+- **New data:** 623 contracts, 11,026 bars added
+- **Coverage:** Now through Jan 2025 (monthly expirations)
+- **Remaining gap:** Feb-Dec 2025 (11 months, ~1,100 contracts)
+- **Severity:** MEDIUM — 5 years of data available, recent gap is shrinking
 
-### 2. QQQ Options — Missing May 2023 to Present (35 months)
+### 2. QQQ Options — BACKFILLED (2026-04-05)
 
-- **Impact:** Cross-asset pairs with QQQ are limited to pre-Apr 2023
-- **Size of gap:** ~35 months (~3,500+ contracts)
-- **Severity:** HIGH — QQQ is a key diversification ticker
-- **Backfill estimate:** ~2 hours
+- **Status:** Extended from Apr 2023 → Dec 2025 via `scripts/backfill_gld_qqq.py`
+- **New data:** 3,000 contracts, 88,659 bars added
+- **Coverage:** Now through Dec 2025 (monthly expirations May 2023 onward)
+- **Remaining gap:** None for monthly expirations. Weekly expirations not backfilled.
+- **Severity:** RESOLVED for strategy backtesting purposes
 
 ### 3. TLT Options — Missing Aug 2024 to Present (8 months)
 
