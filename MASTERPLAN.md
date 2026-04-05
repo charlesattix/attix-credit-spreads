@@ -48,6 +48,15 @@ Build a validated, multi-strategy options trading system on SPY. Data-driven app
 | 2024 | +144.6% | Continued strength |
 | 2025 | +136.8% | YTD through available data |
 
+**Alternative configurations tested:**
+
+| Config | CAGR | Max DD | COVID DD | Sharpe | Notes |
+|--------|------|--------|----------|--------|-------|
+| v4 DynamicSizer (default) | **101.0%** | 8.0% | **6.6%** | 3.94 | Adaptive 0.1×–2.2× leverage |
+| Static 1.6× + TailRiskHedge | **101.6%** | 11.4% | 18.3% | 4.10 | From walk-forward analysis |
+| EXP-1220 solo 1.2× | 99.0% | 7.9% | ~7% | 5.68 | Highest Sharpe, single strategy |
+| Regime-adaptive portfolio | 120.0% | ~10% | ~15% | ~4.7 | 3-way regime comparison |
+
 **Crisis Scenarios (ALL PASS <12% threshold):**
 
 | Scenario | v4 Max DD | Unhedged DD | Protection |
@@ -57,6 +66,20 @@ Build a validated, multi-strategy options trading system on SPY. Data-driven app
 | Flash Crash | **6.9%** | 34.5% | 27.6pp saved |
 | China 2015 | **5.8%** | 28.4% | 22.6pp saved |
 | Volmageddon | **4.5%** | 25.1% | 20.6pp saved |
+
+---
+
+## CURRENT GAPS & OPEN ISSUES
+
+| Gap | Severity | Status | Path to Resolution |
+|-----|----------|--------|-------------------|
+| **Sharpe 3.94 vs 6.0 target** | Medium | OPEN | Regime filtering → 5.07. SPY-only variant → 6.55 but lower CAGR. Trade-off: Sharpe vs absolute return. |
+| **Static 1.6× COVID DD 18.3%** | Medium | RESOLVED (v4) | v4 DynamicSizer cuts to 6.6% via adaptive leverage. Static config exceeds 12% threshold. |
+| **EXP-1220 hedge costs assumed** | Medium | OPEN | 2%/yr flat budget not validated against real SPY put prices. Need IronVault option cost analysis. |
+| **Paper trading not functional** | High | OPEN | Cron not installed. EXP-503/600 never deployed. Orphan positions in 400/401. |
+| **GLD data ends Mar 2024** | Medium | OPEN | Need Polygon backfill for GLD/TLT/QQQ options to validate on recent data. |
+| **6/14 experiments lack walk-forward** | Medium | DOCUMENTED | OOS audit identifies which need rework. Grade C/D experiments need re-validation. |
+| **Execution at $50M+ not viable** | Low | DOCUMENTED | GLD liquidity binding. SPY-only variant for large AUM. |
 
 ---
 
