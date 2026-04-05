@@ -22,23 +22,26 @@
 
 ### Real-Data Validated Strategies — CORRECTED Grades
 
-| Strategy | Trade Sharpe | OOS Sharpe | CAGR | DD | Trades | Audit | Verdict | Data Status |
-|----------|-------------|------------|------|----|--------|-------|---------|-------------|
-| **EXP-1220 Tail Risk** | **1.26** | — | 1.2% (trade) | 1.6% | 171 | B+ | **ALPHA PROVEN** (utilization fix needed) | SPY: current |
-| **EXP-1630 GLD/TLT RelVal** | 2.19 | **4.08** | 1.9% | 1.7% | 63 | A | **PROVEN** | GLD: ends Oct 2024 |
-| **Vol Term Structure** | 2.45 | **2.81** | 0.55% | 0.18% | 53 | A | **PROVEN** | SPY/XLF: current |
-| **Cross-Asset Pairs** | 2.90 | **5.06** | — | — | 32 | A- | **PROVEN** | QQQ: ends Apr 2023 |
-| **TLT Iron Condors** | 2.69 | — | 10.2% | — | 43 | B | **PROMISING** | **TLT: backfilled to Dec 2025** |
-| **XLI Iron Condors** | 5.19 | 2.68 | 18.8% | 10.3% | 58 | B+ | **PROMISING** | XLI: current |
-| EXP-1630-opt Multi-Pair | 1.35 | — | 12.6% | 9.3% | 174 | B | PROMISING | Mixed data status |
-| TLT-XLF Pair | — | 0.96 | 5.5% | — | 57 | — | PROMISING | **Both tickers current** |
-| EXP-1650 Earnings VC | 1.55 | 0.59 | modest | 0.95% | 28 | B- | MARGINAL | XLF: current |
-| EXP-1640 Sector Mom | 0.64 | −0.12 | 0.3% | 0.8% | 19 | C | MARGINAL | XLF: current |
-| EXP-1230 Microstructure | 0.89 | — | — | — | — | D | **DEAD** (AUC 0.511) | — |
-| EXP-1270 Adaptive Stop | −0.25 | — | −0.05% | 1.2% | 41 | D | **DEAD** | — |
-| EXP-1320 Vol Cluster | 0.92 | — | 0.09% | 0.37% | 41 | D | **DEAD** | — |
-| EXP-880 Crisis Hedge | 0.41 | — | −104% | 106% | 262 | F | **DEAD** | — |
-| EXP-1470 North Star | ~0 | — | 0.42% | — | 19 | F | **DEAD** | — |
+| Strategy | Trade Sharpe | OOS Sharpe | CAGR | DD | Trades | OOS Audit | Backtest Audit | Verdict | Data Status |
+|----------|-------------|------------|------|----|--------|-----------|----------------|---------|-------------|
+| **EXP-1220 Tail Risk** | **1.26** | — | 1.2% (trade) | 1.6% | 171 | B+ | D (cost+data) | **ALPHA PROVEN** (needs util fix) | SPY: current |
+| **EXP-1630 GLD/TLT RelVal** | 2.19 | **4.08** | 1.9% | 1.7% | 63 | A | **B+** | **PROVEN** | GLD: ends Oct 2024 |
+| **Vol Term Structure** | 2.45 | **2.81** | 0.55% | 0.18% | 53 | A | **B+** | **PROVEN** | SPY/XLF: current |
+| **Cross-Asset Pairs** | 2.90 | **5.06** | — | — | 32 | A- | **B+** | **PROVEN** | QQQ: ends Apr 2023 |
+| **TLT Iron Condors** | 2.69 | — | 10.2% | — | 43 | B | **B+** | **PROMISING** | TLT: to Dec 2025 |
+| **XLI Iron Condors** | 5.19 | 2.68 | 18.8% | 10.3% | 58 | B+ | **B+** | **PROMISING** | XLI: current |
+| EXP-1630-opt Multi-Pair | 1.35 | — | 12.6% | 9.3% | 174 | B | B+ | PROMISING | Mixed data |
+| EXP-1650 Earnings VC | 1.55 | 0.59 | modest | 0.95% | 28 | B- | C | MARGINAL | XLF: current |
+| EXP-1640 Sector Mom | 0.64 | −0.12 | 0.3% | 0.8% | 19 | C | D | MARGINAL | XLF: current |
+| EXP-880-real | 0.41 | — | −104% | 106% | 262 | F | C | **DEAD** | SPY: current |
+| EXP-1220-real | — | — | — | — | — | B+ | D | See EXP-1220 above | SPY: current |
+| EXP-1270-real | −0.25 | — | −0.05% | 1.2% | 41 | D | C | **DEAD** | SPY: current |
+| EXP-1320-real | 0.92 | — | 0.09% | 0.37% | 41 | D | D | **DEAD** | SPY: current |
+| EXP-1470-real | ~0 | — | 0.42% | — | 19 | F | D | **DEAD** | — |
+| EXP-1230-real | 0.89 | — | — | — | — | D | C | **DEAD** | — |
+| *39 -max experiments* | — | — | — | — | — | — | F (all) | SYNTHETIC | — |
+
+> **Backtest audit key:** 52 experiments scanned. 39 `-max` experiments auto-fail (synthetic data). 4 Grade B+ (IronVault real data, minor cost warning). 5 Grade C/D (real data but missing cost fields or data source issues). See `reports/full_audit_report.html` for full matrix.
 
 ---
 
