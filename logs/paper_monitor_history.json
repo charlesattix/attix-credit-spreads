@@ -1,0 +1,71 @@
+[
+  {
+    "date": "2026-04-06",
+    "timestamp": "2026-04-06T13:16:54.650405",
+    "experiments": {
+      "exp036": {
+        "status": "error"
+      },
+      "exp059": {
+        "status": "error"
+      },
+      "exp154": {
+        "status": "error"
+      },
+      "exp305": {
+        "status": "ok",
+        "equity": 94447.59,
+        "positions": 0,
+        "total_unrealized_pl": 0,
+        "orders_filled": 18,
+        "metrics": {
+          "n_days": 63,
+          "total_return_pct": -5.55,
+          "cagr_pct": -20.43,
+          "sharpe": -2.033,
+          "max_dd_pct": 7.24,
+          "vol_pct": 11.11,
+          "current_equity": 94447.59,
+          "peak_equity": 101817.11
+        }
+      },
+      "exp400": {
+        "status": "ok",
+        "equity": 114622.28,
+        "positions": 12,
+        "total_unrealized_pl": 5700.0,
+        "orders_filled": 22,
+        "metrics": {
+          "n_days": 63,
+          "total_return_pct": 15.52,
+          "cagr_pct": 78.1,
+          "sharpe": 1.271,
+          "max_dd_pct": 20.85,
+          "vol_pct": 59.78,
+          "current_equity": 115522.28,
+          "peak_equity": 141663.16
+        }
+      },
+      "exp401": {
+        "status": "ok",
+        "equity": 121399.88,
+        "positions": 8,
+        "total_unrealized_pl": 5897.0,
+        "orders_filled": 18,
+        "metrics": {
+          "n_days": 63,
+          "total_return_pct": 22.24,
+          "cagr_pct": 123.27,
+          "sharpe": 1.862,
+          "max_dd_pct": 16.13,
+          "vol_pct": 50.47,
+          "current_equity": 122238.88,
+          "peak_equity": 140646.6
+        }
+      },
+      "exp880.example": {
+        "status": "error"
+      }
+    }
+  }
+]
