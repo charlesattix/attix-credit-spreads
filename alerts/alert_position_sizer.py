@@ -278,23 +278,49 @@ class AlertPositionSizer:
     ) -> SizeResult:
         """Flat-risk sizing matching backtester.py logic."""
         risk_cfg = self.config.get("risk", {})
+        sizing_cfg = self.config.get("sizing", {})
         strategy_cfg = self.config.get("strategy", {})
         backtest_cfg = self.config.get("backtest", {})
+        account_cfg = self.config.get("account", {})
+
+        # Merge `sizing:` section as fallback so legacy paper configs (which
+        # put position-sizing fields under `sizing:` with names like
+        # `leveraged_risk_pct` / `contracts_max`) keep working. The `risk:`
+        # section always wins on key collision.
+        effective_risk = {**sizing_cfg, **risk_cfg}
 
         # Sizing base: flat uses starting_capital, compound uses current equity
-        sizing_mode = risk_cfg.get("sizing_mode", "flat")
-        starting_capital = float(backtest_cfg.get("starting_capital", risk_cfg.get("account_size", 100_000)))
+        sizing_mode = effective_risk.get("sizing_mode", "flat")
+        starting_capital = float(
+            backtest_cfg.get(
+                "starting_capital",
+                account_cfg.get(
+                    "starting_capital",
+                    effective_risk.get("account_size", 100_000),
+                ),
+            )
+        )
         account_base = starting_capital if sizing_mode == "flat" else account_value
 
         # Detect iron condor
         is_ic = alert.type.value == "iron_condor" or "condor" in str(alert.type).lower()
 
-        # Risk % per trade
+        # Risk % per trade. Support both the canonical `max_risk_per_trade`
+        # key and the legacy `sizing.leveraged_risk_pct` / `base_risk_pct`
+        # aliases used by the paper-sweep configs.
         if is_ic:
             ic_cfg = strategy_cfg.get("iron_condor", {})
             raw_risk_pct = float(ic_cfg.get("ic_risk_per_trade", 12.0)) / 100.0
         else:
-            raw_risk_pct = float(risk_cfg.get("max_risk_per_trade", 5.0)) / 100.0
+            raw_risk_pct = float(
+                effective_risk.get(
+                    "max_risk_per_trade",
+                    effective_risk.get(
+                        "leveraged_risk_pct",
+                        effective_risk.get("base_risk_pct", 5.0),
+                    ),
+                )
+            ) / 100.0
 
         # VIX dynamic scaling (optional — only if vix_dynamic_sizing configured)
         vix_scale = 1.0
@@ -325,9 +351,19 @@ class AlertPositionSizer:
 
         contracts = int(dollar_risk / max_loss_per_spread) if max_loss_per_spread > 0 else 1
 
-        # Config limits — max_contracts from config (not hardcoded)
-        min_contracts = int(risk_cfg.get("min_contracts", 1))
-        max_contracts = int(risk_cfg.get("max_contracts", 25))
+        # Config limits — max_contracts from config (not hardcoded). Support
+        # `contracts_min` / `contracts_max` aliases from the legacy `sizing:`
+        # section.
+        min_contracts = int(
+            effective_risk.get(
+                "min_contracts", effective_risk.get("contracts_min", 1)
+            )
+        )
+        max_contracts = int(
+            effective_risk.get(
+                "max_contracts", effective_risk.get("contracts_max", 25)
+            )
+        )
         contracts = max(min_contracts, min(contracts, max_contracts))
 
         actual_dollar_risk = contracts * max_loss_per_spread

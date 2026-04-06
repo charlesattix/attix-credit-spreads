@@ -94,11 +94,22 @@ exits:
 # ─── Risk Management (2x calibration) ────────────────────────────────────
 # DD halt is tighter than 1.5x to account for higher leverage sensitivity.
 risk:
+  # Position-sizing fields read by alerts/alert_position_sizer.py.
+  # These mirror the values in `sizing:` above (which uses legacy aliases)
+  # so the canonical and legacy keys stay in sync.
+  max_risk_per_trade: 2.0       # 2% of starting_capital per trade
+  max_contracts: 15
+  min_contracts: 1
+  sizing_mode: flat             # base = backtest.starting_capital
   max_daily_loss_pct: 4.0       # vs 3.0 at 1.5x
   max_weekly_loss_pct: 7.0      # vs 5.0 at 1.5x
   max_drawdown_halt_pct: 13.0   # vs 10.0 at 1.5x
   drawdown_recovery_pct: 6.5    # vs 5.0 at 1.5x
   correlation_check: true
+
+# ─── Backtest reference (used by sizer for starting_capital) ─────────────
+backtest:
+  starting_capital: 100000
 
 # ─── Monitoring & Alerts ─────────────────────────────────────────────────
 monitoring:

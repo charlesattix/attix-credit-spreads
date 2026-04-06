@@ -87,11 +87,20 @@ exits:
 
 # Hard halt at 20% DD — this is the circuit breaker
 risk:
+  # Position-sizing fields read by alerts/alert_position_sizer.py.
+  # Mirrors `sizing:` above (legacy aliases). Keep both in sync.
+  max_risk_per_trade: 5.0       # 5% of starting_capital per trade
+  max_contracts: 30
+  min_contracts: 1
+  sizing_mode: flat             # base = backtest.starting_capital
   max_daily_loss_pct: 7.0
   max_weekly_loss_pct: 13.0
   max_drawdown_halt_pct: 20.0
   drawdown_recovery_pct: 10.0
   correlation_check: true
+
+backtest:
+  starting_capital: 100000
 
 monitoring:
   check_interval_minutes: 5     # most frequent checks at 5x
