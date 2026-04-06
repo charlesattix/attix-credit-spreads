@@ -219,9 +219,12 @@ class TestScriptFailsWithoutEnv:
         env_file.write_text("SOME_OTHER_KEY=foo\n")
 
         test_script = tmp_path / "test_key.sh"
+        # Explicitly unset POLYGON_API_KEY before sourcing to defend against
+        # any inherited env var (fixes flaky failure under full test suite).
         test_script.write_text(textwrap.dedent(f"""\
             #!/usr/bin/env bash
             set -euo pipefail
+            unset POLYGON_API_KEY
             PROJECT_DIR="{tmp_path}"
             set -a
             . "$PROJECT_DIR/.env"
@@ -234,7 +237,8 @@ class TestScriptFailsWithoutEnv:
         """))
         test_script.chmod(0o755)
 
-        # Clean env so parent's POLYGON_API_KEY doesn't leak into subprocess
+        # Clean env so parent's POLYGON_API_KEY doesn't leak into subprocess.
+        # Only pass PATH — nothing else.
         result = subprocess.run(
             ["bash", str(test_script)],
             capture_output=True, text=True, timeout=10,
