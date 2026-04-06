@@ -8,8 +8,10 @@ applies 1.5× position sizing, submits paper orders, tracks positions.
 Usage:
     python3 scripts/run_exp1220.py              # live scan + trade
     python3 scripts/run_exp1220.py --dry-run    # show trades without submitting
-    python3 scripts/run_exp1220.py --status      # show open positions
-    python3 scripts/run_exp1220.py --close-all   # close all open positions
+    python3 scripts/run_exp1220.py --status     # show open positions
+    python3 scripts/run_exp1220.py --close-all  # close all open positions
+    python3 scripts/run_exp1220.py --smoke-test # validate config + API without trading
+    python3 scripts/run_exp1220.py --health     # write health file and exit
 
 Designed to run as a LaunchAgent (once per day at 9:35 AM ET).
 """
@@ -20,9 +22,11 @@ import argparse
 import csv
 import json
 import logging
+import logging.handlers
 import math
 import os
 import sys
+import time
 from datetime import datetime, timedelta, date
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -36,16 +40,58 @@ LOG_DIR = ROOT / "logs"
 LOG_DIR.mkdir(exist_ok=True)
 JOURNAL_PATH = LOG_DIR / "trade_journal.csv"
 STATE_PATH = LOG_DIR / "exp1220_state.json"
+HEALTH_PATH = LOG_DIR / "exp1220_health.json"
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.FileHandler(LOG_DIR / "exp1220.log"),
-        logging.StreamHandler(),
-    ],
-)
-log = logging.getLogger("exp1220")
+
+def setup_logging(log_level: str = "INFO", max_bytes: int = 50 * 1024 * 1024,
+                   backup_count: int = 5) -> logging.Logger:
+    """Configure logging with rotation. Safe to call multiple times."""
+    logger = logging.getLogger("exp1220")
+    logger.setLevel(getattr(logging, log_level.upper(), logging.INFO))
+
+    # Clear existing handlers so we don't duplicate on re-init
+    for h in list(logger.handlers):
+        logger.removeHandler(h)
+
+    fmt = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s",
+                             datefmt="%Y-%m-%d %H:%M:%S")
+
+    rotating = logging.handlers.RotatingFileHandler(
+        LOG_DIR / "exp1220.log",
+        maxBytes=max_bytes,
+        backupCount=backup_count,
+    )
+    rotating.setFormatter(fmt)
+    logger.addHandler(rotating)
+
+    stream = logging.StreamHandler()
+    stream.setFormatter(fmt)
+    logger.addHandler(stream)
+
+    logger.propagate = False
+    return logger
+
+
+log = setup_logging()
+
+
+def write_health(status: str, details: Optional[dict] = None,
+                  error: Optional[str] = None) -> None:
+    """Write a health status file Charles can monitor.
+
+    status: 'ok', 'warning', 'error', 'halted'
+    """
+    health = {
+        "status": status,
+        "timestamp": datetime.now().isoformat(),
+        "last_run": datetime.now().isoformat(),
+        "error": error,
+        "details": details or {},
+    }
+    try:
+        HEALTH_PATH.write_text(json.dumps(health, indent=2, default=str))
+    except Exception as e:
+        log.error(f"Failed to write health file: {e}")
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -87,36 +133,62 @@ def log_trade(entry: dict):
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# VIX check (yfinance — free, no API key needed)
+# Market data (yfinance — free, no API key needed) with retry
 # ═══════════════════════════════════════════════════════════════════════════
 
-def get_vix() -> float:
-    """Fetch current VIX from Yahoo Finance."""
-    try:
-        import urllib.request
-        url = "https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX?range=1d&interval=1d"
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            data = json.loads(resp.read())
-            close = data["chart"]["result"][0]["meta"]["regularMarketPrice"]
-            return float(close)
-    except Exception as e:
-        log.warning(f"VIX fetch failed: {e}. Using default 20.0")
-        return 20.0
+def _yahoo_fetch(symbol: str, max_retries: int = 3,
+                  backoff: float = 2.0, timeout: int = 10) -> Optional[float]:
+    """Fetch latest price from Yahoo Finance with retry + exponential backoff."""
+    import urllib.request
+    import urllib.error
+
+    url = (f"https://query1.finance.yahoo.com/v8/finance/chart/"
+            f"{symbol}?range=1d&interval=1d")
+    last_err = None
+
+    for attempt in range(max_retries):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                data = json.loads(resp.read())
+                results = data.get("chart", {}).get("result")
+                if not results:
+                    raise ValueError("no results in response")
+                meta = results[0].get("meta", {})
+                price = meta.get("regularMarketPrice")
+                if price is None:
+                    raise ValueError("missing regularMarketPrice")
+                return float(price)
+        except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError) as e:
+            last_err = e
+            log.warning(f"[attempt {attempt+1}/{max_retries}] {symbol} fetch network error: {e}")
+        except (ValueError, KeyError, json.JSONDecodeError) as e:
+            last_err = e
+            log.warning(f"[attempt {attempt+1}/{max_retries}] {symbol} fetch parse error: {e}")
+        except Exception as e:
+            last_err = e
+            log.warning(f"[attempt {attempt+1}/{max_retries}] {symbol} fetch error: {e}")
+
+        if attempt < max_retries - 1:
+            time.sleep(backoff ** attempt)
+
+    log.error(f"{symbol} fetch failed after {max_retries} attempts: {last_err}")
+    return None
+
+
+def get_vix(default: float = 20.0) -> float:
+    """Fetch current VIX. Returns default on failure."""
+    price = _yahoo_fetch("%5EVIX")
+    if price is None:
+        log.warning(f"VIX fetch failed. Using default {default}")
+        return default
+    return price
 
 
 def get_spy_price() -> float:
-    """Fetch current SPY price."""
-    try:
-        import urllib.request
-        url = "https://query1.finance.yahoo.com/v8/finance/chart/SPY?range=1d&interval=1d"
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            data = json.loads(resp.read())
-            return float(data["chart"]["result"][0]["meta"]["regularMarketPrice"])
-    except Exception as e:
-        log.warning(f"SPY price fetch failed: {e}")
-        return 0.0
+    """Fetch current SPY price. Returns 0.0 on failure."""
+    price = _yahoo_fetch("SPY")
+    return price if price is not None else 0.0
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -669,6 +741,164 @@ def show_status(state: dict):
 
 
 # ═══════════════════════════════════════════════════════════════════════════
+# Smoke test — validates config + API connectivity without placing orders
+# ═══════════════════════════════════════════════════════════════════════════
+
+def run_smoke_test() -> int:
+    """Validate config, API connectivity, and data fetch without placing orders.
+
+    Returns 0 on success, non-zero on failure.
+    """
+    print("\n" + "=" * 60)
+    print("  EXP-1220 Smoke Test")
+    print("=" * 60 + "\n")
+
+    failures = []
+    warnings = []
+
+    # 1. Config file loads and has required fields
+    print("[1/6] Loading config...")
+    try:
+        config = load_config()
+        required_sections = ["account", "leverage", "cadence", "sizing",
+                              "spread", "entry_signals", "exits", "risk"]
+        missing = [s for s in required_sections if s not in config]
+        if missing:
+            failures.append(f"Config missing sections: {missing}")
+        else:
+            print(f"      OK  Config loaded: {config['name']}")
+            print(f"      OK  Leverage: {config['leverage']['multiplier']}x")
+    except Exception as e:
+        failures.append(f"Config load failed: {e}")
+        print(f"      FAIL {e}")
+
+    # 2. State file is readable (or createable)
+    print("[2/6] Checking state file...")
+    try:
+        state = load_state()
+        open_count = sum(1 for p in state.get("positions", [])
+                         if p.get("status") == "open")
+        print(f"      OK  State loaded: {open_count} open positions")
+    except Exception as e:
+        failures.append(f"State load failed: {e}")
+        print(f"      FAIL {e}")
+
+    # 3. Log directory is writable
+    print("[3/6] Checking log directory...")
+    try:
+        test_file = LOG_DIR / ".smoke_test_write"
+        test_file.write_text("test")
+        test_file.unlink()
+        print(f"      OK  {LOG_DIR} writable")
+    except Exception as e:
+        failures.append(f"Log dir not writable: {e}")
+        print(f"      FAIL {e}")
+
+    # 4. VIX data fetch
+    print("[4/6] Fetching VIX from Yahoo...")
+    vix = _yahoo_fetch("%5EVIX", max_retries=2)
+    if vix is None:
+        warnings.append("VIX fetch failed — will use default 20.0 at runtime")
+        print(f"      WARN VIX unreachable (will use 20.0 default)")
+    else:
+        print(f"      OK  VIX = {vix:.2f}")
+
+    # 5. SPY data fetch
+    print("[5/6] Fetching SPY from Yahoo...")
+    spy = _yahoo_fetch("SPY", max_retries=2)
+    if spy is None:
+        failures.append("SPY fetch failed — scanner cannot operate without SPY price")
+        print(f"      FAIL SPY unreachable")
+    else:
+        print(f"      OK  SPY = ${spy:.2f}")
+
+    # 6. Alpaca connectivity (only if keys are set — don't fail smoke test if unset)
+    print("[6/6] Checking Alpaca connectivity...")
+    api_key = os.environ.get("ALPACA_API_KEY", "")
+    secret_key = os.environ.get("ALPACA_SECRET_KEY", "")
+    if not api_key or not secret_key:
+        warnings.append("ALPACA_API_KEY/ALPACA_SECRET_KEY not set — use --dry-run or set env vars")
+        print(f"      WARN Alpaca credentials not set (OK for --dry-run only)")
+    else:
+        try:
+            client = AlpacaClient(dry_run=False)
+            acct = client.get_account()
+            print(f"      OK  Alpaca account status: {acct.get('status', 'unknown')}")
+            print(f"      OK  Equity: ${float(acct.get('equity', 0)):,.2f}")
+        except SystemExit:
+            failures.append("Alpaca client initialization failed")
+            print(f"      FAIL Alpaca client init failed")
+        except Exception as e:
+            warnings.append(f"Alpaca connectivity issue: {e}")
+            print(f"      WARN {e}")
+
+    # Summary
+    print()
+    print("=" * 60)
+    if failures:
+        print(f"  SMOKE TEST FAILED ({len(failures)} errors, {len(warnings)} warnings)")
+        for f in failures:
+            print(f"    ERROR: {f}")
+        for w in warnings:
+            print(f"    WARN:  {w}")
+        write_health("error", {"smoke_test": "failed"}, error="; ".join(failures))
+        return 1
+    elif warnings:
+        print(f"  SMOKE TEST PASSED WITH WARNINGS ({len(warnings)} warnings)")
+        for w in warnings:
+            print(f"    WARN: {w}")
+        write_health("warning", {"smoke_test": "passed_with_warnings",
+                                   "warnings": warnings})
+        return 0
+    else:
+        print(f"  SMOKE TEST PASSED — All 6 checks OK")
+        write_health("ok", {"smoke_test": "passed"})
+        return 0
+
+
+def run_health_check() -> int:
+    """Write current health status to file. Returns 0 on ok, 1 on warning, 2 on error."""
+    try:
+        config = load_config()
+        state = load_state()
+        open_positions = sum(1 for p in state.get("positions", [])
+                              if p.get("status") == "open")
+        last_entry = state.get("last_entry_date", "never")
+
+        # Check staleness — if last run was >2 days ago, warn
+        if HEALTH_PATH.exists():
+            prev = json.loads(HEALTH_PATH.read_text())
+            last_run = prev.get("last_run", "")
+            if last_run:
+                try:
+                    last_dt = datetime.fromisoformat(last_run)
+                    age_hours = (datetime.now() - last_dt).total_seconds() / 3600
+                    if age_hours > 48:
+                        write_health("warning",
+                                      {"open_positions": open_positions,
+                                       "last_entry": str(last_entry),
+                                       "hours_since_last_run": round(age_hours, 1)},
+                                      error=f"Scanner hasn't run in {age_hours:.0f}h")
+                        print(f"WARNING: Scanner hasn't run in {age_hours:.0f}h")
+                        return 1
+                except Exception:
+                    pass
+
+        write_health("ok", {
+            "open_positions": open_positions,
+            "last_entry": str(last_entry),
+            "config_name": config.get("name", ""),
+            "leverage": config.get("leverage", {}).get("multiplier", 0),
+        })
+        print(f"HEALTH: OK (open={open_positions}, last_entry={last_entry})")
+        return 0
+    except Exception as e:
+        write_health("error", error=str(e))
+        print(f"HEALTH: ERROR — {e}")
+        return 2
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 # CLI
 # ═══════════════════════════════════════════════════════════════════════════
 
@@ -682,7 +912,16 @@ def main():
                         help="Close all open positions")
     parser.add_argument("--force-scan", action="store_true",
                         help="Force scan even if not scan day")
+    parser.add_argument("--smoke-test", action="store_true",
+                        help="Validate config + API connectivity, no trading")
+    parser.add_argument("--health", action="store_true",
+                        help="Write health status file and exit")
     args = parser.parse_args()
+
+    if args.smoke_test:
+        sys.exit(run_smoke_test())
+    if args.health:
+        sys.exit(run_health_check())
 
     config = load_config()
     state = load_state()
@@ -749,8 +988,18 @@ def main():
         run_scan(config, state, client, args.dry_run)
         log.info("Scan complete.")
 
+        # Write health: OK
+        open_positions = sum(1 for p in state.get("positions", [])
+                              if p.get("status") == "open")
+        write_health("ok", {
+            "open_positions": open_positions,
+            "last_entry": str(state.get("last_entry_date", "")),
+            "mode": "dry-run" if args.dry_run else "paper",
+        })
+
     except Exception as e:
         log.error(f"Scanner error: {e}", exc_info=True)
+        write_health("error", error=str(e))
     finally:
         # FIX 5: Always save state, even on crash
         save_state(state)
