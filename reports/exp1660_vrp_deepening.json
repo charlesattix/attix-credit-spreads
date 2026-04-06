@@ -1,0 +1,3034 @@
+{
+  "experiment": "EXP-1660",
+  "subtitle": "VRP Deepening",
+  "data_source": "IronVault (options_cache.db) \u2014 100% real",
+  "rule_zero_compliant": true,
+  "underlyings": [
+    "SPY",
+    "QQQ",
+    "GLD",
+    "TLT",
+    "XLF",
+    "XLI"
+  ],
+  "methods": [
+    "iv_rv_gap",
+    "premium_richness"
+  ],
+  "filter_variants": [
+    "no_filter",
+    "vix<25",
+    "vix<17",
+    "vix>=17",
+    "bull_only"
+  ],
+  "n_configs": 60,
+  "n_live": 3,
+  "results": [
+    {
+      "ticker": "SPY",
+      "method": "iv_rv_gap",
+      "filter_name": "no_filter",
+      "config": {
+        "regime_filter": null,
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 86,
+        "total_pnl": -20938.0,
+        "win_rate": 0.512,
+        "cagr": -0.0286,
+        "sharpe": -1.631,
+        "max_dd": 0.2352,
+        "spy_corr": -0.7848,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.68,
+        "oos_sharpe": -2.027,
+        "oos_n": 61,
+        "oos_pnl": -24440.0,
+        "yearly": {
+          "2020": {
+            "n": 2,
+            "pnl": -1269.0,
+            "wr": 0.5
+          },
+          "2021": {
+            "n": 12,
+            "pnl": 782.0,
+            "wr": 0.5
+          },
+          "2022": {
+            "n": 11,
+            "pnl": 3989.0,
+            "wr": 0.727
+          },
+          "2023": {
+            "n": 32,
+            "pnl": -8256.0,
+            "wr": 0.5
+          },
+          "2024": {
+            "n": 27,
+            "pnl": -15594.0,
+            "wr": 0.444
+          },
+          "2025": {
+            "n": 2,
+            "pnl": -590.0,
+            "wr": 0.5
+          }
+        },
+        "regime_breakdown": {
+          "crash": {
+            "n": 2,
+            "pnl": -4354.0,
+            "wr": 0.0,
+            "avg_pnl": -2177.0
+          },
+          "high_vol": {
+            "n": 8,
+            "pnl": -804.0,
+            "wr": 0.5,
+            "avg_pnl": -100.5
+          },
+          "low_vol": {
+            "n": 42,
+            "pnl": -18286.0,
+            "wr": 0.5,
+            "avg_pnl": -435.38
+          },
+          "mid_vol": {
+            "n": 34,
+            "pnl": 2506.0,
+            "wr": 0.559,
+            "avg_pnl": 73.71
+          }
+        }
+      },
+      "n_trades": 86
+    },
+    {
+      "ticker": "SPY",
+      "method": "iv_rv_gap",
+      "filter_name": "low_vol+mid_vol",
+      "config": {
+        "regime_filter": [
+          "low_vol",
+          "mid_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 78,
+        "total_pnl": -16765.0,
+        "win_rate": 0.513,
+        "cagr": -0.0231,
+        "sharpe": -1.613,
+        "max_dd": 0.216,
+        "spy_corr": -0.7758,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 2.007,
+        "oos_sharpe": -2.053,
+        "oos_n": 59,
+        "oos_pnl": -23591.0,
+        "yearly": {
+          "2021": {
+            "n": 11,
+            "pnl": 2409.0,
+            "wr": 0.545
+          },
+          "2022": {
+            "n": 8,
+            "pnl": 4417.0,
+            "wr": 0.75
+          },
+          "2023": {
+            "n": 32,
+            "pnl": -8045.0,
+            "wr": 0.5
+          },
+          "2024": {
+            "n": 26,
+            "pnl": -13356.0,
+            "wr": 0.462
+          },
+          "2025": {
+            "n": 1,
+            "pnl": -2190.0,
+            "wr": 0.0
+          }
+        },
+        "regime_breakdown": {
+          "low_vol": {
+            "n": 42,
+            "pnl": -18286.0,
+            "wr": 0.5,
+            "avg_pnl": -435.38
+          },
+          "mid_vol": {
+            "n": 36,
+            "pnl": 1521.0,
+            "wr": 0.528,
+            "avg_pnl": 42.25
+          }
+        }
+      },
+      "n_trades": 78
+    },
+    {
+      "ticker": "SPY",
+      "method": "iv_rv_gap",
+      "filter_name": "low_vol",
+      "config": {
+        "regime_filter": [
+          "low_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 44,
+        "total_pnl": -18757.0,
+        "win_rate": 0.5,
+        "cagr": -0.0254,
+        "sharpe": -1.928,
+        "max_dd": 0.1979,
+        "spy_corr": -0.8586,
+        "exp1220_corr": 0.0,
+        "is_sharpe": -0.22,
+        "oos_sharpe": -1.935,
+        "oos_n": 42,
+        "oos_pnl": -18735.0,
+        "yearly": {
+          "2021": {
+            "n": 2,
+            "pnl": -22.0,
+            "wr": 0.5
+          },
+          "2023": {
+            "n": 19,
+            "pnl": -4889.0,
+            "wr": 0.579
+          },
+          "2024": {
+            "n": 23,
+            "pnl": -13846.0,
+            "wr": 0.435
+          }
+        },
+        "regime_breakdown": {
+          "low_vol": {
+            "n": 44,
+            "pnl": -18757.0,
+            "wr": 0.5,
+            "avg_pnl": -426.3
+          }
+        }
+      },
+      "n_trades": 44
+    },
+    {
+      "ticker": "SPY",
+      "method": "iv_rv_gap",
+      "filter_name": "mid_vol+high_vol",
+      "config": {
+        "regime_filter": [
+          "mid_vol",
+          "high_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 45,
+        "total_pnl": 7378.0,
+        "win_rate": 0.578,
+        "cagr": 0.0095,
+        "sharpe": -1.407,
+        "max_dd": 0.0457,
+        "spy_corr": -0.7566,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 1.232,
+        "oos_sharpe": 0.27,
+        "oos_n": 23,
+        "oos_pnl": 1738.0,
+        "yearly": {
+          "2020": {
+            "n": 1,
+            "pnl": 847.0,
+            "wr": 1.0
+          },
+          "2021": {
+            "n": 10,
+            "pnl": 804.0,
+            "wr": 0.5
+          },
+          "2022": {
+            "n": 11,
+            "pnl": 3989.0,
+            "wr": 0.727
+          },
+          "2023": {
+            "n": 14,
+            "pnl": -2593.0,
+            "wr": 0.429
+          },
+          "2024": {
+            "n": 7,
+            "pnl": 4921.0,
+            "wr": 0.714
+          },
+          "2025": {
+            "n": 2,
+            "pnl": -590.0,
+            "wr": 0.5
+          }
+        },
+        "regime_breakdown": {
+          "high_vol": {
+            "n": 9,
+            "pnl": 112.0,
+            "wr": 0.556,
+            "avg_pnl": 12.44
+          },
+          "mid_vol": {
+            "n": 36,
+            "pnl": 7266.0,
+            "wr": 0.583,
+            "avg_pnl": 201.83
+          }
+        }
+      },
+      "n_trades": 45
+    },
+    {
+      "ticker": "SPY",
+      "method": "iv_rv_gap",
+      "filter_name": "bull",
+      "config": {
+        "regime_filter": null,
+        "trend_filter": "bull",
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 71,
+        "total_pnl": -13152.0,
+        "win_rate": 0.535,
+        "cagr": -0.0183,
+        "sharpe": -1.581,
+        "max_dd": 0.2022,
+        "spy_corr": -0.7712,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 2.099,
+        "oos_sharpe": -1.91,
+        "oos_n": 53,
+        "oos_pnl": -19823.0,
+        "yearly": {
+          "2020": {
+            "n": 1,
+            "pnl": 847.0,
+            "wr": 1.0
+          },
+          "2021": {
+            "n": 11,
+            "pnl": 2499.0,
+            "wr": 0.545
+          },
+          "2022": {
+            "n": 6,
+            "pnl": 3325.0,
+            "wr": 0.833
+          },
+          "2023": {
+            "n": 28,
+            "pnl": -8622.0,
+            "wr": 0.5
+          },
+          "2024": {
+            "n": 25,
+            "pnl": -11201.0,
+            "wr": 0.48
+          }
+        },
+        "regime_breakdown": {
+          "high_vol": {
+            "n": 3,
+            "pnl": -1346.0,
+            "wr": 0.333,
+            "avg_pnl": -448.67
+          },
+          "low_vol": {
+            "n": 41,
+            "pnl": -16131.0,
+            "wr": 0.512,
+            "avg_pnl": -393.44
+          },
+          "mid_vol": {
+            "n": 27,
+            "pnl": 4325.0,
+            "wr": 0.593,
+            "avg_pnl": 160.19
+          }
+        }
+      },
+      "n_trades": 71
+    },
+    {
+      "ticker": "SPY",
+      "method": "premium_richness",
+      "filter_name": "no_filter",
+      "config": {
+        "regime_filter": null,
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 17,
+        "total_pnl": -7679.0,
+        "win_rate": 0.412,
+        "cagr": -0.0105,
+        "sharpe": -2.311,
+        "max_dd": 0.0908,
+        "spy_corr": -0.8595,
+        "exp1220_corr": 0.0,
+        "is_sharpe": -0.495,
+        "oos_sharpe": -0.92,
+        "oos_n": 15,
+        "oos_pnl": -6277.0,
+        "yearly": {
+          "2020": {
+            "n": 1,
+            "pnl": -2116.0,
+            "wr": 0.0
+          },
+          "2022": {
+            "n": 1,
+            "pnl": 714.0,
+            "wr": 1.0
+          },
+          "2023": {
+            "n": 3,
+            "pnl": -335.0,
+            "wr": 0.333
+          },
+          "2024": {
+            "n": 10,
+            "pnl": -5352.0,
+            "wr": 0.4
+          },
+          "2025": {
+            "n": 2,
+            "pnl": -590.0,
+            "wr": 0.5
+          }
+        },
+        "regime_breakdown": {
+          "crash": {
+            "n": 2,
+            "pnl": -4354.0,
+            "wr": 0.0,
+            "avg_pnl": -2177.0
+          },
+          "high_vol": {
+            "n": 3,
+            "pnl": 1684.0,
+            "wr": 0.667,
+            "avg_pnl": 561.33
+          },
+          "low_vol": {
+            "n": 5,
+            "pnl": 971.0,
+            "wr": 0.6,
+            "avg_pnl": 194.2
+          },
+          "mid_vol": {
+            "n": 7,
+            "pnl": -5980.0,
+            "wr": 0.286,
+            "avg_pnl": -854.29
+          }
+        }
+      },
+      "n_trades": 17
+    },
+    {
+      "ticker": "SPY",
+      "method": "premium_richness",
+      "filter_name": "low_vol+mid_vol",
+      "config": {
+        "regime_filter": [
+          "low_vol",
+          "mid_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 13,
+        "total_pnl": -4789.0,
+        "win_rate": 0.462,
+        "cagr": -0.0066,
+        "sharpe": -2.503,
+        "max_dd": 0.0599,
+        "spy_corr": -0.9218,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.0,
+        "oos_sharpe": -0.763,
+        "oos_n": 13,
+        "oos_pnl": -4789.0,
+        "yearly": {
+          "2023": {
+            "n": 2,
+            "pnl": 295.0,
+            "wr": 0.5
+          },
+          "2024": {
+            "n": 10,
+            "pnl": -2894.0,
+            "wr": 0.5
+          },
+          "2025": {
+            "n": 1,
+            "pnl": -2190.0,
+            "wr": 0.0
+          }
+        },
+        "regime_breakdown": {
+          "low_vol": {
+            "n": 5,
+            "pnl": 971.0,
+            "wr": 0.6,
+            "avg_pnl": 194.2
+          },
+          "mid_vol": {
+            "n": 8,
+            "pnl": -5760.0,
+            "wr": 0.375,
+            "avg_pnl": -720.0
+          }
+        }
+      },
+      "n_trades": 13
+    },
+    {
+      "ticker": "SPY",
+      "method": "premium_richness",
+      "filter_name": "low_vol",
+      "config": {
+        "regime_filter": [
+          "low_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 6,
+        "total_pnl": -1889.0,
+        "win_rate": 0.5,
+        "cagr": -0.0027,
+        "sharpe": -3.156,
+        "max_dd": 0.0286,
+        "spy_corr": -0.9873,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.0,
+        "oos_sharpe": -0.384,
+        "oos_n": 6,
+        "oos_pnl": -1889.0,
+        "yearly": {
+          "2024": {
+            "n": 6,
+            "pnl": -1889.0,
+            "wr": 0.5
+          }
+        },
+        "regime_breakdown": {
+          "low_vol": {
+            "n": 6,
+            "pnl": -1889.0,
+            "wr": 0.5,
+            "avg_pnl": -314.83
+          }
+        }
+      },
+      "n_trades": 6
+    },
+    {
+      "ticker": "SPY",
+      "method": "premium_richness",
+      "filter_name": "mid_vol+high_vol",
+      "config": {
+        "regime_filter": [
+          "mid_vol",
+          "high_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 7,
+        "total_pnl": -335.0,
+        "win_rate": 0.571,
+        "cagr": -0.0005,
+        "sharpe": -3.798,
+        "max_dd": 0.0286,
+        "spy_corr": -0.9372,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.0,
+        "oos_sharpe": -0.27,
+        "oos_n": 6,
+        "oos_pnl": -1049.0,
+        "yearly": {
+          "2022": {
+            "n": 1,
+            "pnl": 714.0,
+            "wr": 1.0
+          },
+          "2023": {
+            "n": 2,
+            "pnl": -1271.0,
+            "wr": 0.0
+          },
+          "2024": {
+            "n": 3,
+            "pnl": -1378.0,
+            "wr": 0.667
+          },
+          "2025": {
+            "n": 1,
+            "pnl": 1600.0,
+            "wr": 1.0
+          }
+        },
+        "regime_breakdown": {
+          "high_vol": {
+            "n": 4,
+            "pnl": 2600.0,
+            "wr": 0.75,
+            "avg_pnl": 650.0
+          },
+          "mid_vol": {
+            "n": 3,
+            "pnl": -2935.0,
+            "wr": 0.333,
+            "avg_pnl": -978.33
+          }
+        }
+      },
+      "n_trades": 7
+    },
+    {
+      "ticker": "SPY",
+      "method": "premium_richness",
+      "filter_name": "bull",
+      "config": {
+        "regime_filter": null,
+        "trend_filter": "bull",
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 10,
+        "total_pnl": -2524.0,
+        "win_rate": 0.5,
+        "cagr": -0.0036,
+        "sharpe": -2.68,
+        "max_dd": 0.0352,
+        "spy_corr": -0.9771,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.0,
+        "oos_sharpe": -0.444,
+        "oos_n": 10,
+        "oos_pnl": -2524.0,
+        "yearly": {
+          "2024": {
+            "n": 10,
+            "pnl": -2524.0,
+            "wr": 0.5
+          }
+        },
+        "regime_breakdown": {
+          "low_vol": {
+            "n": 6,
+            "pnl": -1889.0,
+            "wr": 0.5,
+            "avg_pnl": -314.83
+          },
+          "mid_vol": {
+            "n": 4,
+            "pnl": -635.0,
+            "wr": 0.5,
+            "avg_pnl": -158.75
+          }
+        }
+      },
+      "n_trades": 10
+    },
+    {
+      "ticker": "QQQ",
+      "method": "iv_rv_gap",
+      "filter_name": "no_filter",
+      "config": {
+        "regime_filter": null,
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 25,
+        "total_pnl": -11276.0,
+        "win_rate": 0.52,
+        "cagr": -0.0154,
+        "sharpe": -2.006,
+        "max_dd": 0.131,
+        "spy_corr": -0.5352,
+        "exp1220_corr": 0.0,
+        "is_sharpe": -1.324,
+        "oos_sharpe": -0.406,
+        "oos_n": 6,
+        "oos_pnl": -1372.0,
+        "yearly": {
+          "2020": {
+            "n": 18,
+            "pnl": -9559.0,
+            "wr": 0.556
+          },
+          "2021": {
+            "n": 1,
+            "pnl": -345.0,
+            "wr": 0.0
+          },
+          "2023": {
+            "n": 2,
+            "pnl": 1085.0,
+            "wr": 1.0
+          },
+          "2024": {
+            "n": 2,
+            "pnl": -95.0,
+            "wr": 0.5
+          },
+          "2025": {
+            "n": 2,
+            "pnl": -2362.0,
+            "wr": 0.0
+          }
+        },
+        "regime_breakdown": {
+          "crash": {
+            "n": 4,
+            "pnl": -2229.0,
+            "wr": 0.75,
+            "avg_pnl": -557.25
+          },
+          "high_vol": {
+            "n": 11,
+            "pnl": -1510.0,
+            "wr": 0.636,
+            "avg_pnl": -137.27
+          },
+          "low_vol": {
+            "n": 4,
+            "pnl": 442.0,
+            "wr": 0.5,
+            "avg_pnl": 110.5
+          },
+          "mid_vol": {
+            "n": 6,
+            "pnl": -7979.0,
+            "wr": 0.167,
+            "avg_pnl": -1329.83
+          }
+        }
+      },
+      "n_trades": 25
+    },
+    {
+      "ticker": "QQQ",
+      "method": "iv_rv_gap",
+      "filter_name": "low_vol+mid_vol",
+      "config": {
+        "regime_filter": [
+          "low_vol",
+          "mid_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 11,
+        "total_pnl": -8752.0,
+        "win_rate": 0.273,
+        "cagr": -0.0117,
+        "sharpe": -3.9,
+        "max_dd": 0.0847,
+        "spy_corr": -0.6503,
+        "exp1220_corr": 0.0,
+        "is_sharpe": -2.352,
+        "oos_sharpe": -1.028,
+        "oos_n": 5,
+        "oos_pnl": -2837.0,
+        "yearly": {
+          "2020": {
+            "n": 5,
+            "pnl": -5570.0,
+            "wr": 0.2
+          },
+          "2021": {
+            "n": 1,
+            "pnl": -345.0,
+            "wr": 0.0
+          },
+          "2023": {
+            "n": 2,
+            "pnl": 1085.0,
+            "wr": 1.0
+          },
+          "2024": {
+            "n": 1,
+            "pnl": -1560.0,
+            "wr": 0.0
+          },
+          "2025": {
+            "n": 2,
+            "pnl": -2362.0,
+            "wr": 0.0
+          }
+        },
+        "regime_breakdown": {
+          "low_vol": {
+            "n": 4,
+            "pnl": 442.0,
+            "wr": 0.5,
+            "avg_pnl": 110.5
+          },
+          "mid_vol": {
+            "n": 7,
+            "pnl": -9194.0,
+            "wr": 0.143,
+            "avg_pnl": -1313.43
+          }
+        }
+      },
+      "n_trades": 11
+    },
+    {
+      "ticker": "QQQ",
+      "method": "iv_rv_gap",
+      "filter_name": "low_vol",
+      "config": {
+        "regime_filter": [
+          "low_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 4,
+        "total_pnl": 442.0,
+        "win_rate": 0.5,
+        "cagr": 0.0006,
+        "sharpe": -12.745,
+        "max_dd": 0.0034,
+        "spy_corr": 0.0,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.0,
+        "oos_sharpe": 0.717,
+        "oos_n": 3,
+        "oos_pnl": 787.0,
+        "yearly": {
+          "2021": {
+            "n": 1,
+            "pnl": -345.0,
+            "wr": 0.0
+          },
+          "2023": {
+            "n": 2,
+            "pnl": 1085.0,
+            "wr": 1.0
+          },
+          "2025": {
+            "n": 1,
+            "pnl": -298.0,
+            "wr": 0.0
+          }
+        },
+        "regime_breakdown": {
+          "low_vol": {
+            "n": 4,
+            "pnl": 442.0,
+            "wr": 0.5,
+            "avg_pnl": 110.5
+          }
+        }
+      },
+      "n_trades": 4
+    },
+    {
+      "ticker": "QQQ",
+      "method": "iv_rv_gap",
+      "filter_name": "mid_vol+high_vol",
+      "config": {
+        "regime_filter": [
+          "mid_vol",
+          "high_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 19,
+        "total_pnl": -8465.0,
+        "win_rate": 0.474,
+        "cagr": -0.0116,
+        "sharpe": -2.214,
+        "max_dd": 0.0991,
+        "spy_corr": -0.7322,
+        "exp1220_corr": 0.0,
+        "is_sharpe": -0.941,
+        "oos_sharpe": -0.888,
+        "oos_n": 4,
+        "oos_pnl": -2600.0,
+        "yearly": {
+          "2020": {
+            "n": 15,
+            "pnl": -5865.0,
+            "wr": 0.533
+          },
+          "2024": {
+            "n": 2,
+            "pnl": -375.0,
+            "wr": 0.5
+          },
+          "2025": {
+            "n": 2,
+            "pnl": -2225.0,
+            "wr": 0.0
+          }
+        },
+        "regime_breakdown": {
+          "high_vol": {
+            "n": 12,
+            "pnl": -325.0,
+            "wr": 0.667,
+            "avg_pnl": -27.08
+          },
+          "mid_vol": {
+            "n": 7,
+            "pnl": -8140.0,
+            "wr": 0.143,
+            "avg_pnl": -1162.86
+          }
+        }
+      },
+      "n_trades": 19
+    },
+    {
+      "ticker": "QQQ",
+      "method": "iv_rv_gap",
+      "filter_name": "bull",
+      "config": {
+        "regime_filter": null,
+        "trend_filter": "bull",
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 20,
+        "total_pnl": -10735.0,
+        "win_rate": 0.45,
+        "cagr": -0.0146,
+        "sharpe": -2.39,
+        "max_dd": 0.1043,
+        "spy_corr": -0.6965,
+        "exp1220_corr": 0.0,
+        "is_sharpe": -1.356,
+        "oos_sharpe": -1.028,
+        "oos_n": 5,
+        "oos_pnl": -2837.0,
+        "yearly": {
+          "2020": {
+            "n": 14,
+            "pnl": -7553.0,
+            "wr": 0.5
+          },
+          "2021": {
+            "n": 1,
+            "pnl": -345.0,
+            "wr": 0.0
+          },
+          "2023": {
+            "n": 2,
+            "pnl": 1085.0,
+            "wr": 1.0
+          },
+          "2024": {
+            "n": 1,
+            "pnl": -1560.0,
+            "wr": 0.0
+          },
+          "2025": {
+            "n": 2,
+            "pnl": -2362.0,
+            "wr": 0.0
+          }
+        },
+        "regime_breakdown": {
+          "high_vol": {
+            "n": 10,
+            "pnl": -3198.0,
+            "wr": 0.6,
+            "avg_pnl": -319.8
+          },
+          "low_vol": {
+            "n": 4,
+            "pnl": 442.0,
+            "wr": 0.5,
+            "avg_pnl": 110.5
+          },
+          "mid_vol": {
+            "n": 6,
+            "pnl": -7979.0,
+            "wr": 0.167,
+            "avg_pnl": -1329.83
+          }
+        }
+      },
+      "n_trades": 20
+    },
+    {
+      "ticker": "QQQ",
+      "method": "premium_richness",
+      "filter_name": "no_filter",
+      "config": {
+        "regime_filter": null,
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 10,
+        "total_pnl": 999.0,
+        "win_rate": 0.6,
+        "cagr": 0.0012,
+        "sharpe": -3.436,
+        "max_dd": 0.0243,
+        "spy_corr": -0.8697,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.405,
+        "oos_sharpe": -0.149,
+        "oos_n": 3,
+        "oos_pnl": -393.0,
+        "yearly": {
+          "2020": {
+            "n": 7,
+            "pnl": 1392.0,
+            "wr": 0.714
+          },
+          "2024": {
+            "n": 2,
+            "pnl": -95.0,
+            "wr": 0.5
+          },
+          "2025": {
+            "n": 1,
+            "pnl": -298.0,
+            "wr": 0.0
+          }
+        },
+        "regime_breakdown": {
+          "crash": {
+            "n": 1,
+            "pnl": 1465.0,
+            "wr": 1.0,
+            "avg_pnl": 1465.0
+          },
+          "high_vol": {
+            "n": 5,
+            "pnl": 2167.0,
+            "wr": 0.8,
+            "avg_pnl": 433.4
+          },
+          "low_vol": {
+            "n": 1,
+            "pnl": -298.0,
+            "wr": 0.0,
+            "avg_pnl": -298.0
+          },
+          "mid_vol": {
+            "n": 3,
+            "pnl": -2335.0,
+            "wr": 0.333,
+            "avg_pnl": -778.33
+          }
+        }
+      },
+      "n_trades": 10
+    },
+    {
+      "ticker": "QQQ",
+      "method": "premium_richness",
+      "filter_name": "low_vol+mid_vol",
+      "config": {
+        "regime_filter": [
+          "low_vol",
+          "mid_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 3,
+        "total_pnl": -3922.0,
+        "win_rate": 0.0,
+        "cagr": -0.0053,
+        "sharpe": -5.814,
+        "max_dd": 0.0388,
+        "spy_corr": 0.0,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.0,
+        "oos_sharpe": -2.489,
+        "oos_n": 3,
+        "oos_pnl": -3922.0,
+        "yearly": {
+          "2024": {
+            "n": 1,
+            "pnl": -1560.0,
+            "wr": 0.0
+          },
+          "2025": {
+            "n": 2,
+            "pnl": -2362.0,
+            "wr": 0.0
+          }
+        },
+        "regime_breakdown": {
+          "low_vol": {
+            "n": 1,
+            "pnl": -298.0,
+            "wr": 0.0,
+            "avg_pnl": -298.0
+          },
+          "mid_vol": {
+            "n": 2,
+            "pnl": -3624.0,
+            "wr": 0.0,
+            "avg_pnl": -1812.0
+          }
+        }
+      },
+      "n_trades": 3
+    },
+    {
+      "ticker": "QQQ",
+      "method": "premium_richness",
+      "filter_name": "low_vol",
+      "config": {
+        "regime_filter": [
+          "low_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 1,
+        "total_pnl": -298.0,
+        "win_rate": 0.0,
+        "cagr": -0.0004,
+        "sharpe": -46.351,
+        "max_dd": 0.003,
+        "spy_corr": 0.0,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.0,
+        "oos_sharpe": 0.0,
+        "oos_n": 1,
+        "oos_pnl": -298.0,
+        "yearly": {
+          "2025": {
+            "n": 1,
+            "pnl": -298.0,
+            "wr": 0.0
+          }
+        },
+        "regime_breakdown": {
+          "low_vol": {
+            "n": 1,
+            "pnl": -298.0,
+            "wr": 0.0,
+            "avg_pnl": -298.0
+          }
+        }
+      },
+      "n_trades": 1
+    },
+    {
+      "ticker": "QQQ",
+      "method": "premium_richness",
+      "filter_name": "mid_vol+high_vol",
+      "config": {
+        "regime_filter": [
+          "mid_vol",
+          "high_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 8,
+        "total_pnl": 1564.0,
+        "win_rate": 0.625,
+        "cagr": 0.002,
+        "sharpe": -3.949,
+        "max_dd": 0.0172,
+        "spy_corr": -0.8513,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.748,
+        "oos_sharpe": -0.225,
+        "oos_n": 3,
+        "oos_pnl": -536.0,
+        "yearly": {
+          "2020": {
+            "n": 5,
+            "pnl": 2100.0,
+            "wr": 0.8
+          },
+          "2024": {
+            "n": 2,
+            "pnl": -375.0,
+            "wr": 0.5
+          },
+          "2025": {
+            "n": 1,
+            "pnl": -161.0,
+            "wr": 0.0
+          }
+        },
+        "regime_breakdown": {
+          "high_vol": {
+            "n": 5,
+            "pnl": 2490.0,
+            "wr": 0.8,
+            "avg_pnl": 498.0
+          },
+          "mid_vol": {
+            "n": 3,
+            "pnl": -926.0,
+            "wr": 0.333,
+            "avg_pnl": -308.67
+          }
+        }
+      },
+      "n_trades": 8
+    },
+    {
+      "ticker": "QQQ",
+      "method": "premium_richness",
+      "filter_name": "bull",
+      "config": {
+        "regime_filter": null,
+        "trend_filter": "bull",
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 9,
+        "total_pnl": -3392.0,
+        "win_rate": 0.444,
+        "cagr": -0.0046,
+        "sharpe": -3.685,
+        "max_dd": 0.0388,
+        "spy_corr": -0.8713,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.156,
+        "oos_sharpe": -2.489,
+        "oos_n": 3,
+        "oos_pnl": -3922.0,
+        "yearly": {
+          "2020": {
+            "n": 6,
+            "pnl": 530.0,
+            "wr": 0.667
+          },
+          "2024": {
+            "n": 1,
+            "pnl": -1560.0,
+            "wr": 0.0
+          },
+          "2025": {
+            "n": 2,
+            "pnl": -2362.0,
+            "wr": 0.0
+          }
+        },
+        "regime_breakdown": {
+          "high_vol": {
+            "n": 4,
+            "pnl": 1305.0,
+            "wr": 0.75,
+            "avg_pnl": 326.25
+          },
+          "low_vol": {
+            "n": 1,
+            "pnl": -298.0,
+            "wr": 0.0,
+            "avg_pnl": -298.0
+          },
+          "mid_vol": {
+            "n": 4,
+            "pnl": -4399.0,
+            "wr": 0.25,
+            "avg_pnl": -1099.75
+          }
+        }
+      },
+      "n_trades": 9
+    },
+    {
+      "ticker": "GLD",
+      "method": "iv_rv_gap",
+      "filter_name": "no_filter",
+      "config": {
+        "regime_filter": null,
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 1,
+        "total_pnl": 90.0,
+        "win_rate": 1.0,
+        "cagr": 0.0001,
+        "sharpe": -151.901,
+        "max_dd": 0.0,
+        "spy_corr": 0.0,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.0,
+        "oos_sharpe": 0.0,
+        "oos_n": 1,
+        "oos_pnl": 90.0,
+        "yearly": {
+          "2024": {
+            "n": 1,
+            "pnl": 90.0,
+            "wr": 1.0
+          }
+        },
+        "regime_breakdown": {
+          "mid_vol": {
+            "n": 1,
+            "pnl": 90.0,
+            "wr": 1.0,
+            "avg_pnl": 90.0
+          }
+        }
+      },
+      "n_trades": 1
+    },
+    {
+      "ticker": "GLD",
+      "method": "iv_rv_gap",
+      "filter_name": "low_vol+mid_vol",
+      "config": {
+        "regime_filter": [
+          "low_vol",
+          "mid_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 1,
+        "total_pnl": 90.0,
+        "win_rate": 1.0,
+        "cagr": 0.0001,
+        "sharpe": -151.901,
+        "max_dd": 0.0,
+        "spy_corr": 0.0,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.0,
+        "oos_sharpe": 0.0,
+        "oos_n": 1,
+        "oos_pnl": 90.0,
+        "yearly": {
+          "2024": {
+            "n": 1,
+            "pnl": 90.0,
+            "wr": 1.0
+          }
+        },
+        "regime_breakdown": {
+          "mid_vol": {
+            "n": 1,
+            "pnl": 90.0,
+            "wr": 1.0,
+            "avg_pnl": 90.0
+          }
+        }
+      },
+      "n_trades": 1
+    },
+    {
+      "ticker": "GLD",
+      "method": "iv_rv_gap",
+      "filter_name": "low_vol",
+      "config": {
+        "regime_filter": [
+          "low_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 0,
+        "total_pnl": 0,
+        "win_rate": 0,
+        "cagr": 0,
+        "sharpe": 0,
+        "max_dd": 0,
+        "spy_corr": 0,
+        "exp1220_corr": 0,
+        "is_sharpe": 0,
+        "oos_sharpe": 0,
+        "oos_n": 0
+      },
+      "n_trades": 0
+    },
+    {
+      "ticker": "GLD",
+      "method": "iv_rv_gap",
+      "filter_name": "mid_vol+high_vol",
+      "config": {
+        "regime_filter": [
+          "mid_vol",
+          "high_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 1,
+        "total_pnl": 90.0,
+        "win_rate": 1.0,
+        "cagr": 0.0001,
+        "sharpe": -151.901,
+        "max_dd": 0.0,
+        "spy_corr": 0.0,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.0,
+        "oos_sharpe": 0.0,
+        "oos_n": 1,
+        "oos_pnl": 90.0,
+        "yearly": {
+          "2024": {
+            "n": 1,
+            "pnl": 90.0,
+            "wr": 1.0
+          }
+        },
+        "regime_breakdown": {
+          "mid_vol": {
+            "n": 1,
+            "pnl": 90.0,
+            "wr": 1.0,
+            "avg_pnl": 90.0
+          }
+        }
+      },
+      "n_trades": 1
+    },
+    {
+      "ticker": "GLD",
+      "method": "iv_rv_gap",
+      "filter_name": "bull",
+      "config": {
+        "regime_filter": null,
+        "trend_filter": "bull",
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 1,
+        "total_pnl": 90.0,
+        "win_rate": 1.0,
+        "cagr": 0.0001,
+        "sharpe": -151.901,
+        "max_dd": 0.0,
+        "spy_corr": 0.0,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.0,
+        "oos_sharpe": 0.0,
+        "oos_n": 1,
+        "oos_pnl": 90.0,
+        "yearly": {
+          "2024": {
+            "n": 1,
+            "pnl": 90.0,
+            "wr": 1.0
+          }
+        },
+        "regime_breakdown": {
+          "mid_vol": {
+            "n": 1,
+            "pnl": 90.0,
+            "wr": 1.0,
+            "avg_pnl": 90.0
+          }
+        }
+      },
+      "n_trades": 1
+    },
+    {
+      "ticker": "GLD",
+      "method": "premium_richness",
+      "filter_name": "no_filter",
+      "config": {
+        "regime_filter": null,
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 2,
+        "total_pnl": 650.0,
+        "win_rate": 1.0,
+        "cagr": 0.0009,
+        "sharpe": -23.745,
+        "max_dd": 0.0,
+        "spy_corr": 0.0,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.0,
+        "oos_sharpe": 1.383,
+        "oos_n": 2,
+        "oos_pnl": 650.0,
+        "yearly": {
+          "2024": {
+            "n": 2,
+            "pnl": 650.0,
+            "wr": 1.0
+          }
+        },
+        "regime_breakdown": {
+          "crash": {
+            "n": 1,
+            "pnl": 560.0,
+            "wr": 1.0,
+            "avg_pnl": 560.0
+          },
+          "mid_vol": {
+            "n": 1,
+            "pnl": 90.0,
+            "wr": 1.0,
+            "avg_pnl": 90.0
+          }
+        }
+      },
+      "n_trades": 2
+    },
+    {
+      "ticker": "GLD",
+      "method": "premium_richness",
+      "filter_name": "low_vol+mid_vol",
+      "config": {
+        "regime_filter": [
+          "low_vol",
+          "mid_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 1,
+        "total_pnl": 90.0,
+        "win_rate": 1.0,
+        "cagr": 0.0001,
+        "sharpe": -151.901,
+        "max_dd": 0.0,
+        "spy_corr": 0.0,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.0,
+        "oos_sharpe": 0.0,
+        "oos_n": 1,
+        "oos_pnl": 90.0,
+        "yearly": {
+          "2024": {
+            "n": 1,
+            "pnl": 90.0,
+            "wr": 1.0
+          }
+        },
+        "regime_breakdown": {
+          "mid_vol": {
+            "n": 1,
+            "pnl": 90.0,
+            "wr": 1.0,
+            "avg_pnl": 90.0
+          }
+        }
+      },
+      "n_trades": 1
+    },
+    {
+      "ticker": "GLD",
+      "method": "premium_richness",
+      "filter_name": "low_vol",
+      "config": {
+        "regime_filter": [
+          "low_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 0,
+        "total_pnl": 0,
+        "win_rate": 0,
+        "cagr": 0,
+        "sharpe": 0,
+        "max_dd": 0,
+        "spy_corr": 0,
+        "exp1220_corr": 0,
+        "is_sharpe": 0,
+        "oos_sharpe": 0,
+        "oos_n": 0
+      },
+      "n_trades": 0
+    },
+    {
+      "ticker": "GLD",
+      "method": "premium_richness",
+      "filter_name": "mid_vol+high_vol",
+      "config": {
+        "regime_filter": [
+          "mid_vol",
+          "high_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 0,
+        "total_pnl": 0,
+        "win_rate": 0,
+        "cagr": 0,
+        "sharpe": 0,
+        "max_dd": 0,
+        "spy_corr": 0,
+        "exp1220_corr": 0,
+        "is_sharpe": 0,
+        "oos_sharpe": 0,
+        "oos_n": 0
+      },
+      "n_trades": 0
+    },
+    {
+      "ticker": "GLD",
+      "method": "premium_richness",
+      "filter_name": "bull",
+      "config": {
+        "regime_filter": null,
+        "trend_filter": "bull",
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 2,
+        "total_pnl": 650.0,
+        "win_rate": 1.0,
+        "cagr": 0.0009,
+        "sharpe": -23.745,
+        "max_dd": 0.0,
+        "spy_corr": 0.0,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.0,
+        "oos_sharpe": 1.383,
+        "oos_n": 2,
+        "oos_pnl": 650.0,
+        "yearly": {
+          "2024": {
+            "n": 2,
+            "pnl": 650.0,
+            "wr": 1.0
+          }
+        },
+        "regime_breakdown": {
+          "crash": {
+            "n": 1,
+            "pnl": 560.0,
+            "wr": 1.0,
+            "avg_pnl": 560.0
+          },
+          "mid_vol": {
+            "n": 1,
+            "pnl": 90.0,
+            "wr": 1.0,
+            "avg_pnl": 90.0
+          }
+        }
+      },
+      "n_trades": 2
+    },
+    {
+      "ticker": "TLT",
+      "method": "iv_rv_gap",
+      "filter_name": "no_filter",
+      "config": {
+        "regime_filter": null,
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 3,
+        "total_pnl": 912.0,
+        "win_rate": 1.0,
+        "cagr": 0.0012,
+        "sharpe": -21.479,
+        "max_dd": 0.0,
+        "spy_corr": 0.0,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.0,
+        "oos_sharpe": 2.24,
+        "oos_n": 3,
+        "oos_pnl": 912.0,
+        "yearly": {
+          "2024": {
+            "n": 1,
+            "pnl": 182.0,
+            "wr": 1.0
+          },
+          "2025": {
+            "n": 2,
+            "pnl": 730.0,
+            "wr": 1.0
+          }
+        },
+        "regime_breakdown": {
+          "low_vol": {
+            "n": 1,
+            "pnl": 155.0,
+            "wr": 1.0,
+            "avg_pnl": 155.0
+          },
+          "mid_vol": {
+            "n": 2,
+            "pnl": 757.0,
+            "wr": 1.0,
+            "avg_pnl": 378.5
+          }
+        }
+      },
+      "n_trades": 3
+    },
+    {
+      "ticker": "TLT",
+      "method": "iv_rv_gap",
+      "filter_name": "low_vol+mid_vol",
+      "config": {
+        "regime_filter": [
+          "low_vol",
+          "mid_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 3,
+        "total_pnl": 912.0,
+        "win_rate": 1.0,
+        "cagr": 0.0012,
+        "sharpe": -21.479,
+        "max_dd": 0.0,
+        "spy_corr": 0.0,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.0,
+        "oos_sharpe": 2.24,
+        "oos_n": 3,
+        "oos_pnl": 912.0,
+        "yearly": {
+          "2024": {
+            "n": 1,
+            "pnl": 182.0,
+            "wr": 1.0
+          },
+          "2025": {
+            "n": 2,
+            "pnl": 730.0,
+            "wr": 1.0
+          }
+        },
+        "regime_breakdown": {
+          "low_vol": {
+            "n": 1,
+            "pnl": 155.0,
+            "wr": 1.0,
+            "avg_pnl": 155.0
+          },
+          "mid_vol": {
+            "n": 2,
+            "pnl": 757.0,
+            "wr": 1.0,
+            "avg_pnl": 378.5
+          }
+        }
+      },
+      "n_trades": 3
+    },
+    {
+      "ticker": "TLT",
+      "method": "iv_rv_gap",
+      "filter_name": "low_vol",
+      "config": {
+        "regime_filter": [
+          "low_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 1,
+        "total_pnl": 155.0,
+        "win_rate": 1.0,
+        "cagr": 0.0002,
+        "sharpe": -88.047,
+        "max_dd": 0.0,
+        "spy_corr": 0.0,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.0,
+        "oos_sharpe": 0.0,
+        "oos_n": 1,
+        "oos_pnl": 155.0,
+        "yearly": {
+          "2025": {
+            "n": 1,
+            "pnl": 155.0,
+            "wr": 1.0
+          }
+        },
+        "regime_breakdown": {
+          "low_vol": {
+            "n": 1,
+            "pnl": 155.0,
+            "wr": 1.0,
+            "avg_pnl": 155.0
+          }
+        }
+      },
+      "n_trades": 1
+    },
+    {
+      "ticker": "TLT",
+      "method": "iv_rv_gap",
+      "filter_name": "mid_vol+high_vol",
+      "config": {
+        "regime_filter": [
+          "mid_vol",
+          "high_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 2,
+        "total_pnl": 757.0,
+        "win_rate": 1.0,
+        "cagr": 0.001,
+        "sharpe": -22.267,
+        "max_dd": 0.0,
+        "spy_corr": 0.0,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.0,
+        "oos_sharpe": 1.926,
+        "oos_n": 2,
+        "oos_pnl": 757.0,
+        "yearly": {
+          "2024": {
+            "n": 1,
+            "pnl": 182.0,
+            "wr": 1.0
+          },
+          "2025": {
+            "n": 1,
+            "pnl": 575.0,
+            "wr": 1.0
+          }
+        },
+        "regime_breakdown": {
+          "mid_vol": {
+            "n": 2,
+            "pnl": 757.0,
+            "wr": 1.0,
+            "avg_pnl": 378.5
+          }
+        }
+      },
+      "n_trades": 2
+    },
+    {
+      "ticker": "TLT",
+      "method": "iv_rv_gap",
+      "filter_name": "bull",
+      "config": {
+        "regime_filter": null,
+        "trend_filter": "bull",
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 1,
+        "total_pnl": 155.0,
+        "win_rate": 1.0,
+        "cagr": 0.0002,
+        "sharpe": -88.047,
+        "max_dd": 0.0,
+        "spy_corr": 0.0,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.0,
+        "oos_sharpe": 0.0,
+        "oos_n": 1,
+        "oos_pnl": 155.0,
+        "yearly": {
+          "2025": {
+            "n": 1,
+            "pnl": 155.0,
+            "wr": 1.0
+          }
+        },
+        "regime_breakdown": {
+          "low_vol": {
+            "n": 1,
+            "pnl": 155.0,
+            "wr": 1.0,
+            "avg_pnl": 155.0
+          }
+        }
+      },
+      "n_trades": 1
+    },
+    {
+      "ticker": "TLT",
+      "method": "premium_richness",
+      "filter_name": "no_filter",
+      "config": {
+        "regime_filter": null,
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 0,
+        "total_pnl": 0,
+        "win_rate": 0,
+        "cagr": 0,
+        "sharpe": 0,
+        "max_dd": 0,
+        "spy_corr": 0,
+        "exp1220_corr": 0,
+        "is_sharpe": 0,
+        "oos_sharpe": 0,
+        "oos_n": 0
+      },
+      "n_trades": 0
+    },
+    {
+      "ticker": "TLT",
+      "method": "premium_richness",
+      "filter_name": "low_vol+mid_vol",
+      "config": {
+        "regime_filter": [
+          "low_vol",
+          "mid_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 0,
+        "total_pnl": 0,
+        "win_rate": 0,
+        "cagr": 0,
+        "sharpe": 0,
+        "max_dd": 0,
+        "spy_corr": 0,
+        "exp1220_corr": 0,
+        "is_sharpe": 0,
+        "oos_sharpe": 0,
+        "oos_n": 0
+      },
+      "n_trades": 0
+    },
+    {
+      "ticker": "TLT",
+      "method": "premium_richness",
+      "filter_name": "low_vol",
+      "config": {
+        "regime_filter": [
+          "low_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 0,
+        "total_pnl": 0,
+        "win_rate": 0,
+        "cagr": 0,
+        "sharpe": 0,
+        "max_dd": 0,
+        "spy_corr": 0,
+        "exp1220_corr": 0,
+        "is_sharpe": 0,
+        "oos_sharpe": 0,
+        "oos_n": 0
+      },
+      "n_trades": 0
+    },
+    {
+      "ticker": "TLT",
+      "method": "premium_richness",
+      "filter_name": "mid_vol+high_vol",
+      "config": {
+        "regime_filter": [
+          "mid_vol",
+          "high_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 0,
+        "total_pnl": 0,
+        "win_rate": 0,
+        "cagr": 0,
+        "sharpe": 0,
+        "max_dd": 0,
+        "spy_corr": 0,
+        "exp1220_corr": 0,
+        "is_sharpe": 0,
+        "oos_sharpe": 0,
+        "oos_n": 0
+      },
+      "n_trades": 0
+    },
+    {
+      "ticker": "TLT",
+      "method": "premium_richness",
+      "filter_name": "bull",
+      "config": {
+        "regime_filter": null,
+        "trend_filter": "bull",
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 0,
+        "total_pnl": 0,
+        "win_rate": 0,
+        "cagr": 0,
+        "sharpe": 0,
+        "max_dd": 0,
+        "spy_corr": 0,
+        "exp1220_corr": 0,
+        "is_sharpe": 0,
+        "oos_sharpe": 0,
+        "oos_n": 0
+      },
+      "n_trades": 0
+    },
+    {
+      "ticker": "XLF",
+      "method": "iv_rv_gap",
+      "filter_name": "no_filter",
+      "config": {
+        "regime_filter": null,
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 34,
+        "total_pnl": -675.0,
+        "win_rate": 0.618,
+        "cagr": -0.001,
+        "sharpe": -4.387,
+        "max_dd": 0.0652,
+        "spy_corr": -0.6777,
+        "exp1220_corr": 0.0,
+        "is_sharpe": -0.718,
+        "oos_sharpe": 2.126,
+        "oos_n": 12,
+        "oos_pnl": 1470.0,
+        "yearly": {
+          "2020": {
+            "n": 9,
+            "pnl": 135.0,
+            "wr": 0.444
+          },
+          "2021": {
+            "n": 5,
+            "pnl": -2815.0,
+            "wr": 0.2
+          },
+          "2022": {
+            "n": 8,
+            "pnl": 535.0,
+            "wr": 0.625
+          },
+          "2023": {
+            "n": 5,
+            "pnl": 620.0,
+            "wr": 0.8
+          },
+          "2024": {
+            "n": 5,
+            "pnl": 535.0,
+            "wr": 1.0
+          },
+          "2025": {
+            "n": 2,
+            "pnl": 315.0,
+            "wr": 1.0
+          }
+        },
+        "regime_breakdown": {
+          "crash": {
+            "n": 5,
+            "pnl": 225.0,
+            "wr": 0.4,
+            "avg_pnl": 45.0
+          },
+          "high_vol": {
+            "n": 17,
+            "pnl": -1235.0,
+            "wr": 0.529,
+            "avg_pnl": -72.65
+          },
+          "low_vol": {
+            "n": 4,
+            "pnl": 330.0,
+            "wr": 1.0,
+            "avg_pnl": 82.5
+          },
+          "mid_vol": {
+            "n": 8,
+            "pnl": 5.0,
+            "wr": 0.75,
+            "avg_pnl": 0.62
+          }
+        }
+      },
+      "n_trades": 34
+    },
+    {
+      "ticker": "XLF",
+      "method": "iv_rv_gap",
+      "filter_name": "low_vol+mid_vol",
+      "config": {
+        "regime_filter": [
+          "low_vol",
+          "mid_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 14,
+        "total_pnl": 893.0,
+        "win_rate": 0.786,
+        "cagr": 0.0012,
+        "sharpe": -7.567,
+        "max_dd": 0.015,
+        "spy_corr": -0.7457,
+        "exp1220_corr": 0.0,
+        "is_sharpe": -0.162,
+        "oos_sharpe": 1.785,
+        "oos_n": 11,
+        "oos_pnl": 1210.0,
+        "yearly": {
+          "2020": {
+            "n": 1,
+            "pnl": 1188.0,
+            "wr": 1.0
+          },
+          "2021": {
+            "n": 1,
+            "pnl": -875.0,
+            "wr": 0.0
+          },
+          "2022": {
+            "n": 1,
+            "pnl": -630.0,
+            "wr": 0.0
+          },
+          "2023": {
+            "n": 5,
+            "pnl": 620.0,
+            "wr": 0.8
+          },
+          "2024": {
+            "n": 5,
+            "pnl": 535.0,
+            "wr": 1.0
+          },
+          "2025": {
+            "n": 1,
+            "pnl": 55.0,
+            "wr": 1.0
+          }
+        },
+        "regime_breakdown": {
+          "low_vol": {
+            "n": 4,
+            "pnl": 330.0,
+            "wr": 1.0,
+            "avg_pnl": 82.5
+          },
+          "mid_vol": {
+            "n": 10,
+            "pnl": 563.0,
+            "wr": 0.7,
+            "avg_pnl": 56.3
+          }
+        }
+      },
+      "n_trades": 14
+    },
+    {
+      "ticker": "XLF",
+      "method": "iv_rv_gap",
+      "filter_name": "low_vol",
+      "config": {
+        "regime_filter": [
+          "low_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 4,
+        "total_pnl": 330.0,
+        "win_rate": 1.0,
+        "cagr": 0.0004,
+        "sharpe": -78.544,
+        "max_dd": 0.0,
+        "spy_corr": 0.0,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.0,
+        "oos_sharpe": 5.475,
+        "oos_n": 4,
+        "oos_pnl": 330.0,
+        "yearly": {
+          "2024": {
+            "n": 3,
+            "pnl": 275.0,
+            "wr": 1.0
+          },
+          "2025": {
+            "n": 1,
+            "pnl": 55.0,
+            "wr": 1.0
+          }
+        },
+        "regime_breakdown": {
+          "low_vol": {
+            "n": 4,
+            "pnl": 330.0,
+            "wr": 1.0,
+            "avg_pnl": 82.5
+          }
+        }
+      },
+      "n_trades": 4
+    },
+    {
+      "ticker": "XLF",
+      "method": "iv_rv_gap",
+      "filter_name": "mid_vol+high_vol",
+      "config": {
+        "regime_filter": [
+          "mid_vol",
+          "high_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 26,
+        "total_pnl": -695.0,
+        "win_rate": 0.615,
+        "cagr": -0.001,
+        "sharpe": -5.44,
+        "max_dd": 0.0482,
+        "spy_corr": -0.5654,
+        "exp1220_corr": 0.0,
+        "is_sharpe": -0.795,
+        "oos_sharpe": 1.634,
+        "oos_n": 8,
+        "oos_pnl": 1140.0,
+        "yearly": {
+          "2020": {
+            "n": 5,
+            "pnl": 445.0,
+            "wr": 0.6
+          },
+          "2021": {
+            "n": 5,
+            "pnl": -2815.0,
+            "wr": 0.2
+          },
+          "2022": {
+            "n": 8,
+            "pnl": 535.0,
+            "wr": 0.625
+          },
+          "2023": {
+            "n": 5,
+            "pnl": 620.0,
+            "wr": 0.8
+          },
+          "2024": {
+            "n": 2,
+            "pnl": 260.0,
+            "wr": 1.0
+          },
+          "2025": {
+            "n": 1,
+            "pnl": 260.0,
+            "wr": 1.0
+          }
+        },
+        "regime_breakdown": {
+          "high_vol": {
+            "n": 18,
+            "pnl": -700.0,
+            "wr": 0.556,
+            "avg_pnl": -38.89
+          },
+          "mid_vol": {
+            "n": 8,
+            "pnl": 5.0,
+            "wr": 0.75,
+            "avg_pnl": 0.62
+          }
+        }
+      },
+      "n_trades": 26
+    },
+    {
+      "ticker": "XLF",
+      "method": "iv_rv_gap",
+      "filter_name": "bull",
+      "config": {
+        "regime_filter": null,
+        "trend_filter": "bull",
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 11,
+        "total_pnl": -1710.0,
+        "win_rate": 0.545,
+        "cagr": -0.0023,
+        "sharpe": -9.319,
+        "max_dd": 0.0258,
+        "spy_corr": -0.6036,
+        "exp1220_corr": 0.0,
+        "is_sharpe": -1.558,
+        "oos_sharpe": 3.508,
+        "oos_n": 4,
+        "oos_pnl": 445.0,
+        "yearly": {
+          "2020": {
+            "n": 4,
+            "pnl": -1095.0,
+            "wr": 0.25
+          },
+          "2021": {
+            "n": 3,
+            "pnl": -1060.0,
+            "wr": 0.333
+          },
+          "2024": {
+            "n": 3,
+            "pnl": 390.0,
+            "wr": 1.0
+          },
+          "2025": {
+            "n": 1,
+            "pnl": 55.0,
+            "wr": 1.0
+          }
+        },
+        "regime_breakdown": {
+          "crash": {
+            "n": 2,
+            "pnl": -1320.0,
+            "wr": 0.0,
+            "avg_pnl": -660.0
+          },
+          "high_vol": {
+            "n": 4,
+            "pnl": 40.0,
+            "wr": 0.5,
+            "avg_pnl": 10.0
+          },
+          "low_vol": {
+            "n": 3,
+            "pnl": 250.0,
+            "wr": 1.0,
+            "avg_pnl": 83.33
+          },
+          "mid_vol": {
+            "n": 2,
+            "pnl": -680.0,
+            "wr": 0.5,
+            "avg_pnl": -340.0
+          }
+        }
+      },
+      "n_trades": 11
+    },
+    {
+      "ticker": "XLF",
+      "method": "premium_richness",
+      "filter_name": "no_filter",
+      "config": {
+        "regime_filter": null,
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 11,
+        "total_pnl": 1205.0,
+        "win_rate": 0.818,
+        "cagr": 0.0016,
+        "sharpe": -11.809,
+        "max_dd": 0.007,
+        "spy_corr": -0.7156,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.148,
+        "oos_sharpe": 2.734,
+        "oos_n": 5,
+        "oos_pnl": 1050.0,
+        "yearly": {
+          "2021": {
+            "n": 1,
+            "pnl": 100.0,
+            "wr": 1.0
+          },
+          "2022": {
+            "n": 5,
+            "pnl": 55.0,
+            "wr": 0.6
+          },
+          "2023": {
+            "n": 1,
+            "pnl": 475.0,
+            "wr": 1.0
+          },
+          "2024": {
+            "n": 2,
+            "pnl": 260.0,
+            "wr": 1.0
+          },
+          "2025": {
+            "n": 2,
+            "pnl": 315.0,
+            "wr": 1.0
+          }
+        },
+        "regime_breakdown": {
+          "high_vol": {
+            "n": 7,
+            "pnl": 415.0,
+            "wr": 0.714,
+            "avg_pnl": 59.29
+          },
+          "low_vol": {
+            "n": 1,
+            "pnl": 55.0,
+            "wr": 1.0,
+            "avg_pnl": 55.0
+          },
+          "mid_vol": {
+            "n": 3,
+            "pnl": 735.0,
+            "wr": 1.0,
+            "avg_pnl": 245.0
+          }
+        }
+      },
+      "n_trades": 11
+    },
+    {
+      "ticker": "XLF",
+      "method": "premium_richness",
+      "filter_name": "low_vol+mid_vol",
+      "config": {
+        "regime_filter": [
+          "low_vol",
+          "mid_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 4,
+        "total_pnl": 790.0,
+        "win_rate": 1.0,
+        "cagr": 0.0011,
+        "sharpe": -25.784,
+        "max_dd": 0.0,
+        "spy_corr": 0.0,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.0,
+        "oos_sharpe": 2.019,
+        "oos_n": 4,
+        "oos_pnl": 790.0,
+        "yearly": {
+          "2023": {
+            "n": 1,
+            "pnl": 475.0,
+            "wr": 1.0
+          },
+          "2024": {
+            "n": 2,
+            "pnl": 260.0,
+            "wr": 1.0
+          },
+          "2025": {
+            "n": 1,
+            "pnl": 55.0,
+            "wr": 1.0
+          }
+        },
+        "regime_breakdown": {
+          "low_vol": {
+            "n": 1,
+            "pnl": 55.0,
+            "wr": 1.0,
+            "avg_pnl": 55.0
+          },
+          "mid_vol": {
+            "n": 3,
+            "pnl": 735.0,
+            "wr": 1.0,
+            "avg_pnl": 245.0
+          }
+        }
+      },
+      "n_trades": 4
+    },
+    {
+      "ticker": "XLF",
+      "method": "premium_richness",
+      "filter_name": "low_vol",
+      "config": {
+        "regime_filter": [
+          "low_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 0,
+        "total_pnl": 0,
+        "win_rate": 0,
+        "cagr": 0,
+        "sharpe": 0,
+        "max_dd": 0,
+        "spy_corr": 0,
+        "exp1220_corr": 0,
+        "is_sharpe": 0,
+        "oos_sharpe": 0,
+        "oos_n": 0
+      },
+      "n_trades": 0
+    },
+    {
+      "ticker": "XLF",
+      "method": "premium_richness",
+      "filter_name": "mid_vol+high_vol",
+      "config": {
+        "regime_filter": [
+          "mid_vol",
+          "high_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 7,
+        "total_pnl": 790.0,
+        "win_rate": 0.714,
+        "cagr": 0.001,
+        "sharpe": -12.213,
+        "max_dd": 0.007,
+        "spy_corr": -0.7618,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.051,
+        "oos_sharpe": 3.419,
+        "oos_n": 2,
+        "oos_pnl": 735.0,
+        "yearly": {
+          "2022": {
+            "n": 5,
+            "pnl": 55.0,
+            "wr": 0.6
+          },
+          "2023": {
+            "n": 1,
+            "pnl": 475.0,
+            "wr": 1.0
+          },
+          "2025": {
+            "n": 1,
+            "pnl": 260.0,
+            "wr": 1.0
+          }
+        },
+        "regime_breakdown": {
+          "high_vol": {
+            "n": 6,
+            "pnl": 315.0,
+            "wr": 0.667,
+            "avg_pnl": 52.5
+          },
+          "mid_vol": {
+            "n": 1,
+            "pnl": 475.0,
+            "wr": 1.0,
+            "avg_pnl": 475.0
+          }
+        }
+      },
+      "n_trades": 7
+    },
+    {
+      "ticker": "XLF",
+      "method": "premium_richness",
+      "filter_name": "bull",
+      "config": {
+        "regime_filter": null,
+        "trend_filter": "bull",
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 1,
+        "total_pnl": 195.0,
+        "win_rate": 1.0,
+        "cagr": 0.0003,
+        "sharpe": -69.912,
+        "max_dd": 0.0,
+        "spy_corr": 0.0,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.0,
+        "oos_sharpe": 0.0,
+        "oos_n": 1,
+        "oos_pnl": 195.0,
+        "yearly": {
+          "2024": {
+            "n": 1,
+            "pnl": 195.0,
+            "wr": 1.0
+          }
+        },
+        "regime_breakdown": {
+          "mid_vol": {
+            "n": 1,
+            "pnl": 195.0,
+            "wr": 1.0,
+            "avg_pnl": 195.0
+          }
+        }
+      },
+      "n_trades": 1
+    },
+    {
+      "ticker": "XLI",
+      "method": "iv_rv_gap",
+      "filter_name": "no_filter",
+      "config": {
+        "regime_filter": null,
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 7,
+        "total_pnl": -640.0,
+        "win_rate": 0.714,
+        "cagr": -0.0009,
+        "sharpe": -4.397,
+        "max_dd": 0.0269,
+        "spy_corr": -0.876,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.392,
+        "oos_sharpe": -0.479,
+        "oos_n": 5,
+        "oos_pnl": -1440.0,
+        "yearly": {
+          "2022": {
+            "n": 2,
+            "pnl": 800.0,
+            "wr": 0.5
+          },
+          "2024": {
+            "n": 4,
+            "pnl": -1710.0,
+            "wr": 0.75
+          },
+          "2025": {
+            "n": 1,
+            "pnl": 270.0,
+            "wr": 1.0
+          }
+        },
+        "regime_breakdown": {
+          "high_vol": {
+            "n": 1,
+            "pnl": 1420.0,
+            "wr": 1.0,
+            "avg_pnl": 1420.0
+          },
+          "low_vol": {
+            "n": 3,
+            "pnl": 975.0,
+            "wr": 1.0,
+            "avg_pnl": 325.0
+          },
+          "mid_vol": {
+            "n": 3,
+            "pnl": -3035.0,
+            "wr": 0.333,
+            "avg_pnl": -1011.67
+          }
+        }
+      },
+      "n_trades": 7
+    },
+    {
+      "ticker": "XLI",
+      "method": "iv_rv_gap",
+      "filter_name": "low_vol+mid_vol",
+      "config": {
+        "regime_filter": [
+          "low_vol",
+          "mid_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 6,
+        "total_pnl": -2060.0,
+        "win_rate": 0.667,
+        "cagr": -0.0028,
+        "sharpe": -5.102,
+        "max_dd": 0.0269,
+        "spy_corr": -0.8713,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.0,
+        "oos_sharpe": -0.479,
+        "oos_n": 5,
+        "oos_pnl": -1440.0,
+        "yearly": {
+          "2022": {
+            "n": 1,
+            "pnl": -620.0,
+            "wr": 0.0
+          },
+          "2024": {
+            "n": 4,
+            "pnl": -1710.0,
+            "wr": 0.75
+          },
+          "2025": {
+            "n": 1,
+            "pnl": 270.0,
+            "wr": 1.0
+          }
+        },
+        "regime_breakdown": {
+          "low_vol": {
+            "n": 3,
+            "pnl": 975.0,
+            "wr": 1.0,
+            "avg_pnl": 325.0
+          },
+          "mid_vol": {
+            "n": 3,
+            "pnl": -3035.0,
+            "wr": 0.333,
+            "avg_pnl": -1011.67
+          }
+        }
+      },
+      "n_trades": 6
+    },
+    {
+      "ticker": "XLI",
+      "method": "iv_rv_gap",
+      "filter_name": "low_vol",
+      "config": {
+        "regime_filter": [
+          "low_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 3,
+        "total_pnl": 975.0,
+        "win_rate": 1.0,
+        "cagr": 0.0013,
+        "sharpe": -22.277,
+        "max_dd": 0.0,
+        "spy_corr": 0.0,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.0,
+        "oos_sharpe": 3.864,
+        "oos_n": 3,
+        "oos_pnl": 975.0,
+        "yearly": {
+          "2024": {
+            "n": 3,
+            "pnl": 975.0,
+            "wr": 1.0
+          }
+        },
+        "regime_breakdown": {
+          "low_vol": {
+            "n": 3,
+            "pnl": 975.0,
+            "wr": 1.0,
+            "avg_pnl": 325.0
+          }
+        }
+      },
+      "n_trades": 3
+    },
+    {
+      "ticker": "XLI",
+      "method": "iv_rv_gap",
+      "filter_name": "mid_vol+high_vol",
+      "config": {
+        "regime_filter": [
+          "mid_vol",
+          "high_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 4,
+        "total_pnl": -1615.0,
+        "win_rate": 0.5,
+        "cagr": -0.0022,
+        "sharpe": -4.593,
+        "max_dd": 0.0329,
+        "spy_corr": 0.0,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.392,
+        "oos_sharpe": -0.817,
+        "oos_n": 2,
+        "oos_pnl": -2415.0,
+        "yearly": {
+          "2022": {
+            "n": 2,
+            "pnl": 800.0,
+            "wr": 0.5
+          },
+          "2024": {
+            "n": 1,
+            "pnl": -2685.0,
+            "wr": 0.0
+          },
+          "2025": {
+            "n": 1,
+            "pnl": 270.0,
+            "wr": 1.0
+          }
+        },
+        "regime_breakdown": {
+          "high_vol": {
+            "n": 1,
+            "pnl": 1420.0,
+            "wr": 1.0,
+            "avg_pnl": 1420.0
+          },
+          "mid_vol": {
+            "n": 3,
+            "pnl": -3035.0,
+            "wr": 0.333,
+            "avg_pnl": -1011.67
+          }
+        }
+      },
+      "n_trades": 4
+    },
+    {
+      "ticker": "XLI",
+      "method": "iv_rv_gap",
+      "filter_name": "bull",
+      "config": {
+        "regime_filter": null,
+        "trend_filter": "bull",
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 4,
+        "total_pnl": -2815.0,
+        "win_rate": 0.5,
+        "cagr": -0.0038,
+        "sharpe": -5.303,
+        "max_dd": 0.0281,
+        "spy_corr": 0.0,
+        "exp1220_corr": 0.0,
+        "is_sharpe": 0.0,
+        "oos_sharpe": -0.749,
+        "oos_n": 3,
+        "oos_pnl": -2195.0,
+        "yearly": {
+          "2022": {
+            "n": 1,
+            "pnl": -620.0,
+            "wr": 0.0
+          },
+          "2024": {
+            "n": 3,
+            "pnl": -2195.0,
+            "wr": 0.667
+          }
+        },
+        "regime_breakdown": {
+          "low_vol": {
+            "n": 2,
+            "pnl": 490.0,
+            "wr": 1.0,
+            "avg_pnl": 245.0
+          },
+          "mid_vol": {
+            "n": 2,
+            "pnl": -3305.0,
+            "wr": 0.0,
+            "avg_pnl": -1652.5
+          }
+        }
+      },
+      "n_trades": 4
+    },
+    {
+      "ticker": "XLI",
+      "method": "premium_richness",
+      "filter_name": "no_filter",
+      "config": {
+        "regime_filter": null,
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 0,
+        "total_pnl": 0,
+        "win_rate": 0,
+        "cagr": 0,
+        "sharpe": 0,
+        "max_dd": 0,
+        "spy_corr": 0,
+        "exp1220_corr": 0,
+        "is_sharpe": 0,
+        "oos_sharpe": 0,
+        "oos_n": 0
+      },
+      "n_trades": 0
+    },
+    {
+      "ticker": "XLI",
+      "method": "premium_richness",
+      "filter_name": "low_vol+mid_vol",
+      "config": {
+        "regime_filter": [
+          "low_vol",
+          "mid_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 0,
+        "total_pnl": 0,
+        "win_rate": 0,
+        "cagr": 0,
+        "sharpe": 0,
+        "max_dd": 0,
+        "spy_corr": 0,
+        "exp1220_corr": 0,
+        "is_sharpe": 0,
+        "oos_sharpe": 0,
+        "oos_n": 0
+      },
+      "n_trades": 0
+    },
+    {
+      "ticker": "XLI",
+      "method": "premium_richness",
+      "filter_name": "low_vol",
+      "config": {
+        "regime_filter": [
+          "low_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 0,
+        "total_pnl": 0,
+        "win_rate": 0,
+        "cagr": 0,
+        "sharpe": 0,
+        "max_dd": 0,
+        "spy_corr": 0,
+        "exp1220_corr": 0,
+        "is_sharpe": 0,
+        "oos_sharpe": 0,
+        "oos_n": 0
+      },
+      "n_trades": 0
+    },
+    {
+      "ticker": "XLI",
+      "method": "premium_richness",
+      "filter_name": "mid_vol+high_vol",
+      "config": {
+        "regime_filter": [
+          "mid_vol",
+          "high_vol"
+        ],
+        "trend_filter": null,
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 0,
+        "total_pnl": 0,
+        "win_rate": 0,
+        "cagr": 0,
+        "sharpe": 0,
+        "max_dd": 0,
+        "spy_corr": 0,
+        "exp1220_corr": 0,
+        "is_sharpe": 0,
+        "oos_sharpe": 0,
+        "oos_n": 0
+      },
+      "n_trades": 0
+    },
+    {
+      "ticker": "XLI",
+      "method": "premium_richness",
+      "filter_name": "bull",
+      "config": {
+        "regime_filter": null,
+        "trend_filter": "bull",
+        "iv_rv_threshold": 0.03
+      },
+      "stats": {
+        "n_trades": 0,
+        "total_pnl": 0,
+        "win_rate": 0,
+        "cagr": 0,
+        "sharpe": 0,
+        "max_dd": 0,
+        "spy_corr": 0,
+        "exp1220_corr": 0,
+        "is_sharpe": 0,
+        "oos_sharpe": 0,
+        "oos_n": 0
+      },
+      "n_trades": 0
+    }
+  ]
+}
