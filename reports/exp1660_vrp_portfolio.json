@@ -1,0 +1,187 @@
+{
+  "experiment": "EXP-1660",
+  "subtitle": "VRP Portfolio",
+  "data_source": "IronVault (options_cache.db) \u2014 100% real",
+  "rule_zero_compliant": true,
+  "iv_rv_threshold": 0.02,
+  "tickers_tested": [
+    "SPY",
+    "QQQ",
+    "XLF",
+    "XLI",
+    "GLD",
+    "TLT"
+  ],
+  "ticker_configs": {
+    "SPY": {
+      "short_delta": 0.1,
+      "hedge_delta": 0.05,
+      "width_pct": 0.05
+    },
+    "QQQ": {
+      "short_delta": 0.12,
+      "hedge_delta": 0.05,
+      "width_pct": 0.05
+    },
+    "XLF": {
+      "short_delta": 0.15,
+      "hedge_delta": 0.08,
+      "width_pct": 0.06
+    },
+    "XLI": {
+      "short_delta": 0.15,
+      "hedge_delta": 0.08,
+      "width_pct": 0.06
+    },
+    "GLD": {
+      "short_delta": 0.18,
+      "hedge_delta": 0.08,
+      "width_pct": 0.07
+    },
+    "TLT": {
+      "short_delta": 0.18,
+      "hedge_delta": 0.08,
+      "width_pct": 0.07
+    }
+  },
+  "per_ticker_results": [
+    {
+      "ticker": "SPY",
+      "n_trades": 87,
+      "total_pnl": -24168.0,
+      "win_rate": 0.506,
+      "trade_sharpe": -1.463,
+      "daily_sharpe": -1.646,
+      "cagr": -0.039,
+      "max_dd": 0.2599,
+      "avg_iv_rv_gap": 0.2196,
+      "spy_corr": -0.7933,
+      "is_sharpe": 0.68,
+      "oos_sharpe": -2.207,
+      "oos_n": 62
+    },
+    {
+      "ticker": "QQQ",
+      "n_trades": 27,
+      "total_pnl": 5343.0,
+      "win_rate": 0.593,
+      "trade_sharpe": 0.593,
+      "daily_sharpe": -1.148,
+      "cagr": 0.0079,
+      "max_dd": 0.0724,
+      "avg_iv_rv_gap": 0.1549,
+      "spy_corr": -0.5248,
+      "is_sharpe": -0.176,
+      "oos_sharpe": 0.946,
+      "oos_n": 11
+    },
+    {
+      "ticker": "XLF",
+      "n_trades": 22,
+      "total_pnl": -850.0,
+      "win_rate": 0.5,
+      "trade_sharpe": -0.409,
+      "daily_sharpe": -6.319,
+      "cagr": -0.0014,
+      "max_dd": 0.0277,
+      "avg_iv_rv_gap": 0.2405,
+      "spy_corr": -0.6229,
+      "is_sharpe": -0.877,
+      "oos_sharpe": 5.165,
+      "oos_n": 5
+    },
+    {
+      "ticker": "XLI",
+      "n_trades": 2,
+      "total_pnl": 375.0,
+      "win_rate": 0.5,
+      "trade_sharpe": 0.342,
+      "daily_sharpe": -15.159,
+      "cagr": 0.0006,
+      "max_dd": 0.0036,
+      "avg_iv_rv_gap": 0.2134,
+      "spy_corr": 0.0,
+      "is_sharpe": 0.0,
+      "oos_sharpe": 0.0,
+      "oos_n": 1
+    },
+    {
+      "ticker": "GLD",
+      "n_trades": 5,
+      "total_pnl": -436.0,
+      "win_rate": 0.6,
+      "trade_sharpe": -0.15,
+      "daily_sharpe": -4.888,
+      "cagr": -0.0007,
+      "max_dd": 0.0282,
+      "avg_iv_rv_gap": 0.1909,
+      "spy_corr": 0.0,
+      "is_sharpe": 0.0,
+      "oos_sharpe": -0.15,
+      "oos_n": 5
+    },
+    {
+      "ticker": "TLT",
+      "n_trades": 2,
+      "total_pnl": 890.0,
+      "win_rate": 1.0,
+      "trade_sharpe": 2.119,
+      "daily_sharpe": -17.542,
+      "cagr": 0.0014,
+      "max_dd": 0.0,
+      "avg_iv_rv_gap": 0.1615,
+      "spy_corr": 0.0,
+      "is_sharpe": 0.0,
+      "oos_sharpe": 2.119,
+      "oos_n": 2
+    }
+  ],
+  "portfolio": {
+    "n_configs": 3,
+    "configs": [
+      "SPY",
+      "QQQ",
+      "XLF"
+    ],
+    "total_pnl": -19675.0,
+    "sharpe": -2.768,
+    "cagr": -0.0106,
+    "max_dd": 0.1068,
+    "spy_corr": -0.1931,
+    "n_active_days": 125
+  },
+  "correlation_matrix": {
+    "names": [
+      "SPY",
+      "QQQ",
+      "XLF",
+      "GLD"
+    ],
+    "matrix": {
+      "SPY": {
+        "SPY": 1.0,
+        "QQQ": 0.001,
+        "XLF": 0.033,
+        "GLD": 0.038
+      },
+      "QQQ": {
+        "SPY": 0.001,
+        "QQQ": 1.0,
+        "XLF": 0.0,
+        "GLD": 0.0
+      },
+      "XLF": {
+        "SPY": 0.033,
+        "QQQ": 0.0,
+        "XLF": 1.0,
+        "GLD": 0.017
+      },
+      "GLD": {
+        "SPY": 0.038,
+        "QQQ": 0.0,
+        "XLF": 0.017,
+        "GLD": 1.0
+      }
+    }
+  }
+}
