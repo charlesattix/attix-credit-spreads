@@ -1,0 +1,206 @@
+{
+  "experiment": "EXP-1840",
+  "name": "IV Spike Entry \u2014 Volatility-Timed Credit Spreads",
+  "data_source": "IronVault options_cache.db (real)",
+  "date_range": "2020-01-15 -> 2025-12-30",
+  "rule_zero_compliant": true,
+  "generated": "2026-04-06T11:17:41.084933",
+  "parameters": {
+    "ticker": "SPY",
+    "iv_lookback": 5,
+    "iv_spike_z": 1.5,
+    "target_dte_min": 20,
+    "target_dte_max": 45,
+    "spread_width": 5.0,
+    "otm_pct": 0.03,
+    "min_credit_pct": 0.15,
+    "profit_target_pct": 0.5,
+    "stop_loss_mult": 2.0,
+    "risk_pct": 0.02,
+    "min_spacing_days": 3
+  },
+  "signal_stats": {
+    "eligible_days": 918,
+    "spike_days": 125,
+    "spike_rate": 0.1362
+  },
+  "metrics": {
+    "n_trades": 8,
+    "total_pnl": 2753.0,
+    "win_rate": 0.875,
+    "avg_pnl_per_trade": 344.12,
+    "cagr": 0.0047,
+    "sharpe": 0.59,
+    "max_dd": 0.012,
+    "total_return_pct": 2.75,
+    "n_years": 5.75
+  },
+  "walk_forward": {
+    "is_period": "2020-2022",
+    "oos_period": "2023-2025",
+    "is_cagr": 0.0,
+    "is_sharpe": 0.0,
+    "oos_cagr": 0.0103,
+    "oos_sharpe": 0.761
+  },
+  "yearly": {
+    "2020": {
+      "n": 1,
+      "pnl": 678.0,
+      "wr": 1.0,
+      "return_pct": 0.68
+    },
+    "2024": {
+      "n": 2,
+      "pnl": 1574.0,
+      "wr": 1.0,
+      "return_pct": 1.57
+    },
+    "2025": {
+      "n": 5,
+      "pnl": 501.0,
+      "wr": 0.8,
+      "return_pct": 0.5
+    }
+  },
+  "comparison": {
+    "exp1220_base": {
+      "cagr_pct": 99.03,
+      "sharpe": 5.68,
+      "max_dd_pct": 7.85,
+      "vol_pct": 12.26,
+      "source": "reports/exp1220_dynamic_leverage.json (static_1_2x)"
+    },
+    "exp1840": {
+      "cagr_pct": 0.47000000000000003,
+      "sharpe": 0.59,
+      "max_dd_pct": 1.2,
+      "n_trades": 8,
+      "win_rate": 0.875
+    },
+    "sharpe_improvement": -5.09,
+    "verdict": "EXP-1840 does NOT improve Sharpe vs EXP-1220 base"
+  },
+  "trades": [
+    {
+      "entry_date": "2020-03-18",
+      "exit_date": "2020-03-24",
+      "expiration": "2020-04-17",
+      "short_strike": 213.0,
+      "long_strike": 208.0,
+      "entry_credit": 2.01,
+      "exit_debit": 0.88,
+      "contracts": 6,
+      "pnl": 678.0,
+      "hold_days": 4,
+      "exit_reason": "profit_target",
+      "iv_z_at_entry": 1.942,
+      "iv_proxy_at_entry": 0.20139
+    },
+    {
+      "entry_date": "2024-08-06",
+      "exit_date": "2024-08-07",
+      "expiration": "2024-09-06",
+      "short_strike": 496.0,
+      "long_strike": 491.0,
+      "entry_credit": 2.23,
+      "exit_debit": 0.86,
+      "contracts": 7,
+      "pnl": 959.0,
+      "hold_days": 1,
+      "exit_reason": "profit_target",
+      "iv_z_at_entry": 1.543,
+      "iv_proxy_at_entry": 0.06782
+    },
+    {
+      "entry_date": "2024-12-18",
+      "exit_date": "2024-12-19",
+      "expiration": "2025-01-17",
+      "short_strike": 559.0,
+      "long_strike": 554.0,
+      "entry_credit": 1.11,
+      "exit_debit": -0.12,
+      "contracts": 5,
+      "pnl": 615.0,
+      "hold_days": 1,
+      "exit_reason": "profit_target",
+      "iv_z_at_entry": 8.026,
+      "iv_proxy_at_entry": 0.05059
+    },
+    {
+      "entry_date": "2025-03-10",
+      "exit_date": "2025-03-11",
+      "expiration": "2025-04-11",
+      "short_strike": 536.0,
+      "long_strike": 531.0,
+      "entry_credit": 1.16,
+      "exit_debit": -0.68,
+      "contracts": 5,
+      "pnl": 920.0,
+      "hold_days": 1,
+      "exit_reason": "profit_target",
+      "iv_z_at_entry": 1.826,
+      "iv_proxy_at_entry": 0.05757
+    },
+    {
+      "entry_date": "2025-04-03",
+      "exit_date": "2025-04-08",
+      "expiration": "2025-05-02",
+      "short_strike": 515.0,
+      "long_strike": 510.0,
+      "entry_credit": 0.87,
+      "exit_debit": 3.88,
+      "contracts": 4,
+      "pnl": -1204.0,
+      "hold_days": 3,
+      "exit_reason": "stop_loss",
+      "iv_z_at_entry": 2.538,
+      "iv_proxy_at_entry": 0.06609
+    },
+    {
+      "entry_date": "2025-06-13",
+      "exit_date": "2025-06-16",
+      "expiration": "2025-07-11",
+      "short_strike": 573.0,
+      "long_strike": 568.0,
+      "entry_credit": 1.0,
+      "exit_debit": 0.43,
+      "contracts": 5,
+      "pnl": 285.0,
+      "hold_days": 1,
+      "exit_reason": "profit_target",
+      "iv_z_at_entry": 2.473,
+      "iv_proxy_at_entry": 0.04014
+    },
+    {
+      "entry_date": "2025-10-10",
+      "exit_date": "2025-10-20",
+      "expiration": "2025-11-07",
+      "short_strike": 630.0,
+      "long_strike": 625.0,
+      "entry_credit": 0.84,
+      "exit_debit": 0.24,
+      "contracts": 4,
+      "pnl": 240.0,
+      "hold_days": 6,
+      "exit_reason": "profit_target",
+      "iv_z_at_entry": 10.03,
+      "iv_proxy_at_entry": 0.0464
+    },
+    {
+      "entry_date": "2025-12-17",
+      "exit_date": "2025-12-18",
+      "expiration": "2026-01-16",
+      "short_strike": 648.0,
+      "long_strike": 643.0,
+      "entry_credit": 0.88,
+      "exit_debit": 0.23,
+      "contracts": 4,
+      "pnl": 260.0,
+      "hold_days": 1,
+      "exit_reason": "profit_target",
+      "iv_z_at_entry": 2.053,
+      "iv_proxy_at_entry": 0.03535
+    }
+  ]
+}
