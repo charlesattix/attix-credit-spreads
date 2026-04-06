@@ -219,9 +219,16 @@ Full report: `reports/oos_integrity_audit.html`
 - [ ] QQQ: construct OCC symbols for May 2023 → Dec 2025
 - [ ] Re-validate EXP-1630 and cross-asset pairs
 
-### 4. Hedge Cost Resolution
-- [ ] Decide: no hedge (1.2% CAGR) vs selective VIX<15 puts (~2%/yr) vs collar (1.3%/yr)
-- [ ] At current alpha (1.5%/yr), only selective or collar hedges are cost-viable
+### 4. Hedge Cost Resolution [RESOLVED 2026-04-06]
+- [x] Decision: **NO HEDGE** at current alpha level
+- [x] Analysis: `reports/hedge_cost_resolution.html` (scripts/hedge_cost_resolution.py)
+- **Finding:** At 1.5%/yr trade-level alpha, ALL hedges are net-negative:
+  - Continuous puts: -2.86%/yr net (4.36% cost)
+  - Selective VIX<15: -0.60%/yr net (2.10% cost)
+  - Collar: -0.31%/yr net (1.81% total drag incl. upside cap)
+- **Break-even alphas:** Collar needs ≥1.81%/yr, Selective ≥2.10%/yr, Continuous ≥4.36%/yr
+- **Action:** Defer hedge deployment until alpha ≥2.5%/yr. Re-evaluate after
+  8 weeks of paper trading. If hedge becomes necessary, use COLLAR (cheapest).
 
 ---
 

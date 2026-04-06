@@ -1,0 +1,265 @@
+{
+  "generated": "2026-04-06T08:35:39.316664",
+  "inputs": {
+    "baseline_alpha_cagr": 0.015,
+    "baseline_sharpe": 1.26,
+    "baseline_max_dd": 0.016,
+    "avg_real_put_cost": 0.0436,
+    "yearly_put_costs": {
+      "2020": 0.0528,
+      "2021": 0.0302,
+      "2022": 0.0539,
+      "2023": 0.0244,
+      "2024": 0.0278,
+      "2025": 0.0725
+    },
+    "collar_offset_ratio": 0.7
+  },
+  "options": [
+    {
+      "name": "No Hedge",
+      "description": "Accept full drawdown risk. No hedge cost.",
+      "annual_cost_pct": 0.0,
+      "gross_alpha_pct": 1.5,
+      "net_cagr_pct": 1.5,
+      "dd_reduction_pct": 0.0,
+      "dd_adjustments": {
+        "covid": 0.0,
+        "bear": 0.0,
+        "flash": 0.0,
+        "vix_spike": 0.0
+      },
+      "crisis_dds": {
+        "covid": 51.78,
+        "bear": 43.68,
+        "flash": 15.0,
+        "vix_spike": 22.5
+      },
+      "sharpe_impact_pct": 0.0,
+      "net_sharpe": 1.26,
+      "break_even_alpha_pct": 0.0
+    },
+    {
+      "name": "Selective VIX<15 Puts",
+      "description": "Buy 5% OTM SPY puts only when VIX < 15 (~18% of days). Cheapest market entry.",
+      "annual_cost_pct": 2.1,
+      "gross_alpha_pct": 1.5,
+      "net_cagr_pct": -0.6,
+      "dd_reduction_pct": 32.5,
+      "dd_adjustments": {
+        "covid": 0.35,
+        "bear": 0.2,
+        "flash": 0.3,
+        "vix_spike": 0.45
+      },
+      "crisis_dds": {
+        "covid": 33.66,
+        "bear": 34.94,
+        "flash": 10.5,
+        "vix_spike": 12.38
+      },
+      "sharpe_impact_pct": -140.0,
+      "net_sharpe": -0.5,
+      "break_even_alpha_pct": 2.1
+    },
+    {
+      "name": "Collar Strategy",
+      "description": "Sell 3% OTM SPY calls to fund 5% OTM puts. ~70% cost offset.",
+      "annual_cost_pct": 1.31,
+      "gross_alpha_pct": 1.5,
+      "net_cagr_pct": 0.19,
+      "dd_reduction_pct": 45.0,
+      "dd_adjustments": {
+        "covid": 0.5,
+        "bear": 0.3,
+        "flash": 0.45,
+        "vix_spike": 0.55
+      },
+      "crisis_dds": {
+        "covid": 25.89,
+        "bear": 30.58,
+        "flash": 8.25,
+        "vix_spike": 10.12
+      },
+      "sharpe_impact_pct": -120.5,
+      "net_sharpe": -0.26,
+      "break_even_alpha_pct": 1.81,
+      "extra_drag_pct": 0.5
+    }
+  ],
+  "alpha_sensitivity": {
+    "1.0%": {
+      "continuous_puts": {
+        "alpha": 0.01,
+        "cost": 0.0436,
+        "net": -0.0336,
+        "viable": false
+      },
+      "selective_puts": {
+        "alpha": 0.01,
+        "cost": 0.021,
+        "net": -0.011000000000000001,
+        "viable": false
+      },
+      "collar": {
+        "alpha": 0.01,
+        "cost": 0.018080000000000002,
+        "net": -0.008080000000000002,
+        "viable": false
+      }
+    },
+    "1.5%": {
+      "continuous_puts": {
+        "alpha": 0.015,
+        "cost": 0.0436,
+        "net": -0.0286,
+        "viable": false
+      },
+      "selective_puts": {
+        "alpha": 0.015,
+        "cost": 0.021,
+        "net": -0.006000000000000002,
+        "viable": false
+      },
+      "collar": {
+        "alpha": 0.015,
+        "cost": 0.018080000000000002,
+        "net": -0.003080000000000003,
+        "viable": false
+      }
+    },
+    "2.0%": {
+      "continuous_puts": {
+        "alpha": 0.02,
+        "cost": 0.0436,
+        "net": -0.0236,
+        "viable": false
+      },
+      "selective_puts": {
+        "alpha": 0.02,
+        "cost": 0.021,
+        "net": -0.0010000000000000009,
+        "viable": false
+      },
+      "collar": {
+        "alpha": 0.02,
+        "cost": 0.018080000000000002,
+        "net": 0.001919999999999998,
+        "viable": true
+      }
+    },
+    "2.5%": {
+      "continuous_puts": {
+        "alpha": 0.025,
+        "cost": 0.0436,
+        "net": -0.0186,
+        "viable": false
+      },
+      "selective_puts": {
+        "alpha": 0.025,
+        "cost": 0.021,
+        "net": 0.004,
+        "viable": true
+      },
+      "collar": {
+        "alpha": 0.025,
+        "cost": 0.018080000000000002,
+        "net": 0.006919999999999999,
+        "viable": true
+      }
+    },
+    "3.5%": {
+      "continuous_puts": {
+        "alpha": 0.035,
+        "cost": 0.0436,
+        "net": -0.008599999999999997,
+        "viable": false
+      },
+      "selective_puts": {
+        "alpha": 0.035,
+        "cost": 0.021,
+        "net": 0.014000000000000002,
+        "viable": true
+      },
+      "collar": {
+        "alpha": 0.035,
+        "cost": 0.018080000000000002,
+        "net": 0.01692,
+        "viable": true
+      }
+    },
+    "5.0%": {
+      "continuous_puts": {
+        "alpha": 0.05,
+        "cost": 0.0436,
+        "net": 0.006400000000000003,
+        "viable": true
+      },
+      "selective_puts": {
+        "alpha": 0.05,
+        "cost": 0.021,
+        "net": 0.029,
+        "viable": true
+      },
+      "collar": {
+        "alpha": 0.05,
+        "cost": 0.018080000000000002,
+        "net": 0.031920000000000004,
+        "viable": true
+      }
+    },
+    "8.0%": {
+      "continuous_puts": {
+        "alpha": 0.08,
+        "cost": 0.0436,
+        "net": 0.0364,
+        "viable": true
+      },
+      "selective_puts": {
+        "alpha": 0.08,
+        "cost": 0.021,
+        "net": 0.059,
+        "viable": true
+      },
+      "collar": {
+        "alpha": 0.08,
+        "cost": 0.018080000000000002,
+        "net": 0.06192,
+        "viable": true
+      }
+    },
+    "12.0%": {
+      "continuous_puts": {
+        "alpha": 0.12,
+        "cost": 0.0436,
+        "net": 0.0764,
+        "viable": true
+      },
+      "selective_puts": {
+        "alpha": 0.12,
+        "cost": 0.021,
+        "net": 0.09899999999999999,
+        "viable": true
+      },
+      "collar": {
+        "alpha": 0.12,
+        "cost": 0.018080000000000002,
+        "net": 0.10192,
+        "viable": true
+      }
+    }
+  },
+  "recommendation": {
+    "best_net_cagr": "No Hedge",
+    "best_crisis_protection": "Collar Strategy",
+    "recommendation": "No Hedge",
+    "reasoning": "At current trade-level alpha of 1.5%/yr, EVERY hedge option is net-negative because the cheapest hedge (collar at ~1.8%/yr total drag) still exceeds the alpha. Hedging only becomes viable when alpha > 1.8%/yr. Current credit spread strategy must either: (1) increase position size/frequency to boost alpha beyond hedge break-even, or (2) accept drawdown risk and forgo hedging until alpha scales up.",
+    "action_items": [
+      "Deploy Phase 6 EXP-400/401 blend unhedged at current parameters",
+      "Monitor for regime shifts (VIX > 30) as early crisis warning",
+      "Defer hedge deployment until portfolio alpha reaches \u22652.5%/yr",
+      "If hedge becomes necessary, use COLLAR (cheapest at 1.81% total drag)",
+      "Re-evaluate after 8 weeks of paper trading validates real alpha"
+    ]
+  }
+}
