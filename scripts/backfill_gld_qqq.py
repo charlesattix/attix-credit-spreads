@@ -155,12 +155,20 @@ def open_db():
 
 
 def ensure_contract(conn, symbol, ticker, exp_date, strike, opt_type):
-    """Insert contract if not exists."""
+    """Insert contract if not exists.
+
+    FIX: as_of_date is NOT NULL in the schema. Previous version omitted it
+    and INSERT OR IGNORE silently swallowed the NOT NULL constraint error,
+    leaving option_daily bars orphaned (no matching contract metadata).
+    """
+    as_of = datetime.utcnow().strftime("%Y-%m-%d")
+    # Normalize opt_type to P/C (matching rest of DB) not put/call
+    ot = opt_type[0].upper() if opt_type else "P"
     conn.execute("""
         INSERT OR IGNORE INTO option_contracts
-            (contract_symbol, ticker, expiration, strike, option_type)
-        VALUES (?, ?, ?, ?, ?)
-    """, (symbol, ticker, exp_date, strike, opt_type))
+            (contract_symbol, ticker, expiration, strike, option_type, as_of_date)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (symbol, ticker, exp_date, strike, ot, as_of))
 
 
 def insert_bars(conn, symbol, bars):
@@ -231,8 +239,7 @@ def backfill_ticker(ticker: str, start_date: str, end_date: str, max_contracts: 
             api_calls += 1
 
             if bars:
-                ensure_contract(conn, symbol, ticker, exp, strike,
-                              "put" if opt_type == "P" else "call")
+                ensure_contract(conn, symbol, ticker, exp, strike, opt_type)
                 inserted = insert_bars(conn, symbol, bars)
                 total_bars += inserted
                 total_contracts += 1
