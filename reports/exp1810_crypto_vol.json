@@ -1,0 +1,86 @@
+{
+  "experiment": "EXP-1810",
+  "name": "Crypto Vol Deep Dive (IBIT)",
+  "rule_zero": "100% real data: Yahoo IBIT/SPY/BTC spot + real current option chains",
+  "data_reality": {
+    "ironvault_has_ibit": false,
+    "yfinance_historical_chains": false,
+    "ibit_spot_bars": 558,
+    "ibit_first_date": "2024-01-11",
+    "ibit_last_date": "2026-04-02"
+  },
+  "measured_iv": {
+    "ibit_atm_iv_today": 0.5410418890223481,
+    "spy_atm_iv_today": 0.22357228970691156
+  },
+  "real_winrate_analysis": {
+    "ibit_n_trades": 115,
+    "ibit_win_rate": 0.8,
+    "ibit_avg_loss_when_lose_pct": 0.04178244943889029,
+    "ibit_required_premium_pct": 0.008356489887778058,
+    "ibit_breakeven_iv": 0.15125552187542673,
+    "spy_n_trades": 115,
+    "spy_win_rate": 0.9826086956521739,
+    "spy_required_premium_pct": 0.0004448508064314606,
+    "spy_breakeven_iv": 0.008051962221830201
+  },
+  "premium_sensitivity": [
+    {
+      "premium_pct": 0.005,
+      "full_sharpe": -1.3051383999713897,
+      "is_sharpe": -1.4332915047195809,
+      "oos_sharpe": -1.0161153287208717,
+      "cagr": -0.17263642132185908,
+      "max_dd": 0.3591033129997625,
+      "n_trades": 115
+    },
+    {
+      "premium_pct": 0.01,
+      "full_sharpe": 0.24166993272912846,
+      "is_sharpe": -0.008640554385941865,
+      "oos_sharpe": 0.8935987793289824,
+      "cagr": 0.07309059570089449,
+      "max_dd": 0.20791446170153216,
+      "n_trades": 115
+    },
+    {
+      "premium_pct": 0.015,
+      "full_sharpe": 1.744083984647795,
+      "is_sharpe": 1.4018676873932272,
+      "oos_sharpe": 2.6316481002012173,
+      "cagr": 0.3899952419235835,
+      "max_dd": 0.17874844312049287,
+      "n_trades": 115
+    },
+    {
+      "premium_pct": 0.02,
+      "full_sharpe": 3.064246885012296,
+      "is_sharpe": 2.6804417086742385,
+      "oos_sharpe": 4.015557020125369,
+      "cagr": 0.7981783470402675,
+      "max_dd": 0.14866732446789843,
+      "n_trades": 115
+    },
+    {
+      "premium_pct": 0.025,
+      "full_sharpe": 4.138757719544706,
+      "is_sharpe": 3.758900540580827,
+      "oos_sharpe": 5.031453039892341,
+      "cagr": 1.323273007911895,
+      "max_dd": 0.13816614718913445,
+      "n_trades": 115
+    },
+    {
+      "premium_pct": 0.03,
+      "full_sharpe": 4.972650911522159,
+      "is_sharpe": 4.6247008699091685,
+      "oos_sharpe": 5.752357170467957,
+      "cagr": 1.9979279347119645,
+      "max_dd": 0.13316614718913466,
+      "n_trades": 115
+    }
+  ],
+  "ibit_spy_correlation": 0.4025577878319282,
+  "verdict": "IBIT measured IV = 54%",
+  "confidence": "LOW (16 months of data, no historical chains)"
+}
