@@ -1,0 +1,196 @@
+{
+  "round": 3,
+  "rule_zero": "100% real data \u2014 Yahoo + IronVault",
+  "exp1220_yearly": {
+    "2020": 2.0794,
+    "2021": 0.8828,
+    "2022": 1.0055,
+    "2023": 0.6565,
+    "2024": 0.6266,
+    "2025": 0.9775
+  },
+  "ideas": {
+    "1_earnings_crush": {
+      "name": "Earnings IV Crush",
+      "status": "KILLED (prior EXP-1760/1800)",
+      "reason": "IronVault contains zero single-name options. Index proxy (EXP-1760) achieved Trade Sharpe 0.79 but OOS Sharpe -0.06 and SPY corr -0.54 \u2014 failed walk-forward.",
+      "verdict": "DEAD",
+      "prior_data": {
+        "n_trades": 111,
+        "total_pnl": 5456.0,
+        "win_rate": 0.586,
+        "trade_sharpe": 0.792,
+        "sharpe_arith": -2.092,
+        "cagr": 0.0083,
+        "max_dd": 0.0335,
+        "is_sharpe": 1.321,
+        "oos_sharpe": -0.06,
+        "oos_n": 44,
+        "oos_pnl": -172.0,
+        "oos_wr": 0.545,
+        "spy_corr": -0.5398,
+        "exp1220_corr": 0.0,
+        "by_ticker": {
+          "AAPL": {
+            "n": 20,
+            "pnl": -2216.0,
+            "wr": 0.55,
+            "avg_pnl": -110.8
+          },
+          "AMZN": {
+            "n": 19,
+            "pnl": 1910.0,
+            "wr": 0.632,
+            "avg_pnl": 100.53
+          },
+          "GOOGL": {
+            "n": 13,
+            "pnl": -278.0,
+            "wr": 0.538,
+            "avg_pnl": -21.38
+          },
+          "META": {
+            "n": 15,
+            "pnl": -930.0,
+            "wr": 0.467,
+            "avg_pnl": -62.0
+          },
+          "MSFT": {
+            "n": 23,
+            "pnl": 2693.0,
+            "wr": 0.609,
+            "avg_pnl": 117.09
+          },
+          "NVDA": {
+            "n": 11,
+            "pnl": 2437.0,
+            "wr": 0.545,
+            "avg_pnl": 221.55
+          },
+          "TSLA": {
+            "n": 10,
+            "pnl": 1840.0,
+            "wr": 0.8,
+            "avg_pnl": 184.0
+          }
+        },
+        "yearly": {
+          "2020": {
+            "n": 25,
+            "pnl": 5107.0,
+            "wr": 0.68
+          },
+          "2021": {
+            "n": 22,
+            "pnl": 388.0,
+            "wr": 0.727
+          },
+          "2022": {
+            "n": 20,
+            "pnl": 133.0,
+            "wr": 0.4
+          },
+          "2023": {
+            "n": 14,
+            "pnl": -492.0,
+            "wr": 0.429
+          },
+          "2024": {
+            "n": 16,
+            "pnl": 675.0,
+            "wr": 0.625
+          },
+          "2025": {
+            "n": 14,
+            "pnl": -355.0,
+            "wr": 0.571
+          }
+        },
+        "avg_net_credit": 5.236
+      }
+    },
+    "2_putw": {
+      "name": "PUTW (Yahoo, no leverage)",
+      "n_days": 2072,
+      "first": "2018-01-03",
+      "last": "2026-04-02",
+      "cagr": 0.07230453353634436,
+      "sharpe": 0.2483529711267264,
+      "vol": 0.13959005632421467,
+      "max_dd": 0.2839936402164063,
+      "corr_1220_yearly": -0.4782652741812458,
+      "data_source": "Yahoo PUTW (real ETF prices)",
+      "verdict": "KILL"
+    },
+    "3_calendar": {
+      "name": "SPY weekly calendar (call)",
+      "n_days": 1571,
+      "first": "2020-01-02",
+      "last": "2026-04-02",
+      "cagr": -0.14166888940229927,
+      "sharpe": -1.9213282541006056,
+      "vol": 0.10021793891385736,
+      "max_dd": 0.6594966514205705,
+      "corr_1220_yearly": -0.2600209312821763,
+      "n_trades": 254,
+      "data_source": "IronVault SPY option_daily",
+      "verdict": "KILL"
+    },
+    "4_overnight_intraday": {
+      "name": "Overnight/Intraday decomposition",
+      "data_source": "Yahoo SPY daily OHLC",
+      "candidates": {
+        "overnight_only": {
+          "name": "Long overnight (close\u2192open)",
+          "n_days": 2073,
+          "first": "2018-01-03",
+          "last": "2026-04-02",
+          "cagr": 0.0777951625201927,
+          "sharpe": 0.3030271370100187,
+          "vol": 0.12468843380544258,
+          "max_dd": 0.2941353190138145,
+          "corr_1220_yearly": -0.009427289737048053
+        },
+        "intraday_only": {
+          "name": "Long intraday (open\u2192close)",
+          "n_days": 2074,
+          "first": "2018-01-02",
+          "last": "2026-04-02",
+          "cagr": 0.034509354989094465,
+          "sharpe": -0.003019550452857438,
+          "vol": 0.14601575281090204,
+          "max_dd": 0.24590837911136054,
+          "corr_1220_yearly": -0.26419709196048796
+        },
+        "daily_mean_reversion": {
+          "name": "Daily intraday mean-reversion",
+          "n_days": 2073,
+          "first": "2018-01-03",
+          "last": "2026-04-02",
+          "cagr": 0.03942358822608116,
+          "sharpe": 0.029130803415796047,
+          "vol": 0.14599320655396777,
+          "max_dd": 0.2723639142146377,
+          "corr_1220_yearly": 0.9564281478488337
+        }
+      },
+      "surviving": [],
+      "verdict": "KILL"
+    },
+    "5_seasonal": {
+      "name": "Seasonal SPY (full)",
+      "n_days": 2073,
+      "first": "2018-01-03",
+      "last": "2026-04-02",
+      "cagr": 0.07894058530641712,
+      "sharpe": 0.33532027961612465,
+      "vol": 0.11056804051182366,
+      "max_dd": 0.17553653297821026,
+      "corr_1220_yearly": 0.7278716015908445,
+      "is_sharpe": 0.5070624015530885,
+      "oos_sharpe": 0.04986775356862534,
+      "data_source": "Yahoo SPY daily",
+      "verdict": "KILL"
+    }
+  }
+}
