@@ -1,0 +1,519 @@
+{
+  "generated": "2026-04-06T08:32:34.237395",
+  "portfolio_weights": {
+    "EXP-400": 0.813,
+    "EXP-401": 0.187
+  },
+  "meta": {
+    "n_returns": 1565,
+    "total_return_pct": 231.38,
+    "cagr_pct": 21.28,
+    "calendar_start": "2020-01-02",
+    "calendar_end": "2025-12-31"
+  },
+  "threshold_check": {
+    "mc_p5_dd_pct": 16.58,
+    "mc_threshold_pct": 30.0,
+    "mc_pass": true,
+    "crisis_pass": false,
+    "crisis_threshold_pct": 40.0,
+    "crisis_details": [
+      {
+        "name": "COVID Crash (Feb-Mar 2020)",
+        "dd_pct": 51.78,
+        "underlying_dd_pct": 34.52,
+        "passes": false
+      },
+      {
+        "name": "2022 Bear Market",
+        "dd_pct": 43.68,
+        "underlying_dd_pct": 29.12,
+        "passes": false
+      },
+      {
+        "name": "Flash Crash (Single Day)",
+        "dd_pct": 15.0,
+        "underlying_dd_pct": 10.0,
+        "passes": true
+      },
+      {
+        "name": "VIX Spike (15 \u2192 65)",
+        "dd_pct": 22.5,
+        "underlying_dd_pct": 15.0,
+        "passes": true
+      }
+    ],
+    "overall_pass": false
+  },
+  "monte_carlo": {
+    "n_simulations": 10000,
+    "horizon_days": 1565,
+    "block_size": 5,
+    "starting_capital": 100000,
+    "terminal_wealth": {
+      "mean": 341636.4,
+      "median": 332169.23,
+      "std": 85121.96,
+      "min": 133674.02,
+      "max": 854349.55,
+      "percentiles": {
+        "p1": 187077.14,
+        "p5": 221579.19,
+        "p10": 241687.3,
+        "p25": 280383.64,
+        "p50": 332169.23,
+        "p75": 390743.03,
+        "p90": 452086.95,
+        "p95": 494386.76,
+        "p99": 594789.68
+      }
+    },
+    "max_drawdown": {
+      "mean_pct": -10.78,
+      "median_pct": -10.19,
+      "worst_pct": -30.8,
+      "percentiles_pct": {
+        "p1": -20.82,
+        "p5": -16.58,
+        "p10": -14.87,
+        "p25": -12.34,
+        "p50": -10.19,
+        "p75": -8.6,
+        "p90": -7.66,
+        "p95": -7.03,
+        "p99": -5.57
+      }
+    },
+    "sharpe_ratio": {
+      "mean": 1.915,
+      "median": 1.913,
+      "std": 0.429,
+      "percentiles": {
+        "p1": 0.949,
+        "p5": 1.215,
+        "p10": 1.365,
+        "p25": 1.622,
+        "p50": 1.913,
+        "p75": 2.204,
+        "p90": 2.468,
+        "p95": 2.625,
+        "p99": 2.932
+      }
+    },
+    "prob_profit": 1.0,
+    "prob_ruin_50pct": 0.0
+  },
+  "crisis_scenarios": [
+    {
+      "name": "COVID Crash (Feb-Mar 2020)",
+      "description": "S&P 500 fell ~34% in 23 trading days",
+      "n_days": 23,
+      "underlying_drawdown_pct": -34.52,
+      "portfolio_drawdown_pct": -51.78,
+      "max_drawdown_pct": -34.52,
+      "trough_value": 48216.02,
+      "spread_beta": 1.5,
+      "vix_start": 15.0,
+      "vix_peak": 82.0,
+      "vix_multiplier": 5.47,
+      "estimated_recovery_days": 927,
+      "hedged_portfolio_drawdown_pct": null,
+      "hedged_trough_value": null,
+      "hedged_equity_path": null
+    },
+    {
+      "name": "2022 Bear Market",
+      "description": "S&P 500 fell ~25% over ~9 months (~190 trading days)",
+      "n_days": 190,
+      "underlying_drawdown_pct": -29.12,
+      "portfolio_drawdown_pct": -43.68,
+      "max_drawdown_pct": -31.06,
+      "trough_value": 56318.99,
+      "spread_beta": 1.5,
+      "vix_start": 17.0,
+      "vix_peak": 36.0,
+      "vix_multiplier": 2.12,
+      "estimated_recovery_days": 730,
+      "hedged_portfolio_drawdown_pct": null,
+      "hedged_trough_value": null,
+      "hedged_equity_path": null
+    },
+    {
+      "name": "Flash Crash (Single Day)",
+      "description": "Sudden 10% drawdown in a single trading session",
+      "n_days": 1,
+      "underlying_drawdown_pct": -10.0,
+      "portfolio_drawdown_pct": -15.0,
+      "max_drawdown_pct": -10.0,
+      "trough_value": 85000.0,
+      "spread_beta": 1.5,
+      "vix_start": 15.0,
+      "vix_peak": 65.0,
+      "vix_multiplier": 4.33,
+      "estimated_recovery_days": 207,
+      "hedged_portfolio_drawdown_pct": null,
+      "hedged_trough_value": null,
+      "hedged_equity_path": null
+    },
+    {
+      "name": "VIX Spike (15 \u2192 65)",
+      "description": "VIX quadruples over 5 days; credit spreads widen sharply",
+      "n_days": 5,
+      "underlying_drawdown_pct": -15.0,
+      "portfolio_drawdown_pct": -22.5,
+      "max_drawdown_pct": -15.0,
+      "trough_value": 77500.0,
+      "spread_beta": 1.5,
+      "vix_start": 15.0,
+      "vix_peak": 65.0,
+      "vix_multiplier": 4.33,
+      "estimated_recovery_days": 324,
+      "hedged_portfolio_drawdown_pct": null,
+      "hedged_trough_value": null,
+      "hedged_equity_path": null
+    }
+  ],
+  "sensitivity": {
+    "position_size_pct": {
+      "label": "Position Size (% of account)",
+      "description": "Risk per trade as pct of account (risk.max_risk_per_trade)",
+      "baseline": 5.0,
+      "results": [
+        {
+          "value": 1.0,
+          "sharpe": 1.89,
+          "max_dd_pct": -2.22,
+          "cagr_pct": 4.02,
+          "calmar": 1.815,
+          "terminal_value": 127788.76,
+          "is_baseline": false
+        },
+        {
+          "value": 2.0,
+          "sharpe": 1.89,
+          "max_dd_pct": -4.42,
+          "cagr_pct": 8.16,
+          "calmar": 1.848,
+          "terminal_value": 162845.24,
+          "is_baseline": false
+        },
+        {
+          "value": 3.0,
+          "sharpe": 1.89,
+          "max_dd_pct": -6.59,
+          "cagr_pct": 12.42,
+          "calmar": 1.883,
+          "terminal_value": 206940.0,
+          "is_baseline": false
+        },
+        {
+          "value": 5.0,
+          "sharpe": 1.89,
+          "max_dd_pct": -10.89,
+          "cagr_pct": 21.26,
+          "calmar": 1.952,
+          "terminal_value": 331383.31,
+          "is_baseline": true
+        },
+        {
+          "value": 7.0,
+          "sharpe": 1.89,
+          "max_dd_pct": -15.11,
+          "cagr_pct": 30.57,
+          "calmar": 2.023,
+          "terminal_value": 524710.95,
+          "is_baseline": false
+        },
+        {
+          "value": 10.0,
+          "sharpe": 1.89,
+          "max_dd_pct": -21.28,
+          "cagr_pct": 45.39,
+          "calmar": 2.133,
+          "terminal_value": 1023378.62,
+          "is_baseline": false
+        },
+        {
+          "value": 15.0,
+          "sharpe": 1.89,
+          "max_dd_pct": -31.17,
+          "cagr_pct": 72.3,
+          "calmar": 2.32,
+          "terminal_value": 2940433.6,
+          "is_baseline": false
+        }
+      ]
+    },
+    "stop_loss_multiplier": {
+      "label": "Stop Loss Multiplier",
+      "description": "Stop loss as multiple of credit received",
+      "baseline": 3.5,
+      "results": [
+        {
+          "value": 1.5,
+          "sharpe": 5.902,
+          "max_dd_pct": -0.93,
+          "cagr_pct": 53.98,
+          "calmar": 57.886,
+          "terminal_value": 1461996.02,
+          "is_baseline": false
+        },
+        {
+          "value": 2.0,
+          "sharpe": 5.534,
+          "max_dd_pct": -1.2,
+          "cagr_pct": 50.57,
+          "calmar": 42.284,
+          "terminal_value": 1272270.38,
+          "is_baseline": false
+        },
+        {
+          "value": 2.5,
+          "sharpe": 5.101,
+          "max_dd_pct": -1.89,
+          "cagr_pct": 46.66,
+          "calmar": 24.735,
+          "terminal_value": 1080046.75,
+          "is_baseline": false
+        },
+        {
+          "value": 3.0,
+          "sharpe": 4.105,
+          "max_dd_pct": -3.48,
+          "cagr_pct": 38.12,
+          "calmar": 10.953,
+          "terminal_value": 744067.18,
+          "is_baseline": false
+        },
+        {
+          "value": 3.5,
+          "sharpe": 1.89,
+          "max_dd_pct": -10.89,
+          "cagr_pct": 21.26,
+          "calmar": 1.952,
+          "terminal_value": 331383.31,
+          "is_baseline": true
+        },
+        {
+          "value": 4.0,
+          "sharpe": 1.728,
+          "max_dd_pct": -11.49,
+          "cagr_pct": 19.64,
+          "calmar": 1.71,
+          "terminal_value": 304824.28,
+          "is_baseline": false
+        },
+        {
+          "value": 5.0,
+          "sharpe": 1.422,
+          "max_dd_pct": -12.66,
+          "cagr_pct": 16.47,
+          "calmar": 1.3,
+          "terminal_value": 257872.64,
+          "is_baseline": false
+        }
+      ]
+    },
+    "iv_rank_threshold": {
+      "label": "IV Rank Entry Threshold",
+      "description": "Minimum IV rank to enter a trade (strategy.min_iv_rank)",
+      "baseline": 12,
+      "results": [
+        {
+          "value": 0,
+          "sharpe": 1.833,
+          "max_dd_pct": -11.0,
+          "cagr_pct": 20.78,
+          "calmar": 1.888,
+          "terminal_value": 323252.55,
+          "is_baseline": false
+        },
+        {
+          "value": 5,
+          "sharpe": 1.903,
+          "max_dd_pct": -11.02,
+          "cagr_pct": 21.51,
+          "calmar": 1.952,
+          "terminal_value": 335646.9,
+          "is_baseline": false
+        },
+        {
+          "value": 10,
+          "sharpe": 1.891,
+          "max_dd_pct": -10.85,
+          "cagr_pct": 21.29,
+          "calmar": 1.962,
+          "terminal_value": 331848.49,
+          "is_baseline": false
+        },
+        {
+          "value": 15,
+          "sharpe": 1.853,
+          "max_dd_pct": -11.01,
+          "cagr_pct": 20.31,
+          "calmar": 1.845,
+          "terminal_value": 315506.21,
+          "is_baseline": false
+        },
+        {
+          "value": 20,
+          "sharpe": 1.846,
+          "max_dd_pct": -11.34,
+          "cagr_pct": 19.88,
+          "calmar": 1.753,
+          "terminal_value": 308516.97,
+          "is_baseline": false
+        },
+        {
+          "value": 30,
+          "sharpe": 1.658,
+          "max_dd_pct": -10.85,
+          "cagr_pct": 15.5,
+          "calmar": 1.429,
+          "terminal_value": 244860.63,
+          "is_baseline": false
+        },
+        {
+          "value": 40,
+          "sharpe": 1.342,
+          "max_dd_pct": -11.33,
+          "cagr_pct": 13.07,
+          "calmar": 1.154,
+          "terminal_value": 214593.23,
+          "is_baseline": false
+        },
+        {
+          "value": 50,
+          "sharpe": 1.553,
+          "max_dd_pct": -7.44,
+          "cagr_pct": 12.24,
+          "calmar": 1.645,
+          "terminal_value": 204977.81,
+          "is_baseline": false
+        }
+      ]
+    },
+    "profit_target_pct": {
+      "label": "Profit Target (%)",
+      "description": "Close at this % of max profit (risk.profit_target)",
+      "baseline": 50,
+      "results": [
+        {
+          "value": 25,
+          "sharpe": -0.677,
+          "max_dd_pct": -31.56,
+          "cagr_pct": -5.66,
+          "calmar": -0.179,
+          "terminal_value": 69609.8,
+          "is_baseline": false
+        },
+        {
+          "value": 40,
+          "sharpe": 1.027,
+          "max_dd_pct": -11.54,
+          "cagr_pct": 9.7,
+          "calmar": 0.84,
+          "terminal_value": 177723.36,
+          "is_baseline": false
+        },
+        {
+          "value": 50,
+          "sharpe": 1.89,
+          "max_dd_pct": -10.89,
+          "cagr_pct": 21.26,
+          "calmar": 1.952,
+          "terminal_value": 331383.31,
+          "is_baseline": true
+        },
+        {
+          "value": 60,
+          "sharpe": 2.578,
+          "max_dd_pct": -10.72,
+          "cagr_pct": 34.02,
+          "calmar": 3.174,
+          "terminal_value": 617001.35,
+          "is_baseline": false
+        },
+        {
+          "value": 75,
+          "sharpe": 3.366,
+          "max_dd_pct": -10.59,
+          "cagr_pct": 55.65,
+          "calmar": 5.253,
+          "terminal_value": 1563324.59,
+          "is_baseline": false
+        },
+        {
+          "value": 90,
+          "sharpe": 3.366,
+          "max_dd_pct": -10.59,
+          "cagr_pct": 55.65,
+          "calmar": 5.253,
+          "terminal_value": 1563324.59,
+          "is_baseline": false
+        }
+      ]
+    },
+    "spread_width": {
+      "label": "Spread Width ($)",
+      "description": "Width between short and long strikes",
+      "baseline": 5.0,
+      "results": [
+        {
+          "value": 2.5,
+          "sharpe": 1.89,
+          "max_dd_pct": -6.76,
+          "cagr_pct": 12.75,
+          "calmar": 1.885,
+          "terminal_value": 210812.52,
+          "is_baseline": false
+        },
+        {
+          "value": 5.0,
+          "sharpe": 1.89,
+          "max_dd_pct": -10.89,
+          "cagr_pct": 21.26,
+          "calmar": 1.952,
+          "terminal_value": 331383.31,
+          "is_baseline": true
+        },
+        {
+          "value": 7.5,
+          "sharpe": 1.89,
+          "max_dd_pct": -14.36,
+          "cagr_pct": 28.87,
+          "calmar": 2.011,
+          "terminal_value": 483566.99,
+          "is_baseline": false
+        },
+        {
+          "value": 10.0,
+          "sharpe": 1.89,
+          "max_dd_pct": -17.44,
+          "cagr_pct": 36.0,
+          "calmar": 2.064,
+          "terminal_value": 675744.58,
+          "is_baseline": false
+        },
+        {
+          "value": 15.0,
+          "sharpe": 1.89,
+          "max_dd_pct": -22.87,
+          "cagr_pct": 49.45,
+          "calmar": 2.162,
+          "terminal_value": 1214538.41,
+          "is_baseline": false
+        },
+        {
+          "value": 20.0,
+          "sharpe": 1.89,
+          "max_dd_pct": -27.66,
+          "cagr_pct": 62.28,
+          "calmar": 2.252,
+          "terminal_value": 2025898.39,
+          "is_baseline": false
+        }
+      ]
+    }
+  }
+}
