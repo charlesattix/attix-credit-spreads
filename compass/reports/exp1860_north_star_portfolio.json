@@ -1,0 +1,275 @@
+{
+  "experiment": "EXP-1860",
+  "title": "North Star Portfolio v3",
+  "generated": "2026-04-07T13:02:14",
+  "data_window": {
+    "start": "2020-01-02",
+    "end": "2025-12-31",
+    "n_days": 1508
+  },
+  "rule_zero": true,
+  "components": {
+    "exp1220_2x": {
+      "weight": 0.8,
+      "leverage": 2.0,
+      "source": "scripts.ultimate_portfolio.load_exp1220_dynamic"
+    },
+    "v5_hedge": {
+      "weight": 0.05,
+      "leverage": 1.0,
+      "source": "compass.crisis_alpha_v5 frozen best"
+    },
+    "gld_calendar": {
+      "weight": 0.075,
+      "leverage": 1.0,
+      "source": "compass.exp1770_commodity_calendars GLD-GC=F"
+    },
+    "slv_calendar": {
+      "weight": 0.075,
+      "leverage": 1.0,
+      "source": "compass.exp1770_commodity_calendars SLV-SI=F"
+    }
+  },
+  "overlays": {
+    "exp1740_fomc": 0.6,
+    "exp1750_putcall": 0.78,
+    "composition_factor": 0.7,
+    "audit": {
+      "applied": true,
+      "base_sharpe": 3.7,
+      "lift_1740": 0.6,
+      "lift_1750": 0.78,
+      "composition_factor": 0.7,
+      "composed_lift": 0.966,
+      "mean_multiplier": 1.2611
+    }
+  },
+  "stream_metrics": {
+    "exp1220": {
+      "cagr_pct": 58.84,
+      "sharpe": 3.7,
+      "max_dd_pct": 7.58,
+      "calmar": 7.76,
+      "sortino": 6.56,
+      "vol_pct": 11.49,
+      "total_ret_pct": 1494.21,
+      "n_days": 1508
+    },
+    "v5_hedge": {
+      "cagr_pct": -1.07,
+      "sharpe": -0.82,
+      "max_dd_pct": 12.84,
+      "calmar": -0.08,
+      "sortino": -0.51,
+      "vol_pct": 6.54,
+      "total_ret_pct": -6.21,
+      "n_days": 1508
+    },
+    "gld_calendar": {
+      "cagr_pct": 18.13,
+      "sharpe": 2.03,
+      "max_dd_pct": 2.5,
+      "calmar": 7.25,
+      "sortino": 3.03,
+      "vol_pct": 6.08,
+      "total_ret_pct": 170.97,
+      "n_days": 1508
+    },
+    "slv_calendar": {
+      "cagr_pct": 32.85,
+      "sharpe": 1.99,
+      "max_dd_pct": 6.08,
+      "calmar": 5.4,
+      "sortino": 2.84,
+      "vol_pct": 12.39,
+      "total_ret_pct": 447.35,
+      "n_days": 1508
+    }
+  },
+  "stream_correlation": {
+    "exp1220": {
+      "exp1220": 1.0,
+      "v5_hedge": -0.151,
+      "gld_calendar": 0.001,
+      "slv_calendar": -0.024
+    },
+    "v5_hedge": {
+      "exp1220": -0.151,
+      "v5_hedge": 1.0,
+      "gld_calendar": -0.049,
+      "slv_calendar": -0.018
+    },
+    "gld_calendar": {
+      "exp1220": 0.001,
+      "v5_hedge": -0.049,
+      "gld_calendar": 1.0,
+      "slv_calendar": 0.255
+    },
+    "slv_calendar": {
+      "exp1220": -0.024,
+      "v5_hedge": -0.018,
+      "gld_calendar": 0.255,
+      "slv_calendar": 1.0
+    }
+  },
+  "results": {
+    "base": {
+      "metrics": {
+        "cagr_pct": 119.86,
+        "sharpe": 3.96,
+        "max_dd_pct": 11.64,
+        "calmar": 10.3,
+        "sortino": 7.14,
+        "vol_pct": 19.27,
+        "total_ret_pct": 4973.52,
+        "n_days": 1256
+      },
+      "yearly": [
+        {
+          "cagr_pct": 174.54,
+          "sharpe": 5.68,
+          "max_dd_pct": 2.87,
+          "calmar": 60.88,
+          "sortino": 13.05,
+          "vol_pct": 17.29,
+          "total_ret_pct": 174.54,
+          "n_days": 252,
+          "year": 2021
+        },
+        {
+          "cagr_pct": 42.35,
+          "sharpe": 1.64,
+          "max_dd_pct": 11.64,
+          "calmar": 3.64,
+          "sortino": 2.77,
+          "vol_pct": 20.04,
+          "total_ret_pct": 42.15,
+          "n_days": 251,
+          "year": 2022
+        },
+        {
+          "cagr_pct": 153.35,
+          "sharpe": 3.73,
+          "max_dd_pct": 6.92,
+          "calmar": 22.15,
+          "sortino": 6.75,
+          "vol_pct": 24.53,
+          "total_ret_pct": 151.48,
+          "n_days": 250,
+          "year": 2023
+        },
+        {
+          "cagr_pct": 124.56,
+          "sharpe": 4.85,
+          "max_dd_pct": 2.68,
+          "calmar": 46.54,
+          "sortino": 8.99,
+          "vol_pct": 16.04,
+          "total_ret_pct": 124.56,
+          "n_days": 252,
+          "year": 2024
+        },
+        {
+          "cagr_pct": 130.11,
+          "sharpe": 4.73,
+          "max_dd_pct": 4.25,
+          "calmar": 30.58,
+          "sortino": 9.55,
+          "vol_pct": 16.99,
+          "total_ret_pct": 128.6,
+          "n_days": 250,
+          "year": 2025
+        }
+      ]
+    },
+    "with_overlays": {
+      "metrics": {
+        "cagr_pct": 166.03,
+        "sharpe": 3.97,
+        "max_dd_pct": 14.55,
+        "calmar": 11.41,
+        "sortino": 7.14,
+        "vol_pct": 24.3,
+        "total_ret_pct": 13019.97,
+        "n_days": 1256
+      },
+      "yearly": [
+        {
+          "cagr_pct": 252.2,
+          "sharpe": 5.69,
+          "max_dd_pct": 3.61,
+          "calmar": 69.89,
+          "sortino": 13.0,
+          "vol_pct": 21.81,
+          "total_ret_pct": 252.2,
+          "n_days": 252,
+          "year": 2021
+        },
+        {
+          "cagr_pct": 52.93,
+          "sharpe": 1.63,
+          "max_dd_pct": 14.55,
+          "calmar": 3.64,
+          "sortino": 2.74,
+          "vol_pct": 25.27,
+          "total_ret_pct": 52.67,
+          "n_days": 251,
+          "year": 2022
+        },
+        {
+          "cagr_pct": 216.84,
+          "sharpe": 3.74,
+          "max_dd_pct": 8.69,
+          "calmar": 24.96,
+          "sortino": 6.77,
+          "vol_pct": 30.93,
+          "total_ret_pct": 213.95,
+          "n_days": 250,
+          "year": 2023
+        },
+        {
+          "cagr_pct": 173.38,
+          "sharpe": 4.86,
+          "max_dd_pct": 3.35,
+          "calmar": 51.74,
+          "sortino": 9.01,
+          "vol_pct": 20.22,
+          "total_ret_pct": 173.38,
+          "n_days": 252,
+          "year": 2024
+        },
+        {
+          "cagr_pct": 184.15,
+          "sharpe": 4.78,
+          "max_dd_pct": 5.35,
+          "calmar": 34.44,
+          "sortino": 9.58,
+          "vol_pct": 21.43,
+          "total_ret_pct": 181.81,
+          "n_days": 250,
+          "year": 2025
+        }
+      ]
+    }
+  },
+  "targets": {
+    "cagr_pct": {
+      "goal": ">100",
+      "base": 119.86,
+      "with_overlays": 166.03,
+      "passed": "True"
+    },
+    "sharpe": {
+      "goal": ">6.0",
+      "base": 3.96,
+      "with_overlays": 3.97,
+      "passed": false
+    },
+    "max_dd_pct": {
+      "goal": "<12",
+      "base": 11.64,
+      "with_overlays": 14.55,
+      "passed": false
+    }
+  }
+}
