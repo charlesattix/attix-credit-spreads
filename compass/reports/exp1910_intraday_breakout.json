@@ -1,0 +1,84 @@
+{
+  "experiment": "EXP-1910",
+  "tag": "EXP-1910",
+  "description": "Intraday gap-and-go + volume-confirm breakout (daily OHLC proxy)",
+  "data_source": "Yahoo Finance daily auto-adjusted OHLCV",
+  "window": {
+    "start": "2020-01-01",
+    "end": "2025-12-31"
+  },
+  "tickers": [
+    "SPY",
+    "QQQ"
+  ],
+  "walk_forward": {
+    "train_days": 252,
+    "test_days": 63,
+    "step_days": 63,
+    "gap_grid": [
+      0.001,
+      0.002,
+      0.003,
+      0.005
+    ],
+    "vol_grid": [
+      1.0,
+      1.25,
+      1.5,
+      2.0
+    ],
+    "round_trip_bps": 1.0
+  },
+  "tickers_metrics": {
+    "SPY": {
+      "metrics": {
+        "n_days": 1498,
+        "n_active_days": 122,
+        "total_return": -0.25340170930261574,
+        "cagr": -0.04797106504834592,
+        "sharpe": -0.5978950881087923,
+        "max_dd": -0.3025216716351901,
+        "hit_rate": 0.4918032786885246,
+        "vol": 0.07707207379999405
+      },
+      "n_folds": 19,
+      "corr_vs_exp1220": 0.7878284842614963
+    },
+    "QQQ": {
+      "metrics": {
+        "n_days": 1498,
+        "n_active_days": 130,
+        "total_return": -0.14329608485147705,
+        "cagr": -0.025682506357895596,
+        "sharpe": -0.2555674040023603,
+        "max_dd": -0.2678231251225621,
+        "hit_rate": 0.5153846153846153,
+        "vol": 0.0866398923021662
+      },
+      "n_folds": 19,
+      "corr_vs_exp1220": 0.01619075962570118
+    }
+  },
+  "portfolio": {
+    "metrics": {
+      "n_days": 1498,
+      "n_active_days": 193,
+      "total_return": -0.19760720827048506,
+      "cagr": -0.036358326387810336,
+      "sharpe": -0.4545748403413111,
+      "max_dd": -0.25327450393157347,
+      "hit_rate": 0.49222797927461137,
+      "vol": 0.07504083008956121
+    },
+    "corr_vs_exp1220": 0.322171375232333,
+    "n_streams": 2
+  },
+  "exp1220_yearly_protected_return": {
+    "2020": 0.5297,
+    "2021": 0.4913,
+    "2022": 0.1482,
+    "2023": 0.401,
+    "2024": 0.3151,
+    "2025": 0.3724
+  }
+}
