@@ -1,0 +1,270 @@
+{
+  "experiment": "EXP-1750",
+  "name": "Order Flow / Put-Call Ratio Overlay",
+  "date_range": {
+    "start": "2020-01-01",
+    "end": "2025-12-31"
+  },
+  "baseline": {
+    "n": 177,
+    "total_pnl": 6264.0,
+    "win_rate": 0.8362,
+    "avg_pnl": 35.39,
+    "sharpe": 0.615,
+    "sortino": 0.611,
+    "max_dd_pct": 3.02,
+    "cagr_pct": 1.03,
+    "calmar": 0.34,
+    "avg_hold_days": 5.6
+  },
+  "overlay": {
+    "n": 128,
+    "total_pnl": 11798.0,
+    "win_rate": 0.8594,
+    "avg_pnl": 92.17,
+    "sharpe": 1.396,
+    "sortino": 1.266,
+    "max_dd_pct": 2.04,
+    "cagr_pct": 2.01,
+    "calmar": 0.99,
+    "avg_hold_days": 5.6
+  },
+  "delta": {
+    "sharpe": 0.781,
+    "cagr_pct": 0.98,
+    "win_rate": 0.0232,
+    "max_dd_pct": -0.98,
+    "total_pnl": 5534.0,
+    "n_trades": -49
+  },
+  "walk_forward": {
+    "by_year": [
+      {
+        "year": 2020,
+        "baseline_n": 30,
+        "baseline_pnl": 952.0,
+        "baseline_wr": 0.8333,
+        "baseline_sharpe": 0.444,
+        "overlay_n": 20,
+        "overlay_pnl": 1960.0,
+        "overlay_wr": 0.85,
+        "overlay_sharpe": 1.294,
+        "delta_sharpe": 0.85,
+        "delta_pnl": 1008.0
+      },
+      {
+        "year": 2021,
+        "baseline_n": 34,
+        "baseline_pnl": 2084.0,
+        "baseline_wr": 0.8824,
+        "baseline_sharpe": 1.193,
+        "overlay_n": 31,
+        "overlay_pnl": 2001.0,
+        "overlay_wr": 0.7742,
+        "overlay_sharpe": 1.694,
+        "delta_sharpe": 0.501,
+        "delta_pnl": -83.0
+      },
+      {
+        "year": 2022,
+        "baseline_n": 32,
+        "baseline_pnl": 1368.0,
+        "baseline_wr": 0.7188,
+        "baseline_sharpe": 0.604,
+        "overlay_n": 27,
+        "overlay_pnl": 4289.0,
+        "overlay_wr": 0.8519,
+        "overlay_sharpe": 1.575,
+        "delta_sharpe": 0.971,
+        "delta_pnl": 2921.0
+      },
+      {
+        "year": 2023,
+        "baseline_n": 27,
+        "baseline_pnl": 1172.0,
+        "baseline_wr": 0.8889,
+        "baseline_sharpe": 1.16,
+        "overlay_n": 16,
+        "overlay_pnl": 1467.0,
+        "overlay_wr": 0.9375,
+        "overlay_sharpe": 2.471,
+        "delta_sharpe": 1.311,
+        "delta_pnl": 295.0
+      },
+      {
+        "year": 2024,
+        "baseline_n": 27,
+        "baseline_pnl": 108.0,
+        "baseline_wr": 0.8519,
+        "baseline_sharpe": 0.115,
+        "overlay_n": 19,
+        "overlay_pnl": 596.0,
+        "overlay_wr": 0.8947,
+        "overlay_sharpe": 0.911,
+        "delta_sharpe": 0.796,
+        "delta_pnl": 488.0
+      },
+      {
+        "year": 2025,
+        "baseline_n": 27,
+        "baseline_pnl": 580.0,
+        "baseline_wr": 0.8519,
+        "baseline_sharpe": 0.353,
+        "overlay_n": 15,
+        "overlay_pnl": 1485.0,
+        "overlay_wr": 0.9333,
+        "overlay_sharpe": 2.755,
+        "delta_sharpe": 2.402,
+        "delta_pnl": 905.0
+      }
+    ]
+  },
+  "overlay_params": {
+    "pcr_high_pct": 0.75,
+    "pcr_low_pct": 0.25,
+    "pcr_lookback": 60,
+    "use_vix_inversion": true,
+    "use_put_zspike": true,
+    "size_high_pct": 1.3,
+    "size_low_pct": 0.5
+  },
+  "signal_stats": {
+    "allowed_pct": 67.54439681567666,
+    "block_low_pcr": 25.168401714635642,
+    "block_inversion": 7.409675443968157,
+    "block_put_spike": 4.5927740355174524,
+    "mean_pcr": 48.552609606096645,
+    "mean_ts_long": 0.8973399217621189
+  },
+  "data_sources": {
+    "pc_ratio": "IronVault option_daily \u2014 SUM(put volume)/SUM(call volume) for SPY",
+    "vix_term": "Yahoo Finance ^VIX, ^VIX9D, ^VIX3M",
+    "spy_options": "IronVault options_cache.db (real)"
+  },
+  "trades_baseline_sample": [
+    {
+      "entry_date": "2020-01-02",
+      "exit_date": "2020-01-15",
+      "pnl": 28.0,
+      "exit_reason": "profit",
+      "credit": 0.11,
+      "vix": 12.5,
+      "hold_days": 9,
+      "contracts": 4,
+      "size_mult": 1.0,
+      "gate": "baseline"
+    },
+    {
+      "entry_date": "2020-01-13",
+      "exit_date": "2020-01-17",
+      "pnl": 48.0,
+      "exit_reason": "profit",
+      "credit": 0.24,
+      "vix": 12.3,
+      "hold_days": 4,
+      "contracts": 4,
+      "size_mult": 1.0,
+      "gate": "baseline"
+    },
+    {
+      "entry_date": "2020-01-24",
+      "exit_date": "2020-02-05",
+      "pnl": 108.0,
+      "exit_reason": "profit",
+      "credit": 0.38,
+      "vix": 14.6,
+      "hold_days": 8,
+      "contracts": 4,
+      "size_mult": 1.0,
+      "gate": "baseline"
+    },
+    {
+      "entry_date": "2020-02-03",
+      "exit_date": "2020-02-04",
+      "pnl": 148.0,
+      "exit_reason": "profit",
+      "credit": 0.63,
+      "vix": 18.0,
+      "hold_days": 1,
+      "contracts": 4,
+      "size_mult": 1.0,
+      "gate": "baseline"
+    },
+    {
+      "entry_date": "2020-02-14",
+      "exit_date": "2020-02-24",
+      "pnl": -456.0,
+      "exit_reason": "stop",
+      "credit": 0.37,
+      "vix": 13.7,
+      "hold_days": 5,
+      "contracts": 4,
+      "size_mult": 1.0,
+      "gate": "baseline"
+    }
+  ],
+  "trades_overlay_sample": [
+    {
+      "entry_date": "2020-01-29",
+      "exit_date": "2020-02-04",
+      "pnl": 148.0,
+      "exit_reason": "profit",
+      "credit": 0.74,
+      "vix": 16.4,
+      "hold_days": 4,
+      "contracts": 4,
+      "size_mult": 1.0,
+      "gate": "overlay_pass"
+    },
+    {
+      "entry_date": "2020-02-14",
+      "exit_date": "2020-02-24",
+      "pnl": -456.0,
+      "exit_reason": "stop",
+      "credit": 0.37,
+      "vix": 13.7,
+      "hold_days": 5,
+      "contracts": 4,
+      "size_mult": 1.0,
+      "gate": "overlay_pass"
+    },
+    {
+      "entry_date": "2020-04-24",
+      "exit_date": "2020-04-29",
+      "pnl": 450.0,
+      "exit_reason": "profit",
+      "credit": 1.42,
+      "vix": 35.9,
+      "hold_days": 3,
+      "contracts": 5,
+      "size_mult": 1.3,
+      "gate": "overlay_pass"
+    },
+    {
+      "entry_date": "2020-05-04",
+      "exit_date": "2020-05-07",
+      "pnl": 284.0,
+      "exit_reason": "profit",
+      "credit": 1.38,
+      "vix": 36.0,
+      "hold_days": 3,
+      "contracts": 4,
+      "size_mult": 1.0,
+      "gate": "overlay_pass"
+    },
+    {
+      "entry_date": "2020-05-15",
+      "exit_date": "2020-05-18",
+      "pnl": 268.0,
+      "exit_reason": "profit",
+      "credit": 1.01,
+      "vix": 31.9,
+      "hold_days": 1,
+      "contracts": 4,
+      "size_mult": 1.0,
+      "gate": "overlay_pass"
+    }
+  ],
+  "target_sharpe_improvement": 0.3,
+  "target_met": true
+}
