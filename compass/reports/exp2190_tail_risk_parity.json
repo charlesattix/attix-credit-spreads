@@ -1,0 +1,158 @@
+{
+  "experiment": "EXP-2190",
+  "title": "Portfolio Insurance via Tail-Risk Parity",
+  "timestamp": "2026-04-07T17:03:12.321896Z",
+  "config": {
+    "gross_leverage": 3.0,
+    "alpha_weights": {
+      "exp1220": 0.6,
+      "gld_cal": 0.075,
+      "slv_cal": 0.075,
+      "cross_vol": 0.15
+    },
+    "base_hedge_w": 0.05,
+    "max_hedge_w": 0.25,
+    "hedge_step_per_trigger": 0.07,
+    "dd_trigger_pct": 3.0,
+    "corr_trigger": 0.6,
+    "corr_window": 20,
+    "is_window": {
+      "start": "2020-01-01",
+      "end": "2022-12-31"
+    },
+    "oos_window": {
+      "start": "2023-01-01",
+      "end": "2025-12-31"
+    }
+  },
+  "windows": [
+    {
+      "window": {
+        "label": "full sample",
+        "start": "2020-01-01",
+        "end": "2025-12-31"
+      },
+      "baseline": {
+        "label": "full sample: baseline",
+        "n_days": 1566,
+        "cagr_pct": 152.041,
+        "sharpe": 4.637,
+        "sortino": 8.287,
+        "max_dd_pct": -12.478,
+        "vol_pct": 20.416,
+        "hit_rate_pct": 59.9,
+        "mean_daily_bps": 37.57
+      },
+      "overlay": {
+        "label": "full sample: overlay",
+        "n_days": 1566,
+        "cagr_pct": 161.784,
+        "sharpe": 4.624,
+        "sortino": 8.295,
+        "max_dd_pct": -12.422,
+        "vol_pct": 21.338,
+        "hit_rate_pct": 59.8,
+        "mean_daily_bps": 39.15
+      },
+      "delta": {
+        "sharpe": -0.013,
+        "cagr_pct": 9.743,
+        "max_dd_pct": 0.056,
+        "vol_pct": 0.922,
+        "sortino": 0.008
+      }
+    },
+    {
+      "window": {
+        "label": "in-sample 2020-2022",
+        "start": "2020-01-01",
+        "end": "2022-12-31"
+      },
+      "baseline": {
+        "label": "in-sample 2020-2022: baseline",
+        "n_days": 783,
+        "cagr_pct": 133.841,
+        "sharpe": 4.556,
+        "sortino": 8.286,
+        "max_dd_pct": -12.478,
+        "vol_pct": 19.068,
+        "hit_rate_pct": 60.5,
+        "mean_daily_bps": 34.48
+      },
+      "overlay": {
+        "label": "in-sample 2020-2022: overlay",
+        "n_days": 783,
+        "cagr_pct": 143.511,
+        "sharpe": 4.546,
+        "sortino": 8.404,
+        "max_dd_pct": -12.422,
+        "vol_pct": 20.045,
+        "hit_rate_pct": 60.4,
+        "mean_daily_bps": 36.16
+      },
+      "delta": {
+        "sharpe": -0.01,
+        "cagr_pct": 9.67,
+        "max_dd_pct": 0.056,
+        "vol_pct": 0.977,
+        "sortino": 0.118
+      }
+    },
+    {
+      "window": {
+        "label": "OOS 2023-2025",
+        "start": "2023-01-01",
+        "end": "2025-12-31"
+      },
+      "baseline": {
+        "label": "OOS 2023-2025: baseline",
+        "n_days": 783,
+        "cagr_pct": 171.658,
+        "sharpe": 4.726,
+        "sortino": 8.396,
+        "max_dd_pct": -7.5,
+        "vol_pct": 21.682,
+        "hit_rate_pct": 59.3,
+        "mean_daily_bps": 40.66
+      },
+      "overlay": {
+        "label": "OOS 2023-2025: overlay",
+        "n_days": 783,
+        "cagr_pct": 181.429,
+        "sharpe": 4.708,
+        "sortino": 8.311,
+        "max_dd_pct": -7.939,
+        "vol_pct": 22.559,
+        "hit_rate_pct": 59.3,
+        "mean_daily_bps": 42.14
+      },
+      "delta": {
+        "sharpe": -0.018,
+        "cagr_pct": 9.771,
+        "max_dd_pct": -0.439,
+        "vol_pct": 0.877,
+        "sortino": -0.085
+      }
+    }
+  ],
+  "trigger_stats_full": {
+    "n_days": 1566,
+    "pct_inverted": 7.02,
+    "pct_dd_trigger": 9.51,
+    "pct_corr_trigger": 0.0,
+    "stress_count_distribution": {
+      "0": 1310,
+      "1": 253,
+      "2": 3
+    },
+    "mean_target_hedge_w": 0.0616,
+    "max_target_hedge_w": 0.19
+  },
+  "verdict": {
+    "oos_delta_sharpe": -0.018,
+    "oos_delta_dd_pct": -0.439,
+    "oos_delta_cagr_pct": 9.771,
+    "improved": false
+  },
+  "rule_zero": "Real streams from compass/cache/exp2080_streams.pkl (EXP-1220 canonical, EXP-1770 walk-forward GLD/SLV, cross-vol arb, Crisis Alpha v5). Yahoo ^VIX and ^VIX3M for term inversion. No synthetic data, 1-day lag on overlay (no look-ahead)."
+}
