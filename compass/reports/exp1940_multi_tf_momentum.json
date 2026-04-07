@@ -1,0 +1,3975 @@
+{
+  "experiment": "EXP-1940",
+  "title": "Multi-Timeframe Momentum (SPY/QQQ/IWM/EFA/EEM)",
+  "timestamp": "2026-04-07T13:30:32.732478Z",
+  "data": {
+    "universe": [
+      "SPY",
+      "QQQ",
+      "IWM",
+      "EFA",
+      "EEM"
+    ],
+    "start": "2015-01-02",
+    "end": "2025-12-30",
+    "n_bars": 2765,
+    "source": "Yahoo Finance v8 chart API (adjclose, dividend+split adjusted)"
+  },
+  "signal": {
+    "spec": "z(ret_1m) + z(ret_3m) + z(ret_12m) cross-sectional",
+    "rebalance": "monthly (last business day of month)",
+    "warmup_months": 12
+  },
+  "variants": {
+    "long_only": {
+      "metrics": {
+        "n_days": 2765,
+        "cagr_pct": 12.61,
+        "sharpe": 0.76,
+        "max_dd_pct": -32.03,
+        "vol_pct": 17.84,
+        "win_rate_pct": 48.8,
+        "best_day_pct": 8.38,
+        "worst_day_pct": -11.8
+      },
+      "walk_forward_yearly": [
+        {
+          "year": 2015,
+          "n_days": 252,
+          "cagr_pct": 0.0,
+          "sharpe": 0.0,
+          "max_dd_pct": 0.0,
+          "vol_pct": 0.0,
+          "win_rate_pct": 0.0,
+          "best_day_pct": 0.0,
+          "worst_day_pct": 0.0
+        },
+        {
+          "year": 2016,
+          "n_days": 252,
+          "cagr_pct": 15.29,
+          "sharpe": 1.09,
+          "max_dd_pct": -7.17,
+          "vol_pct": 13.98,
+          "win_rate_pct": 49.2,
+          "best_day_pct": 3.04,
+          "worst_day_pct": -3.84
+        },
+        {
+          "year": 2017,
+          "n_days": 251,
+          "cagr_pct": 24.29,
+          "sharpe": 2.47,
+          "max_dd_pct": -2.61,
+          "vol_pct": 8.97,
+          "win_rate_pct": 56.6,
+          "best_day_pct": 1.72,
+          "worst_day_pct": -1.98
+        },
+        {
+          "year": 2018,
+          "n_days": 251,
+          "cagr_pct": -3.25,
+          "sharpe": -0.09,
+          "max_dd_pct": -18.75,
+          "vol_pct": 18.01,
+          "win_rate_pct": 53.0,
+          "best_day_pct": 4.43,
+          "worst_day_pct": -3.88
+        },
+        {
+          "year": 2019,
+          "n_days": 252,
+          "cagr_pct": 25.86,
+          "sharpe": 1.72,
+          "max_dd_pct": -8.74,
+          "vol_pct": 13.97,
+          "win_rate_pct": 57.5,
+          "best_day_pct": 3.62,
+          "worst_day_pct": -3.18
+        },
+        {
+          "year": 2020,
+          "n_days": 253,
+          "cagr_pct": 27.76,
+          "sharpe": 0.9,
+          "max_dd_pct": -31.98,
+          "vol_pct": 33.64,
+          "win_rate_pct": 58.1,
+          "best_day_pct": 8.11,
+          "worst_day_pct": -11.8
+        },
+        {
+          "year": 2021,
+          "n_days": 252,
+          "cagr_pct": 17.67,
+          "sharpe": 1.07,
+          "max_dd_pct": -8.09,
+          "vol_pct": 16.43,
+          "win_rate_pct": 54.0,
+          "best_day_pct": 3.08,
+          "worst_day_pct": -3.15
+        },
+        {
+          "year": 2022,
+          "n_days": 251,
+          "cagr_pct": -22.48,
+          "sharpe": -0.93,
+          "max_dd_pct": -31.04,
+          "vol_pct": 24.14,
+          "win_rate_pct": 45.4,
+          "best_day_pct": 5.75,
+          "worst_day_pct": -3.93
+        },
+        {
+          "year": 2023,
+          "n_days": 250,
+          "cagr_pct": 23.32,
+          "sharpe": 1.61,
+          "max_dd_pct": -13.0,
+          "vol_pct": 13.6,
+          "win_rate_pct": 54.4,
+          "best_day_pct": 2.31,
+          "worst_day_pct": -1.98
+        },
+        {
+          "year": 2024,
+          "n_days": 252,
+          "cagr_pct": 13.93,
+          "sharpe": 0.95,
+          "max_dd_pct": -11.09,
+          "vol_pct": 14.99,
+          "win_rate_pct": 50.8,
+          "best_day_pct": 3.67,
+          "worst_day_pct": -3.67
+        },
+        {
+          "year": 2025,
+          "n_days": 249,
+          "cagr_pct": 29.26,
+          "sharpe": 1.55,
+          "max_dd_pct": -15.38,
+          "vol_pct": 17.59,
+          "win_rate_pct": 58.2,
+          "best_day_pct": 8.38,
+          "worst_day_pct": -6.0
+        }
+      ],
+      "expanding_window": [
+        {
+          "year": 2017,
+          "in_sample_years": [
+            2015,
+            2016
+          ],
+          "in_sample": {
+            "n_days": 504,
+            "cagr_pct": 7.37,
+            "sharpe": 0.77,
+            "max_dd_pct": -7.17,
+            "vol_pct": 9.89,
+            "win_rate_pct": 24.6,
+            "best_day_pct": 3.04,
+            "worst_day_pct": -3.84
+          },
+          "oos": {
+            "n_days": 251,
+            "cagr_pct": 24.29,
+            "sharpe": 2.47,
+            "max_dd_pct": -2.61,
+            "vol_pct": 8.97,
+            "win_rate_pct": 56.6,
+            "best_day_pct": 1.72,
+            "worst_day_pct": -1.98
+          }
+        },
+        {
+          "year": 2018,
+          "in_sample_years": [
+            2015,
+            2016,
+            2017
+          ],
+          "in_sample": {
+            "n_days": 755,
+            "cagr_pct": 12.73,
+            "sharpe": 1.3,
+            "max_dd_pct": -7.17,
+            "vol_pct": 9.6,
+            "win_rate_pct": 35.2,
+            "best_day_pct": 3.04,
+            "worst_day_pct": -3.84
+          },
+          "oos": {
+            "n_days": 251,
+            "cagr_pct": -3.25,
+            "sharpe": -0.09,
+            "max_dd_pct": -18.75,
+            "vol_pct": 18.01,
+            "win_rate_pct": 53.0,
+            "best_day_pct": 4.43,
+            "worst_day_pct": -3.88
+          }
+        },
+        {
+          "year": 2019,
+          "in_sample_years": [
+            2015,
+            2016,
+            2017,
+            2018
+          ],
+          "in_sample": {
+            "n_days": 1006,
+            "cagr_pct": 8.51,
+            "sharpe": 0.73,
+            "max_dd_pct": -18.75,
+            "vol_pct": 12.25,
+            "win_rate_pct": 39.7,
+            "best_day_pct": 4.43,
+            "worst_day_pct": -3.88
+          },
+          "oos": {
+            "n_days": 252,
+            "cagr_pct": 25.86,
+            "sharpe": 1.72,
+            "max_dd_pct": -8.74,
+            "vol_pct": 13.97,
+            "win_rate_pct": 57.5,
+            "best_day_pct": 3.62,
+            "worst_day_pct": -3.18
+          }
+        },
+        {
+          "year": 2020,
+          "in_sample_years": [
+            2015,
+            2016,
+            2017,
+            2018,
+            2019
+          ],
+          "in_sample": {
+            "n_days": 1258,
+            "cagr_pct": 11.78,
+            "sharpe": 0.95,
+            "max_dd_pct": -18.75,
+            "vol_pct": 12.61,
+            "win_rate_pct": 43.2,
+            "best_day_pct": 4.43,
+            "worst_day_pct": -3.88
+          },
+          "oos": {
+            "n_days": 253,
+            "cagr_pct": 27.76,
+            "sharpe": 0.9,
+            "max_dd_pct": -31.98,
+            "vol_pct": 33.64,
+            "win_rate_pct": 58.1,
+            "best_day_pct": 8.11,
+            "worst_day_pct": -11.8
+          }
+        },
+        {
+          "year": 2021,
+          "in_sample_years": [
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020
+          ],
+          "in_sample": {
+            "n_days": 1511,
+            "cagr_pct": 14.31,
+            "sharpe": 0.84,
+            "max_dd_pct": -31.98,
+            "vol_pct": 17.93,
+            "win_rate_pct": 45.7,
+            "best_day_pct": 8.11,
+            "worst_day_pct": -11.8
+          },
+          "oos": {
+            "n_days": 252,
+            "cagr_pct": 17.67,
+            "sharpe": 1.07,
+            "max_dd_pct": -8.09,
+            "vol_pct": 16.43,
+            "win_rate_pct": 54.0,
+            "best_day_pct": 3.08,
+            "worst_day_pct": -3.15
+          }
+        },
+        {
+          "year": 2022,
+          "in_sample_years": [
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ],
+          "in_sample": {
+            "n_days": 1763,
+            "cagr_pct": 14.78,
+            "sharpe": 0.87,
+            "max_dd_pct": -31.98,
+            "vol_pct": 17.72,
+            "win_rate_pct": 46.9,
+            "best_day_pct": 8.11,
+            "worst_day_pct": -11.8
+          },
+          "oos": {
+            "n_days": 251,
+            "cagr_pct": -22.48,
+            "sharpe": -0.93,
+            "max_dd_pct": -31.04,
+            "vol_pct": 24.14,
+            "win_rate_pct": 45.4,
+            "best_day_pct": 5.75,
+            "worst_day_pct": -3.93
+          }
+        },
+        {
+          "year": 2023,
+          "in_sample_years": [
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021,
+            2022
+          ],
+          "in_sample": {
+            "n_days": 2014,
+            "cagr_pct": 9.3,
+            "sharpe": 0.57,
+            "max_dd_pct": -32.03,
+            "vol_pct": 18.65,
+            "win_rate_pct": 46.7,
+            "best_day_pct": 8.11,
+            "worst_day_pct": -11.8
+          },
+          "oos": {
+            "n_days": 250,
+            "cagr_pct": 23.32,
+            "sharpe": 1.61,
+            "max_dd_pct": -13.0,
+            "vol_pct": 13.6,
+            "win_rate_pct": 54.4,
+            "best_day_pct": 2.31,
+            "worst_day_pct": -1.98
+          }
+        },
+        {
+          "year": 2024,
+          "in_sample_years": [
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021,
+            2022,
+            2023
+          ],
+          "in_sample": {
+            "n_days": 2264,
+            "cagr_pct": 10.77,
+            "sharpe": 0.65,
+            "max_dd_pct": -32.03,
+            "vol_pct": 18.16,
+            "win_rate_pct": 47.6,
+            "best_day_pct": 8.11,
+            "worst_day_pct": -11.8
+          },
+          "oos": {
+            "n_days": 252,
+            "cagr_pct": 13.93,
+            "sharpe": 0.95,
+            "max_dd_pct": -11.09,
+            "vol_pct": 14.99,
+            "win_rate_pct": 50.8,
+            "best_day_pct": 3.67,
+            "worst_day_pct": -3.67
+          }
+        },
+        {
+          "year": 2025,
+          "in_sample_years": [
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021,
+            2022,
+            2023,
+            2024
+          ],
+          "in_sample": {
+            "n_days": 2516,
+            "cagr_pct": 11.08,
+            "sharpe": 0.68,
+            "max_dd_pct": -32.03,
+            "vol_pct": 17.86,
+            "win_rate_pct": 47.9,
+            "best_day_pct": 8.11,
+            "worst_day_pct": -11.8
+          },
+          "oos": {
+            "n_days": 249,
+            "cagr_pct": 29.26,
+            "sharpe": 1.55,
+            "max_dd_pct": -15.38,
+            "vol_pct": 17.59,
+            "win_rate_pct": 58.2,
+            "best_day_pct": 8.38,
+            "worst_day_pct": -6.0
+          }
+        }
+      ],
+      "correlation_to_exp1220": 0.5411,
+      "n_holdings": 120,
+      "first_rebalance": "2016-01-29",
+      "last_rebalance": "2025-12-30",
+      "monthly_returns": [
+        {
+          "month": "2015-01",
+          "ret": 0.0
+        },
+        {
+          "month": "2015-02",
+          "ret": 0.0
+        },
+        {
+          "month": "2015-03",
+          "ret": 0.0
+        },
+        {
+          "month": "2015-04",
+          "ret": 0.0
+        },
+        {
+          "month": "2015-05",
+          "ret": 0.0
+        },
+        {
+          "month": "2015-06",
+          "ret": 0.0
+        },
+        {
+          "month": "2015-07",
+          "ret": 0.0
+        },
+        {
+          "month": "2015-08",
+          "ret": 0.0
+        },
+        {
+          "month": "2015-09",
+          "ret": 0.0
+        },
+        {
+          "month": "2015-10",
+          "ret": 0.0
+        },
+        {
+          "month": "2015-11",
+          "ret": 0.0
+        },
+        {
+          "month": "2015-12",
+          "ret": 0.0
+        },
+        {
+          "month": "2016-01",
+          "ret": 0.0
+        },
+        {
+          "month": "2016-02",
+          "ret": -0.016573
+        },
+        {
+          "month": "2016-03",
+          "ret": 0.088307
+        },
+        {
+          "month": "2016-04",
+          "ret": -0.007865
+        },
+        {
+          "month": "2016-05",
+          "ret": 0.012873
+        },
+        {
+          "month": "2016-06",
+          "ret": -0.006484
+        },
+        {
+          "month": "2016-07",
+          "ret": 0.049749
+        },
+        {
+          "month": "2016-08",
+          "ret": 0.01252
+        },
+        {
+          "month": "2016-09",
+          "ret": 0.019537
+        },
+        {
+          "month": "2016-10",
+          "ret": -0.022995
+        },
+        {
+          "month": "2016-11",
+          "ret": -0.001107
+        },
+        {
+          "month": "2016-12",
+          "ret": 0.02024
+        },
+        {
+          "month": "2017-01",
+          "ret": 0.017923
+        },
+        {
+          "month": "2017-02",
+          "ret": 0.026875
+        },
+        {
+          "month": "2017-03",
+          "ret": 0.019506
+        },
+        {
+          "month": "2017-04",
+          "ret": 0.022898
+        },
+        {
+          "month": "2017-05",
+          "ret": 0.034497
+        },
+        {
+          "month": "2017-06",
+          "ret": -0.003584
+        },
+        {
+          "month": "2017-07",
+          "ret": 0.031016
+        },
+        {
+          "month": "2017-08",
+          "ret": 0.014664
+        },
+        {
+          "month": "2017-09",
+          "ret": 0.006754
+        },
+        {
+          "month": "2017-10",
+          "ret": 0.028742
+        },
+        {
+          "month": "2017-11",
+          "ret": 0.015183
+        },
+        {
+          "month": "2017-12",
+          "ret": 0.004771
+        },
+        {
+          "month": "2018-01",
+          "ret": 0.075623
+        },
+        {
+          "month": "2018-02",
+          "ret": -0.036096
+        },
+        {
+          "month": "2018-03",
+          "ret": -0.020979
+        },
+        {
+          "month": "2018-04",
+          "ret": -0.004392
+        },
+        {
+          "month": "2018-05",
+          "ret": 0.032672
+        },
+        {
+          "month": "2018-06",
+          "ret": 0.007836
+        },
+        {
+          "month": "2018-07",
+          "ret": 0.027302
+        },
+        {
+          "month": "2018-08",
+          "ret": 0.044285
+        },
+        {
+          "month": "2018-09",
+          "ret": -0.006715
+        },
+        {
+          "month": "2018-10",
+          "ret": -0.078513
+        },
+        {
+          "month": "2018-11",
+          "ret": 0.007152
+        },
+        {
+          "month": "2018-12",
+          "ret": -0.069714
+        },
+        {
+          "month": "2019-01",
+          "ret": 0.091314
+        },
+        {
+          "month": "2019-02",
+          "ret": 0.021899
+        },
+        {
+          "month": "2019-03",
+          "ret": 0.01194
+        },
+        {
+          "month": "2019-04",
+          "ret": 0.04332
+        },
+        {
+          "month": "2019-05",
+          "ret": -0.0748
+        },
+        {
+          "month": "2019-06",
+          "ret": 0.068339
+        },
+        {
+          "month": "2019-07",
+          "ret": 0.006222
+        },
+        {
+          "month": "2019-08",
+          "ret": -0.02839
+        },
+        {
+          "month": "2019-09",
+          "ret": 0.020139
+        },
+        {
+          "month": "2019-10",
+          "ret": 0.033284
+        },
+        {
+          "month": "2019-11",
+          "ret": 0.016929
+        },
+        {
+          "month": "2019-12",
+          "ret": 0.031944
+        },
+        {
+          "month": "2020-01",
+          "ret": -0.011032
+        },
+        {
+          "month": "2020-02",
+          "ret": -0.075982
+        },
+        {
+          "month": "2020-03",
+          "ret": -0.117997
+        },
+        {
+          "month": "2020-04",
+          "ret": 0.111468
+        },
+        {
+          "month": "2020-05",
+          "ret": 0.060499
+        },
+        {
+          "month": "2020-06",
+          "ret": 0.038644
+        },
+        {
+          "month": "2020-07",
+          "ret": 0.062379
+        },
+        {
+          "month": "2020-08",
+          "ret": 0.069179
+        },
+        {
+          "month": "2020-09",
+          "ret": -0.034851
+        },
+        {
+          "month": "2020-10",
+          "ret": -0.013726
+        },
+        {
+          "month": "2020-11",
+          "ret": 0.128522
+        },
+        {
+          "month": "2020-12",
+          "ret": 0.062092
+        },
+        {
+          "month": "2021-01",
+          "ret": 0.028157
+        },
+        {
+          "month": "2021-02",
+          "ret": 0.022888
+        },
+        {
+          "month": "2021-03",
+          "ret": 0.008694
+        },
+        {
+          "month": "2021-04",
+          "ret": 0.043368
+        },
+        {
+          "month": "2021-05",
+          "ret": -0.000756
+        },
+        {
+          "month": "2021-06",
+          "ret": 0.010143
+        },
+        {
+          "month": "2021-07",
+          "ret": 0.005458
+        },
+        {
+          "month": "2021-08",
+          "ret": 0.028822
+        },
+        {
+          "month": "2021-09",
+          "ret": -0.044015
+        },
+        {
+          "month": "2021-10",
+          "ret": 0.04819
+        },
+        {
+          "month": "2021-11",
+          "ret": -0.010536
+        },
+        {
+          "month": "2021-12",
+          "ret": 0.026946
+        },
+        {
+          "month": "2022-01",
+          "ret": -0.058783
+        },
+        {
+          "month": "2022-02",
+          "ret": -0.035476
+        },
+        {
+          "month": "2022-03",
+          "ret": 0.018338
+        },
+        {
+          "month": "2022-04",
+          "ret": -0.097135
+        },
+        {
+          "month": "2022-05",
+          "ret": 0.008293
+        },
+        {
+          "month": "2022-06",
+          "ret": -0.084436
+        },
+        {
+          "month": "2022-07",
+          "ret": 0.046289
+        },
+        {
+          "month": "2022-08",
+          "ret": -0.037353
+        },
+        {
+          "month": "2022-09",
+          "ret": -0.101369
+        },
+        {
+          "month": "2022-10",
+          "ret": 0.077456
+        },
+        {
+          "month": "2022-11",
+          "ret": 0.069045
+        },
+        {
+          "month": "2022-12",
+          "ret": -0.034029
+        },
+        {
+          "month": "2023-01",
+          "ret": 0.081549
+        },
+        {
+          "month": "2023-02",
+          "ret": -0.041282
+        },
+        {
+          "month": "2023-03",
+          "ret": 0.024766
+        },
+        {
+          "month": "2023-04",
+          "ret": 0.016861
+        },
+        {
+          "month": "2023-05",
+          "ret": 0.01349
+        },
+        {
+          "month": "2023-06",
+          "ret": 0.057634
+        },
+        {
+          "month": "2023-07",
+          "ret": 0.044246
+        },
+        {
+          "month": "2023-08",
+          "ret": -0.04399
+        },
+        {
+          "month": "2023-09",
+          "ret": -0.05215
+        },
+        {
+          "month": "2023-10",
+          "ret": -0.02365
+        },
+        {
+          "month": "2023-11",
+          "ret": 0.093979
+        },
+        {
+          "month": "2023-12",
+          "ret": 0.051741
+        },
+        {
+          "month": "2024-01",
+          "ret": -0.001789
+        },
+        {
+          "month": "2024-02",
+          "ret": 0.045059
+        },
+        {
+          "month": "2024-03",
+          "ret": 0.026939
+        },
+        {
+          "month": "2024-04",
+          "ret": -0.050784
+        },
+        {
+          "month": "2024-05",
+          "ret": 0.04386
+        },
+        {
+          "month": "2024-06",
+          "ret": 0.026857
+        },
+        {
+          "month": "2024-07",
+          "ret": 0.001395
+        },
+        {
+          "month": "2024-08",
+          "ret": 0.005913
+        },
+        {
+          "month": "2024-09",
+          "ret": 0.018467
+        },
+        {
+          "month": "2024-10",
+          "ret": -0.017579
+        },
+        {
+          "month": "2024-11",
+          "ret": 0.074659
+        },
+        {
+          "month": "2024-12",
+          "ret": -0.034974
+        },
+        {
+          "month": "2025-01",
+          "ret": 0.023481
+        },
+        {
+          "month": "2025-02",
+          "ret": -0.00352
+        },
+        {
+          "month": "2025-03",
+          "ret": -0.014341
+        },
+        {
+          "month": "2025-04",
+          "ret": 0.010272
+        },
+        {
+          "month": "2025-05",
+          "ret": 0.06013
+        },
+        {
+          "month": "2025-06",
+          "ret": 0.046343
+        },
+        {
+          "month": "2025-07",
+          "ret": 0.018016
+        },
+        {
+          "month": "2025-08",
+          "ret": 0.019034
+        },
+        {
+          "month": "2025-09",
+          "ret": 0.052289
+        },
+        {
+          "month": "2025-10",
+          "ret": 0.035825
+        },
+        {
+          "month": "2025-11",
+          "ret": -0.007536
+        },
+        {
+          "month": "2025-12",
+          "ret": 0.019297
+        }
+      ],
+      "holdings_history": [
+        {
+          "rebalance": "2016-01-29",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2016-02-29",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2016-03-31",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2016-04-29",
+          "weights": {
+            "SPY": 0.3333,
+            "IWM": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2016-05-31",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "IWM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2016-06-30",
+          "weights": {
+            "SPY": 0.3333,
+            "IWM": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2016-07-29",
+          "weights": {
+            "QQQ": 0.3333,
+            "IWM": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2016-08-31",
+          "weights": {
+            "QQQ": 0.3333,
+            "IWM": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2016-09-30",
+          "weights": {
+            "QQQ": 0.3333,
+            "IWM": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2016-10-31",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2016-11-30",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "IWM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2016-12-30",
+          "weights": {
+            "SPY": 0.3333,
+            "IWM": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2017-01-31",
+          "weights": {
+            "QQQ": 0.3333,
+            "IWM": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2017-02-28",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2017-03-31",
+          "weights": {
+            "QQQ": 0.3333,
+            "EFA": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2017-04-28",
+          "weights": {
+            "QQQ": 0.3333,
+            "EFA": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2017-05-31",
+          "weights": {
+            "QQQ": 0.3333,
+            "EFA": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2017-06-30",
+          "weights": {
+            "IWM": 0.3333,
+            "EFA": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2017-07-31",
+          "weights": {
+            "QQQ": 0.3333,
+            "EFA": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2017-08-31",
+          "weights": {
+            "QQQ": 0.3333,
+            "EFA": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2017-09-29",
+          "weights": {
+            "QQQ": 0.3333,
+            "IWM": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2017-10-31",
+          "weights": {
+            "QQQ": 0.3333,
+            "IWM": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2017-11-30",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "IWM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2017-12-29",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2018-01-31",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2018-02-28",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2018-03-29",
+          "weights": {
+            "QQQ": 0.3333,
+            "IWM": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2018-04-30",
+          "weights": {
+            "QQQ": 0.3333,
+            "IWM": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2018-05-31",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "IWM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2018-06-29",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "IWM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2018-07-31",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "IWM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2018-08-31",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "IWM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2018-09-28",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2018-10-31",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2018-11-30",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2018-12-31",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2019-01-31",
+          "weights": {
+            "QQQ": 0.3333,
+            "IWM": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2019-02-28",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "IWM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2019-03-29",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "IWM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2019-04-30",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "IWM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2019-05-31",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2019-06-28",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2019-07-31",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "IWM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2019-08-30",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2019-09-30",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2019-10-31",
+          "weights": {
+            "QQQ": 0.3333,
+            "EFA": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2019-11-29",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "IWM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2019-12-31",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2020-01-31",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "IWM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2020-02-28",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2020-03-31",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2020-04-30",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "IWM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2020-05-29",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "IWM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2020-06-30",
+          "weights": {
+            "QQQ": 0.3333,
+            "IWM": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2020-07-31",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2020-08-31",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2020-09-30",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2020-10-30",
+          "weights": {
+            "QQQ": 0.3333,
+            "IWM": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2020-11-30",
+          "weights": {
+            "QQQ": 0.3333,
+            "IWM": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2020-12-31",
+          "weights": {
+            "QQQ": 0.3333,
+            "IWM": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2021-01-29",
+          "weights": {
+            "QQQ": 0.3333,
+            "IWM": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2021-02-26",
+          "weights": {
+            "QQQ": 0.3333,
+            "IWM": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2021-03-31",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "IWM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2021-04-30",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "IWM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2021-05-28",
+          "weights": {
+            "SPY": 0.3333,
+            "IWM": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2021-06-30",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "IWM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2021-07-30",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2021-08-31",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "IWM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2021-09-30",
+          "weights": {
+            "SPY": 0.3333,
+            "IWM": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2021-10-29",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "IWM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2021-11-30",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "IWM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2021-12-31",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2022-01-31",
+          "weights": {
+            "SPY": 0.3333,
+            "EFA": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2022-02-28",
+          "weights": {
+            "SPY": 0.3333,
+            "IWM": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2022-03-31",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2022-04-29",
+          "weights": {
+            "SPY": 0.3333,
+            "IWM": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2022-05-31",
+          "weights": {
+            "SPY": 0.3333,
+            "IWM": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2022-06-30",
+          "weights": {
+            "SPY": 0.3333,
+            "EFA": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2022-07-29",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "IWM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2022-08-31",
+          "weights": {
+            "SPY": 0.3333,
+            "IWM": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2022-09-30",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "IWM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2022-10-31",
+          "weights": {
+            "SPY": 0.3333,
+            "IWM": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2022-11-30",
+          "weights": {
+            "SPY": 0.3333,
+            "EFA": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2022-12-30",
+          "weights": {
+            "SPY": 0.3333,
+            "EFA": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2023-01-31",
+          "weights": {
+            "IWM": 0.3333,
+            "EFA": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2023-02-28",
+          "weights": {
+            "QQQ": 0.3333,
+            "IWM": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2023-03-31",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2023-04-28",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2023-05-31",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2023-06-30",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "IWM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2023-07-31",
+          "weights": {
+            "QQQ": 0.3333,
+            "IWM": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2023-08-31",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "IWM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2023-09-29",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2023-10-31",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2023-11-30",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2023-12-29",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "IWM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2024-01-31",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2024-02-29",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "IWM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2024-03-28",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "IWM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2024-04-30",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2024-05-31",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2024-06-28",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2024-07-31",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "IWM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2024-08-30",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2024-09-30",
+          "weights": {
+            "SPY": 0.3333,
+            "IWM": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2024-10-31",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "IWM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2024-11-29",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "IWM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2024-12-31",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2025-01-31",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2025-02-28",
+          "weights": {
+            "SPY": 0.3333,
+            "EFA": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2025-03-31",
+          "weights": {
+            "SPY": 0.3333,
+            "EFA": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2025-04-30",
+          "weights": {
+            "QQQ": 0.3333,
+            "EFA": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2025-05-30",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EFA": 0.3333
+          }
+        },
+        {
+          "rebalance": "2025-06-30",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2025-07-31",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2025-08-29",
+          "weights": {
+            "QQQ": 0.3333,
+            "IWM": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2025-09-30",
+          "weights": {
+            "SPY": 0.3333,
+            "QQQ": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2025-10-31",
+          "weights": {
+            "QQQ": 0.3333,
+            "IWM": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2025-11-28",
+          "weights": {
+            "QQQ": 0.3333,
+            "EFA": 0.3333,
+            "EEM": 0.3333
+          }
+        },
+        {
+          "rebalance": "2025-12-30",
+          "weights": {
+            "SPY": 0.3333,
+            "EFA": 0.3333,
+            "EEM": 0.3333
+          }
+        }
+      ]
+    },
+    "long_short": {
+      "metrics": {
+        "n_days": 2765,
+        "cagr_pct": 0.91,
+        "sharpe": 0.14,
+        "max_dd_pct": -22.23,
+        "vol_pct": 10.38,
+        "win_rate_pct": 46.3,
+        "best_day_pct": 3.94,
+        "worst_day_pct": -3.47
+      },
+      "walk_forward_yearly": [
+        {
+          "year": 2015,
+          "n_days": 252,
+          "cagr_pct": 0.0,
+          "sharpe": 0.0,
+          "max_dd_pct": 0.0,
+          "vol_pct": 0.0,
+          "win_rate_pct": 0.0,
+          "best_day_pct": 0.0,
+          "worst_day_pct": 0.0
+        },
+        {
+          "year": 2016,
+          "n_days": 252,
+          "cagr_pct": -6.22,
+          "sharpe": -0.62,
+          "max_dd_pct": -10.47,
+          "vol_pct": 9.6,
+          "win_rate_pct": 47.6,
+          "best_day_pct": 3.37,
+          "worst_day_pct": -2.98
+        },
+        {
+          "year": 2017,
+          "n_days": 251,
+          "cagr_pct": -7.23,
+          "sharpe": -1.03,
+          "max_dd_pct": -7.89,
+          "vol_pct": 7.03,
+          "win_rate_pct": 49.4,
+          "best_day_pct": 1.19,
+          "worst_day_pct": -1.82
+        },
+        {
+          "year": 2018,
+          "n_days": 251,
+          "cagr_pct": 20.08,
+          "sharpe": 1.8,
+          "max_dd_pct": -5.6,
+          "vol_pct": 10.5,
+          "win_rate_pct": 53.8,
+          "best_day_pct": 1.94,
+          "worst_day_pct": -1.88
+        },
+        {
+          "year": 2019,
+          "n_days": 252,
+          "cagr_pct": -0.1,
+          "sharpe": 0.02,
+          "max_dd_pct": -6.12,
+          "vol_pct": 6.84,
+          "win_rate_pct": 51.6,
+          "best_day_pct": 1.4,
+          "worst_day_pct": -1.5
+        },
+        {
+          "year": 2020,
+          "n_days": 253,
+          "cagr_pct": 16.29,
+          "sharpe": 1.16,
+          "max_dd_pct": -7.39,
+          "vol_pct": 13.88,
+          "win_rate_pct": 54.5,
+          "best_day_pct": 2.58,
+          "worst_day_pct": -2.2
+        },
+        {
+          "year": 2021,
+          "n_days": 252,
+          "cagr_pct": 5.53,
+          "sharpe": 0.54,
+          "max_dd_pct": -8.97,
+          "vol_pct": 11.05,
+          "win_rate_pct": 53.6,
+          "best_day_pct": 1.77,
+          "worst_day_pct": -1.87
+        },
+        {
+          "year": 2022,
+          "n_days": 251,
+          "cagr_pct": -8.6,
+          "sharpe": -0.68,
+          "max_dd_pct": -14.39,
+          "vol_pct": 12.09,
+          "win_rate_pct": 47.8,
+          "best_day_pct": 2.72,
+          "worst_day_pct": -3.27
+        },
+        {
+          "year": 2023,
+          "n_days": 250,
+          "cagr_pct": -4.77,
+          "sharpe": -0.38,
+          "max_dd_pct": -13.63,
+          "vol_pct": 11.21,
+          "win_rate_pct": 52.0,
+          "best_day_pct": 1.64,
+          "worst_day_pct": -2.89
+        },
+        {
+          "year": 2024,
+          "n_days": 252,
+          "cagr_pct": -3.59,
+          "sharpe": -0.23,
+          "max_dd_pct": -12.51,
+          "vol_pct": 12.35,
+          "win_rate_pct": 48.8,
+          "best_day_pct": 3.94,
+          "worst_day_pct": -3.47
+        },
+        {
+          "year": 2025,
+          "n_days": 249,
+          "cagr_pct": 2.67,
+          "sharpe": 0.28,
+          "max_dd_pct": -9.52,
+          "vol_pct": 12.16,
+          "win_rate_pct": 50.2,
+          "best_day_pct": 3.78,
+          "worst_day_pct": -2.93
+        }
+      ],
+      "expanding_window": [
+        {
+          "year": 2017,
+          "in_sample_years": [
+            2015,
+            2016
+          ],
+          "in_sample": {
+            "n_days": 504,
+            "cagr_pct": -3.16,
+            "sharpe": -0.44,
+            "max_dd_pct": -10.47,
+            "vol_pct": 6.79,
+            "win_rate_pct": 23.8,
+            "best_day_pct": 3.37,
+            "worst_day_pct": -2.98
+          },
+          "oos": {
+            "n_days": 251,
+            "cagr_pct": -7.23,
+            "sharpe": -1.03,
+            "max_dd_pct": -7.89,
+            "vol_pct": 7.03,
+            "win_rate_pct": 49.4,
+            "best_day_pct": 1.19,
+            "worst_day_pct": -1.82
+          }
+        },
+        {
+          "year": 2018,
+          "in_sample_years": [
+            2015,
+            2016,
+            2017
+          ],
+          "in_sample": {
+            "n_days": 755,
+            "cagr_pct": -4.53,
+            "sharpe": -0.64,
+            "max_dd_pct": -14.29,
+            "vol_pct": 6.87,
+            "win_rate_pct": 32.3,
+            "best_day_pct": 3.37,
+            "worst_day_pct": -2.98
+          },
+          "oos": {
+            "n_days": 251,
+            "cagr_pct": 20.08,
+            "sharpe": 1.8,
+            "max_dd_pct": -5.6,
+            "vol_pct": 10.5,
+            "win_rate_pct": 53.8,
+            "best_day_pct": 1.94,
+            "worst_day_pct": -1.88
+          }
+        },
+        {
+          "year": 2019,
+          "in_sample_years": [
+            2015,
+            2016,
+            2017,
+            2018
+          ],
+          "in_sample": {
+            "n_days": 1006,
+            "cagr_pct": 1.09,
+            "sharpe": 0.18,
+            "max_dd_pct": -14.29,
+            "vol_pct": 7.95,
+            "win_rate_pct": 37.7,
+            "best_day_pct": 3.37,
+            "worst_day_pct": -2.98
+          },
+          "oos": {
+            "n_days": 252,
+            "cagr_pct": -0.1,
+            "sharpe": 0.02,
+            "max_dd_pct": -6.12,
+            "vol_pct": 6.84,
+            "win_rate_pct": 51.6,
+            "best_day_pct": 1.4,
+            "worst_day_pct": -1.5
+          }
+        },
+        {
+          "year": 2020,
+          "in_sample_years": [
+            2015,
+            2016,
+            2017,
+            2018,
+            2019
+          ],
+          "in_sample": {
+            "n_days": 1258,
+            "cagr_pct": 0.85,
+            "sharpe": 0.15,
+            "max_dd_pct": -14.29,
+            "vol_pct": 7.74,
+            "win_rate_pct": 40.5,
+            "best_day_pct": 3.37,
+            "worst_day_pct": -2.98
+          },
+          "oos": {
+            "n_days": 253,
+            "cagr_pct": 16.29,
+            "sharpe": 1.16,
+            "max_dd_pct": -7.39,
+            "vol_pct": 13.88,
+            "win_rate_pct": 54.5,
+            "best_day_pct": 2.58,
+            "worst_day_pct": -2.2
+          }
+        },
+        {
+          "year": 2021,
+          "in_sample_years": [
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020
+          ],
+          "in_sample": {
+            "n_days": 1511,
+            "cagr_pct": 3.29,
+            "sharpe": 0.4,
+            "max_dd_pct": -14.29,
+            "vol_pct": 9.06,
+            "win_rate_pct": 42.8,
+            "best_day_pct": 3.37,
+            "worst_day_pct": -2.98
+          },
+          "oos": {
+            "n_days": 252,
+            "cagr_pct": 5.53,
+            "sharpe": 0.54,
+            "max_dd_pct": -8.97,
+            "vol_pct": 11.05,
+            "win_rate_pct": 53.6,
+            "best_day_pct": 1.77,
+            "worst_day_pct": -1.87
+          }
+        },
+        {
+          "year": 2022,
+          "in_sample_years": [
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021
+          ],
+          "in_sample": {
+            "n_days": 1763,
+            "cagr_pct": 3.6,
+            "sharpe": 0.42,
+            "max_dd_pct": -14.29,
+            "vol_pct": 9.37,
+            "win_rate_pct": 44.4,
+            "best_day_pct": 3.37,
+            "worst_day_pct": -2.98
+          },
+          "oos": {
+            "n_days": 251,
+            "cagr_pct": -8.6,
+            "sharpe": -0.68,
+            "max_dd_pct": -14.39,
+            "vol_pct": 12.09,
+            "win_rate_pct": 47.8,
+            "best_day_pct": 2.72,
+            "worst_day_pct": -3.27
+          }
+        },
+        {
+          "year": 2023,
+          "in_sample_years": [
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021,
+            2022
+          ],
+          "in_sample": {
+            "n_days": 2014,
+            "cagr_pct": 2.0,
+            "sharpe": 0.25,
+            "max_dd_pct": -15.3,
+            "vol_pct": 9.75,
+            "win_rate_pct": 44.8,
+            "best_day_pct": 3.37,
+            "worst_day_pct": -3.27
+          },
+          "oos": {
+            "n_days": 250,
+            "cagr_pct": -4.77,
+            "sharpe": -0.38,
+            "max_dd_pct": -13.63,
+            "vol_pct": 11.21,
+            "win_rate_pct": 52.0,
+            "best_day_pct": 1.64,
+            "worst_day_pct": -2.89
+          }
+        },
+        {
+          "year": 2024,
+          "in_sample_years": [
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021,
+            2022,
+            2023
+          ],
+          "in_sample": {
+            "n_days": 2264,
+            "cagr_pct": 1.23,
+            "sharpe": 0.17,
+            "max_dd_pct": -19.63,
+            "vol_pct": 9.92,
+            "win_rate_pct": 45.6,
+            "best_day_pct": 3.37,
+            "worst_day_pct": -3.27
+          },
+          "oos": {
+            "n_days": 252,
+            "cagr_pct": -3.59,
+            "sharpe": -0.23,
+            "max_dd_pct": -12.51,
+            "vol_pct": 12.35,
+            "win_rate_pct": 48.8,
+            "best_day_pct": 3.94,
+            "worst_day_pct": -3.47
+          }
+        },
+        {
+          "year": 2025,
+          "in_sample_years": [
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021,
+            2022,
+            2023,
+            2024
+          ],
+          "in_sample": {
+            "n_days": 2516,
+            "cagr_pct": 0.73,
+            "sharpe": 0.12,
+            "max_dd_pct": -22.23,
+            "vol_pct": 10.19,
+            "win_rate_pct": 45.9,
+            "best_day_pct": 3.94,
+            "worst_day_pct": -3.47
+          },
+          "oos": {
+            "n_days": 249,
+            "cagr_pct": 2.67,
+            "sharpe": 0.28,
+            "max_dd_pct": -9.52,
+            "vol_pct": 12.16,
+            "win_rate_pct": 50.2,
+            "best_day_pct": 3.78,
+            "worst_day_pct": -2.93
+          }
+        }
+      ],
+      "correlation_to_exp1220": 0.0436,
+      "n_holdings": 120,
+      "first_rebalance": "2016-01-29",
+      "last_rebalance": "2025-12-30",
+      "monthly_returns": [
+        {
+          "month": "2015-01",
+          "ret": 0.0
+        },
+        {
+          "month": "2015-02",
+          "ret": 0.0
+        },
+        {
+          "month": "2015-03",
+          "ret": 0.0
+        },
+        {
+          "month": "2015-04",
+          "ret": 0.0
+        },
+        {
+          "month": "2015-05",
+          "ret": 0.0
+        },
+        {
+          "month": "2015-06",
+          "ret": 0.0
+        },
+        {
+          "month": "2015-07",
+          "ret": 0.0
+        },
+        {
+          "month": "2015-08",
+          "ret": 0.0
+        },
+        {
+          "month": "2015-09",
+          "ret": 0.0
+        },
+        {
+          "month": "2015-10",
+          "ret": 0.0
+        },
+        {
+          "month": "2015-11",
+          "ret": 0.0
+        },
+        {
+          "month": "2015-12",
+          "ret": 0.0
+        },
+        {
+          "month": "2016-01",
+          "ret": 0.0
+        },
+        {
+          "month": "2016-02",
+          "ret": -0.003867
+        },
+        {
+          "month": "2016-03",
+          "ret": -0.005775
+        },
+        {
+          "month": "2016-04",
+          "ret": -0.015388
+        },
+        {
+          "month": "2016-05",
+          "ret": 0.016646
+        },
+        {
+          "month": "2016-06",
+          "ret": -0.0257
+        },
+        {
+          "month": "2016-07",
+          "ret": -0.007737
+        },
+        {
+          "month": "2016-08",
+          "ret": 0.010872
+        },
+        {
+          "month": "2016-09",
+          "ret": 0.011935
+        },
+        {
+          "month": "2016-10",
+          "ret": 0.008744
+        },
+        {
+          "month": "2016-11",
+          "ret": -0.062608
+        },
+        {
+          "month": "2016-12",
+          "ret": 0.011631
+        },
+        {
+          "month": "2017-01",
+          "ret": -0.046118
+        },
+        {
+          "month": "2017-02",
+          "ret": 0.005923
+        },
+        {
+          "month": "2017-03",
+          "ret": -0.005842
+        },
+        {
+          "month": "2017-04",
+          "ret": 0.010927
+        },
+        {
+          "month": "2017-05",
+          "ret": 0.036832
+        },
+        {
+          "month": "2017-06",
+          "ret": -0.026457
+        },
+        {
+          "month": "2017-07",
+          "ret": 0.002497
+        },
+        {
+          "month": "2017-08",
+          "ret": 0.027216
+        },
+        {
+          "month": "2017-09",
+          "ret": -0.041437
+        },
+        {
+          "month": "2017-10",
+          "ret": -3e-05
+        },
+        {
+          "month": "2017-11",
+          "ret": -0.01041
+        },
+        {
+          "month": "2017-12",
+          "ret": -0.024048
+        },
+        {
+          "month": "2018-01",
+          "ret": 0.045784
+        },
+        {
+          "month": "2018-02",
+          "ret": 0.008497
+        },
+        {
+          "month": "2018-03",
+          "ret": -0.018853
+        },
+        {
+          "month": "2018-04",
+          "ret": -0.021045
+        },
+        {
+          "month": "2018-05",
+          "ret": 0.059849
+        },
+        {
+          "month": "2018-06",
+          "ret": 0.04009
+        },
+        {
+          "month": "2018-07",
+          "ret": -0.01012
+        },
+        {
+          "month": "2018-08",
+          "ret": 0.075236
+        },
+        {
+          "month": "2018-09",
+          "ret": -0.015546
+        },
+        {
+          "month": "2018-10",
+          "ret": 0.023656
+        },
+        {
+          "month": "2018-11",
+          "ret": -0.02498
+        },
+        {
+          "month": "2018-12",
+          "ret": 0.027522
+        },
+        {
+          "month": "2019-01",
+          "ret": 0.007217
+        },
+        {
+          "month": "2019-02",
+          "ret": -0.010778
+        },
+        {
+          "month": "2019-03",
+          "ret": -0.001474
+        },
+        {
+          "month": "2019-04",
+          "ret": 0.02069
+        },
+        {
+          "month": "2019-05",
+          "ret": -0.012201
+        },
+        {
+          "month": "2019-06",
+          "ret": -0.002191
+        },
+        {
+          "month": "2019-07",
+          "ret": 0.029356
+        },
+        {
+          "month": "2019-08",
+          "ret": 0.011543
+        },
+        {
+          "month": "2019-09",
+          "ret": -0.0047
+        },
+        {
+          "month": "2019-10",
+          "ret": -0.006441
+        },
+        {
+          "month": "2019-11",
+          "ret": -0.012238
+        },
+        {
+          "month": "2019-12",
+          "ret": -0.01862
+        },
+        {
+          "month": "2020-01",
+          "ret": 0.013907
+        },
+        {
+          "month": "2020-02",
+          "ret": -0.012385
+        },
+        {
+          "month": "2020-03",
+          "ret": 0.073777
+        },
+        {
+          "month": "2020-04",
+          "ret": 0.025334
+        },
+        {
+          "month": "2020-05",
+          "ret": 0.012694
+        },
+        {
+          "month": "2020-06",
+          "ret": -0.010931
+        },
+        {
+          "month": "2020-07",
+          "ret": 0.038075
+        },
+        {
+          "month": "2020-08",
+          "ret": 0.016277
+        },
+        {
+          "month": "2020-09",
+          "ret": -0.021191
+        },
+        {
+          "month": "2020-10",
+          "ret": -0.001456
+        },
+        {
+          "month": "2020-11",
+          "ret": 0.00909
+        },
+        {
+          "month": "2020-12",
+          "ret": 0.012736
+        },
+        {
+          "month": "2021-01",
+          "ret": 0.035369
+        },
+        {
+          "month": "2021-02",
+          "ret": 0.010233
+        },
+        {
+          "month": "2021-03",
+          "ret": -0.016779
+        },
+        {
+          "month": "2021-04",
+          "ret": 0.014251
+        },
+        {
+          "month": "2021-05",
+          "ret": -0.020629
+        },
+        {
+          "month": "2021-06",
+          "ret": -0.031303
+        },
+        {
+          "month": "2021-07",
+          "ret": 0.024863
+        },
+        {
+          "month": "2021-08",
+          "ret": 0.015278
+        },
+        {
+          "month": "2021-09",
+          "ret": -0.017213
+        },
+        {
+          "month": "2021-10",
+          "ret": -0.007187
+        },
+        {
+          "month": "2021-11",
+          "ret": 0.050615
+        },
+        {
+          "month": "2021-12",
+          "ret": -0.000237
+        },
+        {
+          "month": "2022-01",
+          "ret": -0.023004
+        },
+        {
+          "month": "2022-02",
+          "ret": -0.021525
+        },
+        {
+          "month": "2022-03",
+          "ret": 0.015275
+        },
+        {
+          "month": "2022-04",
+          "ret": -0.033972
+        },
+        {
+          "month": "2022-05",
+          "ret": 0.013789
+        },
+        {
+          "month": "2022-06",
+          "ret": -0.01694
+        },
+        {
+          "month": "2022-07",
+          "ret": -0.066443
+        },
+        {
+          "month": "2022-08",
+          "ret": -0.008245
+        },
+        {
+          "month": "2022-09",
+          "ret": 0.004454
+        },
+        {
+          "month": "2022-10",
+          "ret": 0.075699
+        },
+        {
+          "month": "2022-11",
+          "ret": -0.061083
+        },
+        {
+          "month": "2022-12",
+          "ret": 0.041745
+        },
+        {
+          "month": "2023-01",
+          "ret": -0.012124
+        },
+        {
+          "month": "2023-02",
+          "ret": -0.041324
+        },
+        {
+          "month": "2023-03",
+          "ret": -0.04223
+        },
+        {
+          "month": "2023-04",
+          "ret": 0.030297
+        },
+        {
+          "month": "2023-05",
+          "ret": 0.033808
+        },
+        {
+          "month": "2023-06",
+          "ret": 0.000264
+        },
+        {
+          "month": "2023-07",
+          "ret": -0.00842
+        },
+        {
+          "month": "2023-08",
+          "ret": -0.005033
+        },
+        {
+          "month": "2023-09",
+          "ret": -0.015989
+        },
+        {
+          "month": "2023-10",
+          "ret": 0.031028
+        },
+        {
+          "month": "2023-11",
+          "ret": 0.011808
+        },
+        {
+          "month": "2023-12",
+          "ret": -0.026587
+        },
+        {
+          "month": "2024-01",
+          "ret": 0.014501
+        },
+        {
+          "month": "2024-02",
+          "ret": 0.001714
+        },
+        {
+          "month": "2024-03",
+          "ret": -0.007588
+        },
+        {
+          "month": "2024-04",
+          "ret": -0.025099
+        },
+        {
+          "month": "2024-05",
+          "ret": -0.015288
+        },
+        {
+          "month": "2024-06",
+          "ret": 0.041575
+        },
+        {
+          "month": "2024-07",
+          "ret": -0.063674
+        },
+        {
+          "month": "2024-08",
+          "ret": -0.017079
+        },
+        {
+          "month": "2024-09",
+          "ret": -0.009275
+        },
+        {
+          "month": "2024-10",
+          "ret": 0.011125
+        },
+        {
+          "month": "2024-11",
+          "ret": 0.071038
+        },
+        {
+          "month": "2024-12",
+          "ret": -0.031845
+        },
+        {
+          "month": "2025-01",
+          "ret": -0.012055
+        },
+        {
+          "month": "2025-02",
+          "ret": 0.000714
+        },
+        {
+          "month": "2025-03",
+          "ret": 0.046549
+        },
+        {
+          "month": "2025-04",
+          "ret": 0.016324
+        },
+        {
+          "month": "2025-05",
+          "ret": -0.014675
+        },
+        {
+          "month": "2025-06",
+          "ret": -0.018277
+        },
+        {
+          "month": "2025-07",
+          "ret": 0.016487
+        },
+        {
+          "month": "2025-08",
+          "ret": -0.041979
+        },
+        {
+          "month": "2025-09",
+          "ret": 0.022644
+        },
+        {
+          "month": "2025-10",
+          "ret": 0.026388
+        },
+        {
+          "month": "2025-11",
+          "ret": -0.021065
+        },
+        {
+          "month": "2025-12",
+          "ret": 0.008417
+        }
+      ],
+      "holdings_history": [
+        {
+          "rebalance": "2016-01-29",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2016-02-29",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EFA": -0.5
+          }
+        },
+        {
+          "rebalance": "2016-03-31",
+          "weights": {
+            "SPY": 0.5,
+            "IWM": -0.5,
+            "EFA": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2016-04-29",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": -0.5,
+            "IWM": 0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2016-05-31",
+          "weights": {
+            "QQQ": 0.5,
+            "IWM": 0.5,
+            "EFA": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2016-06-30",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": -0.5,
+            "IWM": 0.5,
+            "EFA": -0.5
+          }
+        },
+        {
+          "rebalance": "2016-07-29",
+          "weights": {
+            "SPY": -0.5,
+            "QQQ": 0.5,
+            "IWM": 0.5,
+            "EFA": -0.5
+          }
+        },
+        {
+          "rebalance": "2016-08-31",
+          "weights": {
+            "SPY": -0.5,
+            "IWM": 0.5,
+            "EFA": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2016-09-30",
+          "weights": {
+            "SPY": -0.5,
+            "QQQ": 0.5,
+            "EFA": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2016-10-31",
+          "weights": {
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EFA": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2016-11-30",
+          "weights": {
+            "SPY": 0.5,
+            "IWM": 0.5,
+            "EFA": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2016-12-30",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": -0.5,
+            "IWM": 0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2017-01-31",
+          "weights": {
+            "SPY": -0.5,
+            "QQQ": 0.5,
+            "IWM": 0.5,
+            "EFA": -0.5
+          }
+        },
+        {
+          "rebalance": "2017-02-28",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EFA": -0.5
+          }
+        },
+        {
+          "rebalance": "2017-03-31",
+          "weights": {
+            "SPY": -0.5,
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2017-04-28",
+          "weights": {
+            "SPY": -0.5,
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2017-05-31",
+          "weights": {
+            "SPY": -0.5,
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2017-06-30",
+          "weights": {
+            "SPY": -0.5,
+            "QQQ": -0.5,
+            "IWM": 0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2017-07-31",
+          "weights": {
+            "SPY": -0.5,
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2017-08-31",
+          "weights": {
+            "SPY": -0.5,
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2017-09-29",
+          "weights": {
+            "SPY": -0.5,
+            "IWM": 0.5,
+            "EFA": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2017-10-31",
+          "weights": {
+            "SPY": -0.5,
+            "QQQ": 0.5,
+            "EFA": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2017-11-30",
+          "weights": {
+            "QQQ": 0.5,
+            "IWM": 0.5,
+            "EFA": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2017-12-29",
+          "weights": {
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EFA": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2018-01-31",
+          "weights": {
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EFA": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2018-02-28",
+          "weights": {
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EFA": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2018-03-29",
+          "weights": {
+            "SPY": -0.5,
+            "QQQ": 0.5,
+            "EFA": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2018-04-30",
+          "weights": {
+            "SPY": -0.5,
+            "QQQ": 0.5,
+            "IWM": 0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2018-05-31",
+          "weights": {
+            "QQQ": 0.5,
+            "IWM": 0.5,
+            "EFA": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2018-06-29",
+          "weights": {
+            "QQQ": 0.5,
+            "IWM": 0.5,
+            "EFA": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2018-07-31",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "EFA": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2018-08-31",
+          "weights": {
+            "QQQ": 0.5,
+            "IWM": 0.5,
+            "EFA": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2018-09-28",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2018-10-31",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2018-11-30",
+          "weights": {
+            "SPY": 0.5,
+            "IWM": -0.5,
+            "EFA": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2018-12-31",
+          "weights": {
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EFA": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2019-01-31",
+          "weights": {
+            "SPY": -0.5,
+            "IWM": 0.5,
+            "EFA": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2019-02-28",
+          "weights": {
+            "QQQ": 0.5,
+            "IWM": 0.5,
+            "EFA": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2019-03-29",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "EFA": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2019-04-30",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "EFA": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2019-05-31",
+          "weights": {
+            "SPY": 0.5,
+            "IWM": -0.5,
+            "EFA": 0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2019-06-28",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2019-07-31",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "EFA": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2019-08-30",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2019-09-30",
+          "weights": {
+            "SPY": 0.5,
+            "IWM": -0.5,
+            "EFA": 0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2019-10-31",
+          "weights": {
+            "SPY": -0.5,
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EFA": 0.5
+          }
+        },
+        {
+          "rebalance": "2019-11-29",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "EFA": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2019-12-31",
+          "weights": {
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EFA": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2020-01-31",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "EFA": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2020-02-28",
+          "weights": {
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EFA": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2020-03-31",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2020-04-30",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "EFA": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2020-05-29",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "EFA": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2020-06-30",
+          "weights": {
+            "SPY": -0.5,
+            "QQQ": 0.5,
+            "EFA": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2020-07-31",
+          "weights": {
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EFA": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2020-08-31",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EFA": -0.5
+          }
+        },
+        {
+          "rebalance": "2020-09-30",
+          "weights": {
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EFA": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2020-10-30",
+          "weights": {
+            "SPY": -0.5,
+            "IWM": 0.5,
+            "EFA": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2020-11-30",
+          "weights": {
+            "SPY": -0.5,
+            "QQQ": 0.5,
+            "IWM": 0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2020-12-31",
+          "weights": {
+            "SPY": -0.5,
+            "QQQ": 0.5,
+            "IWM": 0.5,
+            "EFA": -0.5
+          }
+        },
+        {
+          "rebalance": "2021-01-29",
+          "weights": {
+            "SPY": -0.5,
+            "IWM": 0.5,
+            "EFA": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2021-02-26",
+          "weights": {
+            "SPY": -0.5,
+            "QQQ": 0.5,
+            "IWM": 0.5,
+            "EFA": -0.5
+          }
+        },
+        {
+          "rebalance": "2021-03-31",
+          "weights": {
+            "SPY": 0.5,
+            "IWM": 0.5,
+            "EFA": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2021-04-30",
+          "weights": {
+            "SPY": 0.5,
+            "IWM": 0.5,
+            "EFA": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2021-05-28",
+          "weights": {
+            "QQQ": -0.5,
+            "IWM": 0.5,
+            "EFA": 0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2021-06-30",
+          "weights": {
+            "QQQ": 0.5,
+            "IWM": 0.5,
+            "EFA": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2021-07-30",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2021-08-31",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "EFA": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2021-09-30",
+          "weights": {
+            "QQQ": -0.5,
+            "IWM": 0.5,
+            "EFA": 0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2021-10-29",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "EFA": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2021-11-30",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "EFA": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2021-12-31",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2022-01-31",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": -0.5,
+            "IWM": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2022-02-28",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": -0.5,
+            "IWM": 0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2022-03-31",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2022-04-29",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": -0.5,
+            "EFA": 0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2022-05-31",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": -0.5,
+            "EFA": 0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2022-06-30",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": -0.5,
+            "IWM": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2022-07-29",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "EFA": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2022-08-31",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": -0.5,
+            "IWM": 0.5,
+            "EFA": -0.5
+          }
+        },
+        {
+          "rebalance": "2022-09-30",
+          "weights": {
+            "SPY": 0.5,
+            "IWM": 0.5,
+            "EFA": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2022-10-31",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": -0.5,
+            "IWM": 0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2022-11-30",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": -0.5,
+            "IWM": -0.5,
+            "EFA": 0.5
+          }
+        },
+        {
+          "rebalance": "2022-12-30",
+          "weights": {
+            "QQQ": -0.5,
+            "IWM": -0.5,
+            "EFA": 0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2023-01-31",
+          "weights": {
+            "SPY": -0.5,
+            "QQQ": -0.5,
+            "EFA": 0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2023-02-28",
+          "weights": {
+            "SPY": -0.5,
+            "IWM": 0.5,
+            "EFA": 0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2023-03-31",
+          "weights": {
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EFA": 0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2023-04-28",
+          "weights": {
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EFA": 0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2023-05-31",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2023-06-30",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "EFA": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2023-07-31",
+          "weights": {
+            "SPY": -0.5,
+            "QQQ": 0.5,
+            "IWM": 0.5,
+            "EFA": -0.5
+          }
+        },
+        {
+          "rebalance": "2023-08-31",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "EFA": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2023-09-29",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2023-10-31",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2023-11-30",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2023-12-29",
+          "weights": {
+            "QQQ": 0.5,
+            "IWM": 0.5,
+            "EFA": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2024-01-31",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2024-02-29",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "EFA": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2024-03-28",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "EFA": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2024-04-30",
+          "weights": {
+            "SPY": 0.5,
+            "IWM": -0.5,
+            "EFA": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2024-05-31",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2024-06-28",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EFA": -0.5
+          }
+        },
+        {
+          "rebalance": "2024-07-31",
+          "weights": {
+            "SPY": 0.5,
+            "IWM": 0.5,
+            "EFA": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2024-08-30",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2024-09-30",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": -0.5,
+            "EFA": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2024-10-31",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "EFA": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2024-11-29",
+          "weights": {
+            "SPY": 0.5,
+            "IWM": 0.5,
+            "EFA": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2024-12-31",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EFA": -0.5
+          }
+        },
+        {
+          "rebalance": "2025-01-31",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2025-02-28",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": -0.5,
+            "IWM": -0.5,
+            "EFA": 0.5
+          }
+        },
+        {
+          "rebalance": "2025-03-31",
+          "weights": {
+            "QQQ": -0.5,
+            "IWM": -0.5,
+            "EFA": 0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2025-04-30",
+          "weights": {
+            "SPY": -0.5,
+            "IWM": -0.5,
+            "EFA": 0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2025-05-30",
+          "weights": {
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EFA": 0.5,
+            "EEM": -0.5
+          }
+        },
+        {
+          "rebalance": "2025-06-30",
+          "weights": {
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EFA": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2025-07-31",
+          "weights": {
+            "SPY": 0.5,
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EFA": -0.5
+          }
+        },
+        {
+          "rebalance": "2025-08-29",
+          "weights": {
+            "SPY": -0.5,
+            "IWM": 0.5,
+            "EFA": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2025-09-30",
+          "weights": {
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EFA": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2025-10-31",
+          "weights": {
+            "SPY": -0.5,
+            "QQQ": 0.5,
+            "EFA": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2025-11-28",
+          "weights": {
+            "SPY": -0.5,
+            "QQQ": 0.5,
+            "IWM": -0.5,
+            "EEM": 0.5
+          }
+        },
+        {
+          "rebalance": "2025-12-30",
+          "weights": {
+            "QQQ": -0.5,
+            "IWM": -0.5,
+            "EFA": 0.5,
+            "EEM": 0.5
+          }
+        }
+      ]
+    }
+  },
+  "best_variant": "long_only",
+  "target_check": {
+    "sharpe_ge_2": false,
+    "uncorrelated": false
+  },
+  "rule_zero": "All prices from Yahoo Finance v8 chart API. No synthetic data, no random fills, no extrapolation. If a Yahoo fetch fails the script aborts."
+}
