@@ -1,0 +1,306 @@
+{
+  "experiment": "EXP-2070",
+  "name": "VIX Term Structure Alpha \u2014 EXP-1220 Entry Overlay",
+  "generated": "2026-04-07T16:02:23",
+  "data_sources": {
+    "term_structure": "Yahoo Finance ^VIX / ^VIX3M daily ratio",
+    "fomc": "data/fomc/ (federalreserve.gov 2015-2025, 89 meetings)",
+    "vvol": "Yahoo ^VIX \u2192 20d realised / 252d z (EXP-1970)",
+    "options": "IronVault options_cache.db (real Polygon SPY chains)"
+  },
+  "baseline": {
+    "label": "baseline",
+    "n": 171,
+    "pnl": 7372.0,
+    "wr": 0.8771929824561403,
+    "sharpe": 1.257,
+    "cagr_pct": 1.223,
+    "max_dd_pct": 1.551,
+    "avg_pnl": 43.11,
+    "trades_per_yr": 29.23
+  },
+  "variants": {
+    "term_only_ratio_lt_0.80": {
+      "label": "term < 0.80",
+      "n": 14,
+      "pnl": 28.0,
+      "wr": 0.7857142857142857,
+      "sharpe": 0.086,
+      "cagr_pct": 0.02,
+      "max_dd_pct": 0.2,
+      "avg_pnl": 2.0,
+      "trades_per_yr": 9.89
+    },
+    "term_only_ratio_lt_0.85": {
+      "label": "term < 0.85",
+      "n": 59,
+      "pnl": 1568.0,
+      "wr": 0.8813559322033898,
+      "sharpe": 1.431,
+      "cagr_pct": 0.289,
+      "max_dd_pct": 0.2,
+      "avg_pnl": 26.58,
+      "trades_per_yr": 10.93
+    },
+    "term_only_ratio_lt_0.90": {
+      "label": "term < 0.90",
+      "n": 100,
+      "pnl": 3352.0,
+      "wr": 0.89,
+      "sharpe": 2.084,
+      "cagr_pct": 0.596,
+      "max_dd_pct": 0.231,
+      "avg_pnl": 33.52,
+      "trades_per_yr": 18.01
+    },
+    "term_only_ratio_lt_0.95": {
+      "label": "term < 0.95",
+      "n": 137,
+      "pnl": 4168.0,
+      "wr": 0.8686131386861314,
+      "sharpe": 1.217,
+      "cagr_pct": 0.705,
+      "max_dd_pct": 0.581,
+      "avg_pnl": 30.42,
+      "trades_per_yr": 23.58
+    },
+    "skip_backwardation_only": {
+      "label": "skip_backwardation_only",
+      "n": 163,
+      "pnl": 7204.0,
+      "wr": 0.8834355828220859,
+      "sharpe": 1.949,
+      "cagr_pct": 1.196,
+      "max_dd_pct": 0.649,
+      "avg_pnl": 44.2,
+      "trades_per_yr": 27.86
+    },
+    "V_only_vvol": {
+      "label": "V_only_vvol",
+      "n": 162,
+      "pnl": 6092.0,
+      "wr": 0.8827160493827161,
+      "sharpe": 1.102,
+      "cagr_pct": 1.016,
+      "max_dd_pct": 1.551,
+      "avg_pnl": 37.6,
+      "trades_per_yr": 27.69
+    },
+    "F_only_fomc": {
+      "label": "F_only_fomc",
+      "n": 150,
+      "pnl": 6624.0,
+      "wr": 0.88,
+      "sharpe": 1.156,
+      "cagr_pct": 1.102,
+      "max_dd_pct": 1.551,
+      "avg_pnl": 44.16,
+      "trades_per_yr": 25.64
+    },
+    "V_plus_F": {
+      "label": "V_plus_F",
+      "n": 142,
+      "pnl": 5404.0,
+      "wr": 0.8873239436619719,
+      "sharpe": 1.003,
+      "cagr_pct": 0.904,
+      "max_dd_pct": 1.551,
+      "avg_pnl": 38.06,
+      "trades_per_yr": 24.27
+    },
+    "V_plus_F_plus_T_lt_0.85": {
+      "label": "V+F+T term<0.85",
+      "n": 51,
+      "pnl": 1444.0,
+      "wr": 0.9019607843137255,
+      "sharpe": 1.412,
+      "cagr_pct": 0.266,
+      "max_dd_pct": 0.2,
+      "avg_pnl": 28.31,
+      "trades_per_yr": 9.45
+    },
+    "V_plus_F_plus_T_lt_0.90": {
+      "label": "V+F+T term<0.90",
+      "n": 83,
+      "pnl": 3204.0,
+      "wr": 0.9156626506024096,
+      "sharpe": 2.418,
+      "cagr_pct": 0.57,
+      "max_dd_pct": 0.199,
+      "avg_pnl": 38.6,
+      "trades_per_yr": 14.95
+    },
+    "V_plus_F_plus_T_lt_0.95": {
+      "label": "V+F+T term<0.95",
+      "n": 115,
+      "pnl": 4024.0,
+      "wr": 0.8869565217391304,
+      "sharpe": 1.282,
+      "cagr_pct": 0.681,
+      "max_dd_pct": 0.644,
+      "avg_pnl": 34.99,
+      "trades_per_yr": 19.79
+    }
+  },
+  "best_term_only": {
+    "label": "term < 0.90",
+    "n": 100,
+    "pnl": 3352.0,
+    "wr": 0.89,
+    "sharpe": 2.084,
+    "cagr_pct": 0.596,
+    "max_dd_pct": 0.231,
+    "avg_pnl": 33.52,
+    "trades_per_yr": 18.01
+  },
+  "v_plus_f_baseline": {
+    "label": "V_plus_F",
+    "n": 142,
+    "pnl": 5404.0,
+    "wr": 0.8873239436619719,
+    "sharpe": 1.003,
+    "cagr_pct": 0.904,
+    "max_dd_pct": 1.551,
+    "avg_pnl": 38.06,
+    "trades_per_yr": 24.27
+  },
+  "best_stacked_vft": {
+    "label": "V+F+T term<0.90",
+    "n": 83,
+    "pnl": 3204.0,
+    "wr": 0.9156626506024096,
+    "sharpe": 2.418,
+    "cagr_pct": 0.57,
+    "max_dd_pct": 0.199,
+    "avg_pnl": 38.6,
+    "trades_per_yr": 14.95
+  },
+  "incremental_sharpe_over_vf": 1.415,
+  "term_adds_incremental": true,
+  "walk_forward_best_term_only": [
+    {
+      "year": 2020,
+      "base_n": 27,
+      "base_sharpe": 0.145,
+      "base_pnl": 240.0,
+      "filt_n": 12,
+      "filt_sharpe": 1.692,
+      "filt_pnl": 468.0,
+      "delta_sharpe": 1.547
+    },
+    {
+      "year": 2021,
+      "base_n": 34,
+      "base_sharpe": 0.981,
+      "base_pnl": 616.0,
+      "filt_n": 29,
+      "filt_sharpe": 2.134,
+      "filt_pnl": 784.0,
+      "delta_sharpe": 1.153
+    },
+    {
+      "year": 2022,
+      "base_n": 32,
+      "base_sharpe": 2.3,
+      "base_pnl": 2564.0,
+      "filt_n": 9,
+      "filt_sharpe": 1.159,
+      "filt_pnl": 328.0,
+      "delta_sharpe": -1.141
+    },
+    {
+      "year": 2023,
+      "base_n": 26,
+      "base_sharpe": 6.507,
+      "base_pnl": 1064.0,
+      "filt_n": 17,
+      "filt_sharpe": 4.258,
+      "filt_pnl": 472.0,
+      "delta_sharpe": -2.249
+    },
+    {
+      "year": 2024,
+      "base_n": 26,
+      "base_sharpe": 0.321,
+      "base_pnl": 240.0,
+      "filt_n": 20,
+      "filt_sharpe": 0.46,
+      "filt_pnl": 156.0,
+      "delta_sharpe": 0.139
+    },
+    {
+      "year": 2025,
+      "base_n": 26,
+      "base_sharpe": 2.838,
+      "base_pnl": 2648.0,
+      "filt_n": 13,
+      "filt_sharpe": 8.887,
+      "filt_pnl": 1144.0,
+      "delta_sharpe": 6.049
+    }
+  ],
+  "regime_conditional_baseline": [
+    {
+      "regime": "ratio < 0.85",
+      "label": "ratio < 0.85",
+      "n": 59,
+      "pnl": 1568.0,
+      "wr": 0.8813559322033898,
+      "sharpe": 1.431,
+      "cagr_pct": 0.289,
+      "max_dd_pct": 0.2,
+      "avg_pnl": 26.58,
+      "trades_per_yr": 10.93
+    },
+    {
+      "regime": "0.85 \u2264 ratio < 0.90",
+      "label": "0.85 \u2264 ratio < 0.90",
+      "n": 41,
+      "pnl": 1784.0,
+      "wr": 0.9024390243902439,
+      "sharpe": 1.552,
+      "cagr_pct": 0.324,
+      "max_dd_pct": 0.233,
+      "avg_pnl": 43.51,
+      "trades_per_yr": 7.5
+    },
+    {
+      "regime": "0.90 \u2264 ratio < 0.95",
+      "label": "0.90 \u2264 ratio < 0.95",
+      "n": 37,
+      "pnl": 816.0,
+      "wr": 0.8108108108108109,
+      "sharpe": 0.271,
+      "cagr_pct": 0.142,
+      "max_dd_pct": 0.772,
+      "avg_pnl": 22.05,
+      "trades_per_yr": 6.46
+    },
+    {
+      "regime": "0.95 \u2264 ratio < 1.00",
+      "label": "0.95 \u2264 ratio < 1.00",
+      "n": 26,
+      "pnl": 3036.0,
+      "wr": 0.9615384615384616,
+      "sharpe": 3.132,
+      "cagr_pct": 0.516,
+      "max_dd_pct": 0.145,
+      "avg_pnl": 116.77,
+      "trades_per_yr": 4.48
+    },
+    {
+      "regime": "ratio \u2265 1.00 (inv)",
+      "label": "ratio \u2265 1.00 (inv)",
+      "n": 8,
+      "pnl": 168.0,
+      "wr": 0.75,
+      "sharpe": 0.037,
+      "cagr_pct": 0.033,
+      "max_dd_pct": 0.333,
+      "avg_pnl": 21.0,
+      "trades_per_yr": 1.56
+    }
+  ],
+  "target_delta_sharpe": 0.5,
+  "target_met_term_only": true
+}
