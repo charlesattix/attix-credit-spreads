@@ -1,0 +1,488 @@
+{
+  "experiment": "EXP-1760",
+  "title": "Crypto Volatility Hardening",
+  "timestamp": "2026-04-07 11:59:42",
+  "data": {
+    "ibit_days": 558,
+    "ibit_first": "2024-01-11",
+    "ibit_last": "2026-04-02",
+    "bito_days": 1117,
+    "bito_first": "2021-10-20",
+    "bito_last": "2026-04-02",
+    "btc_days": 1922
+  },
+  "results": [
+    {
+      "underlying": "IBIT",
+      "use_regime": false,
+      "metrics": {
+        "n_trades": 106,
+        "cagr_pct": 4.47,
+        "sharpe": 1.04,
+        "max_dd_pct": -4.58,
+        "vol_pct": 4.28,
+        "win_rate_pct": 75.5,
+        "total_pnl": 9892.0,
+        "n_days": 558
+      },
+      "n_trades": 106,
+      "regime_breakdown": [
+        {
+          "regime": "CALM",
+          "n": 28,
+          "pnl": 315.0,
+          "win_rate": 78.6,
+          "avg_pnl": 11.24
+        },
+        {
+          "regime": "NORMAL",
+          "n": 33,
+          "pnl": 2016.0,
+          "win_rate": 72.7,
+          "avg_pnl": 61.08
+        },
+        {
+          "regime": "ELEVATED",
+          "n": 25,
+          "pnl": 2198.0,
+          "win_rate": 72.0,
+          "avg_pnl": 87.94
+        },
+        {
+          "regime": "CRISIS",
+          "n": 20,
+          "pnl": 5363.0,
+          "win_rate": 80.0,
+          "avg_pnl": 268.16
+        }
+      ],
+      "walk_forward": [
+        {
+          "year": 2024,
+          "n_trades": 47,
+          "cagr_pct": 5.56,
+          "sharpe": 1.19,
+          "max_dd_pct": -4.58,
+          "vol_pct": 4.62,
+          "win_rate_pct": 78.7,
+          "total_pnl": 6522.0,
+          "n_days": 262
+        },
+        {
+          "year": 2025,
+          "n_trades": 48,
+          "cagr_pct": 2.44,
+          "sharpe": 0.69,
+          "max_dd_pct": -3.95,
+          "vol_pct": 3.62,
+          "win_rate_pct": 77.1,
+          "total_pnl": 2934.0,
+          "n_days": 261
+        },
+        {
+          "year": 2026,
+          "n_trades": 11,
+          "cagr_pct": 0.4,
+          "sharpe": 0.2,
+          "max_dd_pct": -2.19,
+          "vol_pct": 2.11,
+          "win_rate_pct": 54.5,
+          "total_pnl": 436.0,
+          "n_days": 261
+        }
+      ]
+    },
+    {
+      "underlying": "IBIT",
+      "use_regime": true,
+      "metrics": {
+        "n_trades": 86,
+        "cagr_pct": 1.53,
+        "sharpe": 0.4,
+        "max_dd_pct": -5.35,
+        "vol_pct": 3.98,
+        "win_rate_pct": 74.4,
+        "total_pnl": 3539.0,
+        "n_days": 558
+      },
+      "n_trades": 86,
+      "regime_breakdown": [
+        {
+          "regime": "CALM",
+          "n": 28,
+          "pnl": 431.0,
+          "win_rate": 78.6,
+          "avg_pnl": 15.4
+        },
+        {
+          "regime": "NORMAL",
+          "n": 33,
+          "pnl": 2016.0,
+          "win_rate": 72.7,
+          "avg_pnl": 61.08
+        },
+        {
+          "regime": "ELEVATED",
+          "n": 25,
+          "pnl": 1092.0,
+          "win_rate": 72.0,
+          "avg_pnl": 43.69
+        },
+        {
+          "regime": "CRISIS",
+          "n": 0,
+          "pnl": 0,
+          "win_rate": 0.0,
+          "avg_pnl": 0.0
+        }
+      ],
+      "walk_forward": [
+        {
+          "year": 2024,
+          "n_trades": 46,
+          "cagr_pct": 3.37,
+          "sharpe": 0.7,
+          "max_dd_pct": -5.35,
+          "vol_pct": 4.94,
+          "win_rate_pct": 78.3,
+          "total_pnl": 4244.0,
+          "n_days": 262
+        },
+        {
+          "year": 2025,
+          "n_trades": 38,
+          "cagr_pct": -0.3,
+          "sharpe": -0.09,
+          "max_dd_pct": -3.66,
+          "vol_pct": 2.99,
+          "win_rate_pct": 71.1,
+          "total_pnl": -263.0,
+          "n_days": 261
+        },
+        {
+          "year": 2026,
+          "n_trades": 2,
+          "cagr_pct": -0.43,
+          "sharpe": -0.92,
+          "max_dd_pct": -0.47,
+          "vol_pct": 0.46,
+          "win_rate_pct": 50.0,
+          "total_pnl": -441.0,
+          "n_days": 261
+        }
+      ]
+    },
+    {
+      "underlying": "BITO",
+      "use_regime": false,
+      "metrics": {
+        "n_trades": 186,
+        "cagr_pct": -0.18,
+        "sharpe": -0.01,
+        "max_dd_pct": -11.22,
+        "vol_pct": 5.38,
+        "win_rate_pct": 68.3,
+        "total_pnl": -172.0,
+        "n_days": 1117
+      },
+      "n_trades": 186,
+      "regime_breakdown": [
+        {
+          "regime": "CALM",
+          "n": 39,
+          "pnl": 286.0,
+          "win_rate": 71.8,
+          "avg_pnl": 7.33
+        },
+        {
+          "regime": "NORMAL",
+          "n": 54,
+          "pnl": -3004.0,
+          "win_rate": 68.5,
+          "avg_pnl": -55.62
+        },
+        {
+          "regime": "ELEVATED",
+          "n": 45,
+          "pnl": -5295.0,
+          "win_rate": 62.2,
+          "avg_pnl": -117.67
+        },
+        {
+          "regime": "CRISIS",
+          "n": 48,
+          "pnl": 7841.0,
+          "win_rate": 70.8,
+          "avg_pnl": 163.35
+        }
+      ],
+      "walk_forward": [
+        {
+          "year": 2021,
+          "n_trades": 10,
+          "cagr_pct": -2.64,
+          "sharpe": -0.8,
+          "max_dd_pct": -5.48,
+          "vol_pct": 3.27,
+          "win_rate_pct": 50.0,
+          "total_pnl": -4580.0,
+          "n_days": 261
+        },
+        {
+          "year": 2022,
+          "n_trades": 40,
+          "cagr_pct": -0.74,
+          "sharpe": -0.07,
+          "max_dd_pct": -7.21,
+          "vol_pct": 7.04,
+          "win_rate_pct": 67.5,
+          "total_pnl": -506.0,
+          "n_days": 260
+        },
+        {
+          "year": 2023,
+          "n_trades": 36,
+          "cagr_pct": 11.54,
+          "sharpe": 3.79,
+          "max_dd_pct": -0.72,
+          "vol_pct": 2.89,
+          "win_rate_pct": 91.7,
+          "total_pnl": 11311.0,
+          "n_days": 260
+        },
+        {
+          "year": 2024,
+          "n_trades": 48,
+          "cagr_pct": -4.5,
+          "sharpe": -0.79,
+          "max_dd_pct": -8.07,
+          "vol_pct": 5.65,
+          "win_rate_pct": 64.6,
+          "total_pnl": -3904.0,
+          "n_days": 262
+        },
+        {
+          "year": 2025,
+          "n_trades": 43,
+          "cagr_pct": -2.93,
+          "sharpe": -0.75,
+          "max_dd_pct": -6.5,
+          "vol_pct": 3.88,
+          "win_rate_pct": 62.8,
+          "total_pnl": -2728.0,
+          "n_days": 261
+        },
+        {
+          "year": 2026,
+          "n_trades": 9,
+          "cagr_pct": 0.2,
+          "sharpe": 0.11,
+          "max_dd_pct": -2.24,
+          "vol_pct": 2.13,
+          "win_rate_pct": 44.4,
+          "total_pnl": 234.0,
+          "n_days": 261
+        }
+      ]
+    },
+    {
+      "underlying": "BITO",
+      "use_regime": true,
+      "metrics": {
+        "n_trades": 138,
+        "cagr_pct": -1.24,
+        "sharpe": -0.28,
+        "max_dd_pct": -10.66,
+        "vol_pct": 4.17,
+        "win_rate_pct": 67.4,
+        "total_pnl": -5126.0,
+        "n_days": 1117
+      },
+      "n_trades": 138,
+      "regime_breakdown": [
+        {
+          "regime": "CALM",
+          "n": 39,
+          "pnl": 444.0,
+          "win_rate": 71.8,
+          "avg_pnl": 11.39
+        },
+        {
+          "regime": "NORMAL",
+          "n": 54,
+          "pnl": -3004.0,
+          "win_rate": 68.5,
+          "avg_pnl": -55.62
+        },
+        {
+          "regime": "ELEVATED",
+          "n": 45,
+          "pnl": -2567.0,
+          "win_rate": 62.2,
+          "avg_pnl": -57.04
+        },
+        {
+          "regime": "CRISIS",
+          "n": 0,
+          "pnl": 0,
+          "win_rate": 0.0,
+          "avg_pnl": 0.0
+        }
+      ],
+      "walk_forward": [
+        {
+          "year": 2021,
+          "n_trades": 6,
+          "cagr_pct": -2.89,
+          "sharpe": -1.3,
+          "max_dd_pct": -3.92,
+          "vol_pct": 2.23,
+          "win_rate_pct": 33.3,
+          "total_pnl": -3010.0,
+          "n_days": 261
+        },
+        {
+          "year": 2022,
+          "n_trades": 14,
+          "cagr_pct": -3.75,
+          "sharpe": -1.36,
+          "max_dd_pct": -4.45,
+          "vol_pct": 2.78,
+          "win_rate_pct": 50.0,
+          "total_pnl": -3908.0,
+          "n_days": 260
+        },
+        {
+          "year": 2023,
+          "n_trades": 36,
+          "cagr_pct": 11.95,
+          "sharpe": 3.44,
+          "max_dd_pct": -1.08,
+          "vol_pct": 3.3,
+          "win_rate_pct": 91.7,
+          "total_pnl": 11707.0,
+          "n_days": 260
+        },
+        {
+          "year": 2024,
+          "n_trades": 47,
+          "cagr_pct": -6.19,
+          "sharpe": -1.0,
+          "max_dd_pct": -9.35,
+          "vol_pct": 6.19,
+          "win_rate_pct": 63.8,
+          "total_pnl": -5880.0,
+          "n_days": 262
+        },
+        {
+          "year": 2025,
+          "n_trades": 34,
+          "cagr_pct": -3.43,
+          "sharpe": -1.01,
+          "max_dd_pct": -5.33,
+          "vol_pct": 3.42,
+          "win_rate_pct": 61.8,
+          "total_pnl": -3558.0,
+          "n_days": 261
+        },
+        {
+          "year": 2026,
+          "n_trades": 1,
+          "cagr_pct": -0.46,
+          "sharpe": -0.98,
+          "max_dd_pct": -0.48,
+          "vol_pct": 0.47,
+          "win_rate_pct": 0.0,
+          "total_pnl": -477.0,
+          "n_days": 261
+        }
+      ]
+    }
+  ],
+  "best": {
+    "underlying": "IBIT (no filter)",
+    "use_regime": false,
+    "metrics": {
+      "n_trades": 106,
+      "cagr_pct": 4.47,
+      "sharpe": 1.04,
+      "max_dd_pct": -4.58,
+      "vol_pct": 4.28,
+      "win_rate_pct": 75.5,
+      "total_pnl": 9892.0,
+      "n_days": 558
+    },
+    "regime_breakdown": [
+      {
+        "regime": "CALM",
+        "n": 28,
+        "pnl": 315.0,
+        "win_rate": 78.6,
+        "avg_pnl": 11.24
+      },
+      {
+        "regime": "NORMAL",
+        "n": 33,
+        "pnl": 2016.0,
+        "win_rate": 72.7,
+        "avg_pnl": 61.08
+      },
+      {
+        "regime": "ELEVATED",
+        "n": 25,
+        "pnl": 2198.0,
+        "win_rate": 72.0,
+        "avg_pnl": 87.94
+      },
+      {
+        "regime": "CRISIS",
+        "n": 20,
+        "pnl": 5363.0,
+        "win_rate": 80.0,
+        "avg_pnl": 268.16
+      }
+    ],
+    "walk_forward": [
+      {
+        "year": 2024,
+        "n_trades": 47,
+        "cagr_pct": 5.56,
+        "sharpe": 1.19,
+        "max_dd_pct": -4.58,
+        "vol_pct": 4.62,
+        "win_rate_pct": 78.7,
+        "total_pnl": 6522.0,
+        "n_days": 262
+      },
+      {
+        "year": 2025,
+        "n_trades": 48,
+        "cagr_pct": 2.44,
+        "sharpe": 0.69,
+        "max_dd_pct": -3.95,
+        "vol_pct": 3.62,
+        "win_rate_pct": 77.1,
+        "total_pnl": 2934.0,
+        "n_days": 261
+      },
+      {
+        "year": 2026,
+        "n_trades": 11,
+        "cagr_pct": 0.4,
+        "sharpe": 0.2,
+        "max_dd_pct": -2.19,
+        "vol_pct": 2.11,
+        "win_rate_pct": 54.5,
+        "total_pnl": 436.0,
+        "n_days": 261
+      }
+    ]
+  },
+  "correlation_to_exp1220": 0.30848570833555516,
+  "target_check": {
+    "cagr_ok": false,
+    "sharpe_ok": false,
+    "corr_ok": false
+  },
+  "disclosure": "FEASIBILITY VALIDATION: option premiums are Black-Scholes derived (IBIT/BITO chains absent from IronVault). All spot prices and BTC realized vol are real Yahoo Finance data."
+}
