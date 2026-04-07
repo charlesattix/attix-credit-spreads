@@ -1,0 +1,1126 @@
+{
+  "experiment": "EXP-2200",
+  "title": "7-Stream North Star Portfolio v6",
+  "generated": "2026-04-07T17:34:14",
+  "rule_zero": true,
+  "sources": {
+    "exp1220": "compass.exp1220_standalone on real IronVault SPY chains",
+    "xlf_cs": "compass.exp2160_high_capacity_alts.run_put_credit_spreads (XLF)",
+    "xli_cs": "compass.exp2160_high_capacity_alts.run_put_credit_spreads (XLI)",
+    "gld_cal": "compass.exp1770_commodity_calendars WF GLD-GC=F (from exp1860 cache)",
+    "slv_cal": "compass.exp1770_commodity_calendars WF SLV-SI=F (from exp1860 cache)",
+    "vol_arb": "compass.exp2020_cross_vol_arb trade tape",
+    "v5_hedge": "compass.crisis_alpha_v5 frozen best (from exp1860 cache)",
+    "trade_to_daily": "uniform smearing across entry\u2192exit (EXP-2160 method)",
+    "sharpe_formula": "compass.metrics.full_metrics (mean/std \u00d7 \u221a252)"
+  },
+  "data_window": {
+    "start": "2020-01-01",
+    "end": "2025-12-31",
+    "warmup": 252
+  },
+  "stream_info": {
+    "exp1220": {
+      "n_trades": 171,
+      "trade_sharpe": 1.257
+    },
+    "xlf_cs": {
+      "n_trades": 248,
+      "trade_sharpe": 11.189
+    },
+    "xli_cs": {
+      "n_trades": 248,
+      "trade_sharpe": 6.036
+    },
+    "vol_arb": {
+      "n_trades": 271,
+      "trade_sharpe": 2.281
+    },
+    "gld_cal": {
+      "n_trades": null,
+      "daily_sharpe": 1.96
+    },
+    "slv_cal": {
+      "n_trades": null,
+      "daily_sharpe": 1.94
+    },
+    "v5_hedge": {
+      "n_trades": null,
+      "daily_sharpe": -0.83
+    }
+  },
+  "stream_metrics_smeared": {
+    "exp1220": {
+      "cagr_pct": 1.19,
+      "sharpe": -7.18,
+      "max_dd_pct": 1.53,
+      "calmar": 0.78,
+      "sortino": -3.15,
+      "vol_pct": 0.46,
+      "total_ret_pct": 7.64,
+      "n_days": 1566
+    },
+    "xlf_cs": {
+      "cagr_pct": 17.6,
+      "sharpe": 19.67,
+      "max_dd_pct": 1.45,
+      "calmar": 12.11,
+      "sortino": 5.77,
+      "vol_pct": 0.6,
+      "total_ret_pct": 173.81,
+      "n_days": 1566
+    },
+    "xli_cs": {
+      "cagr_pct": 17.67,
+      "sharpe": 15.52,
+      "max_dd_pct": 1.37,
+      "calmar": 12.9,
+      "sortino": 41.83,
+      "vol_pct": 0.76,
+      "total_ret_pct": 174.87,
+      "n_days": 1566
+    },
+    "gld_cal": {
+      "cagr_pct": 17.4,
+      "sharpe": 1.96,
+      "max_dd_pct": 2.5,
+      "calmar": 6.96,
+      "sortino": 2.88,
+      "vol_pct": 5.97,
+      "total_ret_pct": 170.97,
+      "n_days": 1566
+    },
+    "slv_cal": {
+      "cagr_pct": 31.46,
+      "sharpe": 1.94,
+      "max_dd_pct": 6.08,
+      "calmar": 5.18,
+      "sortino": 2.71,
+      "vol_pct": 12.17,
+      "total_ret_pct": 447.35,
+      "n_days": 1566
+    },
+    "vol_arb": {
+      "cagr_pct": 7.86,
+      "sharpe": 3.92,
+      "max_dd_pct": 3.79,
+      "calmar": 2.07,
+      "sortino": 5.48,
+      "vol_pct": 0.78,
+      "total_ret_pct": 59.98,
+      "n_days": 1566
+    },
+    "v5_hedge": {
+      "cagr_pct": -1.03,
+      "sharpe": -0.83,
+      "max_dd_pct": 12.84,
+      "calmar": -0.08,
+      "sortino": -0.51,
+      "vol_pct": 6.42,
+      "total_ret_pct": -6.21,
+      "n_days": 1566
+    }
+  },
+  "stream_metrics_sparse": {
+    "exp1220": {
+      "cagr_pct": 1.19,
+      "sharpe": -3.31,
+      "max_dd_pct": 1.55,
+      "calmar": 0.77,
+      "sortino": -0.66,
+      "vol_pct": 1.0,
+      "total_ret_pct": 7.62,
+      "n_days": 1566
+    },
+    "xlf_cs": {
+      "cagr_pct": 17.71,
+      "sharpe": 3.59,
+      "max_dd_pct": 1.3,
+      "calmar": 13.57,
+      "sortino": 1.46,
+      "vol_pct": 3.3,
+      "total_ret_pct": 175.4,
+      "n_days": 1566
+    },
+    "xli_cs": {
+      "cagr_pct": 17.22,
+      "sharpe": 2.42,
+      "max_dd_pct": 3.7,
+      "calmar": 4.66,
+      "sortino": 0.61,
+      "vol_pct": 4.76,
+      "total_ret_pct": 168.35,
+      "n_days": 1566
+    },
+    "gld_cal": {
+      "cagr_pct": 17.4,
+      "sharpe": 1.96,
+      "max_dd_pct": 2.5,
+      "calmar": 6.96,
+      "sortino": 2.88,
+      "vol_pct": 5.97,
+      "total_ret_pct": 170.97,
+      "n_days": 1566
+    },
+    "slv_cal": {
+      "cagr_pct": 31.46,
+      "sharpe": 1.94,
+      "max_dd_pct": 6.08,
+      "calmar": 5.18,
+      "sortino": 2.71,
+      "vol_pct": 12.17,
+      "total_ret_pct": 447.35,
+      "n_days": 1566
+    },
+    "vol_arb": {
+      "cagr_pct": 7.79,
+      "sharpe": 0.87,
+      "max_dd_pct": 5.48,
+      "calmar": 1.42,
+      "sortino": 0.53,
+      "vol_pct": 3.53,
+      "total_ret_pct": 59.4,
+      "n_days": 1566
+    },
+    "v5_hedge": {
+      "cagr_pct": -1.03,
+      "sharpe": -0.83,
+      "max_dd_pct": 12.84,
+      "calmar": -0.08,
+      "sortino": -0.51,
+      "vol_pct": 6.42,
+      "total_ret_pct": -6.21,
+      "n_days": 1566
+    }
+  },
+  "correlation_matrix": {
+    "exp1220": {
+      "exp1220": 1.0,
+      "xlf_cs": 0.159,
+      "xli_cs": 0.168,
+      "gld_cal": -0.038,
+      "slv_cal": -0.031,
+      "vol_arb": 0.017,
+      "v5_hedge": -0.089
+    },
+    "xlf_cs": {
+      "exp1220": 0.159,
+      "xlf_cs": 1.0,
+      "xli_cs": 0.224,
+      "gld_cal": 0.005,
+      "slv_cal": -0.027,
+      "vol_arb": 0.1,
+      "v5_hedge": -0.052
+    },
+    "xli_cs": {
+      "exp1220": 0.168,
+      "xlf_cs": 0.224,
+      "xli_cs": 1.0,
+      "gld_cal": -0.003,
+      "slv_cal": -0.011,
+      "vol_arb": -0.103,
+      "v5_hedge": -0.054
+    },
+    "gld_cal": {
+      "exp1220": -0.038,
+      "xlf_cs": 0.005,
+      "xli_cs": -0.003,
+      "gld_cal": 1.0,
+      "slv_cal": 0.256,
+      "vol_arb": -0.003,
+      "v5_hedge": -0.049
+    },
+    "slv_cal": {
+      "exp1220": -0.031,
+      "xlf_cs": -0.027,
+      "xli_cs": -0.011,
+      "gld_cal": 0.256,
+      "slv_cal": 1.0,
+      "vol_arb": -0.025,
+      "v5_hedge": -0.018
+    },
+    "vol_arb": {
+      "exp1220": 0.017,
+      "xlf_cs": 0.1,
+      "xli_cs": -0.103,
+      "gld_cal": -0.003,
+      "slv_cal": -0.025,
+      "vol_arb": 1.0,
+      "v5_hedge": -0.005
+    },
+    "v5_hedge": {
+      "exp1220": -0.089,
+      "xlf_cs": -0.052,
+      "xli_cs": -0.054,
+      "gld_cal": -0.049,
+      "slv_cal": -0.018,
+      "vol_arb": -0.005,
+      "v5_hedge": 1.0
+    }
+  },
+  "optimizer_weights": {
+    "equal_risk": {
+      "exp1220": 0.31639076832034235,
+      "xlf_cs": 0.2451864538074452,
+      "xli_cs": 0.1923975392572773,
+      "gld_cal": 0.024448590716864282,
+      "slv_cal": 0.01199997588044858,
+      "vol_arb": 0.18682395771704877,
+      "v5_hedge": 0.022752714300573386
+    },
+    "max_sharpe": {
+      "exp1220": 0.0,
+      "xlf_cs": 0.4999999999999989,
+      "xli_cs": 0.31964314907812513,
+      "gld_cal": 0.004759285477481159,
+      "slv_cal": 0.0031797847363981336,
+      "vol_arb": 0.16769887451430782,
+      "v5_hedge": 0.004718906193688919
+    },
+    "min_variance": {
+      "exp1220": 0.2508457922852999,
+      "xlf_cs": 0.24629258344953464,
+      "xli_cs": 0.24482257993327064,
+      "gld_cal": 0.0038269165870824214,
+      "slv_cal": 0.0016403361263669734,
+      "vol_arb": 0.24458689455063828,
+      "v5_hedge": 0.007984897067807233
+    }
+  },
+  "configs": {
+    "equal_risk_none": {
+      "weights": {
+        "exp1220": 0.31639076832034235,
+        "xlf_cs": 0.2451864538074452,
+        "xli_cs": 0.1923975392572773,
+        "gld_cal": 0.024448590716864282,
+        "slv_cal": 0.01199997588044858,
+        "vol_arb": 0.18682395771704877,
+        "v5_hedge": 0.022752714300573386
+      },
+      "vol_target": null,
+      "metrics": {
+        "cagr_pct": 10.04,
+        "sharpe": 13.4,
+        "max_dd_pct": 0.17,
+        "calmar": 59.39,
+        "sortino": 24.16,
+        "vol_pct": 0.38,
+        "total_ret_pct": 64.65,
+        "n_days": 1314
+      },
+      "yearly": [
+        {
+          "cagr_pct": 9.19,
+          "sharpe": 12.87,
+          "max_dd_pct": 0.08,
+          "calmar": 111.27,
+          "sortino": 24.53,
+          "vol_pct": 0.33,
+          "total_ret_pct": 9.53,
+          "n_days": 261,
+          "year": 2021
+        },
+        {
+          "cagr_pct": 11.02,
+          "sharpe": 14.06,
+          "max_dd_pct": 0.09,
+          "calmar": 123.07,
+          "sortino": 26.24,
+          "vol_pct": 0.42,
+          "total_ret_pct": 11.39,
+          "n_days": 260,
+          "year": 2022
+        },
+        {
+          "cagr_pct": 8.22,
+          "sharpe": 10.33,
+          "max_dd_pct": 0.03,
+          "calmar": 280.26,
+          "sortino": 49.77,
+          "vol_pct": 0.33,
+          "total_ret_pct": 8.49,
+          "n_days": 260,
+          "year": 2023
+        },
+        {
+          "cagr_pct": 9.68,
+          "sharpe": 13.64,
+          "max_dd_pct": 0.17,
+          "calmar": 57.26,
+          "sortino": 36.03,
+          "vol_pct": 0.35,
+          "total_ret_pct": 10.08,
+          "n_days": 262,
+          "year": 2024
+        },
+        {
+          "cagr_pct": 12.05,
+          "sharpe": 16.72,
+          "max_dd_pct": 0.14,
+          "calmar": 87.76,
+          "sortino": 26.23,
+          "vol_pct": 0.41,
+          "total_ret_pct": 12.5,
+          "n_days": 261,
+          "year": 2025
+        }
+      ]
+    },
+    "equal_risk_12%": {
+      "weights": {
+        "exp1220": 0.31639076832034235,
+        "xlf_cs": 0.2451864538074452,
+        "xli_cs": 0.1923975392572773,
+        "gld_cal": 0.024448590716864282,
+        "slv_cal": 0.01199997588044858,
+        "vol_arb": 0.18682395771704877,
+        "v5_hedge": 0.022752714300573386
+      },
+      "vol_target": "12%",
+      "metrics": {
+        "cagr_pct": 1520.75,
+        "sharpe": 24.9,
+        "max_dd_pct": 4.86,
+        "calmar": 313.18,
+        "sortino": 44.89,
+        "vol_pct": 11.09,
+        "total_ret_pct": 203146937.68,
+        "n_days": 1314
+      },
+      "yearly": [
+        {
+          "cagr_pct": 1197.44,
+          "sharpe": 25.89,
+          "max_dd_pct": 2.4,
+          "calmar": 497.9,
+          "sortino": 49.36,
+          "vol_pct": 9.79,
+          "total_ret_pct": 1321.81,
+          "n_days": 261,
+          "year": 2021
+        },
+        {
+          "cagr_pct": 1996.26,
+          "sharpe": 24.32,
+          "max_dd_pct": 2.61,
+          "calmar": 765.01,
+          "sortino": 45.38,
+          "vol_pct": 12.43,
+          "total_ret_pct": 2208.85,
+          "n_days": 260,
+          "year": 2022
+        },
+        {
+          "cagr_pct": 900.79,
+          "sharpe": 23.54,
+          "max_dd_pct": 0.86,
+          "calmar": 1049.4,
+          "sortino": 113.37,
+          "vol_pct": 9.66,
+          "total_ret_pct": 976.71,
+          "n_days": 260,
+          "year": 2023
+        },
+        {
+          "cagr_pct": 1375.58,
+          "sharpe": 26.16,
+          "max_dd_pct": 4.86,
+          "calmar": 283.28,
+          "sortino": 69.08,
+          "vol_pct": 10.19,
+          "total_ret_pct": 1541.92,
+          "n_days": 262,
+          "year": 2024
+        },
+        {
+          "cagr_pct": 2636.52,
+          "sharpe": 27.29,
+          "max_dd_pct": 3.98,
+          "calmar": 663.23,
+          "sortino": 42.81,
+          "vol_pct": 12.07,
+          "total_ret_pct": 2979.84,
+          "n_days": 261,
+          "year": 2025
+        }
+      ]
+    },
+    "equal_risk_15%": {
+      "weights": {
+        "exp1220": 0.31639076832034235,
+        "xlf_cs": 0.2451864538074452,
+        "xli_cs": 0.1923975392572773,
+        "gld_cal": 0.024448590716864282,
+        "slv_cal": 0.01199997588044858,
+        "vol_arb": 0.18682395771704877,
+        "v5_hedge": 0.022752714300573386
+      },
+      "vol_target": "15%",
+      "metrics": {
+        "cagr_pct": 3130.48,
+        "sharpe": 24.98,
+        "max_dd_pct": 6.04,
+        "calmar": 518.55,
+        "sortino": 45.04,
+        "vol_pct": 13.87,
+        "total_ret_pct": 7408879881.79,
+        "n_days": 1314
+      },
+      "yearly": [
+        {
+          "cagr_pct": 2348.91,
+          "sharpe": 25.98,
+          "max_dd_pct": 3.0,
+          "calmar": 782.93,
+          "sortino": 49.53,
+          "vol_pct": 12.24,
+          "total_ret_pct": 2645.23,
+          "n_days": 261,
+          "year": 2021
+        },
+        {
+          "cagr_pct": 4349.64,
+          "sharpe": 24.39,
+          "max_dd_pct": 3.26,
+          "calmar": 1335.92,
+          "sortino": 45.52,
+          "vol_pct": 15.54,
+          "total_ret_pct": 4919.41,
+          "n_days": 260,
+          "year": 2022
+        },
+        {
+          "cagr_pct": 1671.73,
+          "sharpe": 23.63,
+          "max_dd_pct": 1.07,
+          "calmar": 1559.09,
+          "sortino": 113.81,
+          "vol_pct": 12.07,
+          "total_ret_pct": 1841.01,
+          "n_days": 260,
+          "year": 2023
+        },
+        {
+          "cagr_pct": 2774.63,
+          "sharpe": 26.24,
+          "max_dd_pct": 6.04,
+          "calmar": 459.6,
+          "sortino": 69.32,
+          "vol_pct": 12.74,
+          "total_ret_pct": 3184.45,
+          "n_days": 262,
+          "year": 2024
+        },
+        {
+          "cagr_pct": 6103.35,
+          "sharpe": 27.37,
+          "max_dd_pct": 4.95,
+          "calmar": 1232.41,
+          "sortino": 42.93,
+          "vol_pct": 15.08,
+          "total_ret_pct": 7088.67,
+          "n_days": 261,
+          "year": 2025
+        }
+      ]
+    },
+    "max_sharpe_none": {
+      "weights": {
+        "exp1220": 0.0,
+        "xlf_cs": 0.4999999999999989,
+        "xli_cs": 0.31964314907812513,
+        "gld_cal": 0.004759285477481159,
+        "slv_cal": 0.0031797847363981336,
+        "vol_arb": 0.16769887451430782,
+        "v5_hedge": 0.004718906193688919
+      },
+      "vol_target": null,
+      "metrics": {
+        "cagr_pct": 15.59,
+        "sharpe": 23.49,
+        "max_dd_pct": 0.34,
+        "calmar": 46.17,
+        "sortino": 16.72,
+        "vol_pct": 0.43,
+        "total_ret_pct": 112.86,
+        "n_days": 1314
+      },
+      "yearly": [
+        {
+          "cagr_pct": 13.72,
+          "sharpe": 21.18,
+          "max_dd_pct": 0.0,
+          "calmar": 0,
+          "sortino": 21.18,
+          "vol_pct": 0.39,
+          "total_ret_pct": 14.24,
+          "n_days": 261,
+          "year": 2021
+        },
+        {
+          "cagr_pct": 15.63,
+          "sharpe": 24.12,
+          "max_dd_pct": 0.0,
+          "calmar": 13606.78,
+          "sortino": 24.12,
+          "vol_pct": 0.42,
+          "total_ret_pct": 16.16,
+          "n_days": 260,
+          "year": 2022
+        },
+        {
+          "cagr_pct": 13.5,
+          "sharpe": 19.21,
+          "max_dd_pct": 0.01,
+          "calmar": 1072.23,
+          "sortino": 394.55,
+          "vol_pct": 0.43,
+          "total_ret_pct": 13.96,
+          "n_days": 260,
+          "year": 2023
+        },
+        {
+          "cagr_pct": 16.47,
+          "sharpe": 28.61,
+          "max_dd_pct": 0.12,
+          "calmar": 132.94,
+          "sortino": 121.39,
+          "vol_pct": 0.38,
+          "total_ret_pct": 17.18,
+          "n_days": 262,
+          "year": 2024
+        },
+        {
+          "cagr_pct": 18.56,
+          "sharpe": 27.5,
+          "max_dd_pct": 0.34,
+          "calmar": 54.96,
+          "sortino": 0.0,
+          "vol_pct": 0.46,
+          "total_ret_pct": 19.28,
+          "n_days": 261,
+          "year": 2025
+        }
+      ]
+    },
+    "max_sharpe_12%": {
+      "weights": {
+        "exp1220": 0.0,
+        "xlf_cs": 0.4999999999999989,
+        "xli_cs": 0.31964314907812513,
+        "gld_cal": 0.004759285477481159,
+        "slv_cal": 0.0031797847363981336,
+        "vol_arb": 0.16769887451430782,
+        "v5_hedge": 0.004718906193688919
+      },
+      "vol_target": "12%",
+      "metrics": {
+        "cagr_pct": 4647.22,
+        "sharpe": 33.67,
+        "max_dd_pct": 8.81,
+        "calmar": 527.21,
+        "sortino": 23.97,
+        "vol_pct": 11.44,
+        "total_ret_pct": 55135848093.27,
+        "n_days": 1314
+      },
+      "yearly": [
+        {
+          "cagr_pct": 2981.88,
+          "sharpe": 32.16,
+          "max_dd_pct": 0.0,
+          "calmar": 0,
+          "sortino": 32.16,
+          "vol_pct": 10.61,
+          "total_ret_pct": 3383.28,
+          "n_days": 261,
+          "year": 2021
+        },
+        {
+          "cagr_pct": 4687.51,
+          "sharpe": 34.54,
+          "max_dd_pct": 0.03,
+          "calmar": 151832.13,
+          "sortino": 34.54,
+          "vol_pct": 11.17,
+          "total_ret_pct": 5313.11,
+          "n_days": 260,
+          "year": 2022
+        },
+        {
+          "cagr_pct": 2827.7,
+          "sharpe": 29.4,
+          "max_dd_pct": 0.34,
+          "calmar": 8362.32,
+          "sortino": 603.79,
+          "vol_pct": 11.43,
+          "total_ret_pct": 3158.99,
+          "n_days": 260,
+          "year": 2023
+        },
+        {
+          "cagr_pct": 5712.15,
+          "sharpe": 40.14,
+          "max_dd_pct": 3.28,
+          "calmar": 1739.47,
+          "sortino": 170.3,
+          "vol_pct": 10.1,
+          "total_ret_pct": 6728.89,
+          "n_days": 262,
+          "year": 2024
+        },
+        {
+          "cagr_pct": 9171.98,
+          "sharpe": 37.0,
+          "max_dd_pct": 8.81,
+          "calmar": 1040.53,
+          "sortino": 0.0,
+          "vol_pct": 12.25,
+          "total_ret_pct": 10800.05,
+          "n_days": 261,
+          "year": 2025
+        }
+      ]
+    },
+    "max_sharpe_15%": {
+      "weights": {
+        "exp1220": 0.0,
+        "xlf_cs": 0.4999999999999989,
+        "xli_cs": 0.31964314907812513,
+        "gld_cal": 0.004759285477481159,
+        "slv_cal": 0.0031797847363981336,
+        "vol_arb": 0.16769887451430782,
+        "v5_hedge": 0.004718906193688919
+      },
+      "vol_target": "15%",
+      "metrics": {
+        "cagr_pct": 12223.04,
+        "sharpe": 33.75,
+        "max_dd_pct": 10.93,
+        "calmar": 1117.86,
+        "sortino": 24.02,
+        "vol_pct": 14.3,
+        "total_ret_pct": 7972616600362.76,
+        "n_days": 1314
+      },
+      "yearly": [
+        {
+          "cagr_pct": 7096.93,
+          "sharpe": 32.24,
+          "max_dd_pct": 0.0,
+          "calmar": 0,
+          "sortino": 32.24,
+          "vol_pct": 13.26,
+          "total_ret_pct": 8284.44,
+          "n_days": 261,
+          "year": 2021
+        },
+        {
+          "cagr_pct": 12354.78,
+          "sharpe": 34.62,
+          "max_dd_pct": 0.04,
+          "calmar": 320144.6,
+          "sortino": 34.62,
+          "vol_pct": 13.97,
+          "total_ret_pct": 14416.25,
+          "n_days": 260,
+          "year": 2022
+        },
+        {
+          "cagr_pct": 6649.38,
+          "sharpe": 29.48,
+          "max_dd_pct": 0.42,
+          "calmar": 15736.03,
+          "sortino": 605.41,
+          "vol_pct": 14.29,
+          "total_ret_pct": 7615.0,
+          "n_days": 260,
+          "year": 2023
+        },
+        {
+          "cagr_pct": 15761.66,
+          "sharpe": 40.23,
+          "max_dd_pct": 4.09,
+          "calmar": 3853.98,
+          "sortino": 170.68,
+          "vol_pct": 12.63,
+          "total_ret_pct": 19293.85,
+          "n_days": 262,
+          "year": 2024
+        },
+        {
+          "cagr_pct": 28246.48,
+          "sharpe": 37.08,
+          "max_dd_pct": 10.93,
+          "calmar": 2583.29,
+          "sortino": 0.0,
+          "vol_pct": 15.31,
+          "total_ret_pct": 34580.74,
+          "n_days": 261,
+          "year": 2025
+        }
+      ]
+    },
+    "min_variance_none": {
+      "weights": {
+        "exp1220": 0.2508457922852999,
+        "xlf_cs": 0.24629258344953464,
+        "xli_cs": 0.24482257993327064,
+        "gld_cal": 0.0038269165870824214,
+        "slv_cal": 0.0016403361263669734,
+        "vol_arb": 0.24458689455063828,
+        "v5_hedge": 0.007984897067807233
+      },
+      "vol_target": null,
+      "metrics": {
+        "cagr_pct": 10.67,
+        "sharpe": 16.92,
+        "max_dd_pct": 0.2,
+        "calmar": 53.3,
+        "sortino": 41.35,
+        "vol_pct": 0.33,
+        "total_ret_pct": 69.68,
+        "n_days": 1314
+      },
+      "yearly": [
+        {
+          "cagr_pct": 9.88,
+          "sharpe": 17.9,
+          "max_dd_pct": 0.05,
+          "calmar": 195.29,
+          "sortino": 1804.06,
+          "vol_pct": 0.28,
+          "total_ret_pct": 10.25,
+          "n_days": 261,
+          "year": 2021
+        },
+        {
+          "cagr_pct": 11.33,
+          "sharpe": 19.44,
+          "max_dd_pct": 0.05,
+          "calmar": 212.21,
+          "sortino": 232.53,
+          "vol_pct": 0.32,
+          "total_ret_pct": 11.71,
+          "n_days": 260,
+          "year": 2022
+        },
+        {
+          "cagr_pct": 8.44,
+          "sharpe": 11.62,
+          "max_dd_pct": 0.08,
+          "calmar": 109.85,
+          "sortino": 49.1,
+          "vol_pct": 0.31,
+          "total_ret_pct": 8.72,
+          "n_days": 260,
+          "year": 2023
+        },
+        {
+          "cagr_pct": 10.1,
+          "sharpe": 16.25,
+          "max_dd_pct": 0.2,
+          "calmar": 50.46,
+          "sortino": 57.6,
+          "vol_pct": 0.32,
+          "total_ret_pct": 10.52,
+          "n_days": 262,
+          "year": 2024
+        },
+        {
+          "cagr_pct": 13.58,
+          "sharpe": 22.22,
+          "max_dd_pct": 0.1,
+          "calmar": 141.26,
+          "sortino": 45.05,
+          "vol_pct": 0.37,
+          "total_ret_pct": 14.1,
+          "n_days": 261,
+          "year": 2025
+        }
+      ]
+    },
+    "min_variance_12%": {
+      "weights": {
+        "exp1220": 0.2508457922852999,
+        "xlf_cs": 0.24629258344953464,
+        "xli_cs": 0.24482257993327064,
+        "gld_cal": 0.0038269165870824214,
+        "slv_cal": 0.0016403361263669734,
+        "vol_arb": 0.24458689455063828,
+        "v5_hedge": 0.007984897067807233
+      },
+      "vol_target": "12%",
+      "metrics": {
+        "cagr_pct": 2749.46,
+        "sharpe": 30.01,
+        "max_dd_pct": 6.47,
+        "calmar": 424.78,
+        "sortino": 73.34,
+        "vol_pct": 11.11,
+        "total_ret_pct": 3850788670.91,
+        "n_days": 1314
+      },
+      "yearly": [
+        {
+          "cagr_pct": 2154.74,
+          "sharpe": 33.77,
+          "max_dd_pct": 1.68,
+          "calmar": 1285.64,
+          "sortino": 3403.07,
+          "vol_pct": 9.16,
+          "total_ret_pct": 2420.11,
+          "n_days": 261,
+          "year": 2021
+        },
+        {
+          "cagr_pct": 3360.4,
+          "sharpe": 33.06,
+          "max_dd_pct": 1.77,
+          "calmar": 1898.49,
+          "sortino": 395.38,
+          "vol_pct": 10.68,
+          "total_ret_pct": 3772.46,
+          "n_days": 260,
+          "year": 2022
+        },
+        {
+          "cagr_pct": 1358.64,
+          "sharpe": 25.69,
+          "max_dd_pct": 2.53,
+          "calmar": 536.59,
+          "sortino": 108.56,
+          "vol_pct": 10.33,
+          "total_ret_pct": 1488.18,
+          "n_days": 260,
+          "year": 2023
+        },
+        {
+          "cagr_pct": 2306.93,
+          "sharpe": 30.09,
+          "max_dd_pct": 6.47,
+          "calmar": 356.41,
+          "sortino": 106.65,
+          "vol_pct": 10.51,
+          "total_ret_pct": 2630.76,
+          "n_days": 262,
+          "year": 2024
+        },
+        {
+          "cagr_pct": 6564.71,
+          "sharpe": 34.0,
+          "max_dd_pct": 3.17,
+          "calmar": 2071.81,
+          "sortino": 68.92,
+          "vol_pct": 12.35,
+          "total_ret_pct": 7643.13,
+          "n_days": 261,
+          "year": 2025
+        }
+      ]
+    },
+    "min_variance_15%": {
+      "weights": {
+        "exp1220": 0.2508457922852999,
+        "xlf_cs": 0.24629258344953464,
+        "xli_cs": 0.24482257993327064,
+        "gld_cal": 0.0038269165870824214,
+        "slv_cal": 0.0016403361263669734,
+        "vol_arb": 0.24458689455063828,
+        "v5_hedge": 0.007984897067807233
+      },
+      "vol_target": "15%",
+      "metrics": {
+        "cagr_pct": 6426.07,
+        "sharpe": 30.09,
+        "max_dd_pct": 8.03,
+        "calmar": 800.35,
+        "sortino": 73.54,
+        "vol_pct": 13.88,
+        "total_ret_pct": 289808708793.61,
+        "n_days": 1314
+      },
+      "yearly": [
+        {
+          "cagr_pct": 4777.81,
+          "sharpe": 33.87,
+          "max_dd_pct": 2.09,
+          "calmar": 2283.79,
+          "sortino": 3412.97,
+          "vol_pct": 11.45,
+          "total_ret_pct": 5504.26,
+          "n_days": 261,
+          "year": 2021
+        },
+        {
+          "cagr_pct": 8214.04,
+          "sharpe": 33.14,
+          "max_dd_pct": 2.21,
+          "calmar": 3716.59,
+          "sortino": 396.39,
+          "vol_pct": 13.35,
+          "total_ret_pct": 9466.62,
+          "n_days": 260,
+          "year": 2022
+        },
+        {
+          "cagr_pct": 2733.45,
+          "sharpe": 25.78,
+          "max_dd_pct": 3.16,
+          "calmar": 866.04,
+          "sortino": 108.92,
+          "vol_pct": 12.92,
+          "total_ret_pct": 3050.8,
+          "n_days": 260,
+          "year": 2023
+        },
+        {
+          "cagr_pct": 5189.3,
+          "sharpe": 30.17,
+          "max_dd_pct": 8.03,
+          "calmar": 646.32,
+          "sortino": 106.95,
+          "vol_pct": 13.13,
+          "total_ret_pct": 6091.38,
+          "n_days": 262,
+          "year": 2024
+        },
+        {
+          "cagr_pct": 18694.66,
+          "sharpe": 34.07,
+          "max_dd_pct": 3.95,
+          "calmar": 4732.67,
+          "sortino": 69.07,
+          "vol_pct": 15.43,
+          "total_ret_pct": 22559.48,
+          "n_days": 261,
+          "year": 2025
+        }
+      ]
+    }
+  },
+  "sparse_configs": {
+    "equal_risk_none": {
+      "metrics": {
+        "cagr_pct": 10.33,
+        "sharpe": 3.4,
+        "max_dd_pct": 0.62,
+        "calmar": 16.7,
+        "sortino": 7.0,
+        "vol_pct": 1.57,
+        "total_ret_pct": 66.93,
+        "n_days": 1314
+      }
+    },
+    "equal_risk_12%": {
+      "metrics": {
+        "cagr_pct": 106.02,
+        "sharpe": 5.89,
+        "max_dd_pct": 4.59,
+        "calmar": 23.1,
+        "sortino": 12.11,
+        "vol_pct": 11.65,
+        "total_ret_pct": 4233.56,
+        "n_days": 1314
+      }
+    },
+    "equal_risk_15%": {
+      "metrics": {
+        "cagr_pct": 146.25,
+        "sharpe": 5.96,
+        "max_dd_pct": 5.74,
+        "calmar": 25.49,
+        "sortino": 12.27,
+        "vol_pct": 14.56,
+        "total_ret_pct": 10882.81,
+        "n_days": 1314
+      }
+    },
+    "max_sharpe_none": {
+      "metrics": {
+        "cagr_pct": 16.18,
+        "sharpe": 3.88,
+        "max_dd_pct": 0.99,
+        "calmar": 16.32,
+        "sortino": 9.76,
+        "vol_pct": 2.72,
+        "total_ret_pct": 118.58,
+        "n_days": 1314
+      }
+    },
+    "max_sharpe_12%": {
+      "metrics": {
+        "cagr_pct": 92.73,
+        "sharpe": 5.16,
+        "max_dd_pct": 4.38,
+        "calmar": 21.18,
+        "sortino": 12.99,
+        "vol_pct": 12.01,
+        "total_ret_pct": 2960.46,
+        "n_days": 1314
+      }
+    },
+    "max_sharpe_15%": {
+      "metrics": {
+        "cagr_pct": 126.53,
+        "sharpe": 5.23,
+        "max_dd_pct": 5.47,
+        "calmar": 23.12,
+        "sortino": 13.18,
+        "vol_pct": 15.01,
+        "total_ret_pct": 7008.47,
+        "n_days": 1314
+      }
+    },
+    "min_variance_none": {
+      "metrics": {
+        "cagr_pct": 10.96,
+        "sharpe": 3.28,
+        "max_dd_pct": 0.81,
+        "calmar": 13.51,
+        "sortino": 5.99,
+        "vol_pct": 1.81,
+        "total_ret_pct": 72.01,
+        "n_days": 1314
+      }
+    },
+    "min_variance_12%": {
+      "metrics": {
+        "cagr_pct": 93.21,
+        "sharpe": 5.37,
+        "max_dd_pct": 5.19,
+        "calmar": 17.97,
+        "sortino": 9.84,
+        "vol_pct": 11.55,
+        "total_ret_pct": 3000.54,
+        "n_days": 1314
+      }
+    },
+    "min_variance_15%": {
+      "metrics": {
+        "cagr_pct": 127.27,
+        "sharpe": 5.45,
+        "max_dd_pct": 6.48,
+        "calmar": 19.63,
+        "sortino": 9.98,
+        "vol_pct": 14.44,
+        "total_ret_pct": 7130.04,
+        "n_days": 1314
+      }
+    }
+  },
+  "winner": "max_sharpe_15%",
+  "winner_metrics": {
+    "cagr_pct": 12223.04,
+    "sharpe": 33.75,
+    "max_dd_pct": 10.93,
+    "calmar": 1117.86,
+    "sortino": 24.02,
+    "vol_pct": 14.3,
+    "total_ret_pct": 7972616600362.76,
+    "n_days": 1314
+  },
+  "winner_sparse_sharpe": 5.23,
+  "caveat": "SMEARED Sharpe is an UPPER BOUND \u2014 XLF/XLI at 98% win rate inflate 2.4\u00d7 vs the per-trade Sharpe (EXP-2160 note). The sparse cross-check provides a LOWER BOUND. The truthful portfolio Sharpe lies somewhere between the two."
+}
