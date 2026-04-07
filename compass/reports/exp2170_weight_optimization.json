@@ -1,0 +1,321 @@
+{
+  "experiment": "EXP-2170",
+  "name": "Weight optimisation bake-off for the 5-stream portfolio",
+  "generated": "2026-04-07T17:03:24",
+  "data": {
+    "source": "compass.exp2080_corr_regime.load_streams (cached real cube)",
+    "streams": [
+      "exp1220",
+      "v5_hedge",
+      "gld_cal",
+      "slv_cal",
+      "cross_vol"
+    ],
+    "n_days": 1566,
+    "range": [
+      "2020-01-01",
+      "2025-12-31"
+    ],
+    "leverage": 3.0
+  },
+  "walk_forward": {
+    "train_days": 252,
+    "test_days": 63,
+    "n_folds": 20
+  },
+  "results": {
+    "equal_weight": {
+      "label": "equal_weight",
+      "n_days": 1260,
+      "cagr_pct": 79.641,
+      "sharpe": 5.337,
+      "sortino": 9.983,
+      "max_dd_pct": 4.2,
+      "vol_pct": 11.103,
+      "calmar": 18.964
+    },
+    "static_prod": {
+      "label": "static_prod",
+      "n_days": 1260,
+      "cagr_pct": 132.972,
+      "sharpe": 5.235,
+      "sortino": 10.473,
+      "max_dd_pct": 7.669,
+      "vol_pct": 16.438,
+      "calmar": 17.338
+    },
+    "inv_vol": {
+      "label": "inv_vol",
+      "n_days": 1260,
+      "cagr_pct": 42.267,
+      "sharpe": 4.539,
+      "sortino": 6.771,
+      "max_dd_pct": 4.543,
+      "vol_pct": 7.84,
+      "calmar": 9.304
+    },
+    "min_variance": {
+      "label": "min_variance",
+      "n_days": 1260,
+      "cagr_pct": 79.886,
+      "sharpe": 5.468,
+      "sortino": 10.46,
+      "max_dd_pct": 4.2,
+      "vol_pct": 10.859,
+      "calmar": 19.022
+    },
+    "mv_sample": {
+      "label": "mv_sample",
+      "n_days": 1260,
+      "cagr_pct": 89.318,
+      "sharpe": 5.393,
+      "sortino": 9.947,
+      "max_dd_pct": 4.396,
+      "vol_pct": 11.982,
+      "calmar": 20.32
+    },
+    "mv_shrink": {
+      "label": "mv_shrink",
+      "n_days": 1260,
+      "cagr_pct": 92.306,
+      "sharpe": 5.387,
+      "sortino": 10.009,
+      "max_dd_pct": 4.369,
+      "vol_pct": 12.295,
+      "calmar": 21.128
+    },
+    "mv_shrink_floor05": {
+      "label": "mv_shrink_floor05",
+      "n_days": 1260,
+      "cagr_pct": 89.17,
+      "sharpe": 5.406,
+      "sortino": 9.998,
+      "max_dd_pct": 4.343,
+      "vol_pct": 11.938,
+      "calmar": 20.53
+    }
+  },
+  "weights_summary": {
+    "equal_weight": {
+      "avg": {
+        "exp1220": 0.2,
+        "v5_hedge": 0.2,
+        "gld_cal": 0.2,
+        "slv_cal": 0.2,
+        "cross_vol": 0.2
+      },
+      "std": {
+        "exp1220": 0.0,
+        "v5_hedge": 0.0,
+        "gld_cal": 0.0,
+        "slv_cal": 0.0,
+        "cross_vol": 0.0
+      },
+      "n_folds": 20
+    },
+    "static_prod": {
+      "avg": {
+        "exp1220": 0.4,
+        "v5_hedge": 0.05,
+        "gld_cal": 0.2,
+        "slv_cal": 0.2,
+        "cross_vol": 0.15
+      },
+      "std": {
+        "exp1220": 0.0,
+        "v5_hedge": 0.0,
+        "gld_cal": 0.0,
+        "slv_cal": 0.0,
+        "cross_vol": 0.0
+      },
+      "n_folds": 20
+    },
+    "inv_vol": {
+      "avg": {
+        "exp1220": 0.0923,
+        "v5_hedge": 0.3313,
+        "gld_cal": 0.1677,
+        "slv_cal": 0.0838,
+        "cross_vol": 0.3248
+      },
+      "std": {
+        "exp1220": 0.0408,
+        "v5_hedge": 0.1746,
+        "gld_cal": 0.0494,
+        "slv_cal": 0.0276,
+        "cross_vol": 0.1056
+      },
+      "n_folds": 20
+    },
+    "min_variance": {
+      "avg": {
+        "exp1220": 0.2042,
+        "v5_hedge": 0.2031,
+        "gld_cal": 0.2026,
+        "slv_cal": 0.1842,
+        "cross_vol": 0.2059
+      },
+      "std": {
+        "exp1220": 0.0128,
+        "v5_hedge": 0.0117,
+        "gld_cal": 0.0078,
+        "slv_cal": 0.0476,
+        "cross_vol": 0.0177
+      },
+      "n_folds": 20
+    },
+    "mv_sample": {
+      "avg": {
+        "exp1220": 0.2443,
+        "v5_hedge": 0.0576,
+        "gld_cal": 0.2283,
+        "slv_cal": 0.1086,
+        "cross_vol": 0.3613
+      },
+      "std": {
+        "exp1220": 0.1325,
+        "v5_hedge": 0.0852,
+        "gld_cal": 0.0972,
+        "slv_cal": 0.0572,
+        "cross_vol": 0.1529
+      },
+      "n_folds": 20
+    },
+    "mv_shrink": {
+      "avg": {
+        "exp1220": 0.241,
+        "v5_hedge": 0.0444,
+        "gld_cal": 0.2512,
+        "slv_cal": 0.117,
+        "cross_vol": 0.3465
+      },
+      "std": {
+        "exp1220": 0.1325,
+        "v5_hedge": 0.0699,
+        "gld_cal": 0.1051,
+        "slv_cal": 0.0662,
+        "cross_vol": 0.1555
+      },
+      "n_folds": 20
+    },
+    "mv_shrink_floor05": {
+      "avg": {
+        "exp1220": 0.2353,
+        "v5_hedge": 0.0698,
+        "gld_cal": 0.2428,
+        "slv_cal": 0.1165,
+        "cross_vol": 0.3355
+      },
+      "std": {
+        "exp1220": 0.1258,
+        "v5_hedge": 0.0563,
+        "gld_cal": 0.1003,
+        "slv_cal": 0.0608,
+        "cross_vol": 0.1578
+      },
+      "n_folds": 20
+    }
+  },
+  "ranking": [
+    {
+      "rank": 1,
+      "name": "min_variance",
+      "label": "min_variance",
+      "n_days": 1260,
+      "cagr_pct": 79.886,
+      "sharpe": 5.468,
+      "sortino": 10.46,
+      "max_dd_pct": 4.2,
+      "vol_pct": 10.859,
+      "calmar": 19.022
+    },
+    {
+      "rank": 2,
+      "name": "mv_shrink_floor05",
+      "label": "mv_shrink_floor05",
+      "n_days": 1260,
+      "cagr_pct": 89.17,
+      "sharpe": 5.406,
+      "sortino": 9.998,
+      "max_dd_pct": 4.343,
+      "vol_pct": 11.938,
+      "calmar": 20.53
+    },
+    {
+      "rank": 3,
+      "name": "mv_sample",
+      "label": "mv_sample",
+      "n_days": 1260,
+      "cagr_pct": 89.318,
+      "sharpe": 5.393,
+      "sortino": 9.947,
+      "max_dd_pct": 4.396,
+      "vol_pct": 11.982,
+      "calmar": 20.32
+    },
+    {
+      "rank": 4,
+      "name": "mv_shrink",
+      "label": "mv_shrink",
+      "n_days": 1260,
+      "cagr_pct": 92.306,
+      "sharpe": 5.387,
+      "sortino": 10.009,
+      "max_dd_pct": 4.369,
+      "vol_pct": 12.295,
+      "calmar": 21.128
+    },
+    {
+      "rank": 5,
+      "name": "equal_weight",
+      "label": "equal_weight",
+      "n_days": 1260,
+      "cagr_pct": 79.641,
+      "sharpe": 5.337,
+      "sortino": 9.983,
+      "max_dd_pct": 4.2,
+      "vol_pct": 11.103,
+      "calmar": 18.964
+    },
+    {
+      "rank": 6,
+      "name": "static_prod",
+      "label": "static_prod",
+      "n_days": 1260,
+      "cagr_pct": 132.972,
+      "sharpe": 5.235,
+      "sortino": 10.473,
+      "max_dd_pct": 7.669,
+      "vol_pct": 16.438,
+      "calmar": 17.338
+    },
+    {
+      "rank": 7,
+      "name": "inv_vol",
+      "label": "inv_vol",
+      "n_days": 1260,
+      "cagr_pct": 42.267,
+      "sharpe": 4.539,
+      "sortino": 6.771,
+      "max_dd_pct": 4.543,
+      "vol_pct": 7.84,
+      "calmar": 9.304
+    }
+  ],
+  "best": {
+    "name": "min_variance",
+    "label": "min_variance",
+    "n_days": 1260,
+    "cagr_pct": 79.886,
+    "sharpe": 5.468,
+    "sortino": 10.46,
+    "max_dd_pct": 4.2,
+    "vol_pct": 10.859,
+    "calmar": 19.022,
+    "delta_sharpe_vs_static": 0.233,
+    "headroom_to_target": 0.532
+  },
+  "target_sharpe": 6.0,
+  "target_met": false,
+  "honest_note": "Pooled OOS Sharpe across the same daily cube is upper-bounded by the orthogonal alpha contained in the streams themselves. If the best allocator does not clear 6.0, the gap closes by adding new uncorrelated streams (EXP-2020, EXP-2070 already exist), not by re-weighting the existing five."
+}
