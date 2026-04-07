@@ -52,7 +52,21 @@ REGIME_SIZE_SCALE = {
 
 
 class CreditSpreadStrategy(BaseStrategy):
-    """Bull put / bear call credit spreads with MA trend filter."""
+    """Bull put / bear call credit spreads with MA trend filter.
+
+    Optional EXP-1880 entry overlay
+    -------------------------------
+    Set ``strategy.entry_overlay = IntegratedEntryOverlay(...)`` (or build it
+    via :func:`compass.exp1880_integrated_overlays.IntegratedEntryOverlay.from_config`)
+    and toggle ``use_fomc_filter`` / ``use_pcr_filter`` in params to gate
+    entries. Each filter is independently switchable. The overlay is queried
+    once per ``generate_signals()`` call (i.e. once per scan day) and applies
+    a size multiplier via ``signal.metadata['overlay_size_mult']``, which
+    ``size_position()`` honours.
+    """
+
+    # EXP-1880 — optional entry overlay; default None preserves prior behaviour
+    entry_overlay: object | None = None
 
     def _resolve_regime_direction(self, regime: str | None) -> str:
         """Map regime to trade direction, checking per-regime param overrides."""
@@ -148,6 +162,24 @@ class CreditSpreadStrategy(BaseStrategy):
             vix_pctile = self._compute_vix_percentile(market_data, window=50)
             if vix_pctile is not None and vix_pctile >= vix_pctile_gate:
                 signals = [s for s in signals if s.net_credit >= min_credit]
+
+        # EXP-1880 — sentiment + put/call entry overlay (Wave-3 integration).
+        # Each filter is independently switchable via params. If the overlay
+        # blocks the day, drop all signals. If it allows but suggests a size
+        # multiplier, stash it on every signal so size_position() picks it up.
+        use_fomc = bool(self._p("use_fomc_filter", False))
+        use_pcr = bool(self._p("use_pcr_filter", False))
+        if (use_fomc or use_pcr) and signals and self.entry_overlay is not None:
+            decision = self.entry_overlay.allow_entry(market_data.date)
+            if not decision.allow:
+                logger.debug(
+                    "EXP-1880 overlay blocked %s on %s by %s",
+                    self.name, market_data.date, decision.blocked_by,
+                )
+                return []
+            if decision.size_mult != 1.0:
+                for s in signals:
+                    s.metadata["overlay_size_mult"] = decision.size_mult
 
         return signals
 
@@ -326,6 +358,12 @@ class CreditSpreadStrategy(BaseStrategy):
             return 0
 
         contracts = max(1, int(risk_budget / risk_per_unit))
+
+        # EXP-1880 overlay size modifier (set in generate_signals)
+        overlay_mult = float(signal.metadata.get("overlay_size_mult", 1.0)) if signal.metadata else 1.0
+        if overlay_mult != 1.0:
+            contracts = max(1, int(round(contracts * overlay_mult)))
+
         return min(contracts, 10)
 
     @classmethod
@@ -350,4 +388,7 @@ class CreditSpreadStrategy(BaseStrategy):
                      description="Minimum net credit to accept (0=disabled). Combined with vix_pctile_gate."),
             ParamDef("vix_pctile_gate", "int", 100, low=0, high=100, step=5,
                      description="Skip low-credit trades when VIX 50d percentile >= this (100=disabled)."),
+            # EXP-1880: integrated FOMC + PCR entry overlays (require entry_overlay attached)
+            ParamDef("use_fomc_filter", "bool", False, description="Enable EXP-1740 FOMC hawkish + VIX-slope entry filter."),
+            ParamDef("use_pcr_filter",  "bool", False, description="Enable EXP-1750 put/call ratio + VIX inversion entry filter."),
         ]

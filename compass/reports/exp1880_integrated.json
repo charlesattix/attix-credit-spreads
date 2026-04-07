@@ -1,0 +1,122 @@
+{
+  "experiment": "EXP-1880",
+  "name": "Integrated FOMC + PCR Entry Overlays for EXP-1220",
+  "generated": "2026-04-07T13:04:02",
+  "data_sources": {
+    "fomc": "data/fomc/ (federalreserve.gov 2015-2025, 89 meetings)",
+    "pcr": "IronVault options_cache.db (real Polygon SPY option_daily volume)",
+    "vix": "Yahoo Finance ^VIX, ^VIX3M, ^VIX9D",
+    "options": "IronVault SPY chains via run_exp1220_trades"
+  },
+  "baseline": {
+    "label": "baseline",
+    "n": 171,
+    "pnl": 7372.0,
+    "wr": 0.8771929824561403,
+    "sharpe": 1.2572966264809826,
+    "cagr_pct": 1.2231410405201473,
+    "max_dd_pct": 1.5505115089514065,
+    "avg_pnl": 43.111111111111114,
+    "trades_per_yr": 29.226836686944317
+  },
+  "fomc_only": {
+    "label": "fomc_only",
+    "n": 142,
+    "pnl": 6456.0,
+    "wr": 0.8873239436619719,
+    "sharpe": 1.8564968269615678,
+    "cagr_pct": 1.0750219215117198,
+    "max_dd_pct": 0.6521241705438181,
+    "avg_pnl": 45.46478873239437,
+    "trades_per_yr": 24.270238652316333
+  },
+  "pcr_only": {
+    "label": "pcr_only",
+    "n": 93,
+    "pnl": 3988.0,
+    "wr": 0.8494623655913979,
+    "sharpe": 1.2640149528125588,
+    "cagr_pct": 0.7199685928992494,
+    "max_dd_pct": 0.6611250724917843,
+    "avg_pnl": 42.88172043010753,
+    "trades_per_yr": 17.060899045705675
+  },
+  "integrated": {
+    "label": "integrated",
+    "n": 81,
+    "pnl": 3427.0,
+    "wr": 0.8518518518518519,
+    "sharpe": 1.1081963837509379,
+    "cagr_pct": 0.6200669042454763,
+    "max_dd_pct": 0.7014763288427108,
+    "avg_pnl": 42.30864197530864,
+    "trades_per_yr": 14.859492717227523
+  },
+  "delta_vs_baseline": {
+    "fomc_only": 0.599,
+    "pcr_only": 0.007,
+    "integrated": -0.149
+  },
+  "walk_forward_integrated": [
+    {
+      "year": 2020,
+      "baseline_n": 27,
+      "baseline_sharpe": 0.1447738221102018,
+      "baseline_pnl": 240.0,
+      "filtered_n": 15,
+      "filtered_sharpe": 7.120200681376847,
+      "filtered_pnl": 1376.0,
+      "delta_sharpe": 6.975426859266645
+    },
+    {
+      "year": 2021,
+      "baseline_n": 34,
+      "baseline_sharpe": 0.9814571679441041,
+      "baseline_pnl": 616.0,
+      "filtered_n": 21,
+      "filtered_sharpe": 0.2970026433481748,
+      "filtered_pnl": 212.0,
+      "delta_sharpe": -0.6844545245959293
+    },
+    {
+      "year": 2022,
+      "baseline_n": 32,
+      "baseline_sharpe": 2.299919701509181,
+      "baseline_pnl": 2564.0,
+      "filtered_n": 17,
+      "filtered_sharpe": 0.8956768711080341,
+      "filtered_pnl": 810.0,
+      "delta_sharpe": -1.404242830401147
+    },
+    {
+      "year": 2023,
+      "baseline_n": 26,
+      "baseline_sharpe": 6.507422525611884,
+      "baseline_pnl": 1064.0,
+      "filtered_n": 8,
+      "filtered_sharpe": 5.3002487916616845,
+      "filtered_pnl": 445.0,
+      "delta_sharpe": -1.2071737339501993
+    },
+    {
+      "year": 2024,
+      "baseline_n": 26,
+      "baseline_sharpe": 0.3205625866299361,
+      "baseline_pnl": 240.0,
+      "filtered_n": 12,
+      "filtered_sharpe": -0.5585600369667448,
+      "filtered_pnl": -304.0,
+      "delta_sharpe": -0.8791226235966809
+    },
+    {
+      "year": 2025,
+      "baseline_n": 26,
+      "baseline_sharpe": 2.8383892416004204,
+      "baseline_pnl": 2648.0,
+      "filtered_n": 8,
+      "filtered_sharpe": 6.2064741659117875,
+      "filtered_pnl": 888.0,
+      "delta_sharpe": 3.368084924311367
+    }
+  ]
+}
