@@ -1,0 +1,455 @@
+{
+  "experiment": "EXP-2140",
+  "title": "North Star Portfolio Capacity Analysis",
+  "timestamp": "2026-04-07T16:34:23.225470Z",
+  "model": {
+    "impact_formula": "impact_bps = coeff \u00b7 sqrt(participation)",
+    "impact_coeff_equity": 100.0,
+    "impact_coeff_futures": 120.0,
+    "impact_coeff_options": 150.0,
+    "participation_soft_cap_pct_adv": 1.0,
+    "participation_hard_cap_pct_adv": 5.0,
+    "turnover_round_trips_per_year": 50
+  },
+  "aum_tiers_usd": [
+    10000000.0,
+    50000000.0,
+    100000000.0,
+    500000000.0,
+    1000000000.0
+  ],
+  "streams": [
+    {
+      "stream": "EXP-1220 (SPY put credit spreads)",
+      "weight": 0.6,
+      "adv_notional_usd": 151855555983.99048,
+      "binding_instrument": "SPY options (2,314,201 contracts/d \u00d7 100 \u00d7 $656.19)",
+      "impact_coeff": 150.0,
+      "hard_cap_notional_usd": 7592777799.199524,
+      "soft_cap_notional_usd": 1518555559.8399048,
+      "hard_cap_portfolio_aum": 12654629665.33254,
+      "soft_cap_portfolio_aum": 2530925933.0665083,
+      "baseline_sharpe": 3.85,
+      "baseline_alpha_bps": 500,
+      "per_tier": {
+        "$10M": {
+          "aum_usd": 10000000.0,
+          "stream_notional_usd": 6000000.0,
+          "participation_pct": 0.004,
+          "impact_bps_per_trip": 0.94,
+          "annual_impact_cost_bps": 47.1,
+          "alpha_after_bps": 452.9,
+          "alpha_decay_pct": 9.43,
+          "sharpe_after": 3.49,
+          "delta_sharpe": -0.36,
+          "flag": "OK"
+        },
+        "$50M": {
+          "aum_usd": 50000000.0,
+          "stream_notional_usd": 30000000.0,
+          "participation_pct": 0.0198,
+          "impact_bps_per_trip": 2.11,
+          "annual_impact_cost_bps": 105.4,
+          "alpha_after_bps": 394.6,
+          "alpha_decay_pct": 21.08,
+          "sharpe_after": 3.04,
+          "delta_sharpe": -0.81,
+          "flag": "OK"
+        },
+        "$100M": {
+          "aum_usd": 100000000.0,
+          "stream_notional_usd": 60000000.0,
+          "participation_pct": 0.0395,
+          "impact_bps_per_trip": 2.98,
+          "annual_impact_cost_bps": 149.1,
+          "alpha_after_bps": 350.9,
+          "alpha_decay_pct": 29.82,
+          "sharpe_after": 2.7,
+          "delta_sharpe": -1.15,
+          "flag": "OK"
+        },
+        "$500M": {
+          "aum_usd": 500000000.0,
+          "stream_notional_usd": 300000000.0,
+          "participation_pct": 0.1976,
+          "impact_bps_per_trip": 6.67,
+          "annual_impact_cost_bps": 333.4,
+          "alpha_after_bps": 166.6,
+          "alpha_decay_pct": 66.67,
+          "sharpe_after": 1.28,
+          "delta_sharpe": -2.57,
+          "flag": "OK"
+        },
+        "$1,000M": {
+          "aum_usd": 1000000000.0,
+          "stream_notional_usd": 600000000.0,
+          "participation_pct": 0.3951,
+          "impact_bps_per_trip": 9.43,
+          "annual_impact_cost_bps": 471.4,
+          "alpha_after_bps": 28.6,
+          "alpha_decay_pct": 94.29,
+          "sharpe_after": 0.22,
+          "delta_sharpe": -3.63,
+          "flag": "OK"
+        }
+      },
+      "notes": "Most liquid option market in the world \u2014 unlikely to be the bottleneck."
+    },
+    {
+      "stream": "GLD calendar (GLD \u2212 GC=F)",
+      "weight": 0.075,
+      "adv_notional_usd": 313700926.53808594,
+      "binding_instrument": "GC=F futures: GLD $5.29B/d  GC=F $0.31B/d",
+      "impact_coeff": 120.0,
+      "hard_cap_notional_usd": 15685046.326904297,
+      "soft_cap_notional_usd": 3137009.2653808594,
+      "hard_cap_portfolio_aum": 209133951.02539062,
+      "soft_cap_portfolio_aum": 41826790.205078125,
+      "baseline_sharpe": 2.7,
+      "baseline_alpha_bps": 1520,
+      "per_tier": {
+        "$10M": {
+          "aum_usd": 10000000.0,
+          "stream_notional_usd": 750000.0,
+          "participation_pct": 0.2391,
+          "impact_bps_per_trip": 5.87,
+          "annual_impact_cost_bps": 293.4,
+          "alpha_after_bps": 1226.6,
+          "alpha_decay_pct": 19.3,
+          "sharpe_after": 2.18,
+          "delta_sharpe": -0.52,
+          "flag": "OK"
+        },
+        "$50M": {
+          "aum_usd": 50000000.0,
+          "stream_notional_usd": 3750000.0,
+          "participation_pct": 1.1954,
+          "impact_bps_per_trip": 13.12,
+          "annual_impact_cost_bps": 656.0,
+          "alpha_after_bps": 864.0,
+          "alpha_decay_pct": 43.16,
+          "sharpe_after": 1.53,
+          "delta_sharpe": -1.17,
+          "flag": "BOTTLENECK"
+        },
+        "$100M": {
+          "aum_usd": 100000000.0,
+          "stream_notional_usd": 7500000.0,
+          "participation_pct": 2.3908,
+          "impact_bps_per_trip": 18.55,
+          "annual_impact_cost_bps": 927.7,
+          "alpha_after_bps": 592.3,
+          "alpha_decay_pct": 61.04,
+          "sharpe_after": 1.05,
+          "delta_sharpe": -1.65,
+          "flag": "BOTTLENECK"
+        },
+        "$500M": {
+          "aum_usd": 500000000.0,
+          "stream_notional_usd": 37500000.0,
+          "participation_pct": 11.9541,
+          "impact_bps_per_trip": 41.49,
+          "annual_impact_cost_bps": 2074.5,
+          "alpha_after_bps": 0.0,
+          "alpha_decay_pct": 100.0,
+          "sharpe_after": 0.0,
+          "delta_sharpe": -2.7,
+          "flag": "BROKEN"
+        },
+        "$1,000M": {
+          "aum_usd": 1000000000.0,
+          "stream_notional_usd": 75000000.0,
+          "participation_pct": 23.9081,
+          "impact_bps_per_trip": 58.68,
+          "annual_impact_cost_bps": 2933.8,
+          "alpha_after_bps": 0.0,
+          "alpha_decay_pct": 100.0,
+          "sharpe_after": 0.0,
+          "delta_sharpe": -2.7,
+          "flag": "BROKEN"
+        }
+      },
+      "notes": ""
+    },
+    {
+      "stream": "SLV calendar (SLV \u2212 SI=F)",
+      "weight": 0.075,
+      "adv_notional_usd": 122393244.78149414,
+      "binding_instrument": "SI=F futures: SLV $4.35B/d  SI=F $0.12B/d",
+      "impact_coeff": 120.0,
+      "hard_cap_notional_usd": 6119662.239074707,
+      "soft_cap_notional_usd": 1223932.4478149414,
+      "hard_cap_portfolio_aum": 81595496.5209961,
+      "soft_cap_portfolio_aum": 16319099.304199219,
+      "baseline_sharpe": 2.27,
+      "baseline_alpha_bps": 2489,
+      "per_tier": {
+        "$10M": {
+          "aum_usd": 10000000.0,
+          "stream_notional_usd": 750000.0,
+          "participation_pct": 0.6128,
+          "impact_bps_per_trip": 9.39,
+          "annual_impact_cost_bps": 469.7,
+          "alpha_after_bps": 2019.3,
+          "alpha_decay_pct": 18.87,
+          "sharpe_after": 1.84,
+          "delta_sharpe": -0.43,
+          "flag": "OK"
+        },
+        "$50M": {
+          "aum_usd": 50000000.0,
+          "stream_notional_usd": 3750000.0,
+          "participation_pct": 3.0639,
+          "impact_bps_per_trip": 21.0,
+          "annual_impact_cost_bps": 1050.2,
+          "alpha_after_bps": 1438.8,
+          "alpha_decay_pct": 42.2,
+          "sharpe_after": 1.31,
+          "delta_sharpe": -0.96,
+          "flag": "BOTTLENECK"
+        },
+        "$100M": {
+          "aum_usd": 100000000.0,
+          "stream_notional_usd": 7500000.0,
+          "participation_pct": 6.1278,
+          "impact_bps_per_trip": 29.71,
+          "annual_impact_cost_bps": 1485.3,
+          "alpha_after_bps": 1003.7,
+          "alpha_decay_pct": 59.67,
+          "sharpe_after": 0.92,
+          "delta_sharpe": -1.35,
+          "flag": "BROKEN"
+        },
+        "$500M": {
+          "aum_usd": 500000000.0,
+          "stream_notional_usd": 37500000.0,
+          "participation_pct": 30.6389,
+          "impact_bps_per_trip": 66.42,
+          "annual_impact_cost_bps": 3321.1,
+          "alpha_after_bps": 0.0,
+          "alpha_decay_pct": 100.0,
+          "sharpe_after": 0.0,
+          "delta_sharpe": -2.27,
+          "flag": "BROKEN"
+        },
+        "$1,000M": {
+          "aum_usd": 1000000000.0,
+          "stream_notional_usd": 75000000.0,
+          "participation_pct": 61.2779,
+          "impact_bps_per_trip": 93.94,
+          "annual_impact_cost_bps": 4696.8,
+          "alpha_after_bps": 0.0,
+          "alpha_decay_pct": 100.0,
+          "sharpe_after": 0.0,
+          "delta_sharpe": -2.27,
+          "flag": "BROKEN"
+        }
+      },
+      "notes": "Silver is thinner than gold \u2014 watch for capacity issues."
+    },
+    {
+      "stream": "Cross-vol arb (SPY vs IWM)",
+      "weight": 0.15,
+      "adv_notional_usd": 10232977626.548767,
+      "binding_instrument": "IWM ETF shares (options data absent from IronVault)",
+      "impact_coeff": 100.0,
+      "hard_cap_notional_usd": 511648881.32743835,
+      "soft_cap_notional_usd": 102329776.26548767,
+      "hard_cap_portfolio_aum": 3410992542.1829224,
+      "soft_cap_portfolio_aum": 682198508.4365845,
+      "baseline_sharpe": 1.8,
+      "baseline_alpha_bps": 400,
+      "per_tier": {
+        "$10M": {
+          "aum_usd": 10000000.0,
+          "stream_notional_usd": 1500000.0,
+          "participation_pct": 0.0147,
+          "impact_bps_per_trip": 1.21,
+          "annual_impact_cost_bps": 60.5,
+          "alpha_after_bps": 339.5,
+          "alpha_decay_pct": 15.13,
+          "sharpe_after": 1.53,
+          "delta_sharpe": -0.27,
+          "flag": "OK"
+        },
+        "$50M": {
+          "aum_usd": 50000000.0,
+          "stream_notional_usd": 7500000.0,
+          "participation_pct": 0.0733,
+          "impact_bps_per_trip": 2.71,
+          "annual_impact_cost_bps": 135.4,
+          "alpha_after_bps": 264.6,
+          "alpha_decay_pct": 33.84,
+          "sharpe_after": 1.19,
+          "delta_sharpe": -0.61,
+          "flag": "OK"
+        },
+        "$100M": {
+          "aum_usd": 100000000.0,
+          "stream_notional_usd": 15000000.0,
+          "participation_pct": 0.1466,
+          "impact_bps_per_trip": 3.83,
+          "annual_impact_cost_bps": 191.4,
+          "alpha_after_bps": 208.6,
+          "alpha_decay_pct": 47.86,
+          "sharpe_after": 0.94,
+          "delta_sharpe": -0.86,
+          "flag": "OK"
+        },
+        "$500M": {
+          "aum_usd": 500000000.0,
+          "stream_notional_usd": 75000000.0,
+          "participation_pct": 0.7329,
+          "impact_bps_per_trip": 8.56,
+          "annual_impact_cost_bps": 428.1,
+          "alpha_after_bps": 0.0,
+          "alpha_decay_pct": 100.0,
+          "sharpe_after": 0.0,
+          "delta_sharpe": -1.8,
+          "flag": "OK"
+        },
+        "$1,000M": {
+          "aum_usd": 1000000000.0,
+          "stream_notional_usd": 150000000.0,
+          "participation_pct": 1.4658,
+          "impact_bps_per_trip": 12.11,
+          "annual_impact_cost_bps": 605.4,
+          "alpha_after_bps": 0.0,
+          "alpha_decay_pct": 100.0,
+          "sharpe_after": 0.0,
+          "delta_sharpe": -1.8,
+          "flag": "BOTTLENECK"
+        }
+      },
+      "notes": "IWM options depth is thinner than SPY \u2014 variance swap replication via IWM opts is the practical bottleneck."
+    },
+    {
+      "stream": "Crisis Alpha v5 (SPY puts + VIX calls)",
+      "weight": 0.05,
+      "adv_notional_usd": 751064019.0900803,
+      "binding_instrument": "UVXY $0.409B/d + VXX $0.342B/d (VIX-call proxy)",
+      "impact_coeff": 150.0,
+      "hard_cap_notional_usd": 37553200.95450401,
+      "soft_cap_notional_usd": 7510640.190900803,
+      "hard_cap_portfolio_aum": 751064019.0900803,
+      "soft_cap_portfolio_aum": 150212803.81801605,
+      "baseline_sharpe": 1.2,
+      "baseline_alpha_bps": 200,
+      "per_tier": {
+        "$10M": {
+          "aum_usd": 10000000.0,
+          "stream_notional_usd": 500000.0,
+          "participation_pct": 0.0666,
+          "impact_bps_per_trip": 3.87,
+          "annual_impact_cost_bps": 193.5,
+          "alpha_after_bps": 6.5,
+          "alpha_decay_pct": 96.76,
+          "sharpe_after": 0.04,
+          "delta_sharpe": -1.16,
+          "flag": "OK"
+        },
+        "$50M": {
+          "aum_usd": 50000000.0,
+          "stream_notional_usd": 2500000.0,
+          "participation_pct": 0.3329,
+          "impact_bps_per_trip": 8.65,
+          "annual_impact_cost_bps": 432.7,
+          "alpha_after_bps": 0.0,
+          "alpha_decay_pct": 100.0,
+          "sharpe_after": 0.0,
+          "delta_sharpe": -1.2,
+          "flag": "OK"
+        },
+        "$100M": {
+          "aum_usd": 100000000.0,
+          "stream_notional_usd": 5000000.0,
+          "participation_pct": 0.6657,
+          "impact_bps_per_trip": 12.24,
+          "annual_impact_cost_bps": 611.9,
+          "alpha_after_bps": 0.0,
+          "alpha_decay_pct": 100.0,
+          "sharpe_after": 0.0,
+          "delta_sharpe": -1.2,
+          "flag": "OK"
+        },
+        "$500M": {
+          "aum_usd": 500000000.0,
+          "stream_notional_usd": 25000000.0,
+          "participation_pct": 3.3286,
+          "impact_bps_per_trip": 27.37,
+          "annual_impact_cost_bps": 1368.3,
+          "alpha_after_bps": 0.0,
+          "alpha_decay_pct": 100.0,
+          "sharpe_after": 0.0,
+          "delta_sharpe": -1.2,
+          "flag": "BOTTLENECK"
+        },
+        "$1,000M": {
+          "aum_usd": 1000000000.0,
+          "stream_notional_usd": 50000000.0,
+          "participation_pct": 6.6572,
+          "impact_bps_per_trip": 38.7,
+          "annual_impact_cost_bps": 1935.1,
+          "alpha_after_bps": 0.0,
+          "alpha_decay_pct": 100.0,
+          "sharpe_after": 0.0,
+          "delta_sharpe": -1.2,
+          "flag": "BROKEN"
+        }
+      },
+      "notes": "VIX options liquidity is the smallest in the portfolio. 5% allocation keeps this sleeve small but it WILL bind at high AUM."
+    }
+  ],
+  "bottleneck": {
+    "soft_bottleneck_stream": "SLV calendar (SLV \u2212 SI=F)",
+    "soft_bottleneck_aum_usd": 16319099.304199219,
+    "hard_bottleneck_stream": "SLV calendar (SLV \u2212 SI=F)",
+    "hard_bottleneck_aum_usd": 81595496.5209961,
+    "tier_status": {
+      "$10M": {
+        "broken_streams": [],
+        "bottleneck_streams": [],
+        "portfolio_status": "OK"
+      },
+      "$50M": {
+        "broken_streams": [],
+        "bottleneck_streams": [
+          "GLD calendar (GLD \u2212 GC=F)",
+          "SLV calendar (SLV \u2212 SI=F)"
+        ],
+        "portfolio_status": "BOTTLENECK"
+      },
+      "$100M": {
+        "broken_streams": [
+          "SLV calendar (SLV \u2212 SI=F)"
+        ],
+        "bottleneck_streams": [
+          "GLD calendar (GLD \u2212 GC=F)"
+        ],
+        "portfolio_status": "BROKEN"
+      },
+      "$500M": {
+        "broken_streams": [
+          "GLD calendar (GLD \u2212 GC=F)",
+          "SLV calendar (SLV \u2212 SI=F)"
+        ],
+        "bottleneck_streams": [
+          "Crisis Alpha v5 (SPY puts + VIX calls)"
+        ],
+        "portfolio_status": "BROKEN"
+      },
+      "$1,000M": {
+        "broken_streams": [
+          "GLD calendar (GLD \u2212 GC=F)",
+          "SLV calendar (SLV \u2212 SI=F)",
+          "Crisis Alpha v5 (SPY puts + VIX calls)"
+        ],
+        "bottleneck_streams": [
+          "Cross-vol arb (SPY vs IWM)"
+        ],
+        "portfolio_status": "BROKEN"
+      }
+    }
+  },
+  "rule_zero": "Volumes pulled live: Yahoo Finance 90-day median for ETFs/futures, IronVault option_daily (since 2024) for SPY options. Prices from Yahoo last close. No synthetic volumes."
+}
