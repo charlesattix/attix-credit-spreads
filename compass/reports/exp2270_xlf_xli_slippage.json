@@ -1,0 +1,511 @@
+{
+  "experiment": "EXP-2270",
+  "name": "XLF / XLI slippage impact analysis",
+  "generated": "2026-04-07T18:05:38",
+  "data_limitation": "IronVault has no bid/ask quotes and no intraday rows for XLF/XLI options \u2014 only daily OHLC, volume, and open interest. Slippage is therefore swept as an exogenous parameter rather than measured directly. Empirical liquidity proxies from the real OHLC of every contract actually traded are reported alongside, so the reader can pick a defensible slippage assumption from observable data.",
+  "rule_zero": "All trades and OHLC stats from real IronVault Polygon data.",
+  "empirical_liquidity": {
+    "XLF": {
+      "n_contracts": 461,
+      "n_active_rows": 19737,
+      "volume_per_day": {
+        "n": 19737,
+        "mean": 1102.7809,
+        "median": 40.0,
+        "p10": 2.0,
+        "p25": 7.0,
+        "p75": 289.0,
+        "p90": 2003.4,
+        "min": 1.0,
+        "max": 341605.0
+      },
+      "open_interest": {
+        "n": 0
+      },
+      "high_low_over_close": {
+        "n": 19737,
+        "mean": 0.2689,
+        "median": 0.1034,
+        "p10": 0.0,
+        "p25": 0.0,
+        "p75": 0.2692,
+        "p90": 0.5357,
+        "min": 0.0,
+        "max": 87.0
+      },
+      "close_premium": {
+        "n": 19737,
+        "mean": 0.8683,
+        "median": 0.44,
+        "p10": 0.03,
+        "p25": 0.14,
+        "p75": 1.14,
+        "p90": 2.2,
+        "min": 0.01,
+        "max": 19.05
+      }
+    },
+    "XLI": {
+      "n_contracts": 438,
+      "n_active_rows": 13552,
+      "volume_per_day": {
+        "n": 13552,
+        "mean": 338.5918,
+        "median": 10.0,
+        "p10": 1.0,
+        "p25": 3.0,
+        "p75": 50.0,
+        "p90": 292.9,
+        "min": 1.0,
+        "max": 94873.0
+      },
+      "open_interest": {
+        "n": 0
+      },
+      "high_low_over_close": {
+        "n": 13552,
+        "mean": 0.1977,
+        "median": 0.0412,
+        "p10": 0.0,
+        "p25": 0.0,
+        "p75": 0.1752,
+        "p90": 0.3712,
+        "min": 0.0,
+        "max": 90.0
+      },
+      "close_premium": {
+        "n": 13552,
+        "mean": 1.9434,
+        "median": 1.18,
+        "p10": 0.12,
+        "p25": 0.48,
+        "p75": 2.57,
+        "p90": 4.55,
+        "min": 0.01,
+        "max": 31.12
+      }
+    }
+  },
+  "slippage_sweep": {
+    "XLF": {
+      "ticker": "XLF",
+      "n_raw_trades": 248,
+      "sweep": [
+        {
+          "slip_cents_per_leg": 0.0,
+          "n": 248,
+          "wr": 0.9838709677419355,
+          "sharpe": 11.189,
+          "total_return_pct": 173.185,
+          "cagr_pct": 17.98,
+          "max_dd_pct": 2.117,
+          "trades_per_yr": 40.8
+        },
+        {
+          "slip_cents_per_leg": 1.0,
+          "n": 248,
+          "wr": 0.9758064516129032,
+          "sharpe": 8.967,
+          "total_return_pct": 126.453,
+          "cagr_pct": 14.394,
+          "max_dd_pct": 2.222,
+          "trades_per_yr": 40.8
+        },
+        {
+          "slip_cents_per_leg": 2.0,
+          "n": 248,
+          "wr": 0.9475806451612904,
+          "sharpe": 6.661,
+          "total_return_pct": 87.682,
+          "cagr_pct": 10.914,
+          "max_dd_pct": 2.328,
+          "trades_per_yr": 40.8
+        },
+        {
+          "slip_cents_per_leg": 3.0,
+          "n": 248,
+          "wr": 0.8991935483870968,
+          "sharpe": 4.43,
+          "total_return_pct": 55.522,
+          "cagr_pct": 7.536,
+          "max_dd_pct": 2.433,
+          "trades_per_yr": 40.8
+        },
+        {
+          "slip_cents_per_leg": 5.0,
+          "n": 248,
+          "wr": 0.6088709677419355,
+          "sharpe": 0.577,
+          "total_return_pct": 6.733,
+          "cagr_pct": 1.078,
+          "max_dd_pct": 5.774,
+          "trades_per_yr": 40.8
+        },
+        {
+          "slip_cents_per_leg": 7.5,
+          "n": 248,
+          "wr": 0.3064516129032258,
+          "sharpe": -2.907,
+          "total_return_pct": -33.395,
+          "cagr_pct": -6.467,
+          "max_dd_pct": 34.992,
+          "trades_per_yr": 40.8
+        },
+        {
+          "slip_cents_per_leg": 10.0,
+          "n": 248,
+          "wr": 0.10483870967741936,
+          "sharpe": -5.234,
+          "total_return_pct": -58.482,
+          "cagr_pct": -13.465,
+          "max_dd_pct": 59.034,
+          "trades_per_yr": 40.8
+        }
+      ],
+      "break_even_sharpe_15_cents": 5.0,
+      "break_even_sharpe_10_cents": 5.0
+    },
+    "XLI": {
+      "ticker": "XLI",
+      "n_raw_trades": 248,
+      "sweep": [
+        {
+          "slip_cents_per_leg": 0.0,
+          "n": 248,
+          "wr": 0.967741935483871,
+          "sharpe": 6.036,
+          "total_return_pct": 173.797,
+          "cagr_pct": 18.634,
+          "max_dd_pct": 3.697,
+          "trades_per_yr": 42.07
+        },
+        {
+          "slip_cents_per_leg": 1.0,
+          "n": 248,
+          "wr": 0.9596774193548387,
+          "sharpe": 5.408,
+          "total_return_pct": 149.993,
+          "cagr_pct": 16.817,
+          "max_dd_pct": 3.939,
+          "trades_per_yr": 42.07
+        },
+        {
+          "slip_cents_per_leg": 2.0,
+          "n": 248,
+          "wr": 0.9354838709677419,
+          "sharpe": 4.774,
+          "total_return_pct": 128.244,
+          "cagr_pct": 15.027,
+          "max_dd_pct": 4.182,
+          "trades_per_yr": 42.07
+        },
+        {
+          "slip_cents_per_leg": 3.0,
+          "n": 248,
+          "wr": 0.9193548387096774,
+          "sharpe": 4.145,
+          "total_return_pct": 108.375,
+          "cagr_pct": 13.264,
+          "max_dd_pct": 4.424,
+          "trades_per_yr": 42.07
+        },
+        {
+          "slip_cents_per_leg": 5.0,
+          "n": 248,
+          "wr": 0.8669354838709677,
+          "sharpe": 2.938,
+          "total_return_pct": 73.643,
+          "cagr_pct": 9.814,
+          "max_dd_pct": 4.909,
+          "trades_per_yr": 42.07
+        },
+        {
+          "slip_cents_per_leg": 7.5,
+          "n": 248,
+          "wr": 0.8225806451612904,
+          "sharpe": 1.585,
+          "total_return_pct": 38.203,
+          "cagr_pct": 5.642,
+          "max_dd_pct": 6.168,
+          "trades_per_yr": 42.07
+        },
+        {
+          "slip_cents_per_leg": 10.0,
+          "n": 248,
+          "wr": 0.7661290322580645,
+          "sharpe": 0.437,
+          "total_return_pct": 9.953,
+          "cagr_pct": 1.623,
+          "max_dd_pct": 11.067,
+          "trades_per_yr": 42.07
+        }
+      ],
+      "break_even_sharpe_15_cents": 10.0,
+      "break_even_sharpe_10_cents": 10.0
+    }
+  },
+  "weekday_breakdown_clean": {
+    "XLF": {
+      "Mon": {
+        "label": "Mon",
+        "n": 223,
+        "wr": 0.9820627802690582,
+        "sharpe": 10.189,
+        "total_return_pct": 143.806,
+        "cagr_pct": 15.986,
+        "max_dd_pct": 2.117,
+        "trades_per_yr": 37.11
+      },
+      "Tue": {
+        "label": "Tue",
+        "n": 24,
+        "wr": 1.0,
+        "sharpe": 6.52,
+        "total_return_pct": 11.493,
+        "cagr_pct": 1.953,
+        "max_dd_pct": -0.0,
+        "trades_per_yr": 4.27
+      },
+      "Thu": {
+        "label": "Thu",
+        "n": 1,
+        "wr": 1.0,
+        "sharpe": 0.0,
+        "total_return_pct": 0.5,
+        "cagr_pct": 0.482,
+        "max_dd_pct": -0.0,
+        "trades_per_yr": 0.96
+      }
+    },
+    "XLI": {
+      "Mon": {
+        "label": "Mon",
+        "n": 221,
+        "wr": 0.9683257918552036,
+        "sharpe": 5.821,
+        "total_return_pct": 143.674,
+        "cagr_pct": 16.311,
+        "max_dd_pct": 3.697,
+        "trades_per_yr": 37.49
+      },
+      "Tue": {
+        "label": "Tue",
+        "n": 27,
+        "wr": 0.9629629629629629,
+        "sharpe": 1.807,
+        "total_return_pct": 12.362,
+        "cagr_pct": 2.2,
+        "max_dd_pct": 1.457,
+        "trades_per_yr": 5.04
+      }
+    }
+  },
+  "weekday_breakdown_with_3c_slip": {
+    "XLF": {
+      "Mon": {
+        "label": "Mon",
+        "n": 223,
+        "wr": 0.8878923766816144,
+        "sharpe": 3.941,
+        "total_return_pct": 47.111,
+        "cagr_pct": 6.634,
+        "max_dd_pct": 2.433,
+        "trades_per_yr": 37.11
+      },
+      "Tue": {
+        "label": "Tue",
+        "n": 24,
+        "wr": 1.0,
+        "sharpe": 3.856,
+        "total_return_pct": 5.506,
+        "cagr_pct": 0.958,
+        "max_dd_pct": -0.0,
+        "trades_per_yr": 4.27
+      },
+      "Thu": {
+        "label": "Thu",
+        "n": 1,
+        "wr": 1.0,
+        "sharpe": 0.0,
+        "total_return_pct": 0.2,
+        "cagr_pct": 0.193,
+        "max_dd_pct": -0.0,
+        "trades_per_yr": 0.96
+      }
+    },
+    "XLI": {
+      "Mon": {
+        "label": "Mon",
+        "n": 221,
+        "wr": 0.918552036199095,
+        "sharpe": 3.979,
+        "total_return_pct": 92.342,
+        "cagr_pct": 11.736,
+        "max_dd_pct": 4.424,
+        "trades_per_yr": 37.49
+      },
+      "Tue": {
+        "label": "Tue",
+        "n": 27,
+        "wr": 0.9259259259259259,
+        "sharpe": 1.252,
+        "total_return_pct": 8.336,
+        "cagr_pct": 1.506,
+        "max_dd_pct": 1.753,
+        "trades_per_yr": 5.04
+      }
+    }
+  },
+  "portfolio_sensitivity_7stream": [
+    {
+      "slip_cents": 0.0,
+      "equal_weight": {
+        "label": "equal_weight_7stream",
+        "n_days": 1566,
+        "cagr_pct": 20.149,
+        "sharpe": 6.758,
+        "max_dd_pct": 0.923,
+        "vol_pct": 2.723
+      },
+      "min_var": {
+        "label": "min_var_7stream",
+        "n_days": 1566,
+        "cagr_pct": 17.226,
+        "sharpe": 31.547,
+        "max_dd_pct": 0.469,
+        "vol_pct": 0.504
+      },
+      "min_var_weights": {
+        "exp1220": 0.0,
+        "v5_hedge": 0.0121,
+        "gld_cal": 0.0061,
+        "slv_cal": 0.0022,
+        "cross_vol": 0.0182,
+        "xlf_cs": 0.6231,
+        "xli_cs": 0.3383
+      }
+    },
+    {
+      "slip_cents": 1.0,
+      "equal_weight": {
+        "label": "equal_weight_7stream",
+        "n_days": 1566,
+        "cagr_pct": 19.38,
+        "sharpe": 6.524,
+        "max_dd_pct": 0.932,
+        "vol_pct": 2.722
+      },
+      "min_var": {
+        "label": "min_var_7stream",
+        "n_days": 1566,
+        "cagr_pct": 14.482,
+        "sharpe": 28.457,
+        "max_dd_pct": 0.587,
+        "vol_pct": 0.475
+      },
+      "min_var_weights": {
+        "exp1220": 0.0,
+        "v5_hedge": 0.0109,
+        "gld_cal": 0.0054,
+        "slv_cal": 0.002,
+        "cross_vol": 0.0148,
+        "xlf_cs": 0.6386,
+        "xli_cs": 0.3281
+      }
+    },
+    {
+      "slip_cents": 2.0,
+      "equal_weight": {
+        "label": "equal_weight_7stream",
+        "n_days": 1566,
+        "cagr_pct": 18.615,
+        "sharpe": 6.289,
+        "max_dd_pct": 0.94,
+        "vol_pct": 2.721
+      },
+      "min_var": {
+        "label": "min_var_7stream",
+        "n_days": 1566,
+        "cagr_pct": 11.757,
+        "sharpe": 24.407,
+        "max_dd_pct": 0.744,
+        "vol_pct": 0.456
+      },
+      "min_var_weights": {
+        "exp1220": 0.0,
+        "v5_hedge": 0.01,
+        "gld_cal": 0.005,
+        "slv_cal": 0.0019,
+        "cross_vol": 0.0124,
+        "xlf_cs": 0.6442,
+        "xli_cs": 0.3265
+      }
+    },
+    {
+      "slip_cents": 3.0,
+      "equal_weight": {
+        "label": "equal_weight_7stream",
+        "n_days": 1566,
+        "cagr_pct": 17.856,
+        "sharpe": 6.054,
+        "max_dd_pct": 0.948,
+        "vol_pct": 2.721
+      },
+      "min_var": {
+        "label": "min_var_7stream",
+        "n_days": 1566,
+        "cagr_pct": 9.124,
+        "sharpe": 19.586,
+        "max_dd_pct": 0.911,
+        "vol_pct": 0.446
+      },
+      "min_var_weights": {
+        "exp1220": 0.0004,
+        "v5_hedge": 0.0095,
+        "gld_cal": 0.0049,
+        "slv_cal": 0.0017,
+        "cross_vol": 0.0109,
+        "xlf_cs": 0.6391,
+        "xli_cs": 0.3336
+      }
+    },
+    {
+      "slip_cents": 5.0,
+      "equal_weight": {
+        "label": "equal_weight_7stream",
+        "n_days": 1566,
+        "cagr_pct": 16.352,
+        "sharpe": 5.583,
+        "max_dd_pct": 0.965,
+        "vol_pct": 2.72
+      },
+      "min_var": {
+        "label": "min_var_7stream",
+        "n_days": 1566,
+        "cagr_pct": 4.3,
+        "sharpe": 9.187,
+        "max_dd_pct": 1.779,
+        "vol_pct": 0.458
+      },
+      "min_var_weights": {
+        "exp1220": 0.0014,
+        "v5_hedge": 0.0093,
+        "gld_cal": 0.0053,
+        "slv_cal": 0.0016,
+        "cross_vol": 0.0106,
+        "xlf_cs": 0.6024,
+        "xli_cs": 0.3695
+      }
+    }
+  ],
+  "answers": {
+    "q1_realistic_bid_ask": "Cannot be measured directly \u2014 IronVault has no quotes. Industry baseline for XLF/XLI ATM-ish options at the $0.10-$2.00 premium range is roughly $0.02-$0.05 wide, i.e. one-way per-leg slippage of 1-3 cents.",
+    "q2_xlf_break_even_sharpe_15": 5.0,
+    "q2_xlf_break_even_sharpe_10": 5.0,
+    "q2_xli_break_even_sharpe_15": 10.0,
+    "q2_xli_break_even_sharpe_10": 10.0,
+    "q3_portfolio_sharpe_at_3c_slip": 19.586,
+    "q3_portfolio_sharpe_at_0c_slip": 31.547,
+    "q4_timing_finding": "Per-weekday Sharpe (clean fills) is reported; if any single weekday clears 1.5 under realistic 3c slippage we have a tradable carve-out."
+  }
+}
