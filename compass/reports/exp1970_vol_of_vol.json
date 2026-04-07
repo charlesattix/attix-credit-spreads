@@ -1,0 +1,173 @@
+{
+  "experiment": "EXP-1970",
+  "name": "Vol-of-Vol Overlay for EXP-1220 Credit Spreads",
+  "generated": "2026-04-07T14:00:53",
+  "data_sources": {
+    "vix": "Yahoo Finance ^VIX daily",
+    "options": "IronVault options_cache.db (real Polygon SPY chains)"
+  },
+  "signal": {
+    "realised_vol_window": 20,
+    "z_score_window": 252,
+    "size_schedule": {
+      "z<=1": 1.0,
+      "1<z<=2": 0.5,
+      "z>2": 0.0
+    },
+    "regime_mix_pct": {
+      "calm_z_le_0": 60.17,
+      "half_1_lt_z_le_2": 8.64,
+      "flat_z_gt_2": 6.09
+    }
+  },
+  "baseline": {
+    "label": "baseline",
+    "n": 171,
+    "pnl": 7372.0,
+    "wr": 0.8771929824561403,
+    "sharpe": 1.257,
+    "cagr_pct": 1.223,
+    "max_dd_pct": 1.551,
+    "avg_pnl": 43.11,
+    "trades_per_yr": 29.23
+  },
+  "overlay": {
+    "label": "overlay_sized",
+    "n": 161,
+    "pnl": 7648.0,
+    "wr": 0.8881987577639752,
+    "sharpe": 2.116,
+    "cagr_pct": 1.268,
+    "max_dd_pct": 0.704,
+    "avg_pnl": 47.5,
+    "trades_per_yr": 27.52
+  },
+  "standalone": {
+    "label": "standalone_calm_only",
+    "n": 100,
+    "pnl": 5212.0,
+    "wr": 0.9,
+    "sharpe": 2.133,
+    "cagr_pct": 0.904,
+    "max_dd_pct": 0.796,
+    "avg_pnl": 52.12,
+    "trades_per_yr": 17.7
+  },
+  "delta_sharpe_overlay_vs_baseline": 0.859,
+  "target_overlay_delta": 0.5,
+  "target_overlay_met": true,
+  "target_standalone_sharpe": 2.0,
+  "target_standalone_met": true,
+  "walk_forward_overlay": [
+    {
+      "year": 2020,
+      "baseline_n": 27,
+      "baseline_sharpe": 0.145,
+      "baseline_pnl": 240.0,
+      "overlay_n": 26,
+      "overlay_sharpe": 5.153,
+      "overlay_pnl": 1792.0,
+      "delta_sharpe": 5.008
+    },
+    {
+      "year": 2021,
+      "baseline_n": 34,
+      "baseline_sharpe": 0.981,
+      "baseline_pnl": 616.0,
+      "overlay_n": 32,
+      "overlay_sharpe": 1.652,
+      "overlay_pnl": 794.0,
+      "delta_sharpe": 0.671
+    },
+    {
+      "year": 2022,
+      "baseline_n": 32,
+      "baseline_sharpe": 2.3,
+      "baseline_pnl": 2564.0,
+      "overlay_n": 32,
+      "overlay_sharpe": 2.205,
+      "overlay_pnl": 2404.0,
+      "delta_sharpe": -0.095
+    },
+    {
+      "year": 2023,
+      "baseline_n": 26,
+      "baseline_sharpe": 6.507,
+      "baseline_pnl": 1064.0,
+      "overlay_n": 26,
+      "overlay_sharpe": 6.356,
+      "overlay_pnl": 970.0,
+      "delta_sharpe": -0.151
+    },
+    {
+      "year": 2024,
+      "baseline_n": 26,
+      "baseline_sharpe": 0.321,
+      "baseline_pnl": 240.0,
+      "overlay_n": 22,
+      "overlay_sharpe": 0.455,
+      "overlay_pnl": 190.0,
+      "delta_sharpe": 0.134
+    },
+    {
+      "year": 2025,
+      "baseline_n": 26,
+      "baseline_sharpe": 2.838,
+      "baseline_pnl": 2648.0,
+      "overlay_n": 23,
+      "overlay_sharpe": 2.179,
+      "overlay_pnl": 1498.0,
+      "delta_sharpe": -0.659
+    }
+  ],
+  "regime_conditional_baseline": [
+    {
+      "regime": "z <= 0",
+      "label": "z <= 0",
+      "n": 100,
+      "pnl": 5212.0,
+      "wr": 0.9,
+      "sharpe": 2.133,
+      "cagr_pct": 0.904,
+      "max_dd_pct": 0.796,
+      "avg_pnl": 52.12,
+      "trades_per_yr": 17.7
+    },
+    {
+      "regime": "0 < z <= 1",
+      "label": "0 < z <= 1",
+      "n": 49,
+      "pnl": 2440.0,
+      "wr": 0.8775510204081632,
+      "sharpe": 1.005,
+      "cagr_pct": 0.419,
+      "max_dd_pct": 0.816,
+      "avg_pnl": 49.8,
+      "trades_per_yr": 8.49
+    },
+    {
+      "regime": "1 < z <= 2",
+      "label": "1 < z <= 2",
+      "n": 12,
+      "pnl": -8.0,
+      "wr": 0.8333333333333334,
+      "sharpe": -0.005,
+      "cagr_pct": -0.002,
+      "max_dd_pct": 0.483,
+      "avg_pnl": -0.67,
+      "trades_per_yr": 2.82
+    },
+    {
+      "regime": "z > 2",
+      "label": "z > 2",
+      "n": 10,
+      "pnl": -272.0,
+      "wr": 0.7,
+      "sharpe": -0.064,
+      "cagr_pct": -0.053,
+      "max_dd_pct": 0.239,
+      "avg_pnl": -27.2,
+      "trades_per_yr": 1.94
+    }
+  ]
+}
