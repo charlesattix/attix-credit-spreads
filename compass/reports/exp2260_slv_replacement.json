@@ -1,0 +1,100 @@
+{
+  "experiment": "EXP-2260",
+  "tag": "EXP-2260",
+  "description": "SLV replacement \u2014 capacity solution for the 20% SLV sleeve",
+  "candidates": {
+    "TLT_put_credit_spread": {
+      "status": "run",
+      "metrics": {
+        "n": 237,
+        "win_rate": 0.7383966244725738,
+        "cagr": -0.04594359318007557,
+        "sharpe_per_trade": -0.7402272036227839,
+        "max_dd": -0.41376000525580037,
+        "total_return": -0.24587330592839451,
+        "avg_pnl": -0.0011426509719615903
+      },
+      "diagnostics": {
+        "n_attempted": 312,
+        "n_dropped_no_exp": 14,
+        "n_dropped_thin_chain": 0,
+        "n_real_exits": 237,
+        "n_intrinsic_exits": 0
+      },
+      "corr_vs_exp1220": 0.6763429756035464,
+      "capacity": {
+        "n_observations": 237,
+        "participation_rate": 0.1,
+        "median_daily_volume": 919.0,
+        "p5_daily_volume": 102.0,
+        "median_max_contracts_per_entry": 91,
+        "monthly_cap_contracts": 367,
+        "monthly_dollar_vega": 36760.0
+      },
+      "capacity_usd_est": 183500,
+      "capacity_display": "~367 ctr/month \u2248 $0M"
+    },
+    "GDX_put_credit_spread": {
+      "status": "blocked",
+      "reason": "0 IronVault contracts (coverage: {'n_contracts': 0, 'n_snapshot_dates': 0})",
+      "unblock": "Polygon Starter + OCC symbol construction backfill \u2014 same path as the TLT Dec-2025 backfill, per MASTERPLAN scripts/backfill_tlt.py",
+      "capacity": {},
+      "capacity_usd_est": 0,
+      "capacity_display": "\u2014"
+    },
+    "GLD_calendar_2x_weight": {
+      "status": "run",
+      "metrics": {
+        "n_days": 1566,
+        "cagr": 0.1807366232382166,
+        "sharpe_per_trade": 2.7159010230259253,
+        "max_dd": -0.02500598503936953,
+        "total_return": 1.0844197394292996,
+        "win_rate": null,
+        "avg_pnl": null
+      },
+      "corr_vs_exp1220": -0.6059940263533241,
+      "capacity": {
+        "note": "GLD ETF 20d median ADV \u2248 $1.5B/day, GC=F futures notional \u2248 $50B/day. Binding leg is the GLD ETF at 10% participation = $150M/day of ETF flow, \u2248 $3B/month total capacity. Doubling the existing 20% SLV allocation into GLD (to 40%) is well inside that ceiling. Source: public Yahoo daily volumes \u00d7 median 2024 close, rule-of-thumb numbers.",
+        "effective_monthly_capacity_usd": 3000000000
+      },
+      "capacity_usd_est": 3000000000,
+      "capacity_display": "~$3B/month (GLD ETF ADV \u00d7 10%)"
+    },
+    "SPY_unhedged_weekly_straddle": {
+      "status": "run",
+      "metrics": {
+        "n": 301,
+        "win_rate": 0.5714285714285714,
+        "cagr": 0.0008175096883331623,
+        "sharpe_per_trade": 0.05678079158636528,
+        "max_dd": -0.03467959522872026,
+        "total_return": 0.004915093895254019,
+        "avg_pnl": 1.9132302054211923e-05
+      },
+      "diagnostics": {
+        "n_attempted": 314,
+        "n_dropped_no_exp": 0,
+        "n_dropped_thin": 13
+      },
+      "corr_vs_exp1220": -0.1615781700989002,
+      "capacity": {
+        "n_observations": 301,
+        "participation_rate": 0.1,
+        "median_daily_volume": 3860.0,
+        "p5_daily_volume": 203.0,
+        "median_max_contracts_per_entry": 386,
+        "monthly_cap_contracts": 1544,
+        "monthly_dollar_notional": 308800.0
+      },
+      "capacity_usd_est": 77200000,
+      "capacity_display": "~1,544 ctr/month \u2248 $77M"
+    }
+  },
+  "recommendation_html": "<ul><li><b>NO candidate clears all three targets simultaneously.</b></li><li>Partial passes:</li><ul><li>TLT_put_credit_spread: Sharpe -0.74 \u2717; corr +0.68 \u2717; cap $0M \u2717</li><li>GLD_calendar_2x_weight: Sharpe 2.72 \u2713; corr -0.61 \u2717; cap $3000M \u2713</li><li>SPY_unhedged_weekly_straddle: Sharpe 0.06 \u2717; corr -0.16 \u2713; cap $77M \u2717</li></ul><li><b>Practical recommendation:</b> the cleanest capacity fix for the SLV allocation is to reweight into GLD (already validated, same thesis, 40\u00d7 more liquid). The 2\u00d7 allocation hypothesis needs to be stress-tested in the EXP-1870 combined-portfolio model to confirm correlation stays low once the weight doubles.</li></ul>",
+  "targets": {
+    "sharpe_min": 2.0,
+    "abs_corr_max": 0.3,
+    "capacity_usd_min": 500000000
+  }
+}
