@@ -1,0 +1,1856 @@
+{
+  "experiment": "EXP-2180",
+  "title": "Volatility Targeting for Sharpe Boost",
+  "date_range": {
+    "start": "2020-01-01",
+    "end": "2025-12-31"
+  },
+  "data_sources": {
+    "stream_frame": "compass/cache/exp2080_streams.pkl (REAL \u2014 5 streams)",
+    "streams": [
+      "exp1220 (scripts.ultimate_portfolio.load_exp1220_dynamic)",
+      "v5_hedge (compass.crisis_alpha_v5 frozen best)",
+      "gld_cal (compass.exp1770 walk_forward)",
+      "slv_cal (compass.exp1770 walk_forward)",
+      "cross_vol (compass.exp2020 build_trades)"
+    ]
+  },
+  "base_weights": {
+    "exp1220": 0.4,
+    "v5_hedge": 0.05,
+    "gld_cal": 0.2,
+    "slv_cal": 0.2,
+    "cross_vol": 0.15
+  },
+  "lookback_days": 60,
+  "vol_floor": 0.02,
+  "lev_clip": [
+    0.25,
+    5.0
+  ],
+  "vol_autocorr": 0.9933,
+  "baseline": {
+    "label": "static_1x",
+    "metrics": {
+      "n": 1566,
+      "cagr_pct": 32.174,
+      "sharpe": 5.261,
+      "sortino": 9.936,
+      "max_dd_pct": 2.595,
+      "calmar": 12.401,
+      "vol_pct": 5.332,
+      "realised_vol_pct": 5.332
+    },
+    "mean_lev": 1.0
+  },
+  "targets": [
+    {
+      "target_vol": 0.1,
+      "folds": [
+        {
+          "test_start": "2020-12-18",
+          "test_end": "2021-03-16",
+          "mean_lev": 2.056,
+          "min_lev": 1.866,
+          "max_lev": 2.433,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 75.716,
+            "sharpe": 5.271,
+            "sortino": 9.526,
+            "max_dd_pct": 1.291,
+            "calmar": 58.638,
+            "vol_pct": 10.814,
+            "realised_vol_pct": 10.814
+          }
+        },
+        {
+          "test_start": "2021-03-17",
+          "test_end": "2021-06-11",
+          "mean_lev": 1.812,
+          "min_lev": 1.729,
+          "max_lev": 1.914,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 90.442,
+            "sharpe": 6.583,
+            "sortino": 16.43,
+            "max_dd_pct": 1.338,
+            "calmar": 67.604,
+            "vol_pct": 9.87,
+            "realised_vol_pct": 9.87
+          }
+        },
+        {
+          "test_start": "2021-06-14",
+          "test_end": "2021-09-08",
+          "mean_lev": 2.019,
+          "min_lev": 1.78,
+          "max_lev": 2.173,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 95.704,
+            "sharpe": 7.435,
+            "sortino": 17.896,
+            "max_dd_pct": 1.212,
+            "calmar": 78.954,
+            "vol_pct": 9.097,
+            "realised_vol_pct": 9.097
+          }
+        },
+        {
+          "test_start": "2021-09-09",
+          "test_end": "2021-12-06",
+          "mean_lev": 2.528,
+          "min_lev": 2.198,
+          "max_lev": 2.997,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 145.549,
+            "sharpe": 8.188,
+            "sortino": 27.2,
+            "max_dd_pct": 1.077,
+            "calmar": 135.187,
+            "vol_pct": 11.063,
+            "realised_vol_pct": 11.063
+          }
+        },
+        {
+          "test_start": "2021-12-07",
+          "test_end": "2022-03-03",
+          "mean_lev": 2.182,
+          "min_lev": 1.943,
+          "max_lev": 2.428,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 107.151,
+            "sharpe": 6.92,
+            "sortino": 17.646,
+            "max_dd_pct": 1.09,
+            "calmar": 98.307,
+            "vol_pct": 10.62,
+            "realised_vol_pct": 10.62
+          }
+        },
+        {
+          "test_start": "2022-03-04",
+          "test_end": "2022-05-31",
+          "mean_lev": 1.87,
+          "min_lev": 1.616,
+          "max_lev": 2.372,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 76.543,
+            "sharpe": 5.153,
+            "sortino": 8.87,
+            "max_dd_pct": 2.403,
+            "calmar": 31.854,
+            "vol_pct": 11.161,
+            "realised_vol_pct": 11.161
+          }
+        },
+        {
+          "test_start": "2022-06-01",
+          "test_end": "2022-08-26",
+          "mean_lev": 2.384,
+          "min_lev": 1.624,
+          "max_lev": 3.272,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 64.853,
+            "sharpe": 3.495,
+            "sortino": 8.847,
+            "max_dd_pct": 2.681,
+            "calmar": 24.194,
+            "vol_pct": 14.616,
+            "realised_vol_pct": 14.616
+          }
+        },
+        {
+          "test_start": "2022-08-29",
+          "test_end": "2022-11-23",
+          "mean_lev": 1.641,
+          "min_lev": 1.393,
+          "max_lev": 2.172,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 66.62,
+            "sharpe": 3.795,
+            "sortino": 11.291,
+            "max_dd_pct": 1.148,
+            "calmar": 58.008,
+            "vol_pct": 13.704,
+            "realised_vol_pct": 13.704
+          }
+        },
+        {
+          "test_start": "2022-11-24",
+          "test_end": "2023-02-20",
+          "mean_lev": 1.19,
+          "min_lev": 1.083,
+          "max_lev": 1.405,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 20.525,
+            "sharpe": 1.962,
+            "sortino": 3.973,
+            "max_dd_pct": 3.154,
+            "calmar": 6.507,
+            "vol_pct": 9.755,
+            "realised_vol_pct": 9.755
+          }
+        },
+        {
+          "test_start": "2023-02-21",
+          "test_end": "2023-05-18",
+          "mean_lev": 1.404,
+          "min_lev": 1.212,
+          "max_lev": 1.572,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 52.097,
+            "sharpe": 4.377,
+            "sortino": 9.766,
+            "max_dd_pct": 2.453,
+            "calmar": 21.236,
+            "vol_pct": 9.694,
+            "realised_vol_pct": 9.694
+          }
+        },
+        {
+          "test_start": "2023-05-19",
+          "test_end": "2023-08-15",
+          "mean_lev": 1.465,
+          "min_lev": 1.358,
+          "max_lev": 1.695,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 44.131,
+            "sharpe": 4.241,
+            "sortino": 7.961,
+            "max_dd_pct": 1.925,
+            "calmar": 22.928,
+            "vol_pct": 8.713,
+            "realised_vol_pct": 8.713
+          }
+        },
+        {
+          "test_start": "2023-08-16",
+          "test_end": "2023-11-10",
+          "mean_lev": 1.937,
+          "min_lev": 1.66,
+          "max_lev": 2.178,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 56.917,
+            "sharpe": 4.491,
+            "sortino": 7.861,
+            "max_dd_pct": 2.497,
+            "calmar": 22.797,
+            "vol_pct": 10.155,
+            "realised_vol_pct": 10.155
+          }
+        },
+        {
+          "test_start": "2023-11-13",
+          "test_end": "2024-02-07",
+          "mean_lev": 1.684,
+          "min_lev": 1.368,
+          "max_lev": 2.068,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 121.107,
+            "sharpe": 6.572,
+            "sortino": 12.597,
+            "max_dd_pct": 1.696,
+            "calmar": 71.416,
+            "vol_pct": 12.202,
+            "realised_vol_pct": 12.202
+          }
+        },
+        {
+          "test_start": "2024-02-08",
+          "test_end": "2024-05-06",
+          "mean_lev": 1.608,
+          "min_lev": 1.365,
+          "max_lev": 1.962,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 75.425,
+            "sharpe": 7.069,
+            "sortino": 15.243,
+            "max_dd_pct": 1.069,
+            "calmar": 70.571,
+            "vol_pct": 8.004,
+            "realised_vol_pct": 8.004
+          }
+        },
+        {
+          "test_start": "2024-05-07",
+          "test_end": "2024-08-01",
+          "mean_lev": 2.078,
+          "min_lev": 1.959,
+          "max_lev": 2.245,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 92.161,
+            "sharpe": 6.485,
+            "sortino": 12.478,
+            "max_dd_pct": 1.904,
+            "calmar": 48.396,
+            "vol_pct": 10.164,
+            "realised_vol_pct": 10.164
+          }
+        },
+        {
+          "test_start": "2024-08-02",
+          "test_end": "2024-10-29",
+          "mean_lev": 2.301,
+          "min_lev": 2.022,
+          "max_lev": 2.458,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 96.581,
+            "sharpe": 6.868,
+            "sortino": 16.936,
+            "max_dd_pct": 1.351,
+            "calmar": 71.468,
+            "vol_pct": 9.925,
+            "realised_vol_pct": 9.925
+          }
+        },
+        {
+          "test_start": "2024-10-30",
+          "test_end": "2025-01-24",
+          "mean_lev": 2.578,
+          "min_lev": 2.316,
+          "max_lev": 3.168,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 76.716,
+            "sharpe": 5.13,
+            "sortino": 10.263,
+            "max_dd_pct": 1.932,
+            "calmar": 39.702,
+            "vol_pct": 11.231,
+            "realised_vol_pct": 11.231
+          }
+        },
+        {
+          "test_start": "2025-01-27",
+          "test_end": "2025-04-23",
+          "mean_lev": 2.168,
+          "min_lev": 1.991,
+          "max_lev": 2.39,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 26.722,
+            "sharpe": 2.446,
+            "sortino": 4.402,
+            "max_dd_pct": 2.872,
+            "calmar": 9.305,
+            "vol_pct": 9.882,
+            "realised_vol_pct": 9.882
+          }
+        },
+        {
+          "test_start": "2025-04-24",
+          "test_end": "2025-07-21",
+          "mean_lev": 2.031,
+          "min_lev": 1.886,
+          "max_lev": 2.35,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 112.279,
+            "sharpe": 7.229,
+            "sortino": 23.486,
+            "max_dd_pct": 1.354,
+            "calmar": 82.94,
+            "vol_pct": 10.503,
+            "realised_vol_pct": 10.503
+          }
+        },
+        {
+          "test_start": "2025-07-22",
+          "test_end": "2025-10-16",
+          "mean_lev": 2.083,
+          "min_lev": 1.969,
+          "max_lev": 2.265,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 70.731,
+            "sharpe": 5.589,
+            "sortino": 14.195,
+            "max_dd_pct": 1.855,
+            "calmar": 38.132,
+            "vol_pct": 9.662,
+            "realised_vol_pct": 9.662
+          }
+        }
+      ],
+      "pooled_oos": {
+        "n": 1260,
+        "cagr_pct": 75.816,
+        "sharpe": 5.369,
+        "sortino": 11.712,
+        "max_dd_pct": 3.154,
+        "calmar": 24.035,
+        "vol_pct": 10.626,
+        "realised_vol_pct": 10.626
+      },
+      "mean_lev": 1.951,
+      "median_lev": 1.986,
+      "min_lev": 1.083,
+      "max_lev": 3.272,
+      "lev_at_cap_pct": 0.0,
+      "lev_at_floor_pct": 0.0
+    },
+    {
+      "target_vol": 0.12,
+      "folds": [
+        {
+          "test_start": "2020-12-18",
+          "test_end": "2021-03-16",
+          "mean_lev": 2.467,
+          "min_lev": 2.239,
+          "max_lev": 2.919,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 96.389,
+            "sharpe": 5.271,
+            "sortino": 9.526,
+            "max_dd_pct": 1.55,
+            "calmar": 62.2,
+            "vol_pct": 12.977,
+            "realised_vol_pct": 12.977
+          }
+        },
+        {
+          "test_start": "2021-03-17",
+          "test_end": "2021-06-11",
+          "mean_lev": 2.175,
+          "min_lev": 2.074,
+          "max_lev": 2.297,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 116.339,
+            "sharpe": 6.583,
+            "sortino": 16.43,
+            "max_dd_pct": 1.604,
+            "calmar": 72.517,
+            "vol_pct": 11.844,
+            "realised_vol_pct": 11.844
+          }
+        },
+        {
+          "test_start": "2021-06-14",
+          "test_end": "2021-09-08",
+          "mean_lev": 2.423,
+          "min_lev": 2.136,
+          "max_lev": 2.608,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 123.567,
+            "sharpe": 7.435,
+            "sortino": 17.896,
+            "max_dd_pct": 1.454,
+            "calmar": 84.998,
+            "vol_pct": 10.916,
+            "realised_vol_pct": 10.916
+          }
+        },
+        {
+          "test_start": "2021-09-09",
+          "test_end": "2021-12-06",
+          "mean_lev": 3.034,
+          "min_lev": 2.637,
+          "max_lev": 3.596,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 193.351,
+            "sharpe": 8.188,
+            "sortino": 27.2,
+            "max_dd_pct": 1.291,
+            "calmar": 149.746,
+            "vol_pct": 13.276,
+            "realised_vol_pct": 13.276
+          }
+        },
+        {
+          "test_start": "2021-12-07",
+          "test_end": "2022-03-03",
+          "mean_lev": 2.619,
+          "min_lev": 2.332,
+          "max_lev": 2.913,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 139.259,
+            "sharpe": 6.92,
+            "sortino": 17.646,
+            "max_dd_pct": 1.308,
+            "calmar": 106.471,
+            "vol_pct": 12.743,
+            "realised_vol_pct": 12.743
+          }
+        },
+        {
+          "test_start": "2022-03-04",
+          "test_end": "2022-05-31",
+          "mean_lev": 2.244,
+          "min_lev": 1.939,
+          "max_lev": 2.846,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 97.482,
+            "sharpe": 5.153,
+            "sortino": 8.87,
+            "max_dd_pct": 2.88,
+            "calmar": 33.847,
+            "vol_pct": 13.393,
+            "realised_vol_pct": 13.393
+          }
+        },
+        {
+          "test_start": "2022-06-01",
+          "test_end": "2022-08-26",
+          "mean_lev": 2.861,
+          "min_lev": 1.949,
+          "max_lev": 3.926,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 81.718,
+            "sharpe": 3.495,
+            "sortino": 8.847,
+            "max_dd_pct": 3.212,
+            "calmar": 25.441,
+            "vol_pct": 17.539,
+            "realised_vol_pct": 17.539
+          }
+        },
+        {
+          "test_start": "2022-08-29",
+          "test_end": "2022-11-23",
+          "mean_lev": 1.969,
+          "min_lev": 1.672,
+          "max_lev": 2.606,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 84.125,
+            "sharpe": 3.795,
+            "sortino": 11.291,
+            "max_dd_pct": 1.377,
+            "calmar": 61.082,
+            "vol_pct": 16.445,
+            "realised_vol_pct": 16.445
+          }
+        },
+        {
+          "test_start": "2022-11-24",
+          "test_end": "2023-02-20",
+          "mean_lev": 1.428,
+          "min_lev": 1.3,
+          "max_lev": 1.686,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 24.969,
+            "sharpe": 1.962,
+            "sortino": 3.973,
+            "max_dd_pct": 3.778,
+            "calmar": 6.608,
+            "vol_pct": 11.706,
+            "realised_vol_pct": 11.706
+          }
+        },
+        {
+          "test_start": "2023-02-21",
+          "test_end": "2023-05-18",
+          "mean_lev": 1.685,
+          "min_lev": 1.455,
+          "max_lev": 1.886,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 65.208,
+            "sharpe": 4.377,
+            "sortino": 9.766,
+            "max_dd_pct": 2.939,
+            "calmar": 22.185,
+            "vol_pct": 11.633,
+            "realised_vol_pct": 11.633
+          }
+        },
+        {
+          "test_start": "2023-05-19",
+          "test_end": "2023-08-15",
+          "mean_lev": 1.758,
+          "min_lev": 1.629,
+          "max_lev": 2.034,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 54.916,
+            "sharpe": 4.241,
+            "sortino": 7.961,
+            "max_dd_pct": 2.307,
+            "calmar": 23.807,
+            "vol_pct": 10.456,
+            "realised_vol_pct": 10.456
+          }
+        },
+        {
+          "test_start": "2023-08-16",
+          "test_end": "2023-11-10",
+          "mean_lev": 2.325,
+          "min_lev": 1.992,
+          "max_lev": 2.613,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 71.49,
+            "sharpe": 4.491,
+            "sortino": 7.861,
+            "max_dd_pct": 2.993,
+            "calmar": 23.889,
+            "vol_pct": 12.186,
+            "realised_vol_pct": 12.186
+          }
+        },
+        {
+          "test_start": "2023-11-13",
+          "test_end": "2024-02-07",
+          "mean_lev": 2.021,
+          "min_lev": 1.641,
+          "max_lev": 2.481,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 158.61,
+            "sharpe": 6.572,
+            "sortino": 12.597,
+            "max_dd_pct": 2.032,
+            "calmar": 78.04,
+            "vol_pct": 14.643,
+            "realised_vol_pct": 14.643
+          }
+        },
+        {
+          "test_start": "2024-02-08",
+          "test_end": "2024-05-06",
+          "mean_lev": 1.93,
+          "min_lev": 1.638,
+          "max_lev": 2.354,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 96.119,
+            "sharpe": 7.069,
+            "sortino": 15.243,
+            "max_dd_pct": 1.282,
+            "calmar": 74.976,
+            "vol_pct": 9.605,
+            "realised_vol_pct": 9.605
+          }
+        },
+        {
+          "test_start": "2024-05-07",
+          "test_end": "2024-08-01",
+          "mean_lev": 2.494,
+          "min_lev": 2.351,
+          "max_lev": 2.694,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 118.668,
+            "sharpe": 6.485,
+            "sortino": 12.478,
+            "max_dd_pct": 2.284,
+            "calmar": 51.955,
+            "vol_pct": 12.196,
+            "realised_vol_pct": 12.196
+          }
+        },
+        {
+          "test_start": "2024-08-02",
+          "test_end": "2024-10-29",
+          "mean_lev": 2.761,
+          "min_lev": 2.426,
+          "max_lev": 2.949,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 124.729,
+            "sharpe": 6.868,
+            "sortino": 16.936,
+            "max_dd_pct": 1.621,
+            "calmar": 76.962,
+            "vol_pct": 11.909,
+            "realised_vol_pct": 11.909
+          }
+        },
+        {
+          "test_start": "2024-10-30",
+          "test_end": "2025-01-24",
+          "mean_lev": 3.094,
+          "min_lev": 2.78,
+          "max_lev": 3.802,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 97.71,
+            "sharpe": 5.13,
+            "sortino": 10.263,
+            "max_dd_pct": 2.316,
+            "calmar": 42.183,
+            "vol_pct": 13.478,
+            "realised_vol_pct": 13.478
+          }
+        },
+        {
+          "test_start": "2025-01-27",
+          "test_end": "2025-04-23",
+          "mean_lev": 2.602,
+          "min_lev": 2.39,
+          "max_lev": 2.868,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 32.713,
+            "sharpe": 2.446,
+            "sortino": 4.402,
+            "max_dd_pct": 3.441,
+            "calmar": 9.506,
+            "vol_pct": 11.859,
+            "realised_vol_pct": 11.859
+          }
+        },
+        {
+          "test_start": "2025-04-24",
+          "test_end": "2025-07-21",
+          "mean_lev": 2.437,
+          "min_lev": 2.263,
+          "max_lev": 2.819,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 146.387,
+            "sharpe": 7.229,
+            "sortino": 23.486,
+            "max_dd_pct": 1.623,
+            "calmar": 90.189,
+            "vol_pct": 12.603,
+            "realised_vol_pct": 12.603
+          }
+        },
+        {
+          "test_start": "2025-07-22",
+          "test_end": "2025-10-16",
+          "mean_lev": 2.5,
+          "min_lev": 2.363,
+          "max_lev": 2.719,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 89.777,
+            "sharpe": 5.589,
+            "sortino": 14.195,
+            "max_dd_pct": 2.223,
+            "calmar": 40.389,
+            "vol_pct": 11.594,
+            "realised_vol_pct": 11.594
+          }
+        }
+      ],
+      "pooled_oos": {
+        "n": 1260,
+        "cagr_pct": 96.529,
+        "sharpe": 5.369,
+        "sortino": 11.712,
+        "max_dd_pct": 3.778,
+        "calmar": 25.547,
+        "vol_pct": 12.751,
+        "realised_vol_pct": 12.751
+      },
+      "mean_lev": 2.341,
+      "median_lev": 2.383,
+      "min_lev": 1.3,
+      "max_lev": 3.926,
+      "lev_at_cap_pct": 0.0,
+      "lev_at_floor_pct": 0.0
+    },
+    {
+      "target_vol": 0.15,
+      "folds": [
+        {
+          "test_start": "2020-12-18",
+          "test_end": "2021-03-16",
+          "mean_lev": 3.084,
+          "min_lev": 2.799,
+          "max_lev": 3.649,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 131.828,
+            "sharpe": 5.271,
+            "sortino": 9.526,
+            "max_dd_pct": 1.937,
+            "calmar": 68.045,
+            "vol_pct": 16.221,
+            "realised_vol_pct": 16.221
+          }
+        },
+        {
+          "test_start": "2021-03-17",
+          "test_end": "2021-06-11",
+          "mean_lev": 2.719,
+          "min_lev": 2.593,
+          "max_lev": 2.871,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 161.719,
+            "sharpe": 6.583,
+            "sortino": 16.43,
+            "max_dd_pct": 2.003,
+            "calmar": 80.724,
+            "vol_pct": 14.805,
+            "realised_vol_pct": 14.805
+          }
+        },
+        {
+          "test_start": "2021-06-14",
+          "test_end": "2021-09-08",
+          "mean_lev": 3.029,
+          "min_lev": 2.67,
+          "max_lev": 3.26,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 172.772,
+            "sharpe": 7.435,
+            "sortino": 17.896,
+            "max_dd_pct": 1.816,
+            "calmar": 95.157,
+            "vol_pct": 13.645,
+            "realised_vol_pct": 13.645
+          }
+        },
+        {
+          "test_start": "2021-09-09",
+          "test_end": "2021-12-06",
+          "mean_lev": 3.793,
+          "min_lev": 3.296,
+          "max_lev": 4.495,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 282.634,
+            "sharpe": 8.188,
+            "sortino": 27.2,
+            "max_dd_pct": 1.613,
+            "calmar": 175.275,
+            "vol_pct": 16.595,
+            "realised_vol_pct": 16.595
+          }
+        },
+        {
+          "test_start": "2021-12-07",
+          "test_end": "2022-03-03",
+          "mean_lev": 3.274,
+          "min_lev": 2.915,
+          "max_lev": 3.642,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 196.703,
+            "sharpe": 6.92,
+            "sortino": 17.646,
+            "max_dd_pct": 1.635,
+            "calmar": 120.312,
+            "vol_pct": 15.929,
+            "realised_vol_pct": 15.929
+          }
+        },
+        {
+          "test_start": "2022-03-04",
+          "test_end": "2022-05-31",
+          "mean_lev": 2.805,
+          "min_lev": 2.424,
+          "max_lev": 3.558,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 133.407,
+            "sharpe": 5.153,
+            "sortino": 8.87,
+            "max_dd_pct": 3.594,
+            "calmar": 37.124,
+            "vol_pct": 16.741,
+            "realised_vol_pct": 16.741
+          }
+        },
+        {
+          "test_start": "2022-06-01",
+          "test_end": "2022-08-26",
+          "mean_lev": 3.577,
+          "min_lev": 2.437,
+          "max_lev": 4.908,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 109.97,
+            "sharpe": 3.495,
+            "sortino": 8.847,
+            "max_dd_pct": 4.006,
+            "calmar": 27.449,
+            "vol_pct": 21.924,
+            "realised_vol_pct": 21.924
+          }
+        },
+        {
+          "test_start": "2022-08-29",
+          "test_end": "2022-11-23",
+          "mean_lev": 2.461,
+          "min_lev": 2.09,
+          "max_lev": 3.258,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 113.608,
+            "sharpe": 3.795,
+            "sortino": 11.291,
+            "max_dd_pct": 1.72,
+            "calmar": 66.057,
+            "vol_pct": 20.556,
+            "realised_vol_pct": 20.556
+          }
+        },
+        {
+          "test_start": "2022-11-24",
+          "test_end": "2023-02-20",
+          "mean_lev": 1.785,
+          "min_lev": 1.625,
+          "max_lev": 2.107,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 31.852,
+            "sharpe": 1.962,
+            "sortino": 3.973,
+            "max_dd_pct": 4.71,
+            "calmar": 6.762,
+            "vol_pct": 14.633,
+            "realised_vol_pct": 14.633
+          }
+        },
+        {
+          "test_start": "2023-02-21",
+          "test_end": "2023-05-18",
+          "mean_lev": 2.106,
+          "min_lev": 1.818,
+          "max_lev": 2.358,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 86.887,
+            "sharpe": 4.377,
+            "sortino": 9.766,
+            "max_dd_pct": 3.666,
+            "calmar": 23.704,
+            "vol_pct": 14.541,
+            "realised_vol_pct": 14.541
+          }
+        },
+        {
+          "test_start": "2023-05-19",
+          "test_end": "2023-08-15",
+          "mean_lev": 2.197,
+          "min_lev": 2.036,
+          "max_lev": 2.543,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 72.522,
+            "sharpe": 4.241,
+            "sortino": 7.961,
+            "max_dd_pct": 2.878,
+            "calmar": 25.202,
+            "vol_pct": 13.07,
+            "realised_vol_pct": 13.07
+          }
+        },
+        {
+          "test_start": "2023-08-16",
+          "test_end": "2023-11-10",
+          "mean_lev": 2.906,
+          "min_lev": 2.489,
+          "max_lev": 3.267,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 95.769,
+            "sharpe": 4.491,
+            "sortino": 7.861,
+            "max_dd_pct": 3.734,
+            "calmar": 25.646,
+            "vol_pct": 15.232,
+            "realised_vol_pct": 15.232
+          }
+        },
+        {
+          "test_start": "2023-11-13",
+          "test_end": "2024-02-07",
+          "mean_lev": 2.527,
+          "min_lev": 2.052,
+          "max_lev": 3.101,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 226.715,
+            "sharpe": 6.572,
+            "sortino": 12.597,
+            "max_dd_pct": 2.536,
+            "calmar": 89.407,
+            "vol_pct": 18.303,
+            "realised_vol_pct": 18.303
+          }
+        },
+        {
+          "test_start": "2024-02-08",
+          "test_end": "2024-05-06",
+          "mean_lev": 2.412,
+          "min_lev": 2.047,
+          "max_lev": 2.943,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 131.697,
+            "sharpe": 7.069,
+            "sortino": 15.243,
+            "max_dd_pct": 1.601,
+            "calmar": 82.236,
+            "vol_pct": 12.006,
+            "realised_vol_pct": 12.006
+          }
+        },
+        {
+          "test_start": "2024-05-07",
+          "test_end": "2024-08-01",
+          "mean_lev": 3.118,
+          "min_lev": 2.939,
+          "max_lev": 3.367,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 165.207,
+            "sharpe": 6.485,
+            "sortino": 12.478,
+            "max_dd_pct": 2.853,
+            "calmar": 57.907,
+            "vol_pct": 15.245,
+            "realised_vol_pct": 15.245
+          }
+        },
+        {
+          "test_start": "2024-08-02",
+          "test_end": "2024-10-29",
+          "mean_lev": 3.451,
+          "min_lev": 3.033,
+          "max_lev": 3.686,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 174.457,
+            "sharpe": 6.868,
+            "sortino": 16.936,
+            "max_dd_pct": 2.024,
+            "calmar": 86.198,
+            "vol_pct": 14.887,
+            "realised_vol_pct": 14.887
+          }
+        },
+        {
+          "test_start": "2024-10-30",
+          "test_end": "2025-01-24",
+          "mean_lev": 3.867,
+          "min_lev": 3.474,
+          "max_lev": 4.753,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 133.735,
+            "sharpe": 5.13,
+            "sortino": 10.263,
+            "max_dd_pct": 2.891,
+            "calmar": 46.262,
+            "vol_pct": 16.847,
+            "realised_vol_pct": 16.847
+          }
+        },
+        {
+          "test_start": "2025-01-27",
+          "test_end": "2025-04-23",
+          "mean_lev": 3.253,
+          "min_lev": 2.987,
+          "max_lev": 3.585,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 42.13,
+            "sharpe": 2.446,
+            "sortino": 4.402,
+            "max_dd_pct": 4.292,
+            "calmar": 9.815,
+            "vol_pct": 14.823,
+            "realised_vol_pct": 14.823
+          }
+        },
+        {
+          "test_start": "2025-04-24",
+          "test_end": "2025-07-21",
+          "mean_lev": 3.047,
+          "min_lev": 2.828,
+          "max_lev": 3.524,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 207.8,
+            "sharpe": 7.229,
+            "sortino": 23.486,
+            "max_dd_pct": 2.026,
+            "calmar": 102.551,
+            "vol_pct": 15.754,
+            "realised_vol_pct": 15.754
+          }
+        },
+        {
+          "test_start": "2025-07-22",
+          "test_end": "2025-10-16",
+          "mean_lev": 3.125,
+          "min_lev": 2.953,
+          "max_lev": 3.398,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 122.236,
+            "sharpe": 5.589,
+            "sortino": 14.195,
+            "max_dd_pct": 2.773,
+            "calmar": 44.084,
+            "vol_pct": 14.493,
+            "realised_vol_pct": 14.493
+          }
+        }
+      ],
+      "pooled_oos": {
+        "n": 1260,
+        "cagr_pct": 132.052,
+        "sharpe": 5.369,
+        "sortino": 11.712,
+        "max_dd_pct": 4.71,
+        "calmar": 28.034,
+        "vol_pct": 15.939,
+        "realised_vol_pct": 15.939
+      },
+      "mean_lev": 2.927,
+      "median_lev": 2.979,
+      "min_lev": 1.625,
+      "max_lev": 4.908,
+      "lev_at_cap_pct": 0.0,
+      "lev_at_floor_pct": 0.0
+    },
+    {
+      "target_vol": 0.2,
+      "folds": [
+        {
+          "test_start": "2020-12-18",
+          "test_end": "2021-03-16",
+          "mean_lev": 4.112,
+          "min_lev": 3.732,
+          "max_lev": 4.865,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 204.906,
+            "sharpe": 5.271,
+            "sortino": 9.526,
+            "max_dd_pct": 2.584,
+            "calmar": 79.305,
+            "vol_pct": 21.628,
+            "realised_vol_pct": 21.628
+          }
+        },
+        {
+          "test_start": "2021-03-17",
+          "test_end": "2021-06-11",
+          "mean_lev": 3.625,
+          "min_lev": 3.457,
+          "max_lev": 3.829,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 258.69,
+            "sharpe": 6.583,
+            "sortino": 16.43,
+            "max_dd_pct": 2.667,
+            "calmar": 97.009,
+            "vol_pct": 19.74,
+            "realised_vol_pct": 19.74
+          }
+        },
+        {
+          "test_start": "2021-06-14",
+          "test_end": "2021-09-08",
+          "mean_lev": 4.038,
+          "min_lev": 3.56,
+          "max_lev": 4.347,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 279.267,
+            "sharpe": 7.435,
+            "sortino": 17.896,
+            "max_dd_pct": 2.417,
+            "calmar": 115.52,
+            "vol_pct": 18.194,
+            "realised_vol_pct": 18.194
+          }
+        },
+        {
+          "test_start": "2021-09-09",
+          "test_end": "2021-12-06",
+          "mean_lev": 4.882,
+          "min_lev": 4.395,
+          "max_lev": 5.0,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 429.157,
+            "sharpe": 8.352,
+            "sortino": 26.3,
+            "max_dd_pct": 1.922,
+            "calmar": 223.268,
+            "vol_pct": 20.253,
+            "realised_vol_pct": 20.253
+          }
+        },
+        {
+          "test_start": "2021-12-07",
+          "test_end": "2022-03-03",
+          "mean_lev": 4.365,
+          "min_lev": 3.886,
+          "max_lev": 4.856,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 323.617,
+            "sharpe": 6.92,
+            "sortino": 17.646,
+            "max_dd_pct": 2.18,
+            "calmar": 148.453,
+            "vol_pct": 21.239,
+            "realised_vol_pct": 21.239
+          }
+        },
+        {
+          "test_start": "2022-03-04",
+          "test_end": "2022-05-31",
+          "mean_lev": 3.741,
+          "min_lev": 3.232,
+          "max_lev": 4.744,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 207.58,
+            "sharpe": 5.153,
+            "sortino": 8.87,
+            "max_dd_pct": 4.777,
+            "calmar": 43.455,
+            "vol_pct": 22.322,
+            "realised_vol_pct": 22.322
+          }
+        },
+        {
+          "test_start": "2022-06-01",
+          "test_end": "2022-08-26",
+          "mean_lev": 4.355,
+          "min_lev": 3.249,
+          "max_lev": 5.0,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 139.396,
+            "sharpe": 3.369,
+            "sortino": 8.2,
+            "max_dd_pct": 5.322,
+            "calmar": 26.191,
+            "vol_pct": 26.998,
+            "realised_vol_pct": 26.998
+          }
+        },
+        {
+          "test_start": "2022-08-29",
+          "test_end": "2022-11-23",
+          "mean_lev": 3.281,
+          "min_lev": 2.787,
+          "max_lev": 4.343,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 172.665,
+            "sharpe": 3.795,
+            "sortino": 11.291,
+            "max_dd_pct": 2.289,
+            "calmar": 75.42,
+            "vol_pct": 27.408,
+            "realised_vol_pct": 27.408
+          }
+        },
+        {
+          "test_start": "2022-11-24",
+          "test_end": "2023-02-20",
+          "mean_lev": 2.38,
+          "min_lev": 2.166,
+          "max_lev": 2.81,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 43.909,
+            "sharpe": 1.962,
+            "sortino": 3.973,
+            "max_dd_pct": 6.252,
+            "calmar": 7.023,
+            "vol_pct": 19.511,
+            "realised_vol_pct": 19.511
+          }
+        },
+        {
+          "test_start": "2023-02-21",
+          "test_end": "2023-05-18",
+          "mean_lev": 2.808,
+          "min_lev": 2.424,
+          "max_lev": 3.144,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 129.075,
+            "sharpe": 4.377,
+            "sortino": 9.766,
+            "max_dd_pct": 4.868,
+            "calmar": 26.514,
+            "vol_pct": 19.388,
+            "realised_vol_pct": 19.388
+          }
+        },
+        {
+          "test_start": "2023-05-19",
+          "test_end": "2023-08-15",
+          "mean_lev": 2.929,
+          "min_lev": 2.715,
+          "max_lev": 3.39,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 106.098,
+            "sharpe": 4.241,
+            "sortino": 7.961,
+            "max_dd_pct": 3.824,
+            "calmar": 27.744,
+            "vol_pct": 17.426,
+            "realised_vol_pct": 17.426
+          }
+        },
+        {
+          "test_start": "2023-08-16",
+          "test_end": "2023-11-10",
+          "mean_lev": 3.874,
+          "min_lev": 3.319,
+          "max_lev": 4.355,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 143.588,
+            "sharpe": 4.491,
+            "sortino": 7.861,
+            "max_dd_pct": 4.965,
+            "calmar": 28.922,
+            "vol_pct": 20.309,
+            "realised_vol_pct": 20.309
+          }
+        },
+        {
+          "test_start": "2023-11-13",
+          "test_end": "2024-02-07",
+          "mean_lev": 3.369,
+          "min_lev": 2.736,
+          "max_lev": 4.135,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 380.783,
+            "sharpe": 6.572,
+            "sortino": 12.597,
+            "max_dd_pct": 3.371,
+            "calmar": 112.974,
+            "vol_pct": 24.405,
+            "realised_vol_pct": 24.405
+          }
+        },
+        {
+          "test_start": "2024-02-08",
+          "test_end": "2024-05-06",
+          "mean_lev": 3.216,
+          "min_lev": 2.73,
+          "max_lev": 3.923,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 205.453,
+            "sharpe": 7.069,
+            "sortino": 15.243,
+            "max_dd_pct": 2.133,
+            "calmar": 96.323,
+            "vol_pct": 16.008,
+            "realised_vol_pct": 16.008
+          }
+        },
+        {
+          "test_start": "2024-05-07",
+          "test_end": "2024-08-01",
+          "mean_lev": 4.157,
+          "min_lev": 3.919,
+          "max_lev": 4.489,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 264.955,
+            "sharpe": 6.485,
+            "sortino": 12.478,
+            "max_dd_pct": 3.799,
+            "calmar": 69.74,
+            "vol_pct": 20.327,
+            "realised_vol_pct": 20.327
+          }
+        },
+        {
+          "test_start": "2024-08-02",
+          "test_end": "2024-10-29",
+          "mean_lev": 4.601,
+          "min_lev": 4.044,
+          "max_lev": 4.915,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 282.121,
+            "sharpe": 6.868,
+            "sortino": 16.936,
+            "max_dd_pct": 2.694,
+            "calmar": 104.709,
+            "vol_pct": 19.849,
+            "realised_vol_pct": 19.849
+          }
+        },
+        {
+          "test_start": "2024-10-30",
+          "test_end": "2025-01-24",
+          "mean_lev": 4.939,
+          "min_lev": 4.633,
+          "max_lev": 5.0,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 186.976,
+            "sharpe": 5.237,
+            "sortino": 10.467,
+            "max_dd_pct": 3.558,
+            "calmar": 52.556,
+            "vol_pct": 20.566,
+            "realised_vol_pct": 20.566
+          }
+        },
+        {
+          "test_start": "2025-01-27",
+          "test_end": "2025-04-23",
+          "mean_lev": 4.337,
+          "min_lev": 3.983,
+          "max_lev": 4.781,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 59.024,
+            "sharpe": 2.446,
+            "sortino": 4.402,
+            "max_dd_pct": 5.703,
+            "calmar": 10.35,
+            "vol_pct": 19.764,
+            "realised_vol_pct": 19.764
+          }
+        },
+        {
+          "test_start": "2025-04-24",
+          "test_end": "2025-07-21",
+          "mean_lev": 4.062,
+          "min_lev": 3.771,
+          "max_lev": 4.699,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 344.9,
+            "sharpe": 7.229,
+            "sortino": 23.486,
+            "max_dd_pct": 2.696,
+            "calmar": 127.928,
+            "vol_pct": 21.005,
+            "realised_vol_pct": 21.005
+          }
+        },
+        {
+          "test_start": "2025-07-22",
+          "test_end": "2025-10-16",
+          "mean_lev": 4.167,
+          "min_lev": 3.938,
+          "max_lev": 4.531,
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 188.557,
+            "sharpe": 5.589,
+            "sortino": 14.195,
+            "max_dd_pct": 3.684,
+            "calmar": 51.178,
+            "vol_pct": 19.324,
+            "realised_vol_pct": 19.324
+          }
+        }
+      ],
+      "pooled_oos": {
+        "n": 1260,
+        "cagr_pct": 200.92,
+        "sharpe": 5.383,
+        "sortino": 11.666,
+        "max_dd_pct": 6.252,
+        "calmar": 32.137,
+        "vol_pct": 20.912,
+        "realised_vol_pct": 20.912
+      },
+      "mean_lev": 3.862,
+      "median_lev": 3.972,
+      "min_lev": 2.166,
+      "max_lev": 5.0,
+      "lev_at_cap_pct": 7.46,
+      "lev_at_floor_pct": 0.0
+    }
+  ],
+  "best": {
+    "target_vol": 0.2,
+    "folds": [
+      {
+        "test_start": "2020-12-18",
+        "test_end": "2021-03-16",
+        "mean_lev": 4.112,
+        "min_lev": 3.732,
+        "max_lev": 4.865,
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 204.906,
+          "sharpe": 5.271,
+          "sortino": 9.526,
+          "max_dd_pct": 2.584,
+          "calmar": 79.305,
+          "vol_pct": 21.628,
+          "realised_vol_pct": 21.628
+        }
+      },
+      {
+        "test_start": "2021-03-17",
+        "test_end": "2021-06-11",
+        "mean_lev": 3.625,
+        "min_lev": 3.457,
+        "max_lev": 3.829,
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 258.69,
+          "sharpe": 6.583,
+          "sortino": 16.43,
+          "max_dd_pct": 2.667,
+          "calmar": 97.009,
+          "vol_pct": 19.74,
+          "realised_vol_pct": 19.74
+        }
+      },
+      {
+        "test_start": "2021-06-14",
+        "test_end": "2021-09-08",
+        "mean_lev": 4.038,
+        "min_lev": 3.56,
+        "max_lev": 4.347,
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 279.267,
+          "sharpe": 7.435,
+          "sortino": 17.896,
+          "max_dd_pct": 2.417,
+          "calmar": 115.52,
+          "vol_pct": 18.194,
+          "realised_vol_pct": 18.194
+        }
+      },
+      {
+        "test_start": "2021-09-09",
+        "test_end": "2021-12-06",
+        "mean_lev": 4.882,
+        "min_lev": 4.395,
+        "max_lev": 5.0,
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 429.157,
+          "sharpe": 8.352,
+          "sortino": 26.3,
+          "max_dd_pct": 1.922,
+          "calmar": 223.268,
+          "vol_pct": 20.253,
+          "realised_vol_pct": 20.253
+        }
+      },
+      {
+        "test_start": "2021-12-07",
+        "test_end": "2022-03-03",
+        "mean_lev": 4.365,
+        "min_lev": 3.886,
+        "max_lev": 4.856,
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 323.617,
+          "sharpe": 6.92,
+          "sortino": 17.646,
+          "max_dd_pct": 2.18,
+          "calmar": 148.453,
+          "vol_pct": 21.239,
+          "realised_vol_pct": 21.239
+        }
+      },
+      {
+        "test_start": "2022-03-04",
+        "test_end": "2022-05-31",
+        "mean_lev": 3.741,
+        "min_lev": 3.232,
+        "max_lev": 4.744,
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 207.58,
+          "sharpe": 5.153,
+          "sortino": 8.87,
+          "max_dd_pct": 4.777,
+          "calmar": 43.455,
+          "vol_pct": 22.322,
+          "realised_vol_pct": 22.322
+        }
+      },
+      {
+        "test_start": "2022-06-01",
+        "test_end": "2022-08-26",
+        "mean_lev": 4.355,
+        "min_lev": 3.249,
+        "max_lev": 5.0,
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 139.396,
+          "sharpe": 3.369,
+          "sortino": 8.2,
+          "max_dd_pct": 5.322,
+          "calmar": 26.191,
+          "vol_pct": 26.998,
+          "realised_vol_pct": 26.998
+        }
+      },
+      {
+        "test_start": "2022-08-29",
+        "test_end": "2022-11-23",
+        "mean_lev": 3.281,
+        "min_lev": 2.787,
+        "max_lev": 4.343,
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 172.665,
+          "sharpe": 3.795,
+          "sortino": 11.291,
+          "max_dd_pct": 2.289,
+          "calmar": 75.42,
+          "vol_pct": 27.408,
+          "realised_vol_pct": 27.408
+        }
+      },
+      {
+        "test_start": "2022-11-24",
+        "test_end": "2023-02-20",
+        "mean_lev": 2.38,
+        "min_lev": 2.166,
+        "max_lev": 2.81,
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 43.909,
+          "sharpe": 1.962,
+          "sortino": 3.973,
+          "max_dd_pct": 6.252,
+          "calmar": 7.023,
+          "vol_pct": 19.511,
+          "realised_vol_pct": 19.511
+        }
+      },
+      {
+        "test_start": "2023-02-21",
+        "test_end": "2023-05-18",
+        "mean_lev": 2.808,
+        "min_lev": 2.424,
+        "max_lev": 3.144,
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 129.075,
+          "sharpe": 4.377,
+          "sortino": 9.766,
+          "max_dd_pct": 4.868,
+          "calmar": 26.514,
+          "vol_pct": 19.388,
+          "realised_vol_pct": 19.388
+        }
+      },
+      {
+        "test_start": "2023-05-19",
+        "test_end": "2023-08-15",
+        "mean_lev": 2.929,
+        "min_lev": 2.715,
+        "max_lev": 3.39,
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 106.098,
+          "sharpe": 4.241,
+          "sortino": 7.961,
+          "max_dd_pct": 3.824,
+          "calmar": 27.744,
+          "vol_pct": 17.426,
+          "realised_vol_pct": 17.426
+        }
+      },
+      {
+        "test_start": "2023-08-16",
+        "test_end": "2023-11-10",
+        "mean_lev": 3.874,
+        "min_lev": 3.319,
+        "max_lev": 4.355,
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 143.588,
+          "sharpe": 4.491,
+          "sortino": 7.861,
+          "max_dd_pct": 4.965,
+          "calmar": 28.922,
+          "vol_pct": 20.309,
+          "realised_vol_pct": 20.309
+        }
+      },
+      {
+        "test_start": "2023-11-13",
+        "test_end": "2024-02-07",
+        "mean_lev": 3.369,
+        "min_lev": 2.736,
+        "max_lev": 4.135,
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 380.783,
+          "sharpe": 6.572,
+          "sortino": 12.597,
+          "max_dd_pct": 3.371,
+          "calmar": 112.974,
+          "vol_pct": 24.405,
+          "realised_vol_pct": 24.405
+        }
+      },
+      {
+        "test_start": "2024-02-08",
+        "test_end": "2024-05-06",
+        "mean_lev": 3.216,
+        "min_lev": 2.73,
+        "max_lev": 3.923,
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 205.453,
+          "sharpe": 7.069,
+          "sortino": 15.243,
+          "max_dd_pct": 2.133,
+          "calmar": 96.323,
+          "vol_pct": 16.008,
+          "realised_vol_pct": 16.008
+        }
+      },
+      {
+        "test_start": "2024-05-07",
+        "test_end": "2024-08-01",
+        "mean_lev": 4.157,
+        "min_lev": 3.919,
+        "max_lev": 4.489,
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 264.955,
+          "sharpe": 6.485,
+          "sortino": 12.478,
+          "max_dd_pct": 3.799,
+          "calmar": 69.74,
+          "vol_pct": 20.327,
+          "realised_vol_pct": 20.327
+        }
+      },
+      {
+        "test_start": "2024-08-02",
+        "test_end": "2024-10-29",
+        "mean_lev": 4.601,
+        "min_lev": 4.044,
+        "max_lev": 4.915,
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 282.121,
+          "sharpe": 6.868,
+          "sortino": 16.936,
+          "max_dd_pct": 2.694,
+          "calmar": 104.709,
+          "vol_pct": 19.849,
+          "realised_vol_pct": 19.849
+        }
+      },
+      {
+        "test_start": "2024-10-30",
+        "test_end": "2025-01-24",
+        "mean_lev": 4.939,
+        "min_lev": 4.633,
+        "max_lev": 5.0,
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 186.976,
+          "sharpe": 5.237,
+          "sortino": 10.467,
+          "max_dd_pct": 3.558,
+          "calmar": 52.556,
+          "vol_pct": 20.566,
+          "realised_vol_pct": 20.566
+        }
+      },
+      {
+        "test_start": "2025-01-27",
+        "test_end": "2025-04-23",
+        "mean_lev": 4.337,
+        "min_lev": 3.983,
+        "max_lev": 4.781,
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 59.024,
+          "sharpe": 2.446,
+          "sortino": 4.402,
+          "max_dd_pct": 5.703,
+          "calmar": 10.35,
+          "vol_pct": 19.764,
+          "realised_vol_pct": 19.764
+        }
+      },
+      {
+        "test_start": "2025-04-24",
+        "test_end": "2025-07-21",
+        "mean_lev": 4.062,
+        "min_lev": 3.771,
+        "max_lev": 4.699,
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 344.9,
+          "sharpe": 7.229,
+          "sortino": 23.486,
+          "max_dd_pct": 2.696,
+          "calmar": 127.928,
+          "vol_pct": 21.005,
+          "realised_vol_pct": 21.005
+        }
+      },
+      {
+        "test_start": "2025-07-22",
+        "test_end": "2025-10-16",
+        "mean_lev": 4.167,
+        "min_lev": 3.938,
+        "max_lev": 4.531,
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 188.557,
+          "sharpe": 5.589,
+          "sortino": 14.195,
+          "max_dd_pct": 3.684,
+          "calmar": 51.178,
+          "vol_pct": 19.324,
+          "realised_vol_pct": 19.324
+        }
+      }
+    ],
+    "pooled_oos": {
+      "n": 1260,
+      "cagr_pct": 200.92,
+      "sharpe": 5.383,
+      "sortino": 11.666,
+      "max_dd_pct": 6.252,
+      "calmar": 32.137,
+      "vol_pct": 20.912,
+      "realised_vol_pct": 20.912
+    },
+    "mean_lev": 3.862,
+    "median_lev": 3.972,
+    "min_lev": 2.166,
+    "max_lev": 5.0,
+    "lev_at_cap_pct": 7.46,
+    "lev_at_floor_pct": 0.0
+  },
+  "delta_sharpe_best_vs_baseline": 0.122,
+  "target_sharpe_lift": 0.1,
+  "target_met": true
+}
