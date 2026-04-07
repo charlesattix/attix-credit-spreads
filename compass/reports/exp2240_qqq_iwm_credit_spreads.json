@@ -1,0 +1,341 @@
+{
+  "experiment": "EXP-2240",
+  "title": "QQQ and IWM Credit Spreads",
+  "timestamp": "2026-04-07T17:32:54.868431Z",
+  "framework": "EXP-1220 put-credit-spread loop (28 DTE, 5% OTM, 50% profit target, 2\u00d7 stop, VIX<40)",
+  "ironvault_availability": {
+    "SPY": {
+      "contracts": 193272,
+      "date_min": "0000-00-00",
+      "date_max": "2026-04-02"
+    },
+    "QQQ": {
+      "contracts": 23022,
+      "date_min": "2020-01-02",
+      "date_max": "2025-12-19"
+    },
+    "IWM": {
+      "contracts": 0,
+      "date_min": null,
+      "date_max": null
+    },
+    "XLF": {
+      "contracts": 9256,
+      "date_min": "2020-01-02",
+      "date_max": "2026-04-02"
+    },
+    "XLI": {
+      "contracts": 17287,
+      "date_min": "2020-01-02",
+      "date_max": "2026-04-02"
+    }
+  },
+  "tickers": [
+    {
+      "ticker": "SPY",
+      "width": 5.0,
+      "status": "OK",
+      "metrics": {
+        "label": "SPY",
+        "n_trades": 174,
+        "total_pnl": 6080.0,
+        "win_rate": 0.8333,
+        "sharpe": 0.601,
+        "sortino": 0.603,
+        "cagr_pct": 1.013,
+        "max_dd_pct": 3.028,
+        "avg_pnl": 34.94,
+        "trades_per_yr": 29.73
+      },
+      "yearly": [
+        {
+          "year": 2020,
+          "n_trades": 27,
+          "pnl": 768.0,
+          "return_pct": 0.768,
+          "win_rate": 0.8148,
+          "sharpe_approx": 0.237
+        },
+        {
+          "year": 2021,
+          "n_trades": 34,
+          "pnl": 2084.0,
+          "return_pct": 2.084,
+          "win_rate": 0.8824,
+          "sharpe_approx": 0.704
+        },
+        {
+          "year": 2022,
+          "n_trades": 33,
+          "pnl": 1500.0,
+          "return_pct": 1.5,
+          "win_rate": 0.7273,
+          "sharpe_approx": 0.388
+        },
+        {
+          "year": 2023,
+          "n_trades": 27,
+          "pnl": 1096.0,
+          "return_pct": 1.096,
+          "win_rate": 0.8889,
+          "sharpe_approx": 0.729
+        },
+        {
+          "year": 2024,
+          "n_trades": 27,
+          "pnl": 164.0,
+          "return_pct": 0.164,
+          "win_rate": 0.8519,
+          "sharpe_approx": 0.115
+        },
+        {
+          "year": 2025,
+          "n_trades": 26,
+          "pnl": 468.0,
+          "return_pct": 0.468,
+          "win_rate": 0.8462,
+          "sharpe_approx": 0.189
+        }
+      ]
+    },
+    {
+      "ticker": "QQQ",
+      "width": 5.0,
+      "status": "OK",
+      "metrics": {
+        "label": "QQQ",
+        "n_trades": 84,
+        "total_pnl": 11724.0,
+        "win_rate": 0.9048,
+        "sharpe": 2.26,
+        "sortino": 1.959,
+        "cagr_pct": 1.93,
+        "max_dd_pct": 0.762,
+        "avg_pnl": 139.57,
+        "trades_per_yr": 14.49
+      },
+      "yearly": [
+        {
+          "year": 2020,
+          "n_trades": 19,
+          "pnl": 2260.0,
+          "return_pct": 2.26,
+          "win_rate": 0.8421,
+          "sharpe_approx": 1.61
+        },
+        {
+          "year": 2021,
+          "n_trades": 14,
+          "pnl": 1420.0,
+          "return_pct": 1.42,
+          "win_rate": 0.8571,
+          "sharpe_approx": 1.307
+        },
+        {
+          "year": 2022,
+          "n_trades": 16,
+          "pnl": 4236.0,
+          "return_pct": 4.236,
+          "win_rate": 0.9375,
+          "sharpe_approx": 4.388
+        },
+        {
+          "year": 2023,
+          "n_trades": 13,
+          "pnl": 2320.0,
+          "return_pct": 2.32,
+          "win_rate": 1.0,
+          "sharpe_approx": 7.789
+        },
+        {
+          "year": 2024,
+          "n_trades": 12,
+          "pnl": 780.0,
+          "return_pct": 0.78,
+          "win_rate": 0.9167,
+          "sharpe_approx": 0.791
+        },
+        {
+          "year": 2025,
+          "n_trades": 10,
+          "pnl": 708.0,
+          "return_pct": 0.708,
+          "win_rate": 0.9,
+          "sharpe_approx": 1.122
+        }
+      ]
+    },
+    {
+      "ticker": "IWM",
+      "width": 2.0,
+      "status": "SKIP: zero IronVault contracts (data gap)",
+      "metrics": {},
+      "yearly": []
+    },
+    {
+      "ticker": "XLF",
+      "width": 1.0,
+      "status": "OK",
+      "metrics": {
+        "label": "XLF",
+        "n_trades": 128,
+        "total_pnl": 2664.0,
+        "win_rate": 0.8906,
+        "sharpe": 2.062,
+        "sortino": 2.819,
+        "cagr_pct": 0.469,
+        "max_dd_pct": 0.268,
+        "avg_pnl": 20.81,
+        "trades_per_yr": 22.79
+      },
+      "yearly": [
+        {
+          "year": 2020,
+          "n_trades": 17,
+          "pnl": 652.0,
+          "return_pct": 0.652,
+          "win_rate": 0.9412,
+          "sharpe_approx": 5.344
+        },
+        {
+          "year": 2021,
+          "n_trades": 21,
+          "pnl": 488.0,
+          "return_pct": 0.488,
+          "win_rate": 0.9048,
+          "sharpe_approx": 1.718
+        },
+        {
+          "year": 2022,
+          "n_trades": 19,
+          "pnl": 416.0,
+          "return_pct": 0.416,
+          "win_rate": 0.8421,
+          "sharpe_approx": 1.422
+        },
+        {
+          "year": 2023,
+          "n_trades": 22,
+          "pnl": 284.0,
+          "return_pct": 0.284,
+          "win_rate": 0.8636,
+          "sharpe_approx": 1.192
+        },
+        {
+          "year": 2024,
+          "n_trades": 25,
+          "pnl": 468.0,
+          "return_pct": 0.468,
+          "win_rate": 0.88,
+          "sharpe_approx": 1.017
+        },
+        {
+          "year": 2025,
+          "n_trades": 24,
+          "pnl": 356.0,
+          "return_pct": 0.356,
+          "win_rate": 0.9167,
+          "sharpe_approx": 1.05
+        }
+      ]
+    },
+    {
+      "ticker": "XLI",
+      "width": 2.0,
+      "status": "OK",
+      "metrics": {
+        "label": "XLI",
+        "n_trades": 95,
+        "total_pnl": 5948.0,
+        "win_rate": 0.9053,
+        "sharpe": 2.245,
+        "sortino": 1.838,
+        "cagr_pct": 1.04,
+        "max_dd_pct": 0.686,
+        "avg_pnl": 62.61,
+        "trades_per_yr": 17.01
+      },
+      "yearly": [
+        {
+          "year": 2020,
+          "n_trades": 14,
+          "pnl": 1460.0,
+          "return_pct": 1.46,
+          "win_rate": 1.0,
+          "sharpe_approx": 7.24
+        },
+        {
+          "year": 2021,
+          "n_trades": 15,
+          "pnl": 1052.0,
+          "return_pct": 1.052,
+          "win_rate": 1.0,
+          "sharpe_approx": 5.588
+        },
+        {
+          "year": 2022,
+          "n_trades": 12,
+          "pnl": 1208.0,
+          "return_pct": 1.208,
+          "win_rate": 0.9167,
+          "sharpe_approx": 4.598
+        },
+        {
+          "year": 2023,
+          "n_trades": 20,
+          "pnl": 720.0,
+          "return_pct": 0.72,
+          "win_rate": 0.95,
+          "sharpe_approx": 1.965
+        },
+        {
+          "year": 2024,
+          "n_trades": 16,
+          "pnl": 812.0,
+          "return_pct": 0.812,
+          "win_rate": 0.875,
+          "sharpe_approx": 2.169
+        },
+        {
+          "year": 2025,
+          "n_trades": 18,
+          "pnl": 696.0,
+          "return_pct": 0.696,
+          "win_rate": 0.7222,
+          "sharpe_approx": 0.59
+        }
+      ]
+    }
+  ],
+  "correlation_matrix": {
+    "SPY": {
+      "SPY": 1.0,
+      "QQQ": 0.1099,
+      "XLF": 0.1202,
+      "XLI": -0.0062
+    },
+    "QQQ": {
+      "SPY": 0.1099,
+      "QQQ": 1.0,
+      "XLF": -0.0218,
+      "XLI": -0.0909
+    },
+    "XLF": {
+      "SPY": 0.1202,
+      "QQQ": -0.0218,
+      "XLF": 1.0,
+      "XLI": 0.001
+    },
+    "XLI": {
+      "SPY": -0.0062,
+      "QQQ": -0.0909,
+      "XLF": 0.001,
+      "XLI": 1.0
+    }
+  },
+  "verdict": {
+    "QQQ": "PASS (Sh 2.26, WR 90%, n=84)",
+    "IWM": "SKIP: zero IronVault contracts (data gap)"
+  },
+  "rule_zero": "All option prices from IronVault data/options_cache.db (real CBOE/Polygon). Underlying spot + VIX from Yahoo Finance. No synthetic data, no Black-Scholes, no random fills. If a ticker has zero IronVault contracts the script reports the data gap honestly and skips that ticker."
+}
