@@ -1,0 +1,3083 @@
+{
+  "experiment": "EXP-2370",
+  "title": "Portfolio DD Circuit Breaker \u2014 20-fold Walk-Forward",
+  "date_range": {
+    "start": "2020-01-01",
+    "end": "2025-12-31"
+  },
+  "walk_forward": {
+    "train_days": 252,
+    "test_days": 63,
+    "step_days": 63,
+    "n_folds": 20,
+    "target_vol": 0.15
+  },
+  "circuit_spec": {
+    "dd_window_days": 20,
+    "thresholds": [
+      0.03,
+      0.05,
+      0.08,
+      0.1
+    ],
+    "modes": [
+      "flatten",
+      "reduce"
+    ],
+    "causal": true,
+    "base_leverage": 1.0
+  },
+  "streams": [
+    "exp1220",
+    "xlf_cs",
+    "xli_cs",
+    "gld_cal",
+    "slv_cal",
+    "vol_arb",
+    "v5_hedge"
+  ],
+  "data_source": "compass/cache/exp2280_v6_sparse.pkl (REAL EXP-2200 build_streams)",
+  "baseline": {
+    "folds": [
+      {
+        "fold": 0,
+        "test_start": "2020-12-18",
+        "test_end": "2021-03-16",
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 271.569,
+          "sharpe": 5.928,
+          "sortino": 24.722,
+          "max_dd_pct": 1.185,
+          "calmar": 229.234,
+          "vol_pct": 22.607
+        },
+        "trip_count": 0,
+        "trip_pct": 0.0
+      },
+      {
+        "fold": 1,
+        "test_start": "2021-03-17",
+        "test_end": "2021-06-11",
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 111.294,
+          "sharpe": 8.814,
+          "sortino": 16.879,
+          "max_dd_pct": 1.171,
+          "calmar": 95.002,
+          "vol_pct": 8.541
+        },
+        "trip_count": 0,
+        "trip_pct": 0.0
+      },
+      {
+        "fold": 2,
+        "test_start": "2021-06-14",
+        "test_end": "2021-09-08",
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 82.013,
+          "sharpe": 6.393,
+          "sortino": 10.445,
+          "max_dd_pct": 1.207,
+          "calmar": 67.966,
+          "vol_pct": 9.448
+        },
+        "trip_count": 0,
+        "trip_pct": 0.0
+      },
+      {
+        "fold": 3,
+        "test_start": "2021-09-09",
+        "test_end": "2021-12-06",
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 101.562,
+          "sharpe": 3.712,
+          "sortino": 3.022,
+          "max_dd_pct": 6.26,
+          "calmar": 16.223,
+          "vol_pct": 19.412
+        },
+        "trip_count": 0,
+        "trip_pct": 0.0
+      },
+      {
+        "fold": 4,
+        "test_start": "2021-12-07",
+        "test_end": "2022-03-03",
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 450.677,
+          "sharpe": 2.888,
+          "sortino": 3.724,
+          "max_dd_pct": 24.362,
+          "calmar": 18.499,
+          "vol_pct": 66.749
+        },
+        "trip_count": 0,
+        "trip_pct": 0.0
+      },
+      {
+        "fold": 5,
+        "test_start": "2022-03-04",
+        "test_end": "2022-05-31",
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 488.032,
+          "sharpe": 5.843,
+          "sortino": 13.351,
+          "max_dd_pct": 5.299,
+          "calmar": 92.097,
+          "vol_pct": 31.24
+        },
+        "trip_count": 0,
+        "trip_pct": 0.0
+      },
+      {
+        "fold": 6,
+        "test_start": "2022-06-01",
+        "test_end": "2022-08-26",
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 166.811,
+          "sharpe": 6.033,
+          "sortino": 14.682,
+          "max_dd_pct": 2.391,
+          "calmar": 69.773,
+          "vol_pct": 16.519
+        },
+        "trip_count": 0,
+        "trip_pct": 0.0
+      },
+      {
+        "fold": 7,
+        "test_start": "2022-08-29",
+        "test_end": "2022-11-23",
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 185.738,
+          "sharpe": 7.026,
+          "sortino": 10.493,
+          "max_dd_pct": 2.326,
+          "calmar": 79.84,
+          "vol_pct": 15.134
+        },
+        "trip_count": 0,
+        "trip_pct": 0.0
+      },
+      {
+        "fold": 8,
+        "test_start": "2022-11-24",
+        "test_end": "2023-02-20",
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 218.151,
+          "sharpe": 6.118,
+          "sortino": 13.907,
+          "max_dd_pct": 1.928,
+          "calmar": 113.16,
+          "vol_pct": 19.252
+        },
+        "trip_count": 0,
+        "trip_pct": 0.0
+      },
+      {
+        "fold": 9,
+        "test_start": "2023-02-21",
+        "test_end": "2023-05-18",
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 92.051,
+          "sharpe": 3.973,
+          "sortino": 5.253,
+          "max_dd_pct": 4.529,
+          "calmar": 20.325,
+          "vol_pct": 16.795
+        },
+        "trip_count": 0,
+        "trip_pct": 0.0
+      },
+      {
+        "fold": 10,
+        "test_start": "2023-05-19",
+        "test_end": "2023-08-15",
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 106.54,
+          "sharpe": 6.779,
+          "sortino": 19.931,
+          "max_dd_pct": 1.158,
+          "calmar": 92.038,
+          "vol_pct": 10.798
+        },
+        "trip_count": 0,
+        "trip_pct": 0.0
+      },
+      {
+        "fold": 11,
+        "test_start": "2023-08-16",
+        "test_end": "2023-11-10",
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 99.168,
+          "sharpe": 6.654,
+          "sortino": 12.031,
+          "max_dd_pct": 1.592,
+          "calmar": 62.308,
+          "vol_pct": 10.449
+        },
+        "trip_count": 0,
+        "trip_pct": 0.0
+      },
+      {
+        "fold": 12,
+        "test_start": "2023-11-13",
+        "test_end": "2024-02-07",
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 227.394,
+          "sharpe": 6.777,
+          "sortino": 11.656,
+          "max_dd_pct": 2.983,
+          "calmar": 76.22,
+          "vol_pct": 17.769
+        },
+        "trip_count": 0,
+        "trip_pct": 0.0
+      },
+      {
+        "fold": 13,
+        "test_start": "2024-02-08",
+        "test_end": "2024-05-06",
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 58.162,
+          "sharpe": 2.194,
+          "sortino": 1.771,
+          "max_dd_pct": 9.807,
+          "calmar": 5.931,
+          "vol_pct": 22.045
+        },
+        "trip_count": 0,
+        "trip_pct": 0.0
+      },
+      {
+        "fold": 14,
+        "test_start": "2024-05-07",
+        "test_end": "2024-08-01",
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 229.786,
+          "sharpe": 7.387,
+          "sortino": 9.618,
+          "max_dd_pct": 3.297,
+          "calmar": 69.693,
+          "vol_pct": 16.37
+        },
+        "trip_count": 0,
+        "trip_pct": 0.0
+      },
+      {
+        "fold": 15,
+        "test_start": "2024-08-02",
+        "test_end": "2024-10-29",
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 216.654,
+          "sharpe": 7.899,
+          "sortino": 14.19,
+          "max_dd_pct": 2.638,
+          "calmar": 82.116,
+          "vol_pct": 14.761
+        },
+        "trip_count": 0,
+        "trip_pct": 0.0
+      },
+      {
+        "fold": 16,
+        "test_start": "2024-10-30",
+        "test_end": "2025-01-24",
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 82.17,
+          "sharpe": 3.877,
+          "sortino": 5.199,
+          "max_dd_pct": 5.847,
+          "calmar": 14.053,
+          "vol_pct": 15.805
+        },
+        "trip_count": 0,
+        "trip_pct": 0.0
+      },
+      {
+        "fold": 17,
+        "test_start": "2025-01-27",
+        "test_end": "2025-04-23",
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 126.334,
+          "sharpe": 2.863,
+          "sortino": 3.946,
+          "max_dd_pct": 10.83,
+          "calmar": 11.666,
+          "vol_pct": 30.139
+        },
+        "trip_count": 0,
+        "trip_pct": 0.0
+      },
+      {
+        "fold": 18,
+        "test_start": "2025-04-24",
+        "test_end": "2025-07-21",
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 296.56,
+          "sharpe": 7.991,
+          "sortino": 15.489,
+          "max_dd_pct": 1.989,
+          "calmar": 149.106,
+          "vol_pct": 17.472
+        },
+        "trip_count": 0,
+        "trip_pct": 0.0
+      },
+      {
+        "fold": 19,
+        "test_start": "2025-07-22",
+        "test_end": "2025-10-16",
+        "metrics": {
+          "n": 63,
+          "cagr_pct": 175.98,
+          "sharpe": 10.259,
+          "sortino": 303.327,
+          "max_dd_pct": 0.09,
+          "calmar": 1950.114,
+          "vol_pct": 9.962
+        },
+        "trip_count": 0,
+        "trip_pct": 0.0
+      }
+    ],
+    "pooled": {
+      "n": 1260,
+      "cagr_pct": 170.383,
+      "sharpe": 4.429,
+      "sortino": 5.225,
+      "max_dd_pct": 24.362,
+      "calmar": 6.994,
+      "vol_pct": 23.095
+    }
+  },
+  "configs": [
+    {
+      "label": "flatten_3pct",
+      "threshold": 0.03,
+      "mode": "flatten",
+      "pooled": {
+        "n": 1260,
+        "cagr_pct": 132.075,
+        "sharpe": 5.405,
+        "sortino": 7.63,
+        "max_dd_pct": 6.77,
+        "calmar": 19.51,
+        "vol_pct": 15.832
+      },
+      "trip_pct_avg": 14.524,
+      "folds": [
+        {
+          "fold": 0,
+          "test_start": "2020-12-18",
+          "test_end": "2021-03-16",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 271.569,
+            "sharpe": 5.928,
+            "sortino": 24.722,
+            "max_dd_pct": 1.185,
+            "calmar": 229.234,
+            "vol_pct": 22.607
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 1,
+          "test_start": "2021-03-17",
+          "test_end": "2021-06-11",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 111.294,
+            "sharpe": 8.814,
+            "sortino": 16.879,
+            "max_dd_pct": 1.171,
+            "calmar": 95.002,
+            "vol_pct": 8.541
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 2,
+          "test_start": "2021-06-14",
+          "test_end": "2021-09-08",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 82.013,
+            "sharpe": 6.393,
+            "sortino": 10.445,
+            "max_dd_pct": 1.207,
+            "calmar": 67.966,
+            "vol_pct": 9.448
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 3,
+          "test_start": "2021-09-09",
+          "test_end": "2021-12-06",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 92.56,
+            "sharpe": 3.473,
+            "sortino": 2.831,
+            "max_dd_pct": 6.26,
+            "calmar": 14.785,
+            "vol_pct": 19.432
+          },
+          "trip_count": 3,
+          "trip_pct": 4.76
+        },
+        {
+          "fold": 4,
+          "test_start": "2021-12-07",
+          "test_end": "2022-03-03",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 215.721,
+            "sharpe": 4.265,
+            "sortino": 5.943,
+            "max_dd_pct": 4.166,
+            "calmar": 51.787,
+            "vol_pct": 27.879
+          },
+          "trip_count": 24,
+          "trip_pct": 38.1
+        },
+        {
+          "fold": 5,
+          "test_start": "2022-03-04",
+          "test_end": "2022-05-31",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 49.309,
+            "sharpe": 2.326,
+            "sortino": 2.09,
+            "max_dd_pct": 3.919,
+            "calmar": 12.582,
+            "vol_pct": 17.926
+          },
+          "trip_count": 42,
+          "trip_pct": 66.67
+        },
+        {
+          "fold": 6,
+          "test_start": "2022-06-01",
+          "test_end": "2022-08-26",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 166.811,
+            "sharpe": 6.033,
+            "sortino": 14.682,
+            "max_dd_pct": 2.391,
+            "calmar": 69.773,
+            "vol_pct": 16.519
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 7,
+          "test_start": "2022-08-29",
+          "test_end": "2022-11-23",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 185.738,
+            "sharpe": 7.026,
+            "sortino": 10.493,
+            "max_dd_pct": 2.326,
+            "calmar": 79.84,
+            "vol_pct": 15.134
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 8,
+          "test_start": "2022-11-24",
+          "test_end": "2023-02-20",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 218.151,
+            "sharpe": 6.118,
+            "sortino": 13.907,
+            "max_dd_pct": 1.928,
+            "calmar": 113.16,
+            "vol_pct": 19.252
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 9,
+          "test_start": "2023-02-21",
+          "test_end": "2023-05-18",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 44.212,
+            "sharpe": 2.945,
+            "sortino": 2.513,
+            "max_dd_pct": 6.095,
+            "calmar": 7.254,
+            "vol_pct": 12.713
+          },
+          "trip_count": 19,
+          "trip_pct": 30.16
+        },
+        {
+          "fold": 10,
+          "test_start": "2023-05-19",
+          "test_end": "2023-08-15",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 106.54,
+            "sharpe": 6.779,
+            "sortino": 19.931,
+            "max_dd_pct": 1.158,
+            "calmar": 92.038,
+            "vol_pct": 10.798
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 11,
+          "test_start": "2023-08-16",
+          "test_end": "2023-11-10",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 99.168,
+            "sharpe": 6.654,
+            "sortino": 12.031,
+            "max_dd_pct": 1.592,
+            "calmar": 62.308,
+            "vol_pct": 10.449
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 12,
+          "test_start": "2023-11-13",
+          "test_end": "2024-02-07",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 227.394,
+            "sharpe": 6.777,
+            "sortino": 11.656,
+            "max_dd_pct": 2.983,
+            "calmar": 76.22,
+            "vol_pct": 17.769
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 13,
+          "test_start": "2024-02-08",
+          "test_end": "2024-05-06",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 101.111,
+            "sharpe": 5.451,
+            "sortino": 10.415,
+            "max_dd_pct": 3.136,
+            "calmar": 32.246,
+            "vol_pct": 12.985
+          },
+          "trip_count": 10,
+          "trip_pct": 15.87
+        },
+        {
+          "fold": 14,
+          "test_start": "2024-05-07",
+          "test_end": "2024-08-01",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 110.349,
+            "sharpe": 5.118,
+            "sortino": 5.423,
+            "max_dd_pct": 3.297,
+            "calmar": 33.468,
+            "vol_pct": 14.759
+          },
+          "trip_count": 19,
+          "trip_pct": 30.16
+        },
+        {
+          "fold": 15,
+          "test_start": "2024-08-02",
+          "test_end": "2024-10-29",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 216.654,
+            "sharpe": 7.899,
+            "sortino": 14.19,
+            "max_dd_pct": 2.638,
+            "calmar": 82.116,
+            "vol_pct": 14.761
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 16,
+          "test_start": "2024-10-30",
+          "test_end": "2025-01-24",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 52.771,
+            "sharpe": 3.807,
+            "sortino": 3.845,
+            "max_dd_pct": 3.419,
+            "calmar": 15.434,
+            "vol_pct": 11.304
+          },
+          "trip_count": 32,
+          "trip_pct": 50.79
+        },
+        {
+          "fold": 17,
+          "test_start": "2025-01-27",
+          "test_end": "2025-04-23",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 50.074,
+            "sharpe": 3.422,
+            "sortino": 4.741,
+            "max_dd_pct": 3.652,
+            "calmar": 13.712,
+            "vol_pct": 12.081
+          },
+          "trip_count": 34,
+          "trip_pct": 53.97
+        },
+        {
+          "fold": 18,
+          "test_start": "2025-04-24",
+          "test_end": "2025-07-21",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 296.56,
+            "sharpe": 7.991,
+            "sortino": 15.489,
+            "max_dd_pct": 1.989,
+            "calmar": 149.106,
+            "vol_pct": 17.472
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 19,
+          "test_start": "2025-07-22",
+          "test_end": "2025-10-16",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 175.98,
+            "sharpe": 10.259,
+            "sortino": 303.327,
+            "max_dd_pct": 0.09,
+            "calmar": 1950.114,
+            "vol_pct": 9.962
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        }
+      ]
+    },
+    {
+      "label": "flatten_5pct",
+      "threshold": 0.05,
+      "mode": "flatten",
+      "pooled": {
+        "n": 1260,
+        "cagr_pct": 140.31,
+        "sharpe": 4.745,
+        "sortino": 5.241,
+        "max_dd_pct": 15.587,
+        "calmar": 9.002,
+        "vol_pct": 18.885
+      },
+      "trip_pct_avg": 5.635,
+      "folds": [
+        {
+          "fold": 0,
+          "test_start": "2020-12-18",
+          "test_end": "2021-03-16",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 271.569,
+            "sharpe": 5.928,
+            "sortino": 24.722,
+            "max_dd_pct": 1.185,
+            "calmar": 229.234,
+            "vol_pct": 22.607
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 1,
+          "test_start": "2021-03-17",
+          "test_end": "2021-06-11",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 111.294,
+            "sharpe": 8.814,
+            "sortino": 16.879,
+            "max_dd_pct": 1.171,
+            "calmar": 95.002,
+            "vol_pct": 8.541
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 2,
+          "test_start": "2021-06-14",
+          "test_end": "2021-09-08",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 82.013,
+            "sharpe": 6.393,
+            "sortino": 10.445,
+            "max_dd_pct": 1.207,
+            "calmar": 67.966,
+            "vol_pct": 9.448
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 3,
+          "test_start": "2021-09-09",
+          "test_end": "2021-12-06",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 92.56,
+            "sharpe": 3.473,
+            "sortino": 2.831,
+            "max_dd_pct": 6.26,
+            "calmar": 14.785,
+            "vol_pct": 19.432
+          },
+          "trip_count": 3,
+          "trip_pct": 4.76
+        },
+        {
+          "fold": 4,
+          "test_start": "2021-12-07",
+          "test_end": "2022-03-03",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 91.02,
+            "sharpe": 1.93,
+            "sortino": 1.277,
+            "max_dd_pct": 15.479,
+            "calmar": 5.88,
+            "vol_pct": 37.148
+          },
+          "trip_count": 23,
+          "trip_pct": 36.51
+        },
+        {
+          "fold": 5,
+          "test_start": "2022-03-04",
+          "test_end": "2022-05-31",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 440.011,
+            "sharpe": 5.561,
+            "sortino": 12.724,
+            "max_dd_pct": 5.299,
+            "calmar": 83.035,
+            "vol_pct": 31.286
+          },
+          "trip_count": 3,
+          "trip_pct": 4.76
+        },
+        {
+          "fold": 6,
+          "test_start": "2022-06-01",
+          "test_end": "2022-08-26",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 166.811,
+            "sharpe": 6.033,
+            "sortino": 14.682,
+            "max_dd_pct": 2.391,
+            "calmar": 69.773,
+            "vol_pct": 16.519
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 7,
+          "test_start": "2022-08-29",
+          "test_end": "2022-11-23",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 185.738,
+            "sharpe": 7.026,
+            "sortino": 10.493,
+            "max_dd_pct": 2.326,
+            "calmar": 79.84,
+            "vol_pct": 15.134
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 8,
+          "test_start": "2022-11-24",
+          "test_end": "2023-02-20",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 218.151,
+            "sharpe": 6.118,
+            "sortino": 13.907,
+            "max_dd_pct": 1.928,
+            "calmar": 113.16,
+            "vol_pct": 19.252
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 9,
+          "test_start": "2023-02-21",
+          "test_end": "2023-05-18",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 92.051,
+            "sharpe": 3.973,
+            "sortino": 5.253,
+            "max_dd_pct": 4.529,
+            "calmar": 20.325,
+            "vol_pct": 16.795
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 10,
+          "test_start": "2023-05-19",
+          "test_end": "2023-08-15",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 106.54,
+            "sharpe": 6.779,
+            "sortino": 19.931,
+            "max_dd_pct": 1.158,
+            "calmar": 92.038,
+            "vol_pct": 10.798
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 11,
+          "test_start": "2023-08-16",
+          "test_end": "2023-11-10",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 99.168,
+            "sharpe": 6.654,
+            "sortino": 12.031,
+            "max_dd_pct": 1.592,
+            "calmar": 62.308,
+            "vol_pct": 10.449
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 12,
+          "test_start": "2023-11-13",
+          "test_end": "2024-02-07",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 227.394,
+            "sharpe": 6.777,
+            "sortino": 11.656,
+            "max_dd_pct": 2.983,
+            "calmar": 76.22,
+            "vol_pct": 17.769
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 13,
+          "test_start": "2024-02-08",
+          "test_end": "2024-05-06",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 51.171,
+            "sharpe": 1.991,
+            "sortino": 1.574,
+            "max_dd_pct": 9.807,
+            "calmar": 5.218,
+            "vol_pct": 22.005
+          },
+          "trip_count": 4,
+          "trip_pct": 6.35
+        },
+        {
+          "fold": 14,
+          "test_start": "2024-05-07",
+          "test_end": "2024-08-01",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 229.786,
+            "sharpe": 7.387,
+            "sortino": 9.618,
+            "max_dd_pct": 3.297,
+            "calmar": 69.693,
+            "vol_pct": 16.37
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 15,
+          "test_start": "2024-08-02",
+          "test_end": "2024-10-29",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 216.654,
+            "sharpe": 7.899,
+            "sortino": 14.19,
+            "max_dd_pct": 2.638,
+            "calmar": 82.116,
+            "vol_pct": 14.761
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 16,
+          "test_start": "2024-10-30",
+          "test_end": "2025-01-24",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 51.638,
+            "sharpe": 2.806,
+            "sortino": 3.549,
+            "max_dd_pct": 5.847,
+            "calmar": 8.831,
+            "vol_pct": 15.255
+          },
+          "trip_count": 9,
+          "trip_pct": 14.29
+        },
+        {
+          "fold": 17,
+          "test_start": "2025-01-27",
+          "test_end": "2025-04-23",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": -11.575,
+            "sharpe": -0.519,
+            "sortino": -0.383,
+            "max_dd_pct": 15.587,
+            "calmar": -0.743,
+            "vol_pct": 19.897
+          },
+          "trip_count": 29,
+          "trip_pct": 46.03
+        },
+        {
+          "fold": 18,
+          "test_start": "2025-04-24",
+          "test_end": "2025-07-21",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 296.56,
+            "sharpe": 7.991,
+            "sortino": 15.489,
+            "max_dd_pct": 1.989,
+            "calmar": 149.106,
+            "vol_pct": 17.472
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 19,
+          "test_start": "2025-07-22",
+          "test_end": "2025-10-16",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 175.98,
+            "sharpe": 10.259,
+            "sortino": 303.327,
+            "max_dd_pct": 0.09,
+            "calmar": 1950.114,
+            "vol_pct": 9.962
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        }
+      ]
+    },
+    {
+      "label": "flatten_8pct",
+      "threshold": 0.08,
+      "mode": "flatten",
+      "pooled": {
+        "n": 1260,
+        "cagr_pct": 150.188,
+        "sharpe": 4.909,
+        "sortino": 5.492,
+        "max_dd_pct": 15.479,
+        "calmar": 9.703,
+        "vol_pct": 19.083
+      },
+      "trip_pct_avg": 3.095,
+      "folds": [
+        {
+          "fold": 0,
+          "test_start": "2020-12-18",
+          "test_end": "2021-03-16",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 271.569,
+            "sharpe": 5.928,
+            "sortino": 24.722,
+            "max_dd_pct": 1.185,
+            "calmar": 229.234,
+            "vol_pct": 22.607
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 1,
+          "test_start": "2021-03-17",
+          "test_end": "2021-06-11",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 111.294,
+            "sharpe": 8.814,
+            "sortino": 16.879,
+            "max_dd_pct": 1.171,
+            "calmar": 95.002,
+            "vol_pct": 8.541
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 2,
+          "test_start": "2021-06-14",
+          "test_end": "2021-09-08",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 82.013,
+            "sharpe": 6.393,
+            "sortino": 10.445,
+            "max_dd_pct": 1.207,
+            "calmar": 67.966,
+            "vol_pct": 9.448
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 3,
+          "test_start": "2021-09-09",
+          "test_end": "2021-12-06",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 101.562,
+            "sharpe": 3.712,
+            "sortino": 3.022,
+            "max_dd_pct": 6.26,
+            "calmar": 16.223,
+            "vol_pct": 19.412
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 4,
+          "test_start": "2021-12-07",
+          "test_end": "2022-03-03",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 91.02,
+            "sharpe": 1.93,
+            "sortino": 1.277,
+            "max_dd_pct": 15.479,
+            "calmar": 5.88,
+            "vol_pct": 37.148
+          },
+          "trip_count": 23,
+          "trip_pct": 36.51
+        },
+        {
+          "fold": 5,
+          "test_start": "2022-03-04",
+          "test_end": "2022-05-31",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 488.032,
+            "sharpe": 5.843,
+            "sortino": 13.351,
+            "max_dd_pct": 5.299,
+            "calmar": 92.097,
+            "vol_pct": 31.24
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 6,
+          "test_start": "2022-06-01",
+          "test_end": "2022-08-26",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 166.811,
+            "sharpe": 6.033,
+            "sortino": 14.682,
+            "max_dd_pct": 2.391,
+            "calmar": 69.773,
+            "vol_pct": 16.519
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 7,
+          "test_start": "2022-08-29",
+          "test_end": "2022-11-23",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 185.738,
+            "sharpe": 7.026,
+            "sortino": 10.493,
+            "max_dd_pct": 2.326,
+            "calmar": 79.84,
+            "vol_pct": 15.134
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 8,
+          "test_start": "2022-11-24",
+          "test_end": "2023-02-20",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 218.151,
+            "sharpe": 6.118,
+            "sortino": 13.907,
+            "max_dd_pct": 1.928,
+            "calmar": 113.16,
+            "vol_pct": 19.252
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 9,
+          "test_start": "2023-02-21",
+          "test_end": "2023-05-18",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 92.051,
+            "sharpe": 3.973,
+            "sortino": 5.253,
+            "max_dd_pct": 4.529,
+            "calmar": 20.325,
+            "vol_pct": 16.795
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 10,
+          "test_start": "2023-05-19",
+          "test_end": "2023-08-15",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 106.54,
+            "sharpe": 6.779,
+            "sortino": 19.931,
+            "max_dd_pct": 1.158,
+            "calmar": 92.038,
+            "vol_pct": 10.798
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 11,
+          "test_start": "2023-08-16",
+          "test_end": "2023-11-10",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 99.168,
+            "sharpe": 6.654,
+            "sortino": 12.031,
+            "max_dd_pct": 1.592,
+            "calmar": 62.308,
+            "vol_pct": 10.449
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 12,
+          "test_start": "2023-11-13",
+          "test_end": "2024-02-07",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 227.394,
+            "sharpe": 6.777,
+            "sortino": 11.656,
+            "max_dd_pct": 2.983,
+            "calmar": 76.22,
+            "vol_pct": 17.769
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 13,
+          "test_start": "2024-02-08",
+          "test_end": "2024-05-06",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 51.171,
+            "sharpe": 1.991,
+            "sortino": 1.574,
+            "max_dd_pct": 9.807,
+            "calmar": 5.218,
+            "vol_pct": 22.005
+          },
+          "trip_count": 4,
+          "trip_pct": 6.35
+        },
+        {
+          "fold": 14,
+          "test_start": "2024-05-07",
+          "test_end": "2024-08-01",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 229.786,
+            "sharpe": 7.387,
+            "sortino": 9.618,
+            "max_dd_pct": 3.297,
+            "calmar": 69.693,
+            "vol_pct": 16.37
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 15,
+          "test_start": "2024-08-02",
+          "test_end": "2024-10-29",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 216.654,
+            "sharpe": 7.899,
+            "sortino": 14.19,
+            "max_dd_pct": 2.638,
+            "calmar": 82.116,
+            "vol_pct": 14.761
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 16,
+          "test_start": "2024-10-30",
+          "test_end": "2025-01-24",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 82.17,
+            "sharpe": 3.877,
+            "sortino": 5.199,
+            "max_dd_pct": 5.847,
+            "calmar": 14.053,
+            "vol_pct": 15.805
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 17,
+          "test_start": "2025-01-27",
+          "test_end": "2025-04-23",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 44.525,
+            "sharpe": 1.666,
+            "sortino": 1.624,
+            "max_dd_pct": 10.436,
+            "calmar": 4.266,
+            "vol_pct": 23.824
+          },
+          "trip_count": 12,
+          "trip_pct": 19.05
+        },
+        {
+          "fold": 18,
+          "test_start": "2025-04-24",
+          "test_end": "2025-07-21",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 296.56,
+            "sharpe": 7.991,
+            "sortino": 15.489,
+            "max_dd_pct": 1.989,
+            "calmar": 149.106,
+            "vol_pct": 17.472
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 19,
+          "test_start": "2025-07-22",
+          "test_end": "2025-10-16",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 175.98,
+            "sharpe": 10.259,
+            "sortino": 303.327,
+            "max_dd_pct": 0.09,
+            "calmar": 1950.114,
+            "vol_pct": 9.962
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        }
+      ]
+    },
+    {
+      "label": "flatten_10pct",
+      "threshold": 0.1,
+      "mode": "flatten",
+      "pooled": {
+        "n": 1260,
+        "cagr_pct": 150.754,
+        "sharpe": 4.921,
+        "sortino": 5.511,
+        "max_dd_pct": 15.479,
+        "calmar": 9.739,
+        "vol_pct": 19.083
+      },
+      "trip_pct_avg": 2.778,
+      "folds": [
+        {
+          "fold": 0,
+          "test_start": "2020-12-18",
+          "test_end": "2021-03-16",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 271.569,
+            "sharpe": 5.928,
+            "sortino": 24.722,
+            "max_dd_pct": 1.185,
+            "calmar": 229.234,
+            "vol_pct": 22.607
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 1,
+          "test_start": "2021-03-17",
+          "test_end": "2021-06-11",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 111.294,
+            "sharpe": 8.814,
+            "sortino": 16.879,
+            "max_dd_pct": 1.171,
+            "calmar": 95.002,
+            "vol_pct": 8.541
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 2,
+          "test_start": "2021-06-14",
+          "test_end": "2021-09-08",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 82.013,
+            "sharpe": 6.393,
+            "sortino": 10.445,
+            "max_dd_pct": 1.207,
+            "calmar": 67.966,
+            "vol_pct": 9.448
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 3,
+          "test_start": "2021-09-09",
+          "test_end": "2021-12-06",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 101.562,
+            "sharpe": 3.712,
+            "sortino": 3.022,
+            "max_dd_pct": 6.26,
+            "calmar": 16.223,
+            "vol_pct": 19.412
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 4,
+          "test_start": "2021-12-07",
+          "test_end": "2022-03-03",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 91.02,
+            "sharpe": 1.93,
+            "sortino": 1.277,
+            "max_dd_pct": 15.479,
+            "calmar": 5.88,
+            "vol_pct": 37.148
+          },
+          "trip_count": 23,
+          "trip_pct": 36.51
+        },
+        {
+          "fold": 5,
+          "test_start": "2022-03-04",
+          "test_end": "2022-05-31",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 488.032,
+            "sharpe": 5.843,
+            "sortino": 13.351,
+            "max_dd_pct": 5.299,
+            "calmar": 92.097,
+            "vol_pct": 31.24
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 6,
+          "test_start": "2022-06-01",
+          "test_end": "2022-08-26",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 166.811,
+            "sharpe": 6.033,
+            "sortino": 14.682,
+            "max_dd_pct": 2.391,
+            "calmar": 69.773,
+            "vol_pct": 16.519
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 7,
+          "test_start": "2022-08-29",
+          "test_end": "2022-11-23",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 185.738,
+            "sharpe": 7.026,
+            "sortino": 10.493,
+            "max_dd_pct": 2.326,
+            "calmar": 79.84,
+            "vol_pct": 15.134
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 8,
+          "test_start": "2022-11-24",
+          "test_end": "2023-02-20",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 218.151,
+            "sharpe": 6.118,
+            "sortino": 13.907,
+            "max_dd_pct": 1.928,
+            "calmar": 113.16,
+            "vol_pct": 19.252
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 9,
+          "test_start": "2023-02-21",
+          "test_end": "2023-05-18",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 92.051,
+            "sharpe": 3.973,
+            "sortino": 5.253,
+            "max_dd_pct": 4.529,
+            "calmar": 20.325,
+            "vol_pct": 16.795
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 10,
+          "test_start": "2023-05-19",
+          "test_end": "2023-08-15",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 106.54,
+            "sharpe": 6.779,
+            "sortino": 19.931,
+            "max_dd_pct": 1.158,
+            "calmar": 92.038,
+            "vol_pct": 10.798
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 11,
+          "test_start": "2023-08-16",
+          "test_end": "2023-11-10",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 99.168,
+            "sharpe": 6.654,
+            "sortino": 12.031,
+            "max_dd_pct": 1.592,
+            "calmar": 62.308,
+            "vol_pct": 10.449
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 12,
+          "test_start": "2023-11-13",
+          "test_end": "2024-02-07",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 227.394,
+            "sharpe": 6.777,
+            "sortino": 11.656,
+            "max_dd_pct": 2.983,
+            "calmar": 76.22,
+            "vol_pct": 17.769
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 13,
+          "test_start": "2024-02-08",
+          "test_end": "2024-05-06",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 58.162,
+            "sharpe": 2.194,
+            "sortino": 1.771,
+            "max_dd_pct": 9.807,
+            "calmar": 5.931,
+            "vol_pct": 22.045
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 14,
+          "test_start": "2024-05-07",
+          "test_end": "2024-08-01",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 229.786,
+            "sharpe": 7.387,
+            "sortino": 9.618,
+            "max_dd_pct": 3.297,
+            "calmar": 69.693,
+            "vol_pct": 16.37
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 15,
+          "test_start": "2024-08-02",
+          "test_end": "2024-10-29",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 216.654,
+            "sharpe": 7.899,
+            "sortino": 14.19,
+            "max_dd_pct": 2.638,
+            "calmar": 82.116,
+            "vol_pct": 14.761
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 16,
+          "test_start": "2024-10-30",
+          "test_end": "2025-01-24",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 82.17,
+            "sharpe": 3.877,
+            "sortino": 5.199,
+            "max_dd_pct": 5.847,
+            "calmar": 14.053,
+            "vol_pct": 15.805
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 17,
+          "test_start": "2025-01-27",
+          "test_end": "2025-04-23",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 44.525,
+            "sharpe": 1.666,
+            "sortino": 1.624,
+            "max_dd_pct": 10.436,
+            "calmar": 4.266,
+            "vol_pct": 23.824
+          },
+          "trip_count": 12,
+          "trip_pct": 19.05
+        },
+        {
+          "fold": 18,
+          "test_start": "2025-04-24",
+          "test_end": "2025-07-21",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 296.56,
+            "sharpe": 7.991,
+            "sortino": 15.489,
+            "max_dd_pct": 1.989,
+            "calmar": 149.106,
+            "vol_pct": 17.472
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 19,
+          "test_start": "2025-07-22",
+          "test_end": "2025-10-16",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 175.98,
+            "sharpe": 10.259,
+            "sortino": 303.327,
+            "max_dd_pct": 0.09,
+            "calmar": 1950.114,
+            "vol_pct": 9.962
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        }
+      ]
+    },
+    {
+      "label": "reduce_3pct",
+      "threshold": 0.03,
+      "mode": "reduce",
+      "pooled": {
+        "n": 1260,
+        "cagr_pct": 170.383,
+        "sharpe": 4.429,
+        "sortino": 5.225,
+        "max_dd_pct": 24.362,
+        "calmar": 6.994,
+        "vol_pct": 23.095
+      },
+      "trip_pct_avg": 0.0,
+      "folds": [
+        {
+          "fold": 0,
+          "test_start": "2020-12-18",
+          "test_end": "2021-03-16",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 271.569,
+            "sharpe": 5.928,
+            "sortino": 24.722,
+            "max_dd_pct": 1.185,
+            "calmar": 229.234,
+            "vol_pct": 22.607
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 1,
+          "test_start": "2021-03-17",
+          "test_end": "2021-06-11",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 111.294,
+            "sharpe": 8.814,
+            "sortino": 16.879,
+            "max_dd_pct": 1.171,
+            "calmar": 95.002,
+            "vol_pct": 8.541
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 2,
+          "test_start": "2021-06-14",
+          "test_end": "2021-09-08",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 82.013,
+            "sharpe": 6.393,
+            "sortino": 10.445,
+            "max_dd_pct": 1.207,
+            "calmar": 67.966,
+            "vol_pct": 9.448
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 3,
+          "test_start": "2021-09-09",
+          "test_end": "2021-12-06",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 101.562,
+            "sharpe": 3.712,
+            "sortino": 3.022,
+            "max_dd_pct": 6.26,
+            "calmar": 16.223,
+            "vol_pct": 19.412
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 4,
+          "test_start": "2021-12-07",
+          "test_end": "2022-03-03",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 450.677,
+            "sharpe": 2.888,
+            "sortino": 3.724,
+            "max_dd_pct": 24.362,
+            "calmar": 18.499,
+            "vol_pct": 66.749
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 5,
+          "test_start": "2022-03-04",
+          "test_end": "2022-05-31",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 488.032,
+            "sharpe": 5.843,
+            "sortino": 13.351,
+            "max_dd_pct": 5.299,
+            "calmar": 92.097,
+            "vol_pct": 31.24
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 6,
+          "test_start": "2022-06-01",
+          "test_end": "2022-08-26",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 166.811,
+            "sharpe": 6.033,
+            "sortino": 14.682,
+            "max_dd_pct": 2.391,
+            "calmar": 69.773,
+            "vol_pct": 16.519
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 7,
+          "test_start": "2022-08-29",
+          "test_end": "2022-11-23",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 185.738,
+            "sharpe": 7.026,
+            "sortino": 10.493,
+            "max_dd_pct": 2.326,
+            "calmar": 79.84,
+            "vol_pct": 15.134
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 8,
+          "test_start": "2022-11-24",
+          "test_end": "2023-02-20",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 218.151,
+            "sharpe": 6.118,
+            "sortino": 13.907,
+            "max_dd_pct": 1.928,
+            "calmar": 113.16,
+            "vol_pct": 19.252
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 9,
+          "test_start": "2023-02-21",
+          "test_end": "2023-05-18",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 92.051,
+            "sharpe": 3.973,
+            "sortino": 5.253,
+            "max_dd_pct": 4.529,
+            "calmar": 20.325,
+            "vol_pct": 16.795
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 10,
+          "test_start": "2023-05-19",
+          "test_end": "2023-08-15",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 106.54,
+            "sharpe": 6.779,
+            "sortino": 19.931,
+            "max_dd_pct": 1.158,
+            "calmar": 92.038,
+            "vol_pct": 10.798
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 11,
+          "test_start": "2023-08-16",
+          "test_end": "2023-11-10",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 99.168,
+            "sharpe": 6.654,
+            "sortino": 12.031,
+            "max_dd_pct": 1.592,
+            "calmar": 62.308,
+            "vol_pct": 10.449
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 12,
+          "test_start": "2023-11-13",
+          "test_end": "2024-02-07",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 227.394,
+            "sharpe": 6.777,
+            "sortino": 11.656,
+            "max_dd_pct": 2.983,
+            "calmar": 76.22,
+            "vol_pct": 17.769
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 13,
+          "test_start": "2024-02-08",
+          "test_end": "2024-05-06",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 58.162,
+            "sharpe": 2.194,
+            "sortino": 1.771,
+            "max_dd_pct": 9.807,
+            "calmar": 5.931,
+            "vol_pct": 22.045
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 14,
+          "test_start": "2024-05-07",
+          "test_end": "2024-08-01",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 229.786,
+            "sharpe": 7.387,
+            "sortino": 9.618,
+            "max_dd_pct": 3.297,
+            "calmar": 69.693,
+            "vol_pct": 16.37
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 15,
+          "test_start": "2024-08-02",
+          "test_end": "2024-10-29",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 216.654,
+            "sharpe": 7.899,
+            "sortino": 14.19,
+            "max_dd_pct": 2.638,
+            "calmar": 82.116,
+            "vol_pct": 14.761
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 16,
+          "test_start": "2024-10-30",
+          "test_end": "2025-01-24",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 82.17,
+            "sharpe": 3.877,
+            "sortino": 5.199,
+            "max_dd_pct": 5.847,
+            "calmar": 14.053,
+            "vol_pct": 15.805
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 17,
+          "test_start": "2025-01-27",
+          "test_end": "2025-04-23",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 126.334,
+            "sharpe": 2.863,
+            "sortino": 3.946,
+            "max_dd_pct": 10.83,
+            "calmar": 11.666,
+            "vol_pct": 30.139
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 18,
+          "test_start": "2025-04-24",
+          "test_end": "2025-07-21",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 296.56,
+            "sharpe": 7.991,
+            "sortino": 15.489,
+            "max_dd_pct": 1.989,
+            "calmar": 149.106,
+            "vol_pct": 17.472
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 19,
+          "test_start": "2025-07-22",
+          "test_end": "2025-10-16",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 175.98,
+            "sharpe": 10.259,
+            "sortino": 303.327,
+            "max_dd_pct": 0.09,
+            "calmar": 1950.114,
+            "vol_pct": 9.962
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        }
+      ]
+    },
+    {
+      "label": "reduce_5pct",
+      "threshold": 0.05,
+      "mode": "reduce",
+      "pooled": {
+        "n": 1260,
+        "cagr_pct": 170.383,
+        "sharpe": 4.429,
+        "sortino": 5.225,
+        "max_dd_pct": 24.362,
+        "calmar": 6.994,
+        "vol_pct": 23.095
+      },
+      "trip_pct_avg": 0.0,
+      "folds": [
+        {
+          "fold": 0,
+          "test_start": "2020-12-18",
+          "test_end": "2021-03-16",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 271.569,
+            "sharpe": 5.928,
+            "sortino": 24.722,
+            "max_dd_pct": 1.185,
+            "calmar": 229.234,
+            "vol_pct": 22.607
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 1,
+          "test_start": "2021-03-17",
+          "test_end": "2021-06-11",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 111.294,
+            "sharpe": 8.814,
+            "sortino": 16.879,
+            "max_dd_pct": 1.171,
+            "calmar": 95.002,
+            "vol_pct": 8.541
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 2,
+          "test_start": "2021-06-14",
+          "test_end": "2021-09-08",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 82.013,
+            "sharpe": 6.393,
+            "sortino": 10.445,
+            "max_dd_pct": 1.207,
+            "calmar": 67.966,
+            "vol_pct": 9.448
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 3,
+          "test_start": "2021-09-09",
+          "test_end": "2021-12-06",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 101.562,
+            "sharpe": 3.712,
+            "sortino": 3.022,
+            "max_dd_pct": 6.26,
+            "calmar": 16.223,
+            "vol_pct": 19.412
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 4,
+          "test_start": "2021-12-07",
+          "test_end": "2022-03-03",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 450.677,
+            "sharpe": 2.888,
+            "sortino": 3.724,
+            "max_dd_pct": 24.362,
+            "calmar": 18.499,
+            "vol_pct": 66.749
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 5,
+          "test_start": "2022-03-04",
+          "test_end": "2022-05-31",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 488.032,
+            "sharpe": 5.843,
+            "sortino": 13.351,
+            "max_dd_pct": 5.299,
+            "calmar": 92.097,
+            "vol_pct": 31.24
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 6,
+          "test_start": "2022-06-01",
+          "test_end": "2022-08-26",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 166.811,
+            "sharpe": 6.033,
+            "sortino": 14.682,
+            "max_dd_pct": 2.391,
+            "calmar": 69.773,
+            "vol_pct": 16.519
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 7,
+          "test_start": "2022-08-29",
+          "test_end": "2022-11-23",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 185.738,
+            "sharpe": 7.026,
+            "sortino": 10.493,
+            "max_dd_pct": 2.326,
+            "calmar": 79.84,
+            "vol_pct": 15.134
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 8,
+          "test_start": "2022-11-24",
+          "test_end": "2023-02-20",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 218.151,
+            "sharpe": 6.118,
+            "sortino": 13.907,
+            "max_dd_pct": 1.928,
+            "calmar": 113.16,
+            "vol_pct": 19.252
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 9,
+          "test_start": "2023-02-21",
+          "test_end": "2023-05-18",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 92.051,
+            "sharpe": 3.973,
+            "sortino": 5.253,
+            "max_dd_pct": 4.529,
+            "calmar": 20.325,
+            "vol_pct": 16.795
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 10,
+          "test_start": "2023-05-19",
+          "test_end": "2023-08-15",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 106.54,
+            "sharpe": 6.779,
+            "sortino": 19.931,
+            "max_dd_pct": 1.158,
+            "calmar": 92.038,
+            "vol_pct": 10.798
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 11,
+          "test_start": "2023-08-16",
+          "test_end": "2023-11-10",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 99.168,
+            "sharpe": 6.654,
+            "sortino": 12.031,
+            "max_dd_pct": 1.592,
+            "calmar": 62.308,
+            "vol_pct": 10.449
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 12,
+          "test_start": "2023-11-13",
+          "test_end": "2024-02-07",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 227.394,
+            "sharpe": 6.777,
+            "sortino": 11.656,
+            "max_dd_pct": 2.983,
+            "calmar": 76.22,
+            "vol_pct": 17.769
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 13,
+          "test_start": "2024-02-08",
+          "test_end": "2024-05-06",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 58.162,
+            "sharpe": 2.194,
+            "sortino": 1.771,
+            "max_dd_pct": 9.807,
+            "calmar": 5.931,
+            "vol_pct": 22.045
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 14,
+          "test_start": "2024-05-07",
+          "test_end": "2024-08-01",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 229.786,
+            "sharpe": 7.387,
+            "sortino": 9.618,
+            "max_dd_pct": 3.297,
+            "calmar": 69.693,
+            "vol_pct": 16.37
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 15,
+          "test_start": "2024-08-02",
+          "test_end": "2024-10-29",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 216.654,
+            "sharpe": 7.899,
+            "sortino": 14.19,
+            "max_dd_pct": 2.638,
+            "calmar": 82.116,
+            "vol_pct": 14.761
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 16,
+          "test_start": "2024-10-30",
+          "test_end": "2025-01-24",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 82.17,
+            "sharpe": 3.877,
+            "sortino": 5.199,
+            "max_dd_pct": 5.847,
+            "calmar": 14.053,
+            "vol_pct": 15.805
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 17,
+          "test_start": "2025-01-27",
+          "test_end": "2025-04-23",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 126.334,
+            "sharpe": 2.863,
+            "sortino": 3.946,
+            "max_dd_pct": 10.83,
+            "calmar": 11.666,
+            "vol_pct": 30.139
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 18,
+          "test_start": "2025-04-24",
+          "test_end": "2025-07-21",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 296.56,
+            "sharpe": 7.991,
+            "sortino": 15.489,
+            "max_dd_pct": 1.989,
+            "calmar": 149.106,
+            "vol_pct": 17.472
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 19,
+          "test_start": "2025-07-22",
+          "test_end": "2025-10-16",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 175.98,
+            "sharpe": 10.259,
+            "sortino": 303.327,
+            "max_dd_pct": 0.09,
+            "calmar": 1950.114,
+            "vol_pct": 9.962
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        }
+      ]
+    },
+    {
+      "label": "reduce_8pct",
+      "threshold": 0.08,
+      "mode": "reduce",
+      "pooled": {
+        "n": 1260,
+        "cagr_pct": 170.383,
+        "sharpe": 4.429,
+        "sortino": 5.225,
+        "max_dd_pct": 24.362,
+        "calmar": 6.994,
+        "vol_pct": 23.095
+      },
+      "trip_pct_avg": 0.0,
+      "folds": [
+        {
+          "fold": 0,
+          "test_start": "2020-12-18",
+          "test_end": "2021-03-16",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 271.569,
+            "sharpe": 5.928,
+            "sortino": 24.722,
+            "max_dd_pct": 1.185,
+            "calmar": 229.234,
+            "vol_pct": 22.607
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 1,
+          "test_start": "2021-03-17",
+          "test_end": "2021-06-11",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 111.294,
+            "sharpe": 8.814,
+            "sortino": 16.879,
+            "max_dd_pct": 1.171,
+            "calmar": 95.002,
+            "vol_pct": 8.541
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 2,
+          "test_start": "2021-06-14",
+          "test_end": "2021-09-08",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 82.013,
+            "sharpe": 6.393,
+            "sortino": 10.445,
+            "max_dd_pct": 1.207,
+            "calmar": 67.966,
+            "vol_pct": 9.448
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 3,
+          "test_start": "2021-09-09",
+          "test_end": "2021-12-06",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 101.562,
+            "sharpe": 3.712,
+            "sortino": 3.022,
+            "max_dd_pct": 6.26,
+            "calmar": 16.223,
+            "vol_pct": 19.412
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 4,
+          "test_start": "2021-12-07",
+          "test_end": "2022-03-03",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 450.677,
+            "sharpe": 2.888,
+            "sortino": 3.724,
+            "max_dd_pct": 24.362,
+            "calmar": 18.499,
+            "vol_pct": 66.749
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 5,
+          "test_start": "2022-03-04",
+          "test_end": "2022-05-31",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 488.032,
+            "sharpe": 5.843,
+            "sortino": 13.351,
+            "max_dd_pct": 5.299,
+            "calmar": 92.097,
+            "vol_pct": 31.24
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 6,
+          "test_start": "2022-06-01",
+          "test_end": "2022-08-26",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 166.811,
+            "sharpe": 6.033,
+            "sortino": 14.682,
+            "max_dd_pct": 2.391,
+            "calmar": 69.773,
+            "vol_pct": 16.519
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 7,
+          "test_start": "2022-08-29",
+          "test_end": "2022-11-23",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 185.738,
+            "sharpe": 7.026,
+            "sortino": 10.493,
+            "max_dd_pct": 2.326,
+            "calmar": 79.84,
+            "vol_pct": 15.134
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 8,
+          "test_start": "2022-11-24",
+          "test_end": "2023-02-20",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 218.151,
+            "sharpe": 6.118,
+            "sortino": 13.907,
+            "max_dd_pct": 1.928,
+            "calmar": 113.16,
+            "vol_pct": 19.252
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 9,
+          "test_start": "2023-02-21",
+          "test_end": "2023-05-18",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 92.051,
+            "sharpe": 3.973,
+            "sortino": 5.253,
+            "max_dd_pct": 4.529,
+            "calmar": 20.325,
+            "vol_pct": 16.795
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 10,
+          "test_start": "2023-05-19",
+          "test_end": "2023-08-15",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 106.54,
+            "sharpe": 6.779,
+            "sortino": 19.931,
+            "max_dd_pct": 1.158,
+            "calmar": 92.038,
+            "vol_pct": 10.798
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 11,
+          "test_start": "2023-08-16",
+          "test_end": "2023-11-10",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 99.168,
+            "sharpe": 6.654,
+            "sortino": 12.031,
+            "max_dd_pct": 1.592,
+            "calmar": 62.308,
+            "vol_pct": 10.449
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 12,
+          "test_start": "2023-11-13",
+          "test_end": "2024-02-07",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 227.394,
+            "sharpe": 6.777,
+            "sortino": 11.656,
+            "max_dd_pct": 2.983,
+            "calmar": 76.22,
+            "vol_pct": 17.769
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 13,
+          "test_start": "2024-02-08",
+          "test_end": "2024-05-06",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 58.162,
+            "sharpe": 2.194,
+            "sortino": 1.771,
+            "max_dd_pct": 9.807,
+            "calmar": 5.931,
+            "vol_pct": 22.045
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 14,
+          "test_start": "2024-05-07",
+          "test_end": "2024-08-01",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 229.786,
+            "sharpe": 7.387,
+            "sortino": 9.618,
+            "max_dd_pct": 3.297,
+            "calmar": 69.693,
+            "vol_pct": 16.37
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 15,
+          "test_start": "2024-08-02",
+          "test_end": "2024-10-29",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 216.654,
+            "sharpe": 7.899,
+            "sortino": 14.19,
+            "max_dd_pct": 2.638,
+            "calmar": 82.116,
+            "vol_pct": 14.761
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 16,
+          "test_start": "2024-10-30",
+          "test_end": "2025-01-24",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 82.17,
+            "sharpe": 3.877,
+            "sortino": 5.199,
+            "max_dd_pct": 5.847,
+            "calmar": 14.053,
+            "vol_pct": 15.805
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 17,
+          "test_start": "2025-01-27",
+          "test_end": "2025-04-23",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 126.334,
+            "sharpe": 2.863,
+            "sortino": 3.946,
+            "max_dd_pct": 10.83,
+            "calmar": 11.666,
+            "vol_pct": 30.139
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 18,
+          "test_start": "2025-04-24",
+          "test_end": "2025-07-21",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 296.56,
+            "sharpe": 7.991,
+            "sortino": 15.489,
+            "max_dd_pct": 1.989,
+            "calmar": 149.106,
+            "vol_pct": 17.472
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 19,
+          "test_start": "2025-07-22",
+          "test_end": "2025-10-16",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 175.98,
+            "sharpe": 10.259,
+            "sortino": 303.327,
+            "max_dd_pct": 0.09,
+            "calmar": 1950.114,
+            "vol_pct": 9.962
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        }
+      ]
+    },
+    {
+      "label": "reduce_10pct",
+      "threshold": 0.1,
+      "mode": "reduce",
+      "pooled": {
+        "n": 1260,
+        "cagr_pct": 170.383,
+        "sharpe": 4.429,
+        "sortino": 5.225,
+        "max_dd_pct": 24.362,
+        "calmar": 6.994,
+        "vol_pct": 23.095
+      },
+      "trip_pct_avg": 0.0,
+      "folds": [
+        {
+          "fold": 0,
+          "test_start": "2020-12-18",
+          "test_end": "2021-03-16",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 271.569,
+            "sharpe": 5.928,
+            "sortino": 24.722,
+            "max_dd_pct": 1.185,
+            "calmar": 229.234,
+            "vol_pct": 22.607
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 1,
+          "test_start": "2021-03-17",
+          "test_end": "2021-06-11",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 111.294,
+            "sharpe": 8.814,
+            "sortino": 16.879,
+            "max_dd_pct": 1.171,
+            "calmar": 95.002,
+            "vol_pct": 8.541
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 2,
+          "test_start": "2021-06-14",
+          "test_end": "2021-09-08",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 82.013,
+            "sharpe": 6.393,
+            "sortino": 10.445,
+            "max_dd_pct": 1.207,
+            "calmar": 67.966,
+            "vol_pct": 9.448
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 3,
+          "test_start": "2021-09-09",
+          "test_end": "2021-12-06",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 101.562,
+            "sharpe": 3.712,
+            "sortino": 3.022,
+            "max_dd_pct": 6.26,
+            "calmar": 16.223,
+            "vol_pct": 19.412
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 4,
+          "test_start": "2021-12-07",
+          "test_end": "2022-03-03",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 450.677,
+            "sharpe": 2.888,
+            "sortino": 3.724,
+            "max_dd_pct": 24.362,
+            "calmar": 18.499,
+            "vol_pct": 66.749
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 5,
+          "test_start": "2022-03-04",
+          "test_end": "2022-05-31",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 488.032,
+            "sharpe": 5.843,
+            "sortino": 13.351,
+            "max_dd_pct": 5.299,
+            "calmar": 92.097,
+            "vol_pct": 31.24
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 6,
+          "test_start": "2022-06-01",
+          "test_end": "2022-08-26",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 166.811,
+            "sharpe": 6.033,
+            "sortino": 14.682,
+            "max_dd_pct": 2.391,
+            "calmar": 69.773,
+            "vol_pct": 16.519
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 7,
+          "test_start": "2022-08-29",
+          "test_end": "2022-11-23",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 185.738,
+            "sharpe": 7.026,
+            "sortino": 10.493,
+            "max_dd_pct": 2.326,
+            "calmar": 79.84,
+            "vol_pct": 15.134
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 8,
+          "test_start": "2022-11-24",
+          "test_end": "2023-02-20",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 218.151,
+            "sharpe": 6.118,
+            "sortino": 13.907,
+            "max_dd_pct": 1.928,
+            "calmar": 113.16,
+            "vol_pct": 19.252
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 9,
+          "test_start": "2023-02-21",
+          "test_end": "2023-05-18",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 92.051,
+            "sharpe": 3.973,
+            "sortino": 5.253,
+            "max_dd_pct": 4.529,
+            "calmar": 20.325,
+            "vol_pct": 16.795
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 10,
+          "test_start": "2023-05-19",
+          "test_end": "2023-08-15",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 106.54,
+            "sharpe": 6.779,
+            "sortino": 19.931,
+            "max_dd_pct": 1.158,
+            "calmar": 92.038,
+            "vol_pct": 10.798
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 11,
+          "test_start": "2023-08-16",
+          "test_end": "2023-11-10",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 99.168,
+            "sharpe": 6.654,
+            "sortino": 12.031,
+            "max_dd_pct": 1.592,
+            "calmar": 62.308,
+            "vol_pct": 10.449
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 12,
+          "test_start": "2023-11-13",
+          "test_end": "2024-02-07",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 227.394,
+            "sharpe": 6.777,
+            "sortino": 11.656,
+            "max_dd_pct": 2.983,
+            "calmar": 76.22,
+            "vol_pct": 17.769
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 13,
+          "test_start": "2024-02-08",
+          "test_end": "2024-05-06",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 58.162,
+            "sharpe": 2.194,
+            "sortino": 1.771,
+            "max_dd_pct": 9.807,
+            "calmar": 5.931,
+            "vol_pct": 22.045
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 14,
+          "test_start": "2024-05-07",
+          "test_end": "2024-08-01",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 229.786,
+            "sharpe": 7.387,
+            "sortino": 9.618,
+            "max_dd_pct": 3.297,
+            "calmar": 69.693,
+            "vol_pct": 16.37
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 15,
+          "test_start": "2024-08-02",
+          "test_end": "2024-10-29",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 216.654,
+            "sharpe": 7.899,
+            "sortino": 14.19,
+            "max_dd_pct": 2.638,
+            "calmar": 82.116,
+            "vol_pct": 14.761
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 16,
+          "test_start": "2024-10-30",
+          "test_end": "2025-01-24",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 82.17,
+            "sharpe": 3.877,
+            "sortino": 5.199,
+            "max_dd_pct": 5.847,
+            "calmar": 14.053,
+            "vol_pct": 15.805
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 17,
+          "test_start": "2025-01-27",
+          "test_end": "2025-04-23",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 126.334,
+            "sharpe": 2.863,
+            "sortino": 3.946,
+            "max_dd_pct": 10.83,
+            "calmar": 11.666,
+            "vol_pct": 30.139
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 18,
+          "test_start": "2025-04-24",
+          "test_end": "2025-07-21",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 296.56,
+            "sharpe": 7.991,
+            "sortino": 15.489,
+            "max_dd_pct": 1.989,
+            "calmar": 149.106,
+            "vol_pct": 17.472
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        },
+        {
+          "fold": 19,
+          "test_start": "2025-07-22",
+          "test_end": "2025-10-16",
+          "metrics": {
+            "n": 63,
+            "cagr_pct": 175.98,
+            "sharpe": 10.259,
+            "sortino": 303.327,
+            "max_dd_pct": 0.09,
+            "calmar": 1950.114,
+            "vol_pct": 9.962
+          },
+          "trip_count": 0,
+          "trip_pct": 0.0
+        }
+      ]
+    }
+  ],
+  "best_config_label": "flatten_3pct",
+  "best_config_pooled": {
+    "n": 1260,
+    "cagr_pct": 132.075,
+    "sharpe": 5.405,
+    "sortino": 7.63,
+    "max_dd_pct": 6.77,
+    "calmar": 19.51,
+    "vol_pct": 15.832
+  },
+  "target_met": true,
+  "success_criterion": "pooled_max_dd_pct < 12.0 AND pooled_sharpe >= 4.0"
+}
