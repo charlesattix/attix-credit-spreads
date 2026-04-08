@@ -1,0 +1,101 @@
+{
+  "experiment": "EXP-2350",
+  "tag": "EXP-2350",
+  "description": "SLV replacement v2 \u2014 QQQ/TLT/EFA/EEM swap test",
+  "targets": {
+    "standalone_sharpe_min": 1.5,
+    "standalone_abs_corr_max": 0.2,
+    "standalone_capacity_usd_min": 500000000,
+    "combined_sharpe_min": 5.0
+  },
+  "candidates": {
+    "QQQ_put_credit_spread": {
+      "status": "run",
+      "metrics": {
+        "label": "QQQ",
+        "n_trades": 85,
+        "total_pnl": 9076.0,
+        "win_rate": 0.8941,
+        "sharpe": 1.859,
+        "sortino": 3.023,
+        "cagr_pct": 1.509,
+        "max_dd_pct": 0.677,
+        "avg_pnl": 106.78,
+        "trades_per_yr": 14.66
+      },
+      "corr_vs_exp1220": 0.07388445173320621,
+      "capacity": {
+        "n_observations": 85,
+        "median_daily_volume": 3530.0,
+        "p5_daily_volume": 37.800000000000004,
+        "median_max_contracts_per_entry": 353,
+        "monthly_usd_est": 208368.05555555556,
+        "trades_per_year": 14.166666666666666,
+        "contract_dollar_risk_assumed": 500.0
+      }
+    },
+    "TLT_put_credit_spread": {
+      "status": "run",
+      "metrics": {
+        "label": "TLT",
+        "n_trades": 47,
+        "total_pnl": 448.0,
+        "win_rate": 0.8511,
+        "sharpe": 0.385,
+        "sortino": 0.417,
+        "cagr_pct": 0.08,
+        "max_dd_pct": 0.311,
+        "avg_pnl": 9.53,
+        "trades_per_yr": 8.38
+      },
+      "corr_vs_exp1220": 0.03307916264424653,
+      "capacity": {
+        "n_observations": 47,
+        "median_daily_volume": 715.0,
+        "p5_daily_volume": 21.6,
+        "median_max_contracts_per_entry": 71,
+        "monthly_usd_est": 9334.722222222223,
+        "trades_per_year": 7.833333333333333,
+        "contract_dollar_risk_assumed": 200.0
+      }
+    },
+    "EFA_credit_spread": {
+      "status": "blocked",
+      "reason": "0 IronVault contracts. Unblock: Polygon Starter backfill via OCC symbol construction (same path as TLT Dec-2025 backfill)."
+    },
+    "EEM_credit_spread": {
+      "status": "blocked",
+      "reason": "0 IronVault contracts. Unblock: Polygon Starter backfill via OCC symbol construction."
+    }
+  },
+  "swap_test": {
+    "baseline": {
+      "n": 1260,
+      "cagr_pct": 33.001,
+      "sharpe": 5.235,
+      "sortino": 10.473,
+      "max_dd_pct": 2.595,
+      "calmar": 12.719,
+      "vol_pct": 5.479
+    },
+    "swap_to_qqq": {
+      "n": 1260,
+      "cagr_pct": 26.253,
+      "sharpe": 4.816,
+      "sortino": 8.865,
+      "max_dd_pct": 2.797,
+      "calmar": 9.386,
+      "vol_pct": 4.868
+    },
+    "swap_to_tlt": {
+      "n": 1260,
+      "cagr_pct": 25.979,
+      "sharpe": 4.785,
+      "sortino": 8.749,
+      "max_dd_pct": 2.797,
+      "calmar": 9.288,
+      "vol_pct": 4.853
+    }
+  },
+  "recommendation_html": "<ul><li><b>QQQ verdict:</b> QQQ fails at least one standalone criterion; QQQ swap combined Sharpe 4.82.</li><li><b>TLT verdict:</b> TLT fails at least one standalone criterion; TLT swap combined Sharpe 4.79.</li><li><b>EFA and EEM</b> both blocked at 0 IronVault contracts. Unblock via Polygon Starter backfill before they can be evaluated for a second leg.</li></ul>"
+}
