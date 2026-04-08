@@ -1,0 +1,321 @@
+{
+  "experiment": "EXP-2900",
+  "title": "v8a Portfolio Consistency Audit",
+  "generated": "2026-04-08T15:08:14",
+  "rule_zero": true,
+  "audit_sections": {
+    "A": "Stream module discovery",
+    "B": "Signal generator sanity",
+    "C": "Cube build reproducibility",
+    "D": "Pipeline reproduction vs published",
+    "E": "VIX ladder integration",
+    "F": "MASTERPLAN cross-check",
+    "G": "Naming consistency",
+    "H": "Test suite sanity"
+  },
+  "totals": {
+    "total": 39,
+    "pass": 36,
+    "warn": 3,
+    "fail": 0
+  },
+  "verdict": "WARN",
+  "verdict_note": "No hard failures but 3 soft findings. Document the warnings; deployment can proceed.",
+  "results": [
+    {
+      "section": "A",
+      "name": "import_exp1220",
+      "status": "PASS",
+      "detail": "compass.exp1220_standalone imported",
+      "data": {}
+    },
+    {
+      "section": "A",
+      "name": "import_xlf_cs",
+      "status": "PASS",
+      "detail": "compass.exp2160_high_capacity_alts imported",
+      "data": {}
+    },
+    {
+      "section": "A",
+      "name": "import_xli_cs",
+      "status": "PASS",
+      "detail": "compass.exp2160_high_capacity_alts imported",
+      "data": {}
+    },
+    {
+      "section": "A",
+      "name": "import_qqq_cs",
+      "status": "PASS",
+      "detail": "compass.exp2240_qqq_iwm_credit_spreads imported",
+      "data": {}
+    },
+    {
+      "section": "A",
+      "name": "import_gld_cal",
+      "status": "PASS",
+      "detail": "compass.exp1770_commodity_calendars imported",
+      "data": {}
+    },
+    {
+      "section": "A",
+      "name": "import_slv_cal",
+      "status": "PASS",
+      "detail": "compass.exp1770_commodity_calendars imported",
+      "data": {}
+    },
+    {
+      "section": "A",
+      "name": "import_vol_arb",
+      "status": "PASS",
+      "detail": "compass.exp2020_cross_vol_arb imported",
+      "data": {}
+    },
+    {
+      "section": "A",
+      "name": "import_v5_hedge",
+      "status": "PASS",
+      "detail": "compass.crisis_alpha_v5 imported",
+      "data": {}
+    },
+    {
+      "section": "B",
+      "name": "registry_coverage",
+      "status": "PASS",
+      "detail": "all 8 streams registered (extras: none)",
+      "data": {}
+    },
+    {
+      "section": "B",
+      "name": "signal_exp1220",
+      "status": "PASS",
+      "detail": "1 signal(s), actions: OPEN",
+      "data": {}
+    },
+    {
+      "section": "B",
+      "name": "signal_xlf_cs",
+      "status": "PASS",
+      "detail": "1 signal(s), actions: OPEN",
+      "data": {}
+    },
+    {
+      "section": "B",
+      "name": "signal_xli_cs",
+      "status": "PASS",
+      "detail": "1 signal(s), actions: OPEN",
+      "data": {}
+    },
+    {
+      "section": "B",
+      "name": "signal_qqq_cs",
+      "status": "PASS",
+      "detail": "1 signal(s), actions: OPEN",
+      "data": {}
+    },
+    {
+      "section": "B",
+      "name": "signal_gld_cal",
+      "status": "PASS",
+      "detail": "1 signal(s), actions: HOLD",
+      "data": {}
+    },
+    {
+      "section": "B",
+      "name": "signal_slv_cal",
+      "status": "PASS",
+      "detail": "1 signal(s), actions: NONE",
+      "data": {}
+    },
+    {
+      "section": "B",
+      "name": "signal_vol_arb",
+      "status": "PASS",
+      "detail": "1 signal(s), actions: OPEN",
+      "data": {}
+    },
+    {
+      "section": "B",
+      "name": "signal_v5_hedge",
+      "status": "PASS",
+      "detail": "1 signal(s), actions: HOLD",
+      "data": {}
+    },
+    {
+      "section": "C",
+      "name": "sparse_7stream_build",
+      "status": "PASS",
+      "detail": "EXP-2450 base: shape (1566, 7), 2020-01-01\u21922025-12-31",
+      "data": {}
+    },
+    {
+      "section": "C",
+      "name": "qqq_cache",
+      "status": "PASS",
+      "detail": "85 cached QQQ trades",
+      "data": {}
+    },
+    {
+      "section": "C",
+      "name": "v8a_build",
+      "status": "PASS",
+      "detail": "v8a shape (1566, 8), 8 streams",
+      "data": {}
+    },
+    {
+      "section": "D",
+      "name": "exp2450_ledoit_only",
+      "status": "PASS",
+      "detail": "measured SR 6.865 vs published 6.87 (\u0394 -0.005)",
+      "data": {
+        "measured": {
+          "sharpe": 6.865,
+          "cagr_pct": 101.832,
+          "max_dd_pct": 4.209
+        },
+        "published": {
+          "pooled_sharpe": 6.87,
+          "cagr_pct": 101.8,
+          "max_dd_pct": 4.2
+        }
+      }
+    },
+    {
+      "section": "D",
+      "name": "exp2600_v8a_vt12_net",
+      "status": "PASS",
+      "detail": "measured SR 6.164 vs published 6.164 (\u0394 +0.000)",
+      "data": {
+        "measured": {
+          "sharpe": 6.164,
+          "cagr_pct": 125.702,
+          "max_dd_pct": 7.109
+        },
+        "published": {
+          "pooled_sharpe": 6.164,
+          "cagr_pct": 125.702,
+          "max_dd_pct": 7.109
+        }
+      }
+    },
+    {
+      "section": "E",
+      "name": "module_import",
+      "status": "PASS",
+      "detail": "compass.vix_ladder imported",
+      "data": {}
+    },
+    {
+      "section": "E",
+      "name": "self_test",
+      "status": "PASS",
+      "detail": "all point checks pass",
+      "data": {}
+    },
+    {
+      "section": "E",
+      "name": "default_breakpoints",
+      "status": "PASS",
+      "detail": "matches EXP-2820 winner",
+      "data": {}
+    },
+    {
+      "section": "E",
+      "name": "exposure_points",
+      "status": "PASS",
+      "detail": "all 9 breakpoint evaluations exact (max \u0394 0.00e+00)",
+      "data": {}
+    },
+    {
+      "section": "E",
+      "name": "interpolation",
+      "status": "PASS",
+      "detail": "VIX 27.5 \u2192 0.825 (expected 0.825)",
+      "data": {}
+    },
+    {
+      "section": "E",
+      "name": "exp2850_integration",
+      "status": "PASS",
+      "detail": "EXP-2850 integration module imports",
+      "data": {}
+    },
+    {
+      "section": "F",
+      "name": "masterplan_exists",
+      "status": "PASS",
+      "detail": "29 KB",
+      "data": {}
+    },
+    {
+      "section": "F",
+      "name": "gross_sharpe_6_87",
+      "status": "PASS",
+      "detail": "gross Sharpe 6.87 cited (matches EXP-2450)",
+      "data": {}
+    },
+    {
+      "section": "F",
+      "name": "net_sharpe_6_00",
+      "status": "PASS",
+      "detail": "net Alpaca 6.00 cited (matches EXP-2570 target)",
+      "data": {}
+    },
+    {
+      "section": "F",
+      "name": "8_streams_claim",
+      "status": "PASS",
+      "detail": "8-stream architecture documented",
+      "data": {}
+    },
+    {
+      "section": "F",
+      "name": "rule_zero",
+      "status": "PASS",
+      "detail": "Rule Zero referenced",
+      "data": {}
+    },
+    {
+      "section": "F",
+      "name": "weight_convention_warning",
+      "status": "WARN",
+      "detail": "MASTERPLAN quotes MANUAL weights (35/15/10/10/10/5/10/5); EXP-2600 production uses LW risk-parity weights that differ. This is a documentation inconsistency, not a runtime bug.",
+      "data": {}
+    },
+    {
+      "section": "G",
+      "name": "cross_vol_vs_vol_arb",
+      "status": "WARN",
+      "detail": "cube uses 'cross_vol' but signal registry uses 'vol_arb'. Same strategy, two names. Consider unifying.",
+      "data": {}
+    },
+    {
+      "section": "G",
+      "name": "masterplan_naming",
+      "status": "WARN",
+      "detail": "MASTERPLAN uses BOTH 'cross_vol' and 'vol_arb' \u2014 ambiguous",
+      "data": {}
+    },
+    {
+      "section": "H",
+      "name": "vix_ladder_selftest",
+      "status": "PASS",
+      "detail": "module self-test passes",
+      "data": {}
+    },
+    {
+      "section": "H",
+      "name": "exp2690_smoke",
+      "status": "PASS",
+      "detail": "all 8 signal generators produce output",
+      "data": {}
+    },
+    {
+      "section": "H",
+      "name": "daily_driver_e2e",
+      "status": "PASS",
+      "detail": "generate_daily_signals.py end-to-end OK",
+      "data": {}
+    }
+  ]
+}
