@@ -1,0 +1,176 @@
+{
+  "experiment": "EXP-2550",
+  "title": "Net Sharpe Recovery \u2014 Regime TC Filter + Circuit Breaker",
+  "generated": "2026-04-08T06:06:23",
+  "rule_zero": true,
+  "sources": {
+    "sparse_cube": "compass/cache/exp2280_v6_sparse.pkl (renamed vol_arb->cross_vol for EXP-2450 alignment)",
+    "vix": "Yahoo ^VIX daily close, causal shift by 1 day",
+    "tc_full_drag": "EXP-2420 measured 22.205% at 3x leverage",
+    "tc_execopt_drag": "EXP-2470 stack A+B+C+D 17.178%",
+    "regime_filter": "EXP-2540 skip VIX >= 25.0",
+    "circuit_breaker": "EXP-2370 3% DD 20d flatten (causal)",
+    "walk_forward": "compass.exp2400_combined_best_of.walk_forward_combined (LW risk-parity 15% vol target)"
+  },
+  "config": {
+    "capital_usd": 100000,
+    "regime_threshold_vix": 25.0,
+    "baseline_drag_pct": 22.205,
+    "execopt_drag_pct": 17.178,
+    "dd_threshold": 0.03,
+    "dd_window": 20
+  },
+  "variants": {
+    "1_gross": {
+      "description": "Ledoit-Wolf gross (reference)",
+      "metrics": {
+        "label": "gross",
+        "n": 1260,
+        "cagr_pct": 101.832,
+        "sharpe": 6.865,
+        "max_dd_pct": 4.209,
+        "vol_pct": 10.321,
+        "calmar": 24.194
+      },
+      "diagnostics": null
+    },
+    "2_tc_full": {
+      "description": "EXP-2420 full cost model (22.2% drag)",
+      "metrics": {
+        "label": "tc_full",
+        "n": 1260,
+        "cagr_pct": 61.726,
+        "sharpe": 4.714,
+        "max_dd_pct": 4.634,
+        "vol_pct": 10.321,
+        "calmar": 13.32
+      },
+      "diagnostics": null
+    },
+    "3_tc_execopt": {
+      "description": "EXP-2470 stack A+B+C+D (17.2% drag)",
+      "metrics": {
+        "label": "tc_execopt",
+        "n": 1260,
+        "cagr_pct": 70.047,
+        "sharpe": 5.201,
+        "max_dd_pct": 4.538,
+        "vol_pct": 10.321,
+        "calmar": 15.436
+      },
+      "diagnostics": null
+    },
+    "4_execopt+filter": {
+      "description": "EXP-2470 drag + EXP-2540 regime filter (skip VIX\u226525)",
+      "metrics": {
+        "label": "execopt+filter",
+        "n": 1260,
+        "cagr_pct": 51.55,
+        "sharpe": 4.64,
+        "max_dd_pct": 4.171,
+        "vol_pct": 9.056,
+        "calmar": 12.36
+      },
+      "diagnostics": {
+        "threshold_vix": 25.0,
+        "n_total": 1260,
+        "n_active": 1076,
+        "n_skipped": 184,
+        "frac_active": 0.854,
+        "daily_cost_on_active_day_bps": 7.982
+      }
+    },
+    "5_execopt+cb": {
+      "description": "EXP-2470 drag + EXP-2370 3% DD circuit breaker",
+      "metrics": {
+        "label": "execopt+cb",
+        "n": 1260,
+        "cagr_pct": 65.617,
+        "sharpe": 5.028,
+        "max_dd_pct": 6.934,
+        "vol_pct": 10.146,
+        "calmar": 9.463
+      },
+      "diagnostics": null
+    },
+    "6_full_stack": {
+      "description": "EXP-2470 drag + EXP-2540 filter + EXP-2370 circuit (THE ANSWER)",
+      "metrics": {
+        "label": "full_stack",
+        "n": 1260,
+        "cagr_pct": 49.241,
+        "sharpe": 4.528,
+        "max_dd_pct": 7.184,
+        "vol_pct": 8.936,
+        "calmar": 6.854
+      },
+      "diagnostics": null
+    }
+  },
+  "yearly_full_stack": {
+    "2021": {
+      "label": "full_stack_2021",
+      "n": 261,
+      "cagr_pct": 70.575,
+      "sharpe": 5.657,
+      "max_dd_pct": 1.392,
+      "vol_pct": 9.53,
+      "calmar": 50.698
+    },
+    "2022": {
+      "label": "full_stack_2022",
+      "n": 260,
+      "cagr_pct": 25.438,
+      "sharpe": 3.067,
+      "max_dd_pct": 2.29,
+      "vol_pct": 7.483,
+      "calmar": 11.107
+    },
+    "2023": {
+      "label": "full_stack_2023",
+      "n": 260,
+      "cagr_pct": 52.07,
+      "sharpe": 3.799,
+      "max_dd_pct": 7.184,
+      "vol_pct": 11.205,
+      "calmar": 7.248
+    },
+    "2024": {
+      "label": "full_stack_2024",
+      "n": 262,
+      "cagr_pct": 48.571,
+      "sharpe": 5.216,
+      "max_dd_pct": 2.495,
+      "vol_pct": 7.652,
+      "calmar": 19.468
+    },
+    "2025": {
+      "label": "full_stack_2025",
+      "n": 207,
+      "cagr_pct": 50.481,
+      "sharpe": 5.3,
+      "max_dd_pct": 2.074,
+      "vol_pct": 7.773,
+      "calmar": 24.346
+    }
+  },
+  "user_question": {
+    "expected_linear_arithmetic": 5.65,
+    "measured_full_stack": 4.528,
+    "gap": -1.122,
+    "holds": false
+  },
+  "lift_decomposition": {
+    "tc_full_to_execopt": 0.487,
+    "execopt_to_execopt_plus_filter": -0.561,
+    "execopt_plus_filter_to_full": -0.112,
+    "tc_full_to_full": -0.186
+  },
+  "honest_caveats": [
+    "The 4.82 number from EXP-2470 is measured on a flat-drag model (22.2% -> 17.2%), not on a regime-varying TC model. The EXP-2540 +0.83 lift was measured on a DIFFERENT portfolio (60/7.5/7.5/10/5/7.5/2.5) with a regime-varying TC cost structure. The two cannot simply add.",
+    "Regime filter skips BOTH returns and costs on VIX>=25 days. The daily cost on active days is annual_drag / (252 * frac_active), which spreads fixed costs over fewer trade days. This is the honest accounting.",
+    "Circuit breaker is applied INSIDE walk_forward (causal, per-fold); the regime filter is applied POST walk_forward. If both are applied, there is some overlap on high-DD days.",
+    "Drag model treats cost as leverage-invariant (dollar drag fixed). At 15% vol target the portfolio effectively runs at ~3x leverage, matching EXP-2420's baseline.",
+    "The EXP-2450 ledoit_only 6.87 reference is reproduced EXACTLY by variant 1_gross (sanity check)."
+  ]
+}
