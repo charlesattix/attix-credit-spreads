@@ -1,0 +1,166 @@
+{
+  "experiment": "EXP-2460",
+  "name": "Zero-Cost Alpha \u2014 portfolio-level T+V timing overlay",
+  "generated": "2026-04-08T05:05:32",
+  "thresholds": {
+    "term_ratio_block_gt": 0.95,
+    "vvol_z_block_gt": 1.5,
+    "rebalance_every_n_days": 5,
+    "target_vol_annual": 0.15,
+    "cost_bps_per_turnover": 5.0
+  },
+  "data_sources": {
+    "cube": "compass.exp2080_corr_regime.load_streams + compass.exp2160_high_capacity_alts XLF/XLI",
+    "term_structure": "Yahoo Finance ^VIX / ^VIX3M",
+    "vvol": "Yahoo Finance ^VIX 20d realised, 252d z-score"
+  },
+  "cube_info": {
+    "n_days": 1566,
+    "range": [
+      "2020-01-01",
+      "2025-12-31"
+    ],
+    "streams": [
+      "exp1220",
+      "v5_hedge",
+      "gld_cal",
+      "slv_cal",
+      "cross_vol",
+      "xlf_cs",
+      "xli_cs"
+    ]
+  },
+  "block_day_stats": {
+    "T_only_block_days": 318,
+    "V_only_block_days": 98,
+    "both_block_days": 37,
+    "any_block_days": 379,
+    "pct_of_sample": 24.2
+  },
+  "variants": {
+    "baseline": {
+      "gross": {
+        "label": "baseline_gross",
+        "n_days": 1314,
+        "cagr_pct": 103.002,
+        "sharpe": 12.095,
+        "sortino": 18.885,
+        "max_dd_pct": 2.267,
+        "vol_pct": 5.876,
+        "calmar": 45.434
+      },
+      "net": {
+        "label": "baseline_net",
+        "n_days": 1314,
+        "cagr_pct": 102.274,
+        "sharpe": 12.047,
+        "sortino": 18.894,
+        "max_dd_pct": 2.267,
+        "vol_pct": 5.87,
+        "calmar": 45.113
+      },
+      "rebalance_events": 263,
+      "rebalance_events_baseline": 262,
+      "skipped_days": 0,
+      "flatten_days": 0,
+      "total_turnover": 37.5661,
+      "total_cost_bps": 187.83,
+      "mean_scale": 4.952
+    },
+    "skip_hold": {
+      "gross": {
+        "label": "skip_hold_gross",
+        "n_days": 1314,
+        "cagr_pct": 102.239,
+        "sharpe": 11.832,
+        "sortino": 17.927,
+        "max_dd_pct": 2.267,
+        "vol_pct": 5.976,
+        "calmar": 45.098
+      },
+      "net": {
+        "label": "skip_hold_net",
+        "n_days": 1314,
+        "cagr_pct": 101.541,
+        "sharpe": 11.786,
+        "sortino": 17.937,
+        "max_dd_pct": 2.267,
+        "vol_pct": 5.969,
+        "calmar": 44.79
+      },
+      "rebalance_events": 206,
+      "rebalance_events_baseline": 262,
+      "skipped_days": 57,
+      "flatten_days": 0,
+      "total_turnover": 36.1904,
+      "total_cost_bps": 180.95,
+      "mean_scale": 4.95
+    },
+    "skip_flat": {
+      "gross": {
+        "label": "skip_flat_gross",
+        "n_days": 1314,
+        "cagr_pct": 71.075,
+        "sharpe": 10.273,
+        "sortino": 14.907,
+        "max_dd_pct": 2.267,
+        "vol_pct": 5.246,
+        "calmar": 31.351
+      },
+      "net": {
+        "label": "skip_flat_net",
+        "n_days": 1314,
+        "cagr_pct": 67.372,
+        "sharpe": 9.73,
+        "sortino": 15.279,
+        "max_dd_pct": 2.267,
+        "vol_pct": 5.313,
+        "calmar": 29.718
+      },
+      "rebalance_events": 263,
+      "rebalance_events_baseline": 262,
+      "skipped_days": 0,
+      "flatten_days": 57,
+      "total_turnover": 228.3269,
+      "total_cost_bps": 1141.63,
+      "mean_scale": 3.891
+    },
+    "skip_half": {
+      "gross": {
+        "label": "skip_half_gross",
+        "n_days": 1314,
+        "cagr_pct": 78.518,
+        "sharpe": 11.141,
+        "sortino": 17.53,
+        "max_dd_pct": 2.267,
+        "vol_pct": 5.22,
+        "calmar": 34.635
+      },
+      "net": {
+        "label": "skip_half_net",
+        "n_days": 1314,
+        "cagr_pct": 78.518,
+        "sharpe": 11.141,
+        "sortino": 17.53,
+        "max_dd_pct": 2.267,
+        "vol_pct": 5.22,
+        "calmar": 34.635
+      },
+      "rebalance_events": 263,
+      "rebalance_events_baseline": 262,
+      "skipped_days": 57,
+      "flatten_days": 0,
+      "total_turnover": 173.7606,
+      "total_cost_bps": 868.8,
+      "mean_scale": 4.17
+    }
+  },
+  "headline": {
+    "best_variant": "skip_hold",
+    "delta_sharpe_net_vs_baseline": -0.261,
+    "cost_saving_bps": 6.88,
+    "trade_reduction_pct": 21.67,
+    "net_sharpe_best": 11.786,
+    "net_sharpe_baseline": 12.047
+  }
+}
