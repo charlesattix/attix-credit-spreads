@@ -1,0 +1,267 @@
+{
+  "experiment": "EXP-2360",
+  "name": "Robust Covariance Estimators on 7-Stream Portfolio",
+  "generated": "2026-04-08T04:03:45",
+  "baseline_reference": {
+    "source": "EXP-2280",
+    "pooled_oos_sharpe": 4.429
+  },
+  "data_sources": {
+    "five_streams": "compass.exp2080_corr_regime.load_streams (cached real cube)",
+    "xlf_cs": "compass.exp2160_high_capacity_alts.run_put_credit_spreads('XLF')",
+    "xli_cs": "compass.exp2160_high_capacity_alts.run_put_credit_spreads('XLI')"
+  },
+  "config": {
+    "train_days": 252,
+    "test_days": 63,
+    "target_vol_annual": 0.15,
+    "allocator": "equal_risk_contribution (risk parity)",
+    "market_factor_for_one_factor": "exp1220 stream as market proxy"
+  },
+  "cube_info": {
+    "n_days": 1566,
+    "range": [
+      "2020-01-01",
+      "2025-12-31"
+    ],
+    "streams": [
+      "exp1220",
+      "v5_hedge",
+      "gld_cal",
+      "slv_cal",
+      "cross_vol",
+      "xlf_cs",
+      "xli_cs"
+    ]
+  },
+  "results": {
+    "sample": {
+      "pooled": {
+        "label": "sample",
+        "n_days": 1260,
+        "cagr_pct": 87.052,
+        "sharpe": 8.301,
+        "sortino": 4.682,
+        "max_dd_pct": 10.831,
+        "vol_pct": 7.588,
+        "calmar": 8.038
+      },
+      "distribution": {
+        "n_folds": 20,
+        "mean": 20.91,
+        "median": 21.629,
+        "std": 13.161,
+        "min": 0.096,
+        "p10": 1.568,
+        "p25": 10.071,
+        "p75": 28.256,
+        "p90": 38.699,
+        "max": 42.774,
+        "iqr": 18.185,
+        "frac_above_6": 0.8,
+        "frac_above_4": 0.85,
+        "frac_below_3": 0.15,
+        "frac_below_0": 0.0
+      }
+    },
+    "ledoit_wolf": {
+      "pooled": {
+        "label": "ledoit_wolf",
+        "n_days": 1260,
+        "cagr_pct": 103.92,
+        "sharpe": 11.729,
+        "sortino": 18.132,
+        "max_dd_pct": 2.24,
+        "vol_pct": 6.1,
+        "calmar": 46.387
+      },
+      "distribution": {
+        "n_folds": 20,
+        "mean": 13.534,
+        "median": 13.306,
+        "std": 4.763,
+        "min": 6.442,
+        "p10": 7.491,
+        "p25": 10.064,
+        "p75": 16.323,
+        "p90": 19.733,
+        "max": 23.29,
+        "iqr": 6.259,
+        "frac_above_6": 1.0,
+        "frac_above_4": 1.0,
+        "frac_below_3": 0.0,
+        "frac_below_0": 0.0
+      }
+    },
+    "oas": {
+      "pooled": {
+        "label": "oas",
+        "n_days": 1260,
+        "cagr_pct": 104.229,
+        "sharpe": 13.733,
+        "sortino": 19.06,
+        "max_dd_pct": 1.94,
+        "vol_pct": 5.217,
+        "calmar": 53.724
+      },
+      "distribution": {
+        "n_folds": 20,
+        "mean": 16.216,
+        "median": 16.114,
+        "std": 5.935,
+        "min": 6.989,
+        "p10": 8.021,
+        "p25": 13.178,
+        "p75": 19.441,
+        "p90": 24.362,
+        "max": 28.305,
+        "iqr": 6.263,
+        "frac_above_6": 1.0,
+        "frac_above_4": 1.0,
+        "frac_below_3": 0.0,
+        "frac_below_0": 0.0
+      }
+    },
+    "min_cov_det": {
+      "pooled": {
+        "label": "min_cov_det",
+        "n_days": 1260,
+        "cagr_pct": 54.251,
+        "sharpe": 2.471,
+        "sortino": 1.532,
+        "max_dd_pct": 21.714,
+        "vol_pct": 18.231,
+        "calmar": 2.498
+      },
+      "distribution": {
+        "n_folds": 20,
+        "mean": 16.207,
+        "median": 5.063,
+        "std": 27.835,
+        "min": -0.154,
+        "p10": 0.525,
+        "p25": 3.374,
+        "p75": 14.306,
+        "p90": 35.164,
+        "max": 104.002,
+        "iqr": 10.932,
+        "frac_above_6": 0.4,
+        "frac_above_4": 0.7,
+        "frac_below_3": 0.25,
+        "frac_below_0": 0.05
+      }
+    },
+    "one_factor": {
+      "pooled": {
+        "label": "one_factor",
+        "n_days": 1260,
+        "cagr_pct": 109.217,
+        "sharpe": 19.143,
+        "sortino": 16.776,
+        "max_dd_pct": 2.722,
+        "vol_pct": 3.866,
+        "calmar": 40.117
+      },
+      "distribution": {
+        "n_folds": 20,
+        "mean": 25.755,
+        "median": 26.747,
+        "std": 10.921,
+        "min": 5.572,
+        "p10": 11.937,
+        "p25": 18.71,
+        "p75": 31.013,
+        "p90": 40.013,
+        "max": 46.889,
+        "iqr": 12.303,
+        "frac_above_6": 0.95,
+        "frac_above_4": 1.0,
+        "frac_below_3": 0.0,
+        "frac_below_0": 0.0
+      }
+    }
+  },
+  "above_baseline": {
+    "sample": true,
+    "ledoit_wolf": true,
+    "oas": true,
+    "min_cov_det": false,
+    "one_factor": true
+  },
+  "pooled_sharpe_ranking": [
+    {
+      "estimator": "one_factor",
+      "pooled_sharpe": 19.143,
+      "pooled_dd": 2.722,
+      "cagr_pct": 109.217,
+      "median_fold": 26.747,
+      "std_fold": 10.921
+    },
+    {
+      "estimator": "oas",
+      "pooled_sharpe": 13.733,
+      "pooled_dd": 1.94,
+      "cagr_pct": 104.229,
+      "median_fold": 16.114,
+      "std_fold": 5.935
+    },
+    {
+      "estimator": "ledoit_wolf",
+      "pooled_sharpe": 11.729,
+      "pooled_dd": 2.24,
+      "cagr_pct": 103.92,
+      "median_fold": 13.306,
+      "std_fold": 4.763
+    },
+    {
+      "estimator": "sample",
+      "pooled_sharpe": 8.301,
+      "pooled_dd": 10.831,
+      "cagr_pct": 87.052,
+      "median_fold": 21.629,
+      "std_fold": 13.161
+    },
+    {
+      "estimator": "min_cov_det",
+      "pooled_sharpe": 2.471,
+      "pooled_dd": 21.714,
+      "cagr_pct": 54.251,
+      "median_fold": 5.063,
+      "std_fold": 27.835
+    }
+  ],
+  "stability_ranking": [
+    {
+      "estimator": "ledoit_wolf",
+      "std_fold": 4.763,
+      "iqr_fold": 6.259,
+      "pooled_sharpe": 11.729
+    },
+    {
+      "estimator": "oas",
+      "std_fold": 5.935,
+      "iqr_fold": 6.263,
+      "pooled_sharpe": 13.733
+    },
+    {
+      "estimator": "one_factor",
+      "std_fold": 10.921,
+      "iqr_fold": 12.303,
+      "pooled_sharpe": 19.143
+    },
+    {
+      "estimator": "sample",
+      "std_fold": 13.161,
+      "iqr_fold": 18.185,
+      "pooled_sharpe": 8.301
+    },
+    {
+      "estimator": "min_cov_det",
+      "std_fold": 27.835,
+      "iqr_fold": 10.932,
+      "pooled_sharpe": 2.471
+    }
+  ],
+  "best_by_pooled_sharpe": "one_factor",
+  "best_by_stability": "ledoit_wolf"
+}
