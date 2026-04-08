@@ -1,0 +1,281 @@
+{
+  "experiment": "EXP-2570",
+  "name": "Commission-Free Broker Net Sharpe for the 7-Stream Portfolio",
+  "generated": "2026-04-08T06:05:44",
+  "data_sources": {
+    "gross_cube": "compass/reports/exp2510_broker_analysis.json (sparse_gross)",
+    "cost_breakdown": "compass/reports/exp2510_broker_analysis.json (baseline_breakdown)",
+    "exec_opt_savings": "compass/reports/exp2470_execution_optimization.json (best_scenario)",
+    "walk_forward": "EXP-2360/EXP-2450 walk-forward on real 7-stream cube"
+  },
+  "cost_components_pct": {
+    "bid_ask": 4.175,
+    "commission": 8.273,
+    "slippage": 9.756,
+    "full_drag": 22.204,
+    "exec_opt_savings": 5.028
+  },
+  "gross": {
+    "ledoit_only": {
+      "sharpe": 6.865,
+      "cagr_pct": 101.832,
+      "vol_pct": 10.321,
+      "max_dd_pct": 4.209
+    },
+    "combined": {
+      "sharpe": 6.721,
+      "cagr_pct": 96.578,
+      "vol_pct": 10.146,
+      "max_dd_pct": 5.459
+    }
+  },
+  "scenarios": [
+    {
+      "id": "gross",
+      "label": "Gross (no costs)",
+      "broker": "\u2014",
+      "note": "Pre-cost walk-forward ceiling.",
+      "drag_pct": 0.0,
+      "drag_bps": 0.0,
+      "variants": {
+        "ledoit_only": {
+          "gross_sharpe": 6.865,
+          "net_sharpe": 6.865,
+          "delta_sharpe": 0.0,
+          "gross_cagr_pct": 101.83,
+          "net_cagr_pct": 101.83,
+          "ann_vol_pct": 10.321,
+          "drag_pct": 0.0,
+          "max_dd_pct": 4.209,
+          "delta_sharpe_vs_gross": 0.0
+        },
+        "combined": {
+          "gross_sharpe": 6.721,
+          "net_sharpe": 6.721,
+          "delta_sharpe": 0.0,
+          "gross_cagr_pct": 96.58,
+          "net_cagr_pct": 96.58,
+          "ann_vol_pct": 10.146,
+          "drag_pct": 0.0,
+          "max_dd_pct": 5.459,
+          "delta_sharpe_vs_gross": 0.0
+        }
+      }
+    },
+    {
+      "id": "ibkr_baseline",
+      "label": "IBKR Pro (baseline)",
+      "broker": "IBKR Pro fixed $0.65/contract",
+      "note": "EXP-2510 baseline: bid-ask 4.18 + comm 8.27 + slip 9.76.",
+      "drag_pct": 22.204,
+      "drag_bps": 2220.4,
+      "variants": {
+        "ledoit_only": {
+          "gross_sharpe": 6.865,
+          "net_sharpe": 4.714,
+          "delta_sharpe": -2.151,
+          "gross_cagr_pct": 101.83,
+          "net_cagr_pct": 79.63,
+          "ann_vol_pct": 10.321,
+          "drag_pct": 22.204,
+          "max_dd_pct": 4.209,
+          "delta_sharpe_vs_gross": -2.151
+        },
+        "combined": {
+          "gross_sharpe": 6.721,
+          "net_sharpe": 4.533,
+          "delta_sharpe": -2.188,
+          "gross_cagr_pct": 96.58,
+          "net_cagr_pct": 74.37,
+          "ann_vol_pct": 10.146,
+          "drag_pct": 22.204,
+          "max_dd_pct": 5.459,
+          "delta_sharpe_vs_gross": -2.188
+        }
+      }
+    },
+    {
+      "id": "commfree_same_ba",
+      "label": "Commission-free, same B/A",
+      "broker": "Alpaca commission-free pilot (ideal PFOF)",
+      "note": "Kill 8.27% commission, keep bid-ask and slippage constant.",
+      "drag_pct": 13.931,
+      "drag_bps": 1393.1,
+      "variants": {
+        "ledoit_only": {
+          "gross_sharpe": 6.865,
+          "net_sharpe": 5.515,
+          "delta_sharpe": -1.35,
+          "gross_cagr_pct": 101.83,
+          "net_cagr_pct": 87.9,
+          "ann_vol_pct": 10.321,
+          "drag_pct": 13.931,
+          "max_dd_pct": 4.209,
+          "delta_sharpe_vs_gross": -1.35
+        },
+        "combined": {
+          "gross_sharpe": 6.721,
+          "net_sharpe": 5.348,
+          "delta_sharpe": -1.373,
+          "gross_cagr_pct": 96.58,
+          "net_cagr_pct": 82.65,
+          "ann_vol_pct": 10.146,
+          "drag_pct": 13.931,
+          "max_dd_pct": 5.459,
+          "delta_sharpe_vs_gross": -1.373
+        }
+      }
+    },
+    {
+      "id": "commfree_plus_exec_opt",
+      "label": "Commission-free + exec opt (A+B+C+D)",
+      "broker": "Alpaca pilot + EXP-2470 execution stack",
+      "note": "Adds -503 bps from limit-at-mid + patient window + route reallocation + multi-leg combos. The TARGET production configuration.",
+      "drag_pct": 8.903,
+      "drag_bps": 890.3,
+      "variants": {
+        "ledoit_only": {
+          "gross_sharpe": 6.865,
+          "net_sharpe": 6.002,
+          "delta_sharpe": -0.863,
+          "gross_cagr_pct": 101.83,
+          "net_cagr_pct": 92.93,
+          "ann_vol_pct": 10.321,
+          "drag_pct": 8.903,
+          "max_dd_pct": 4.209,
+          "delta_sharpe_vs_gross": -0.863
+        },
+        "combined": {
+          "gross_sharpe": 6.721,
+          "net_sharpe": 5.844,
+          "delta_sharpe": -0.877,
+          "gross_cagr_pct": 96.58,
+          "net_cagr_pct": 87.67,
+          "ann_vol_pct": 10.146,
+          "drag_pct": 8.903,
+          "max_dd_pct": 5.459,
+          "delta_sharpe_vs_gross": -0.877
+        }
+      }
+    },
+    {
+      "id": "commfree_pfof_30pct",
+      "label": "Commission-free, realistic PFOF +30% B/A",
+      "broker": "Alpaca pilot, realistic PFOF penalty",
+      "note": "Model realistic execution quality loss on 2-leg spreads routed to PFOF market makers.",
+      "drag_pct": 15.184,
+      "drag_bps": 1518.4,
+      "variants": {
+        "ledoit_only": {
+          "gross_sharpe": 6.865,
+          "net_sharpe": 5.394,
+          "delta_sharpe": -1.471,
+          "gross_cagr_pct": 101.83,
+          "net_cagr_pct": 86.65,
+          "ann_vol_pct": 10.321,
+          "drag_pct": 15.184,
+          "max_dd_pct": 4.209,
+          "delta_sharpe_vs_gross": -1.471
+        },
+        "combined": {
+          "gross_sharpe": 6.721,
+          "net_sharpe": 5.224,
+          "delta_sharpe": -1.497,
+          "gross_cagr_pct": 96.58,
+          "net_cagr_pct": 81.39,
+          "ann_vol_pct": 10.146,
+          "drag_pct": 15.184,
+          "max_dd_pct": 5.459,
+          "delta_sharpe_vs_gross": -1.497
+        }
+      }
+    },
+    {
+      "id": "commfree_pfof_30pct_plus_exec_opt",
+      "label": "Commission-free + PFOF +30% + exec opt",
+      "broker": "Alpaca pilot + realistic PFOF + EXP-2470 stack",
+      "note": "Conservative target \u2014 both PFOF penalty AND the EXP-2470 savings applied.",
+      "drag_pct": 10.155,
+      "drag_bps": 1015.5,
+      "variants": {
+        "ledoit_only": {
+          "gross_sharpe": 6.865,
+          "net_sharpe": 5.881,
+          "delta_sharpe": -0.984,
+          "gross_cagr_pct": 101.83,
+          "net_cagr_pct": 91.68,
+          "ann_vol_pct": 10.321,
+          "drag_pct": 10.155,
+          "max_dd_pct": 4.209,
+          "delta_sharpe_vs_gross": -0.984
+        },
+        "combined": {
+          "gross_sharpe": 6.721,
+          "net_sharpe": 5.72,
+          "delta_sharpe": -1.001,
+          "gross_cagr_pct": 96.58,
+          "net_cagr_pct": 86.42,
+          "ann_vol_pct": 10.146,
+          "drag_pct": 10.155,
+          "max_dd_pct": 5.459,
+          "delta_sharpe_vs_gross": -1.001
+        }
+      }
+    },
+    {
+      "id": "commfree_rh_worst",
+      "label": "Commission-free, Robinhood worst case (2\u00d7 B/A)",
+      "broker": "Robinhood (documented PFOF penalty + leg-in risk)",
+      "note": "Worst-case reference only; RH does not natively support multi-leg combos.",
+      "drag_pct": 18.106,
+      "drag_bps": 1810.6,
+      "variants": {
+        "ledoit_only": {
+          "gross_sharpe": 6.865,
+          "net_sharpe": 5.111,
+          "delta_sharpe": -1.754,
+          "gross_cagr_pct": 101.83,
+          "net_cagr_pct": 83.73,
+          "ann_vol_pct": 10.321,
+          "drag_pct": 18.106,
+          "max_dd_pct": 4.209,
+          "delta_sharpe_vs_gross": -1.754
+        },
+        "combined": {
+          "gross_sharpe": 6.721,
+          "net_sharpe": 4.936,
+          "delta_sharpe": -1.785,
+          "gross_cagr_pct": 96.58,
+          "net_cagr_pct": 78.47,
+          "ann_vol_pct": 10.146,
+          "drag_pct": 18.106,
+          "max_dd_pct": 5.459,
+          "delta_sharpe_vs_gross": -1.785
+        }
+      }
+    }
+  ],
+  "headline": {
+    "target_drag_bps": 890.3,
+    "target_drag_pct": 8.903,
+    "baseline_drag_bps": 2220.4,
+    "target_vs_baseline_savings_bps": 1330.1,
+    "ledoit_only": {
+      "gross_sharpe": 6.865,
+      "baseline_net": 4.714,
+      "target_net": 6.002,
+      "baseline_cagr": 79.63,
+      "target_cagr": 92.93,
+      "delta_sharpe_baseline_to_target": 1.288
+    },
+    "combined": {
+      "gross_sharpe": 6.721,
+      "baseline_net": 4.533,
+      "target_net": 5.844,
+      "baseline_cagr": 74.37,
+      "target_cagr": 87.67,
+      "delta_sharpe_baseline_to_target": 1.311
+    }
+  },
+  "honest_note": "Gross Sharpe and vol come from the real walk-forward on the sparse 7-stream cube (EXP-2510). This experiment applies the drag transformation via the canonical net_sharpe_from_drag helper (EXP-2420) \u2014 identical to what EXP-2510 and EXP-2470 used so the numbers are directly comparable. Vol and Max DD are held constant because execution cost is deterministic drag that affects the annualised mean, not its variance."
+}
