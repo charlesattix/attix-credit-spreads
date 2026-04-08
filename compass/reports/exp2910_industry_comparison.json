@@ -1,0 +1,270 @@
+{
+  "experiment": "EXP-2910",
+  "tag": "EXP-2910",
+  "description": "Industry comparison \u2014 backtest vs reality expectation-setter for paper trading",
+  "generated": "2026-04-08T15:08:50.162931+00:00",
+  "benchmarks": [
+    {
+      "name": "Citadel Wellington",
+      "category": "Multi-strategy flagship",
+      "net_sharpe_range": "~2.0 \u2013 3.0",
+      "period": "~2010-2023 (multi-year rolling)",
+      "net_return_cagr_range": "~15 \u2013 20 %/yr net",
+      "sources": [
+        "Bloomberg reporting on Citadel Wellington returns",
+        "HFM Week reporting, various 2022-2023 articles",
+        "Institutional Investor profiles"
+      ],
+      "notes": "Multi-strategy fund spanning equities, credit, macro, commodities, quant. Heavily diversified across books. Not an option-selling fund specifically. Sharpe quoted is the CONSOLIDATED fund net of 4% management + 20% incentive fees, after pass-through expenses. Typically considered the top end of realistic multi-strat Sharpe."
+    },
+    {
+      "name": "Millennium Management",
+      "category": "Multi-strategy flagship",
+      "net_sharpe_range": "~2.5 \u2013 3.5",
+      "period": "~2010-2023",
+      "net_return_cagr_range": "~13 \u2013 18 %/yr net",
+      "sources": [
+        "WSJ reporting on Millennium performance",
+        "Institutional Investor, Bloomberg coverage"
+      ],
+      "notes": "Pod-shop multi-strategy. Strict per-pod DD limits, very low volatility target, historically one of the higher realised Sharpes among multi-strats. Net of management fees and a pass-through expense structure."
+    },
+    {
+      "name": "Two Sigma Absolute Return / Compass",
+      "category": "Systematic quant",
+      "net_sharpe_range": "~1.5 \u2013 2.5",
+      "period": "~2010-2020 (various products)",
+      "net_return_cagr_range": "~8 \u2013 15 %/yr net",
+      "sources": [
+        "Eurekahedge quant fund indices",
+        "Press reports on TS flagship vehicles (WSJ 2018-2022)"
+      ],
+      "notes": "Systematic quant strategies. Performance varies materially by product; the absolute-return vehicle has been softer in 2022-2023 per industry reports."
+    },
+    {
+      "name": "Renaissance Medallion (closed)",
+      "category": "Internal quant \u2014 closed",
+      "net_sharpe_range": "~2.5 \u2013 4.0 (some sources higher)",
+      "period": "1988-2018 (academic reconstructions)",
+      "net_return_cagr_range": "~35 \u2013 65 %/yr GROSS before fees",
+      "sources": [
+        "Gregory Zuckerman, 'The Man Who Solved the Market' (2019)",
+        "Cornell 2019 paper (Lu et al) on replication"
+      ],
+      "notes": "Medallion is the canonical outlier \u2014 closed to outside investors since 1993, employee capital only, with an unusually high gross-fee-drag structure (5% mgmt + 44% incentive). NET Sharpe to outside investors is N/A because they can't invest. The figures above are the GROSS reconstructions from academic reverse-engineering. Do not use this as a realistic live benchmark \u2014 nothing retail-accessible reproduces Medallion."
+    },
+    {
+      "name": "Renaissance RIEF (institutional)",
+      "category": "Systematic quant (public)",
+      "net_sharpe_range": "~0.5 \u2013 1.2",
+      "period": "2005-2023",
+      "net_return_cagr_range": "~5 \u2013 8 %/yr net (much worse in 2020-2022)",
+      "sources": [
+        "RIEF prospectus / SEC filings",
+        "WSJ 2020-2021 reporting on RIEF losses"
+      ],
+      "notes": "The 'outside investor' Renaissance product. Sharpe FAR below Medallion \u2014 reportedly suffered double-digit drawdowns in 2020. This is the honest reference point for 'what a systematic quant fund actually delivers to an external allocator'."
+    },
+    {
+      "name": "AQR \u2014 Multi-strategy / Absolute Return",
+      "category": "Systematic factor / quant",
+      "net_sharpe_range": "~0.5 \u2013 1.2 (product-dependent)",
+      "period": "2010-2023",
+      "net_return_cagr_range": "~4 \u2013 10 %/yr net (AR Ret below 0 in 2018)",
+      "sources": [
+        "AQR fund prospectuses and annual reports",
+        "Morningstar performance data (AQR Style Premia)"
+      ],
+      "notes": "AQR publishes detailed research on factor, volatility, and trend strategies. Realised Sharpe on their live-trading multi-factor products sits in the 0.5-1.2 range after costs and fees. AQR's OWN academic papers (Asness, Moskowitz, Pedersen) report simulated Sharpes around 1.0-1.5 on equal-volatility-weighted factor mixes \u2014 which tracks their live experience."
+    },
+    {
+      "name": "Catalyst Hedged Futures (2017 blow-up)",
+      "category": "Option-selling (CAUTIONARY TALE)",
+      "net_sharpe_range": "~1.5 (pre-blowup) \u2192 negative (post)",
+      "period": "2013-2017",
+      "net_return_cagr_range": "~8-12 %/yr 2013-2016, -20% single day Feb 2018",
+      "sources": [
+        "SEC administrative orders on Catalyst fund",
+        "WSJ 2017-2018 reporting on the loss"
+      ],
+      "notes": "Catalyst sold S&P 500 puts systematically. Looked great for four years, then lost ~20% in a single week during the Feb 2018 vol spike. Classic short-vol crash. The pre-blowup backtest looked comparable to ours."
+    },
+    {
+      "name": "LJM Preservation and Growth (2018 blow-up)",
+      "category": "Option-selling (CAUTIONARY TALE)",
+      "net_sharpe_range": "~1.7 (pre-blowup) \u2192 total loss",
+      "period": "2006-2018",
+      "net_return_cagr_range": "~9 %/yr then -82% on Feb 5, 2018",
+      "sources": [
+        "SEC enforcement filings on LJM",
+        "WSJ, NYT 2018 coverage",
+        "Gavin 'Option Trading' blog post-mortem"
+      ],
+      "notes": "LJM sold S&P 500 strangles. Fund collapsed to near-zero in a SINGLE SESSION on February 5, 2018 when VIX went from 17 to 50. Pre-blowup marketing materials showed ~12-year backtest with Sharpe ~1.7. This is the most relevant historical analog to systematic option-selling strategies that look great in backtest."
+    },
+    {
+      "name": "OptionSellers.com (2018 blow-up)",
+      "category": "Option-selling (CAUTIONARY TALE)",
+      "net_sharpe_range": "~1.3 pre-blowup",
+      "period": "2002-2018",
+      "net_return_cagr_range": "~6-10%/yr then -100% (client accounts owed money)",
+      "sources": [
+        "CNBC reporting Nov 2018",
+        "James Cordier client video",
+        "CFTC enforcement filings"
+      ],
+      "notes": "Uncovered natural gas call selling. Nov 14, 2018 nat-gas rally (~20% in a day) wiped out accounts and left clients owing money. 16-year strategy, good backtest, single-session total loss. Always relevant when systematic short-vol strategies are discussed."
+    },
+    {
+      "name": "CBOE BXM (Buy-Write Index)",
+      "category": "Benchmark \u2014 passive S&P 500 covered call",
+      "net_sharpe_range": "~0.4 \u2013 0.6",
+      "period": "1986-2023 full history",
+      "net_return_cagr_range": "~8 %/yr total, ~5.5 % above T-bills",
+      "sources": [
+        "CBOE BXM whitepaper (Whaley 2002, Ibbotson 2004)",
+        "Callan PLUS study (2006, updated 2020)"
+      ],
+      "notes": "The canonical 'systematic short-vol' benchmark. Published long-horizon Sharpe is 0.4-0.6 on a 37-year history. Any active option-selling strategy should justify its Sharpe delta vs BXM \u2014 the difference is the REAL alpha."
+    },
+    {
+      "name": "CBOE PUT (Put-Write Index)",
+      "category": "Benchmark \u2014 passive S&P 500 put-write",
+      "net_sharpe_range": "~0.5 \u2013 0.7",
+      "period": "1986-2023",
+      "net_return_cagr_range": "~9 %/yr total",
+      "sources": [
+        "CBOE PUT methodology document",
+        "Israelov & Nielsen (2014, 2015) 'Still not cheap'"
+      ],
+      "notes": "Passive monthly ATM put-writing on SPX. The structural VRP harvesting benchmark. Sharpe ceiling for a passive VRP harvester is around 0.7. Active strategies should report how much of their claimed Sharpe is above this."
+    },
+    {
+      "name": "Academic VRP literature (Israelov, Bondarenko et al)",
+      "category": "Research \u2014 VRP net of costs",
+      "net_sharpe_range": "~0.5 \u2013 1.5 (depends on structure + costs)",
+      "period": "1996-2020 across various papers",
+      "net_return_cagr_range": "~4 \u2013 10 %/yr",
+      "sources": [
+        "Israelov & Nielsen (2014) 'Still Not Cheap: Portfolio Protection in Calm Markets'",
+        "Bondarenko (2004) 'Why Are Put Options So Expensive?'",
+        "Goyal & Saretto (2009) 'Cross-section of Option Returns'",
+        "Liu Zhao (2022) 'Volatility Risk Premium: Across-the-board or Concentrated?'"
+      ],
+      "notes": "The academic ceiling for NAIVE short-vol Sharpe after realistic transaction costs is widely cited as ~1.0. Israelov's 'better VRP' variants (delta-hedged, multi-expiry, regime-gated) get to ~1.5. Above 2.0 after costs is usually a sign of hidden leverage, survival bias, or overfit parameters."
+    }
+  ],
+  "v8a_numbers": {
+    "sources": [
+      "compass/reports/exp2450_sparse_combined_honest.json",
+      "compass/reports/exp2600_north_star_v8.json",
+      "compass/reports/exp2730_wf_robustness_v8a_net.json",
+      "compass/reports/exp2740_sensitivity.json"
+    ],
+    "checks": {
+      "EXP-2450 sparse combined gross Sharpe": {
+        "value": 6.721,
+        "cagr_pct": 96.578,
+        "max_dd_pct": 5.459,
+        "description": "Sparse-cube, Ledoit-Wolf + circuit breaker, 7 streams"
+      },
+      "EXP-2450 sparse combined NET Sharpe (22% drag)": {
+        "value": 4.532,
+        "cagr_pct": 74.37,
+        "max_dd_pct": 5.459,
+        "description": "Same but after EXP-2420 22% drag"
+      },
+      "EXP-2450 sparse ledoit-only gross Sharpe": {
+        "value": 6.865,
+        "cagr_pct": 101.832,
+        "max_dd_pct": 4.209,
+        "description": "Sparse-cube, Ledoit-Wolf only, 7 streams"
+      },
+      "EXP-2600 v7 baseline net Sharpe @ vt=0.18": {
+        "value": 6.326,
+        "cagr_pct": 246.018,
+        "max_dd_pct": 10.298,
+        "description": "v7 risk-parity 7-stream production, 18% vol target"
+      },
+      "EXP-2730 v8a rolling NET Sharpe (headline)": {
+        "value": 6.164,
+        "median_fold_sharpe": 6.942,
+        "description": "v8a 8-stream rolling walk-forward, EXP-2570 890 bps net drag, median-fold + pooled both clear 6.0. This is the ship-decision baseline and the number quoted in the rest of the MASTERPLAN."
+      },
+      "EXP-2740 sensitivity worst-case": {
+        "value": 5.822,
+        "label": "v5_hedge_+20%",
+        "description": "Worst single-parameter \u00b120% perturbation of the v8a config. 3 of 28 perturbations breach the 6.0 gate \u2014 v5_hedge +20% is the worst at Sharpe 5.82."
+      }
+    }
+  },
+  "expectation_ranges": [
+    {
+      "label": "Exceptional paper-trading result",
+      "net_sharpe": "\u2265 5.0",
+      "net_cagr": "\u2265 100 %/yr",
+      "probability": "LOW \u2014 implies we are in the top 1% of systematic short-vol strategies EVER measured, which is unlikely without a structural edge the rest of the industry has missed. If this happens for 4+ weeks, investigate for hidden bias before celebrating."
+    },
+    {
+      "label": "Strong paper-trading result",
+      "net_sharpe": "2.0 \u2013 4.0",
+      "net_cagr": "25 \u2013 60 %/yr",
+      "probability": "MEDIUM \u2014 puts the strategy alongside top-tier multi-strat funds (Citadel/Millennium range) and well above the academic VRP literature. Would be a genuinely great outcome and the target range the MASTERPLAN should plan for."
+    },
+    {
+      "label": "Realistic paper-trading result",
+      "net_sharpe": "1.0 \u2013 2.0",
+      "net_cagr": "10 \u2013 25 %/yr",
+      "probability": "HIGH \u2014 matches the published academic VRP literature and the realised performance of AQR, Two Sigma public products, and the better-run vol-harvesting funds. This is the HONEST base case the paper-trading framework should size capital against. It is still a genuinely valuable strategy."
+    },
+    {
+      "label": "Mediocre paper-trading result",
+      "net_sharpe": "0.5 \u2013 1.0",
+      "net_cagr": "4 \u2013 10 %/yr",
+      "probability": "MEDIUM \u2014 in this range the strategy is competitive with the passive CBOE BXM/PUT indices but not clearly superior. Worth running but may not justify the ops complexity. Consider simplifying the stream count."
+    },
+    {
+      "label": "Failure",
+      "net_sharpe": "< 0.5",
+      "net_cagr": "negative or flat",
+      "probability": "LOW (but non-zero) \u2014 either a regime the backtest did not see, a real-execution cost higher than modelled, or a data bias we have not yet caught. 5-8% of realised Sharpe historically comes in below the modelled range even for well-built strategies."
+    }
+  ],
+  "suspicious_reasons": [
+    {
+      "concern": "Inflation from trade-P&L smearing",
+      "evidence": "EXP-2390 and EXP-2450 documented a 1.71\u00d7 Sharpe inflation factor when XLF/XLI trade P&L is smeared across holding days instead of landing on exit dates. The smeared cube's combined Sharpe 11.73 dropped to 6.72 on the sparse cube. Some residual smearing bias may exist on the non-XLF/XLI streams that were not re-audited.",
+      "mitigation": "EXP-2450 switched to sparse attribution on the XLF/XLI streams. EXP-2730 reports 6.16 using the sparse cube + real drag. That is the honest anchor. But streams built from other smearing conventions may still carry residual inflation and should be audited independently."
+    },
+    {
+      "concern": "Regime bias \u2014 2020-2025 was unusually short-vol friendly",
+      "evidence": "The backtest window starts post-COVID crash and covers a period of mostly-contained realised volatility, VIX mean-reverting quickly from spikes, and no multi-month grinding drawdown like 2007-2009 or 2000-2002. Short-vol strategies are structurally advantaged in this regime. A 2000-2009 backtest would likely produce materially lower Sharpe for the same config.",
+      "mitigation": "Run the same pipeline on 1998-2008 data if IronVault can be backfilled. Until then, apply a regime-discount factor when translating backtest Sharpe \u2192 expected live Sharpe."
+    },
+    {
+      "concern": "Cost model understates real execution slippage",
+      "evidence": "EXP-2420's per-stream model uses real IronVault bid-ask proxies but assumes linear slippage in notional. Real slippage scales as \u221anotional (market-impact literature). At larger AUM the real drag is HIGHER than the 890 bps v8a assumption. EXP-2740 showed +50% slippage alone drops Sharpe to 5.94.",
+      "mitigation": "Weekly paper-trading slippage tracking against the 890 bps baseline. Alert if 4-week rolling slippage exceeds the EXP-2740 breakpoint."
+    },
+    {
+      "concern": "Parameter overfitting across experiments",
+      "evidence": "The stream pool itself was selected AFTER observing which sleeves had backtest Sharpe > 1 in earlier experiments. EXP-1770 dropped underperforming commodity calendars; EXP-2060 dropped dead sleeves; EXP-2450 moved to sparse attribution after the inflation audit. Each selection step is a survivor-bias trap.",
+      "mitigation": "Paper trading IS the out-of-sample test. Every stream's first month of paper performance is the honest out-of-sample check. Compare rolling 20-day realised Sharpe to the backtest Sharpe per stream."
+    },
+    {
+      "concern": "Leverage and margin drag not fully modelled",
+      "evidence": "EXP-2600 runs at 18% vol target which implies 1.5-2\u00d7 leverage. The cost model does not include overnight financing, margin rebates, or the regulatory margin haircut that portfolio margin applies to defined-risk spreads. A 50 bps/yr financing cost alone would drop net Sharpe by ~0.03.",
+      "mitigation": "Track actual financing debit in paper trading. Re-run the v8a walk-forward with 50-100 bps additional drag as a conservative scenario."
+    },
+    {
+      "concern": "v5_hedge is the worst single perturbation",
+      "evidence": "EXP-2740 showed v5_hedge +20% weight drops Sharpe from 6.16 to 5.82. EXP-2560 showed HALVING v5_hedge actually IMPROVES Sharpe. The hedge stream sits on a knife-edge in the risk-parity allocation.",
+      "mitigation": "Cap v5_hedge weight explicitly in production or replace with a less-noisy hedge candidate. The current configuration is locally optimal but not globally robust."
+    },
+    {
+      "concern": "No live trading comparison yet",
+      "evidence": "Zero trades have been placed on real accounts. Every committed number is a backtest or a sensitivity analysis. The gap between backtest and reality for systematic short-vol strategies is HISTORICALLY 30-50% of Sharpe (LJM, Catalyst, academic meta-studies).",
+      "mitigation": "Paper trading IS the trust-gating gate. 8 weeks minimum per MASTERPLAN Phase 10. Do NOT scale capital based on backtest numbers alone."
+    }
+  ]
+}
