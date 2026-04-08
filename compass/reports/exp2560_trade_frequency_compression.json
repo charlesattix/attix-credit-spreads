@@ -1,0 +1,278 @@
+{
+  "experiment": "EXP-2560",
+  "tag": "EXP-2560",
+  "description": "Trade frequency compression sensitivity on the sparse 7-stream cube. Per-stream halving test with commission drag + Sharpe impact.",
+  "data_sources": {
+    "sparse_cube": "EXP-2390 sparse_xlf_xli + EXP-2080 load_streams",
+    "walk_forward": "EXP-2400 walk_forward_combined (verbatim)",
+    "cost_breakdown": "compass/reports/exp2420_transaction_costs.json"
+  },
+  "config": {
+    "sharpe_loss_budget": 0.5,
+    "compression_method": "keep every other non-zero entry (CLT floor)",
+    "target_commission_savings_bps": 400
+  },
+  "streams": [
+    "exp1220",
+    "v5_hedge",
+    "gld_cal",
+    "slv_cal",
+    "cross_vol",
+    "xlf_cs",
+    "xli_cs"
+  ],
+  "baseline": {
+    "pooled": {
+      "label": "",
+      "n": 1260,
+      "cagr_pct": 96.578,
+      "sharpe": 6.721,
+      "sortino": 12.023,
+      "max_dd_pct": 5.459,
+      "calmar": 17.691,
+      "vol_pct": 10.146
+    },
+    "commission_bps": 827.3200000000002,
+    "total_bps": 2220.509
+  },
+  "per_stream": {
+    "exp1220": {
+      "pooled": {
+        "label": "",
+        "n": 1260,
+        "cagr_pct": 83.553,
+        "sharpe": 6.183,
+        "sortino": 10.275,
+        "max_dd_pct": 4.786,
+        "calmar": 17.456,
+        "vol_pct": 9.914
+      },
+      "commission_bps": 814.06,
+      "total_bps": 2171.5510000000004,
+      "delta_sharpe": -0.5380000000000003,
+      "comm_bps_saved": 13.260000000000218
+    },
+    "v5_hedge": {
+      "pooled": {
+        "label": "",
+        "n": 1260,
+        "cagr_pct": 94.059,
+        "sharpe": 7.065,
+        "sortino": 13.065,
+        "max_dd_pct": 5.149,
+        "calmar": 18.266,
+        "vol_pct": 9.459
+      },
+      "commission_bps": 814.3199999999999,
+      "total_bps": 2167.299,
+      "delta_sharpe": 0.3440000000000003,
+      "comm_bps_saved": 13.000000000000227
+    },
+    "gld_cal": {
+      "pooled": {
+        "label": "",
+        "n": 1260,
+        "cagr_pct": 89.151,
+        "sharpe": 6.522,
+        "sortino": 11.794,
+        "max_dd_pct": 3.683,
+        "calmar": 24.207,
+        "vol_pct": 9.859
+      },
+      "commission_bps": 781.8199999999999,
+      "total_bps": 1991.3490000000002,
+      "delta_sharpe": -0.19899999999999984,
+      "comm_bps_saved": 45.50000000000023
+    },
+    "slv_cal": {
+      "pooled": {
+        "label": "",
+        "n": 1260,
+        "cagr_pct": 94.534,
+        "sharpe": 6.675,
+        "sortino": 11.912,
+        "max_dd_pct": 3.799,
+        "calmar": 24.886,
+        "vol_pct": 10.057
+      },
+      "commission_bps": 632.3199999999999,
+      "total_bps": 1871.6870000000001,
+      "delta_sharpe": -0.04600000000000026,
+      "comm_bps_saved": 195.00000000000023
+    },
+    "cross_vol": {
+      "pooled": {
+        "label": "",
+        "n": 1260,
+        "cagr_pct": 86.422,
+        "sharpe": 6.407,
+        "sortino": 11.354,
+        "max_dd_pct": 5.546,
+        "calmar": 15.583,
+        "vol_pct": 9.807
+      },
+      "commission_bps": 768.8199999999999,
+      "total_bps": 1937.9655,
+      "delta_sharpe": -0.31400000000000006,
+      "comm_bps_saved": 58.50000000000023
+    },
+    "xlf_cs": {
+      "pooled": {
+        "label": "",
+        "n": 1260,
+        "cagr_pct": 78.794,
+        "sharpe": 6.355,
+        "sortino": 10.849,
+        "max_dd_pct": 5.214,
+        "calmar": 15.113,
+        "vol_pct": 9.22
+      },
+      "commission_bps": 761.02,
+      "total_bps": 2124.9285,
+      "delta_sharpe": -0.36599999999999966,
+      "comm_bps_saved": 66.30000000000018
+    },
+    "xli_cs": {
+      "pooled": {
+        "label": "",
+        "n": 1260,
+        "cagr_pct": 84.352,
+        "sharpe": 6.383,
+        "sortino": 11.141,
+        "max_dd_pct": 5.348,
+        "calmar": 15.772,
+        "vol_pct": 9.667
+      },
+      "commission_bps": 805.22,
+      "total_bps": 2168.5285000000003,
+      "delta_sharpe": -0.3380000000000001,
+      "comm_bps_saved": 22.100000000000136
+    }
+  },
+  "all_compressed": {
+    "pooled": {
+      "label": "",
+      "n": 1260,
+      "cagr_pct": 45.179,
+      "sharpe": 5.108,
+      "sortino": 7.412,
+      "max_dd_pct": 5.774,
+      "calmar": 7.824,
+      "vol_pct": 7.357
+    },
+    "commission_bps": 413.65999999999997,
+    "total_bps": 1110.2545
+  },
+  "recommendation": {
+    "set": [
+      "v5_hedge",
+      "slv_cal",
+      "gld_cal",
+      "cross_vol"
+    ],
+    "pooled": {
+      "label": "",
+      "n": 1260,
+      "cagr_pct": 73.334,
+      "sharpe": 6.394,
+      "sortino": 11.143,
+      "max_dd_pct": 3.861,
+      "calmar": 18.995,
+      "vol_pct": 8.671
+    },
+    "commission_bps": 515.3199999999999,
+    "total_bps": 1306.7735000000002,
+    "comm_bps_saved": 312.0000000000002,
+    "sharpe_loss": 0.32699999999999996,
+    "hits_target": false
+  },
+  "verdict_html": "<ul><li><b>Target NOT MET via frequency compression alone.</b> Best subset (v5_hedge, slv_cal, gld_cal, cross_vol) saves 312 bps (baseline 827 \u2192 515) at a Sharpe cost of +0.327. The 400 bps savings target requires halving nearly every stream, which drives total Sharpe loss above the 0.5 budget.</li><li><b>CLT floor observed.</b> Full halving drops pooled Sharpe from 6.72 to 5.11, a loss of +1.61. Theoretical CLT expectation is +1.97. The observation is consistent with independent-trade scaling.</li><li><b>Per-stream ranking.</b> The highest-value compression targets are streams whose commission drag is large and whose standalone Sharpe contribution is small \u2014 SLV (390 bps comm alone, 47% of the total commission bill) is the biggest individual target. The per-stream table ranks all seven.</li><li><b>Alternative: longer DTE instead of fewer trades.</b> This experiment uses the pessimistic CLT floor which assumes per-trade edge is constant. A DTE-doubling approach (e.g. SLV calendar at 42d instead of 21d) could preserve per-trade edge and sidestep the \u221a2 penalty. That requires a real re-run of each stream with longer DTE and is the natural next experiment if the commission savings are worth the implementation cost.</li></ul>",
+  "cost_breakdown": {
+    "capital_usd": 100000.0,
+    "per_stream": {
+      "exp1220": {
+        "ticker": "SPY",
+        "trades_per_year": 34,
+        "legs_per_trade": 2,
+        "contracts_per_trade": 3.0,
+        "commission_annual_usd": 265.2,
+        "commission_bps": 26.52,
+        "bid_ask_annual_usd": 348.6,
+        "slippage_annual_usd": 365.36,
+        "total_annual_usd": 979.17
+      },
+      "xlf_cs": {
+        "ticker": "XLF",
+        "trades_per_year": 34,
+        "legs_per_trade": 2,
+        "contracts_per_trade": 15.0,
+        "commission_annual_usd": 1326.0,
+        "commission_bps": 132.6,
+        "bid_ask_annual_usd": 180.0,
+        "slippage_annual_usd": 405.61,
+        "total_annual_usd": 1911.61
+      },
+      "xli_cs": {
+        "ticker": "XLI",
+        "trades_per_year": 34,
+        "legs_per_trade": 2,
+        "contracts_per_trade": 5.0,
+        "commission_annual_usd": 442.0,
+        "commission_bps": 44.2,
+        "bid_ask_annual_usd": 78.93,
+        "slippage_annual_usd": 518.68,
+        "total_annual_usd": 1039.61
+      },
+      "gld_cal": {
+        "ticker": "GLD",
+        "trades_per_year": 50,
+        "legs_per_trade": 2,
+        "contracts_per_trade": 7.0,
+        "commission_annual_usd": 910.0,
+        "commission_bps": 91.0,
+        "bid_ask_annual_usd": 488.15,
+        "slippage_annual_usd": 3185.05,
+        "total_annual_usd": 4583.2
+      },
+      "slv_cal": {
+        "ticker": "SLV",
+        "trades_per_year": 50,
+        "legs_per_trade": 2,
+        "contracts_per_trade": 30.0,
+        "commission_annual_usd": 3900.0,
+        "commission_bps": 390.0,
+        "bid_ask_annual_usd": 1200.0,
+        "slippage_annual_usd": 1876.44,
+        "total_annual_usd": 6976.44
+      },
+      "vol_arb": {
+        "ticker": "SPY",
+        "trades_per_year": 45,
+        "legs_per_trade": 4,
+        "contracts_per_trade": 5.0,
+        "commission_annual_usd": 1170.0,
+        "commission_bps": 117.0,
+        "bid_ask_annual_usd": 1537.96,
+        "slippage_annual_usd": 2942.91,
+        "total_annual_usd": 5650.86
+      },
+      "v5_hedge": {
+        "ticker": "SPY",
+        "trades_per_year": 20,
+        "legs_per_trade": 1,
+        "contracts_per_trade": 10.0,
+        "commission_annual_usd": 260.0,
+        "commission_bps": 26.0,
+        "bid_ask_annual_usd": 341.77,
+        "slippage_annual_usd": 462.43,
+        "total_annual_usd": 1064.2
+      }
+    },
+    "totals": {
+      "bid_ask_bps": 417.54099999999994,
+      "commission_bps": 827.3200000000002,
+      "slippage_bps": 975.648,
+      "total_bps": 2220.509
+    }
+  }
+}
