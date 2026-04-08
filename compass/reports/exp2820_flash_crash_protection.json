@@ -1,0 +1,366 @@
+{
+  "experiment": "EXP-2820",
+  "name": "Flash Crash Protection",
+  "generated": "2026-04-08T14:05:03",
+  "rule_zero": {
+    "real_cube": true,
+    "real_vix": true,
+    "synthetic_stress_overlay": true,
+    "backtest_claims_derived_from_synthetic": false,
+    "notes": "Real v8a cube + real Yahoo VIX. Synthetic flash-crash overlay reused unchanged from EXP-2750 for apples-to-apples comparison."
+  },
+  "config": {
+    "target_vol_annual": 0.15,
+    "cb_soft_pct": 0.03,
+    "cb_hard_pct": 0.06,
+    "vix_ladder": [
+      [
+        20.0,
+        1.0
+      ],
+      [
+        25.0,
+        0.9
+      ],
+      [
+        30.0,
+        0.75
+      ],
+      [
+        35.0,
+        0.6
+      ],
+      [
+        40.0,
+        0.5
+      ],
+      [
+        50.0,
+        0.35
+      ],
+      [
+        60.0,
+        0.25
+      ],
+      [
+        70.0,
+        0.15
+      ],
+      [
+        1000000000.0,
+        0.0
+      ]
+    ],
+    "scale_caps_tested": [
+      13.0,
+      8.0
+    ],
+    "conditional_hedge_activation_vix": 35.0,
+    "flash_crash_window_start": "2022-06-01"
+  },
+  "cube_info": {
+    "n_days": 1566,
+    "range": [
+      "2020-01-01",
+      "2025-12-31"
+    ],
+    "streams": [
+      "exp1220",
+      "v5_hedge",
+      "gld_cal",
+      "slv_cal",
+      "cross_vol",
+      "xlf_cs",
+      "xli_cs",
+      "xle_cs"
+    ]
+  },
+  "vix_stats": {
+    "median": 18.99,
+    "max": 82.69,
+    "frac_above_35": 3.83,
+    "frac_above_25": 21.97
+  },
+  "variants": {
+    "baseline_no_protection": {
+      "use_vix_ladder": false,
+      "scale_cap": 13.0,
+      "use_conditional_put": false
+    },
+    "cap_8x_only": {
+      "use_vix_ladder": false,
+      "scale_cap": 8.0,
+      "use_conditional_put": false
+    },
+    "vix_ladder_only": {
+      "use_vix_ladder": true,
+      "scale_cap": 13.0,
+      "use_conditional_put": false
+    },
+    "vix_ladder_cap8": {
+      "use_vix_ladder": true,
+      "scale_cap": 8.0,
+      "use_conditional_put": false
+    },
+    "cond_hedge_only": {
+      "use_vix_ladder": false,
+      "scale_cap": 13.0,
+      "use_conditional_put": true
+    },
+    "full_stack": {
+      "use_vix_ladder": true,
+      "scale_cap": 8.0,
+      "use_conditional_put": true
+    }
+  },
+  "normal_case": {
+    "baseline_no_protection": {
+      "label": "normal_baseline_no_protection",
+      "max_dd_pct": 4.433,
+      "final_equity": 1106.1614,
+      "sharpe": 12.128,
+      "cagr_pct": 306.675,
+      "n_soft": 5,
+      "n_hard": 0,
+      "window_dd_pct": 0.0,
+      "window_recovery_days": null,
+      "window_pnl_pct": 0.0
+    },
+    "cap_8x_only": {
+      "label": "normal_cap_8x_only",
+      "max_dd_pct": 2.761,
+      "final_equity": 78.344,
+      "sharpe": 12.16,
+      "cagr_pct": 139.388,
+      "n_soft": 0,
+      "n_hard": 0,
+      "window_dd_pct": 0.0,
+      "window_recovery_days": null,
+      "window_pnl_pct": 0.0
+    },
+    "vix_ladder_only": {
+      "label": "normal_vix_ladder_only",
+      "max_dd_pct": 4.382,
+      "final_equity": 659.289,
+      "sharpe": 12.614,
+      "cagr_pct": 266.66,
+      "n_soft": 1,
+      "n_hard": 0,
+      "window_dd_pct": 0.0,
+      "window_recovery_days": null,
+      "window_pnl_pct": 0.0
+    },
+    "vix_ladder_cap8": {
+      "label": "normal_vix_ladder_cap8",
+      "max_dd_pct": 2.729,
+      "final_equity": 55.7781,
+      "sharpe": 12.604,
+      "cagr_pct": 123.651,
+      "n_soft": 0,
+      "n_hard": 0,
+      "window_dd_pct": 0.0,
+      "window_recovery_days": null,
+      "window_pnl_pct": 0.0
+    },
+    "cond_hedge_only": {
+      "label": "normal_cond_hedge_only",
+      "max_dd_pct": 4.433,
+      "final_equity": 1129.8523,
+      "sharpe": 12.162,
+      "cagr_pct": 308.403,
+      "n_soft": 4,
+      "n_hard": 0,
+      "window_dd_pct": 0.0,
+      "window_recovery_days": null,
+      "window_pnl_pct": 0.0
+    },
+    "full_stack": {
+      "label": "normal_full_stack",
+      "max_dd_pct": 2.729,
+      "final_equity": 56.2199,
+      "sharpe": 12.641,
+      "cagr_pct": 124.004,
+      "n_soft": 0,
+      "n_hard": 0,
+      "window_dd_pct": 0.0,
+      "window_recovery_days": null,
+      "window_pnl_pct": 0.0
+    }
+  },
+  "crash_case": {
+    "baseline_no_protection": {
+      "label": "crash_baseline_no_protection",
+      "max_dd_pct": 43.141,
+      "final_equity": 314.3369,
+      "sharpe": 5.083,
+      "cagr_pct": 216.137,
+      "n_soft": 4,
+      "n_hard": 1,
+      "window_dd_pct": 43.141,
+      "window_recovery_days": 49,
+      "window_pnl_pct": 87.224
+    },
+    "cap_8x_only": {
+      "label": "crash_cap_8x_only",
+      "max_dd_pct": 26.654,
+      "final_equity": 44.1792,
+      "sharpe": 5.286,
+      "cagr_pct": 113.454,
+      "n_soft": 0,
+      "n_hard": 1,
+      "window_dd_pct": 26.654,
+      "window_recovery_days": 37,
+      "window_pnl_pct": 47.714
+    },
+    "vix_ladder_only": {
+      "label": "crash_vix_ladder_only",
+      "max_dd_pct": 2.848,
+      "final_equity": 282.5603,
+      "sharpe": 11.921,
+      "cagr_pct": 209.465,
+      "n_soft": 0,
+      "n_hard": 0,
+      "window_dd_pct": 0.798,
+      "window_recovery_days": 1,
+      "window_pnl_pct": 37.404
+    },
+    "vix_ladder_cap8": {
+      "label": "crash_vix_ladder_cap8",
+      "max_dd_pct": 1.977,
+      "final_equity": 38.243,
+      "sharpe": 11.62,
+      "cagr_pct": 107.378,
+      "n_soft": 0,
+      "n_hard": 0,
+      "window_dd_pct": 0.49,
+      "window_recovery_days": 1,
+      "window_pnl_pct": 21.662
+    },
+    "cond_hedge_only": {
+      "label": "crash_cond_hedge_only",
+      "max_dd_pct": 42.505,
+      "final_equity": 327.1788,
+      "sharpe": 5.148,
+      "cagr_pct": 218.681,
+      "n_soft": 3,
+      "n_hard": 1,
+      "window_dd_pct": 42.505,
+      "window_recovery_days": 47,
+      "window_pnl_pct": 88.677
+    },
+    "full_stack": {
+      "label": "crash_full_stack",
+      "max_dd_pct": 1.977,
+      "final_equity": 39.1225,
+      "sharpe": 11.639,
+      "cagr_pct": 108.323,
+      "n_soft": 0,
+      "n_hard": 0,
+      "window_dd_pct": -0.15,
+      "window_recovery_days": 1,
+      "window_pnl_pct": 22.694
+    }
+  },
+  "summary": [
+    {
+      "variant": "baseline_no_protection",
+      "normal_dd_pct": 4.433,
+      "normal_sharpe": 12.128,
+      "normal_cagr_pct": 306.675,
+      "normal_final_equity": 1106.1614,
+      "crash_window_dd_pct": 43.141,
+      "crash_window_recovery_days": 49,
+      "crash_sharpe": 5.083,
+      "delta_sharpe_vs_baseline_normal": 0.0,
+      "delta_dd_vs_baseline_crash": 0.0,
+      "passes_crash_dd_15pct": false,
+      "passes_normal_sharpe_loss_lt_1": true,
+      "passes_both": false
+    },
+    {
+      "variant": "cap_8x_only",
+      "normal_dd_pct": 2.761,
+      "normal_sharpe": 12.16,
+      "normal_cagr_pct": 139.388,
+      "normal_final_equity": 78.344,
+      "crash_window_dd_pct": 26.654,
+      "crash_window_recovery_days": 37,
+      "crash_sharpe": 5.286,
+      "delta_sharpe_vs_baseline_normal": 0.032,
+      "delta_dd_vs_baseline_crash": -16.487,
+      "passes_crash_dd_15pct": false,
+      "passes_normal_sharpe_loss_lt_1": true,
+      "passes_both": false
+    },
+    {
+      "variant": "vix_ladder_only",
+      "normal_dd_pct": 4.382,
+      "normal_sharpe": 12.614,
+      "normal_cagr_pct": 266.66,
+      "normal_final_equity": 659.289,
+      "crash_window_dd_pct": 0.798,
+      "crash_window_recovery_days": 1,
+      "crash_sharpe": 11.921,
+      "delta_sharpe_vs_baseline_normal": 0.486,
+      "delta_dd_vs_baseline_crash": -42.343,
+      "passes_crash_dd_15pct": true,
+      "passes_normal_sharpe_loss_lt_1": true,
+      "passes_both": true
+    },
+    {
+      "variant": "vix_ladder_cap8",
+      "normal_dd_pct": 2.729,
+      "normal_sharpe": 12.604,
+      "normal_cagr_pct": 123.651,
+      "normal_final_equity": 55.7781,
+      "crash_window_dd_pct": 0.49,
+      "crash_window_recovery_days": 1,
+      "crash_sharpe": 11.62,
+      "delta_sharpe_vs_baseline_normal": 0.476,
+      "delta_dd_vs_baseline_crash": -42.651,
+      "passes_crash_dd_15pct": true,
+      "passes_normal_sharpe_loss_lt_1": true,
+      "passes_both": true
+    },
+    {
+      "variant": "cond_hedge_only",
+      "normal_dd_pct": 4.433,
+      "normal_sharpe": 12.162,
+      "normal_cagr_pct": 308.403,
+      "normal_final_equity": 1129.8523,
+      "crash_window_dd_pct": 42.505,
+      "crash_window_recovery_days": 47,
+      "crash_sharpe": 5.148,
+      "delta_sharpe_vs_baseline_normal": 0.034,
+      "delta_dd_vs_baseline_crash": -0.636,
+      "passes_crash_dd_15pct": false,
+      "passes_normal_sharpe_loss_lt_1": true,
+      "passes_both": false
+    },
+    {
+      "variant": "full_stack",
+      "normal_dd_pct": 2.729,
+      "normal_sharpe": 12.641,
+      "normal_cagr_pct": 124.004,
+      "normal_final_equity": 56.2199,
+      "crash_window_dd_pct": -0.15,
+      "crash_window_recovery_days": 1,
+      "crash_sharpe": 11.639,
+      "delta_sharpe_vs_baseline_normal": 0.513,
+      "delta_dd_vs_baseline_crash": -43.291,
+      "passes_crash_dd_15pct": true,
+      "passes_normal_sharpe_loss_lt_1": true,
+      "passes_both": true
+    }
+  ],
+  "target_crash_dd_pct": 15.0,
+  "passing_variants": [
+    "vix_ladder_only",
+    "vix_ladder_cap8",
+    "full_stack"
+  ],
+  "baseline_reference": {
+    "flash_crash_dd_no_protection": 43.141,
+    "source": "EXP-2750 + this experiment's baseline (both 43% range)"
+  }
+}
