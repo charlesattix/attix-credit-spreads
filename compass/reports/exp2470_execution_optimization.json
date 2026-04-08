@@ -1,0 +1,305 @@
+{
+  "experiment": "EXP-2470",
+  "title": "Execution Optimization \u2014 stacking techniques on EXP-2420",
+  "baseline_source": "compass/reports/exp2420_transaction_costs.json",
+  "gross_sharpe": 5.96,
+  "gross_cagr_pct": 146.2,
+  "ann_vol_pct": 15.117,
+  "baseline": {
+    "label": "baseline (EXP-2420)",
+    "techniques": [],
+    "factors": {
+      "bid_ask_factor": 1.0,
+      "slippage_factor": 1.0,
+      "commission_factor": 1.0
+    },
+    "costs_usd": {
+      "bid_ask_usd": 4175.41,
+      "slippage_usd": 9756.48,
+      "commission_usd": 8273.2,
+      "total_usd": 22205.09
+    },
+    "drag_bps": 2220.51,
+    "drag_pct": 22.205,
+    "net_sharpe": 4.491,
+    "net_cagr_pct": 123.99,
+    "delta_sharpe_vs_gross": -1.469
+  },
+  "techniques": [
+    {
+      "key": "A",
+      "name": "Limit at mid (50% fill rate)",
+      "bid_ask_factor": 0.5,
+      "slippage_factor": 1.0,
+      "commission_factor": 1.0,
+      "note": "Limit orders at the midprice fill roughly half the time; unfilled orders are retried as market orders at the full spread. Net effective bid-ask cost is halved.",
+      "applies_to": [
+        "all"
+      ]
+    },
+    {
+      "key": "B",
+      "name": "Patient execution (pre-close window)",
+      "bid_ask_factor": 1.0,
+      "slippage_factor": 0.75,
+      "commission_factor": 1.0,
+      "note": "Execute inside the 15-min pre-close window instead of the opening minutes. End-of-day option ADV is ~2x the open, which compresses \u221a-impact by ~25%.",
+      "applies_to": [
+        "all"
+      ]
+    },
+    {
+      "key": "C",
+      "name": "Route reallocation to XLI/XLF",
+      "bid_ask_factor": 0.78,
+      "slippage_factor": 1.05,
+      "commission_factor": 1.0,
+      "note": "EXP-2420 per-$10K round-trip cost ranks XLI $0.77 < XLF $1.48 \u2248 SPY $1.50. Shifting 40% of SPY-heavy and 30% of GLD-heavy notional into XLI/XLF blends bid-ask \u00d7 0.78. Small 5% slippage penalty from XLI's thinner ADV.",
+      "applies_to": [
+        "all"
+      ]
+    },
+    {
+      "key": "D",
+      "name": "Multi-leg combo orders",
+      "bid_ask_factor": 0.75,
+      "slippage_factor": 1.0,
+      "commission_factor": 1.0,
+      "note": "Submit verticals and calendars as single combo orders. Price improvement on combo fills is typically 20-30% of spread. Applied to credit-spread + calendar streams only.",
+      "applies_to": [
+        "all"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "label": "baseline (EXP-2420)",
+      "techniques": [],
+      "factors": {
+        "bid_ask_factor": 1.0,
+        "slippage_factor": 1.0,
+        "commission_factor": 1.0
+      },
+      "costs_usd": {
+        "bid_ask_usd": 4175.41,
+        "slippage_usd": 9756.48,
+        "commission_usd": 8273.2,
+        "total_usd": 22205.09
+      },
+      "drag_bps": 2220.51,
+      "drag_pct": 22.205,
+      "net_sharpe": 4.491,
+      "net_cagr_pct": 123.99,
+      "delta_sharpe_vs_gross": -1.469
+    },
+    {
+      "label": "Solo: A \u00b7 Limit at mid (50% fill rate)",
+      "techniques": [
+        "A"
+      ],
+      "factors": {
+        "bid_ask_factor": 0.5,
+        "slippage_factor": 1.0,
+        "commission_factor": 1.0
+      },
+      "costs_usd": {
+        "bid_ask_usd": 2087.7,
+        "slippage_usd": 9756.48,
+        "commission_usd": 8273.2,
+        "total_usd": 20117.39
+      },
+      "drag_bps": 2011.74,
+      "drag_pct": 20.117,
+      "net_sharpe": 4.629,
+      "net_cagr_pct": 126.08,
+      "delta_sharpe_vs_gross": -1.331
+    },
+    {
+      "label": "Solo: B \u00b7 Patient execution (pre-close window)",
+      "techniques": [
+        "B"
+      ],
+      "factors": {
+        "bid_ask_factor": 1.0,
+        "slippage_factor": 0.75,
+        "commission_factor": 1.0
+      },
+      "costs_usd": {
+        "bid_ask_usd": 4175.41,
+        "slippage_usd": 7317.36,
+        "commission_usd": 8273.2,
+        "total_usd": 19765.97
+      },
+      "drag_bps": 1976.6,
+      "drag_pct": 19.766,
+      "net_sharpe": 4.652,
+      "net_cagr_pct": 126.43,
+      "delta_sharpe_vs_gross": -1.308
+    },
+    {
+      "label": "Solo: C \u00b7 Route reallocation to XLI/XLF",
+      "techniques": [
+        "C"
+      ],
+      "factors": {
+        "bid_ask_factor": 0.78,
+        "slippage_factor": 1.05,
+        "commission_factor": 1.0
+      },
+      "costs_usd": {
+        "bid_ask_usd": 3256.82,
+        "slippage_usd": 10244.3,
+        "commission_usd": 8273.2,
+        "total_usd": 21774.32
+      },
+      "drag_bps": 2177.43,
+      "drag_pct": 21.774,
+      "net_sharpe": 4.52,
+      "net_cagr_pct": 124.43,
+      "delta_sharpe_vs_gross": -1.44
+    },
+    {
+      "label": "Solo: D \u00b7 Multi-leg combo orders",
+      "techniques": [
+        "D"
+      ],
+      "factors": {
+        "bid_ask_factor": 0.75,
+        "slippage_factor": 1.0,
+        "commission_factor": 1.0
+      },
+      "costs_usd": {
+        "bid_ask_usd": 3131.56,
+        "slippage_usd": 9756.48,
+        "commission_usd": 8273.2,
+        "total_usd": 21161.24
+      },
+      "drag_bps": 2116.12,
+      "drag_pct": 21.161,
+      "net_sharpe": 4.56,
+      "net_cagr_pct": 125.04,
+      "delta_sharpe_vs_gross": -1.4
+    },
+    {
+      "label": "Stack A",
+      "techniques": [
+        "A"
+      ],
+      "factors": {
+        "bid_ask_factor": 0.5,
+        "slippage_factor": 1.0,
+        "commission_factor": 1.0
+      },
+      "costs_usd": {
+        "bid_ask_usd": 2087.7,
+        "slippage_usd": 9756.48,
+        "commission_usd": 8273.2,
+        "total_usd": 20117.39
+      },
+      "drag_bps": 2011.74,
+      "drag_pct": 20.117,
+      "net_sharpe": 4.629,
+      "net_cagr_pct": 126.08,
+      "delta_sharpe_vs_gross": -1.331
+    },
+    {
+      "label": "Stack A+B",
+      "techniques": [
+        "A",
+        "B"
+      ],
+      "factors": {
+        "bid_ask_factor": 0.5,
+        "slippage_factor": 0.75,
+        "commission_factor": 1.0
+      },
+      "costs_usd": {
+        "bid_ask_usd": 2087.7,
+        "slippage_usd": 7317.36,
+        "commission_usd": 8273.2,
+        "total_usd": 17678.26
+      },
+      "drag_bps": 1767.83,
+      "drag_pct": 17.678,
+      "net_sharpe": 4.791,
+      "net_cagr_pct": 128.52,
+      "delta_sharpe_vs_gross": -1.169
+    },
+    {
+      "label": "Stack A+B+C",
+      "techniques": [
+        "A",
+        "B",
+        "C"
+      ],
+      "factors": {
+        "bid_ask_factor": 0.39,
+        "slippage_factor": 0.7875000000000001,
+        "commission_factor": 1.0
+      },
+      "costs_usd": {
+        "bid_ask_usd": 1628.41,
+        "slippage_usd": 7683.23,
+        "commission_usd": 8273.2,
+        "total_usd": 17584.84
+      },
+      "drag_bps": 1758.48,
+      "drag_pct": 17.585,
+      "net_sharpe": 4.797,
+      "net_cagr_pct": 128.62,
+      "delta_sharpe_vs_gross": -1.163
+    },
+    {
+      "label": "Stack A+B+C+D",
+      "techniques": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "factors": {
+        "bid_ask_factor": 0.2925,
+        "slippage_factor": 0.7875000000000001,
+        "commission_factor": 1.0
+      },
+      "costs_usd": {
+        "bid_ask_usd": 1221.31,
+        "slippage_usd": 7683.23,
+        "commission_usd": 8273.2,
+        "total_usd": 17177.74
+      },
+      "drag_bps": 1717.77,
+      "drag_pct": 17.178,
+      "net_sharpe": 4.824,
+      "net_cagr_pct": 129.02,
+      "delta_sharpe_vs_gross": -1.136
+    }
+  ],
+  "best_scenario": {
+    "label": "Stack A+B+C+D",
+    "techniques": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "factors": {
+      "bid_ask_factor": 0.2925,
+      "slippage_factor": 0.7875000000000001,
+      "commission_factor": 1.0
+    },
+    "costs_usd": {
+      "bid_ask_usd": 1221.31,
+      "slippage_usd": 7683.23,
+      "commission_usd": 8273.2,
+      "total_usd": 17177.74
+    },
+    "drag_bps": 1717.77,
+    "drag_pct": 17.178,
+    "net_sharpe": 4.824,
+    "net_cagr_pct": 129.02,
+    "delta_sharpe_vs_gross": -1.136
+  },
+  "decomposition_rows": "<tr><td>Bid-ask</td><td>$4,175</td><td>$1,221</td><td>$2,954</td><td>71%</td></tr><tr><td>Slippage</td><td>$9,756</td><td>$7,683</td><td>$2,073</td><td>21%</td></tr><tr><td>Commission</td><td>$8,273</td><td>$8,273</td><td>$0</td><td>0%</td></tr><tr style='font-weight:700;background:#f1f5f9'><td>TOTAL</td><td>$22,205</td><td>$17,178</td><td>$5,027</td><td>23%</td></tr>",
+  "rule_zero": "Inherits EXP-2420's real-data cost model (IronVault + Yahoo)"
+}
