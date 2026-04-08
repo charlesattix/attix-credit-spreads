@@ -1,0 +1,46 @@
+{
+  "_comment": "exp_307: SPY + XLI + XLF independent credit spread underlyings. Each runs its own combo regime detector (price/MA/RSI on that ticker's prices). Safe Kelly 4/7/9 sizing: bull=9%, neutral=7%, bear=4%. Equal 33% allocation. Target: +80 independent trades/yr, Sharpe > 6.0.",
+  "_experiment": "exp_307",
+  "_series": "Sector ETF Sharpe Boost",
+  "_hypothesis": "Adding XLI+XLF as independent underlyings with per-ticker combo regime adds ~80 uncorrelated trades/year (40 per ticker). At low cross-ticker correlation (<0.3), this lifts effective N_independent from 45 to 125, projecting Sharpe from 2.60 to 6.0+.",
+
+  "target_delta": 0.12,
+  "use_delta_selection": false,
+  "otm_pct": 0.03,
+  "target_dte": 35,
+  "min_dte": 25,
+  "spread_width": 5,
+  "min_credit_pct": 8,
+  "stop_loss_multiplier": 3.5,
+  "profit_target": 50,
+  "max_risk_per_trade": 7.0,
+  "max_contracts": 25,
+  "direction": "both",
+  "compound": false,
+  "sizing_mode": "flat",
+  "iron_condor_enabled": true,
+  "ic_neutral_regime_only": true,
+  "ic_min_combined_credit_pct": 8,
+  "iv_rank_min_entry": 0,
+  "drawdown_cb_pct": 30,
+  "trend_ma_period": 200,
+  "regime_mode": "combo",
+  "regime_config": {
+    "signals": ["price_vs_ma200", "rsi_momentum", "vix_structure"],
+    "ma_slow_period": 200,
+    "ma200_neutral_band_pct": 0.5,
+    "rsi_period": 14,
+    "rsi_bull_threshold": 55.0,
+    "rsi_bear_threshold": 45.0,
+    "vix_structure_bull": 0.95,
+    "vix_structure_bear": 1.05,
+    "bear_requires_unanimous": true,
+    "cooldown_days": 3,
+    "vix_extreme": 40.0
+  },
+  "regime_risk_sizing": {
+    "bull":    9.0,
+    "neutral": 7.0,
+    "bear":    4.0
+  }
+}

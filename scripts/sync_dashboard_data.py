@@ -159,6 +159,47 @@ def _fetch_alpaca_account(api_key: str, api_secret: str) -> dict:
     return result
 
 
+def _fetch_alpaca_equity_history(api_key: str, api_secret: str) -> list[dict]:
+    """
+    Fetch daily equity history from Alpaca portfolio history API.
+    Returns list of {date, equity, profit_loss} dicts, filtered for non-zero equity.
+    """
+    import urllib.request
+    import urllib.error
+
+    headers = {
+        "APCA-API-KEY-ID":     api_key,
+        "APCA-API-SECRET-KEY": api_secret,
+    }
+    try:
+        req = urllib.request.Request(
+            f"{ALPACA_PAPER_URL}/v2/account/portfolio/history?period=3M&timeframe=1D",
+            headers=headers,
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+
+        timestamps = data.get("timestamp", [])
+        equities   = data.get("equity", [])
+        pnls       = data.get("profit_loss", [])
+
+        result = []
+        for i, ts in enumerate(timestamps):
+            eq = equities[i] if i < len(equities) else None
+            pl = pnls[i] if i < len(pnls) else 0
+            if eq and eq > 0:
+                dt = datetime.fromtimestamp(ts).strftime("%Y-%m-%d")
+                result.append({
+                    "date":        dt,
+                    "equity":      round(eq, 2),
+                    "profit_loss": round(pl or 0, 2),
+                })
+        return result
+    except Exception as e:
+        log.warning("Failed to fetch equity history: %s", e)
+        return []
+
+
 # ---------------------------------------------------------------------------
 # DB path resolution (mirrors paper_trading_report.py)
 # ---------------------------------------------------------------------------
@@ -264,6 +305,7 @@ def _query_experiment(exp: dict, report_date: str) -> dict:
             "profit_factor":   None,
         },
         "equity_curve":       [],  # [{date, cumulative_pnl, cumulative_pnl_pct}]
+        "alpaca_equity_history": [],  # [{date, equity, profit_loss}]
         "open_positions":     [],
         "recent_trades":      [],  # last 20 closed
         "strategy_breakdown": {},  # {strategy_type: {count, wins, pnl}}
@@ -423,6 +465,7 @@ def _query_experiment(exp: dict, report_date: str) -> dict:
     api_secret = env_vars.get("ALPACA_API_SECRET", "")
     if api_key and api_secret:
         result["alpaca"] = _fetch_alpaca_account(api_key, api_secret)
+        result["alpaca_equity_history"] = _fetch_alpaca_equity_history(api_key, api_secret)
     else:
         result["alpaca"] = {
             "error":      "No Alpaca credentials found",

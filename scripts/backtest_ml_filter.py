@@ -25,6 +25,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -425,8 +426,15 @@ def run_pipeline(
     logger.info("=" * 65)
 
     # ── Step 1: Load EXP-400 config ───────────────────────────────────────────
+    # exp_400_champion_realdata.json is a flat params dict; Backtester expects
+    # a nested config with 'backtest', 'strategy', 'risk' keys. Import the
+    # canonical builder from run_compass_backtest (same logic as run_optimization).
+    sys.path.insert(0, str(ROOT / "scripts"))
+    from run_compass_backtest import build_backtester_config as _build_nested_config
+
     with open(BACKTEST_CONFIG) as f:
-        config = json.load(f)
+        flat_params = json.load(f)
+    config = _build_nested_config(flat_params, starting_capital=STARTING_CAPITAL)
 
     # ── Step 2: Run (or load cached) 6-year backtest ──────────────────────────
     if skip_backtest and TRADES_CACHE.exists():
@@ -446,8 +454,10 @@ def run_pipeline(
                     t[field] = pd.Timestamp(t[field])
     else:
         logger.info("Running EXP-400 backtest 2020–2025 (offline mode)…")
-        hist_data = HistoricalOptionsData(offline_mode=True)
-        bt = Backtester(config=config, historical_data=hist_data)
+        _polygon_key = os.environ.get("POLYGON_API_KEY", "dummy")
+        hist_data = HistoricalOptionsData(_polygon_key, offline_mode=True)
+        _otm_pct = flat_params.get("otm_pct", 0.02)
+        bt = Backtester(config=config, historical_data=hist_data, otm_pct=_otm_pct)
         full_results = bt.run_backtest(
             ticker=TICKER, start_date=START_DATE, end_date=END_DATE,
         )
@@ -533,18 +543,25 @@ def run_pipeline(
         min_train_samples=30,
     )
     wf_results = validator.run(df)
-    folds      = wf_results["folds"]
+    # Normalise folds to plain dicts regardless of whether WalkForwardValidator
+    # returns dataclasses/namedtuples or dicts (both are valid return types).
+    raw_folds  = wf_results["folds"]
+    folds      = [f if isinstance(f, dict) else f._asdict() if hasattr(f, "_asdict") else vars(f)
+                  for f in raw_folds]
     wf_agg     = wf_results.get("aggregate", {})
 
     for fold in folds:
-        auc_str = f"{fold.auc:.3f}" if fold.auc is not None else "N/A"
+        auc_str = f"{fold['auc']:.3f}" if fold.get("auc") is not None else "N/A"
+        # to_dict() stores "train_period" = "YYYY-MM-DD → YYYY-MM-DD" and "test_period" similarly
+        _train_period = fold.get("train_period", "")
+        _test_period  = fold.get("test_period",  "")
         logger.info(
-            "  Fold %d | train %s–%s | test %s | n=%d/%d | AUC=%s",
-            fold.fold, fold.train_start[:4], fold.train_end[:4],
-            fold.test_start[:4], fold.n_train, fold.n_test, auc_str,
+            "  Fold %d | train %s | test %s | n=%d/%d | AUC=%s",
+            fold["fold"], _train_period, _test_period[:10],
+            fold["n_train"], fold["n_test"], auc_str,
         )
     logger.info("Mean OOS AUC: %.3f  ±  %.3f",
-                wf_agg.get("mean_auc", 0), wf_agg.get("std_auc", 0))
+                wf_agg.get("auc_mean", 0), wf_agg.get("auc_std", 0))
 
     # ── Step 6: Train EnsembleSignalModel on 2020–TRAIN_END_YEAR ─────────────
     train_df = df[df["year"] <= TRAIN_END_YEAR].copy()
@@ -564,6 +581,9 @@ def run_pipeline(
     # Build feature matrices using walk_forward's prepare_features
     # (handles one-hot encoding + column alignment)
     X_train_df = prepare_features(train_df, NUMERIC_FEATURES, CATEGORICAL_FEATURES)
+    # Ensure all columns are float64 — prevents np.std() failures in EnsembleSignalModel
+    # when one-hot encoded columns have mixed Python float / numpy dtypes.
+    X_train_df = X_train_df.astype(float)
     y_train    = train_df["win"].values.astype(int)
 
     logger.info("Training EnsembleSignalModel on %d trades…", len(train_df))
@@ -699,8 +719,8 @@ def _write_report(
 ) -> None:
     now     = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     folds   = wf_results.get("folds", [])
-    mean_auc = float(wf_agg.get("mean_auc", 0))
-    std_auc  = float(wf_agg.get("std_auc", 0))
+    mean_auc = float(wf_agg.get("auc_mean") or 0)
+    std_auc  = float(wf_agg.get("auc_std")  or 0)
 
     lines = [
         "# EXP-400 ML Ensemble Filter — Backtest Report",
@@ -762,16 +782,19 @@ def _write_report(
     ]
 
     for fold in folds:
-        if fold.auc is None:
+        if fold.get("auc") is None:
             auc_str = "N/A"
             sig     = "—"
         else:
-            auc_str = f"{fold.auc:.3f}"
-            sig     = "✅ signal" if fold.auc > 0.55 else ("⚠️ weak" if fold.auc > 0.50 else "❌ none")
-        ssh = f"{fold.signal_sharpe:.2f}" if fold.signal_sharpe is not None else "—"
+            auc_str = f"{fold['auc']:.3f}"
+            sig     = "✅ signal" if fold["auc"] > 0.55 else ("⚠️ weak" if fold["auc"] > 0.50 else "❌ none")
+        ssh = f"{fold['signal_sharpe']:.2f}" if fold.get("signal_sharpe") is not None else "—"
+        # train_period = "YYYY-MM-DD → YYYY-MM-DD"; test_period = "YYYY-MM-DD → YYYY-MM-DD"
+        _tp  = fold.get("train_period", "—")
+        _tsp = fold.get("test_period", "—")[:7]
         lines.append(
-            f"| {fold.fold} | {fold.train_start[:7]} → {fold.train_end[:7]} "
-            f"| {fold.test_start[:7]} | {fold.n_train} | {fold.n_test} "
+            f"| {fold['fold']} | {_tp} "
+            f"| {_tsp} | {fold['n_train']} | {fold['n_test']} "
             f"| {auc_str} | {sig} (Sharpe {ssh}) |"
         )
 
@@ -1016,7 +1039,7 @@ def _print_summary(
     print("=" * 55)
     print("  EXP-400 ML Filter — Results Summary")
     print("=" * 55)
-    mean_auc = wf_agg.get("mean_auc", 0)
+    mean_auc = wf_agg.get("auc_mean") or 0
     print(f"  Walk-forward mean AUC : {mean_auc:.3f}")
     print(f"  Baseline (OOS) trades : {baseline.get('n_trades', 0)}")
     print(f"  Baseline win rate     : {baseline.get('win_rate', 0):.1f}%")

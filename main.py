@@ -932,6 +932,26 @@ Examples:
 
         # Execute command
         if args.command == 'scan':
+            # Per-experiment file lock: prevent two overlapping scan processes
+            # for the same experiment (e.g. cron fires while previous run is
+            # still executing).  Lock path: /tmp/pilotai_{exp_id}.lock
+            # Lock is held for the lifetime of this process; OS releases it on exit.
+            import fcntl as _fcntl
+            _db_for_lock = args.db_path or os.environ.get("PILOTAI_DB_PATH", "")
+            _lock_base = os.path.basename(_db_for_lock).replace("pilotai_", "").replace(".db", "")
+            _exp_id_lock = _lock_base if _lock_base else "unk"
+            _lock_path = f"/tmp/pilotai_{_exp_id_lock}.lock"
+            _lock_fh = open(_lock_path, "w")
+            try:
+                _fcntl.flock(_lock_fh.fileno(), _fcntl.LOCK_EX | _fcntl.LOCK_NB)
+                logger.info("Acquired scan lock for %s: %s", _exp_id_lock, _lock_path)
+            except BlockingIOError:
+                logger.warning(
+                    "Scanner already running for %s (lock held: %s) — exiting without scan",
+                    _exp_id_lock, _lock_path,
+                )
+                sys.exit(0)
+
             system.scan_opportunities()
             # Run one position-monitor cycle after every scan so stop-loss /
             # profit-target exits are evaluated even in cron (one-shot) mode.

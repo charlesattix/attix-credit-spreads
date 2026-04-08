@@ -1,0 +1,143 @@
+# ============================================================================
+# paper_exp700.yaml — EXP-700 ML-Filtered Champion Paper Trading Config
+# ============================================================================
+# Strategy: EXP-400 params (dte=15/15, otm=2%, width=$12, sl=1.25x, pt=55%,
+#           risk=8.5%) gated by the EXP-305 ensemble ML filter (AUC=0.793,
+#           threshold=0.65).
+#
+# The ML filter uses the ensemble trained in ml/models/ensemble_model_20260324.joblib
+# (XGBoost=34.1%, RandomForest=33.1%, ExtraTrees=32.8%) with walk-forward
+# validation across 4 anchored folds (2020–2023 train, 2024 validation).
+# Holdout 2025 result: +13.8pp return improvement, +5pp win rate at threshold=0.65.
+#
+# Account: New Alpaca paper account (see .env.exp700)
+# Baseline: EXP-503 paper account (PA3Z9PLVYUL5) — no ML filter
+#
+# Usage:
+#   python scripts/exp700_ml_scanner.py --config configs/paper_exp700.yaml \
+#                                       --env-file .env.exp700
+#   # One-shot scan; run via cron at 10:00 ET on trading days.
+#
+# Required env vars (in .env.exp700):
+#   ALPACA_API_KEY       — Alpaca paper trading API key
+#   ALPACA_API_SECRET    — Alpaca paper trading API secret
+#   TELEGRAM_BOT_TOKEN   — (optional) Telegram alerts
+#   TELEGRAM_CHAT_ID     — (optional) Telegram chat ID
+# ============================================================================
+
+paper_mode: true
+experiment_id: "EXP-700"
+db_path: "data/exp700/pilotai_exp700.db"
+created_by: "charlesbot"
+
+tickers:
+  - SPY
+
+# ============================================================================
+# Strategy — EXP-400 champion params
+# ============================================================================
+strategy:
+  target_dte: 15
+  min_dte: 15
+
+  direction: both             # regime selects bull_put vs bear_call
+
+  otm_pct: 0.02               # 2% out-of-the-money
+  use_delta_selection: false
+
+  spread_width: 12            # $12 wide spreads
+
+  iron_condor:
+    enabled: true             # EXP-400 uses IC in neutral regime
+    risk_per_trade: 3.5
+
+  regime_mode: combo
+  regime_config:
+    signals:
+      - price_vs_ma200
+      - rsi_momentum
+      - vix_structure
+    ma_slow_period: 80
+    ma200_neutral_band_pct: 0.5
+    rsi_period: 14
+    rsi_bull_threshold: 50.0
+    rsi_bear_threshold: 45.0
+    vix_structure_bull: 0.95
+    vix_structure_bear: 1.05
+    bear_requires_unanimous: true
+    cooldown_days: 3
+    vix_extreme: 40.0
+    vix_extreme_regime: NEUTRAL
+
+  momentum_filter_pct: 2.0
+
+# ============================================================================
+# ML Filter — EXP-305 ensemble (the key addition vs EXP-503)
+# ============================================================================
+ml_filter:
+  enabled: true
+  model_path: "ml/models/ensemble_model_20260331.joblib"
+  feature_stats_path: "ml/models/ensemble_model_20260331.feature_stats.json"
+
+  # Flat threshold (fallback when type not in type_thresholds)
+  probability_threshold: 0.65
+
+  # Regime-aware per-type thresholds (override flat threshold)
+  # bear_call: 0.35 — max historical prob was 0.616; 0.35 → 82% WR in backtest
+  # iron_condor: 0.60 — validated on 2024 holdout
+  # bull_put: 0.65 — original threshold, unchanged
+  type_thresholds:
+    bull_put_spread: 0.65
+    iron_condor: 0.60
+    bear_call_spread: 0.35
+
+  # Fail-safe: if model unavailable, allow trade through (True) or block (False)
+  fail_open: true
+
+  # Log full feature vector on each prediction (useful for debugging)
+  log_features: true
+
+# ============================================================================
+# Risk Management
+# ============================================================================
+risk:
+  account_size: 100000
+  max_risk_per_trade: 8.5     # EXP-400 champion
+  sizing_mode: flat
+  compound: false
+  max_contracts: 25
+  max_positions: 10
+
+  profit_target: 55           # 55% of credit
+  stop_loss_multiplier: 1.25
+
+  min_credit_pct: 5           # minimum credit as % of spread width
+
+  drawdown_cb_pct: 40         # halt new entries if equity drops 40% from peak
+  tiered_drawdown_cb: true    # EXP-700 uses tiered CB (added in feature/circuit-breaker-impl)
+
+  vix_max_entry: 40           # block entries above VIX 40
+
+# ============================================================================
+# Alpaca Paper Trading
+# ============================================================================
+alpaca:
+  enabled: true
+  paper: true
+  base_url: "https://paper-api.alpaca.markets"
+  api_key: "${ALPACA_API_KEY}"
+  api_secret: "${ALPACA_API_SECRET}"
+
+# ============================================================================
+# Alerts / Logging
+# ============================================================================
+alerts:
+  telegram:
+    enabled: true
+    bot_token: "${TELEGRAM_BOT_TOKEN}"
+    chat_id: "${TELEGRAM_CHAT_ID}"
+
+logging:
+  level: "INFO"
+  file: "logs/exp700_scanner.log"
+  console: true

@@ -1,0 +1,162 @@
+# ============================================================================
+# paper_exp307.yaml — EXP-307 Sector ETF Diversification Paper Trading Config
+# ============================================================================
+# Strategy: Regime-adaptive credit spreads on SPY + XLI (industrials) + XLF
+#           (financials). MA crossover regime detection independently per ticker.
+#           +33 additional trades/yr vs SPY-only, improving Sharpe via sector
+#           diversification (backtest EXP-307).
+#
+# Usage:
+#   python3 scripts/exp307_sector_etf_scanner.py \
+#           --config configs/paper_exp307.yaml \
+#           --env-file .env.exp700
+#
+# Required env vars:
+#   ALPACA_API_KEY      — Alpaca paper trading API key
+#   ALPACA_API_SECRET   — Alpaca paper trading API secret
+#   TELEGRAM_BOT_TOKEN  — (optional) Telegram alert bot token
+#   TELEGRAM_CHAT_ID    — (optional) Telegram chat ID for alerts
+# ============================================================================
+
+paper_mode: true
+experiment_id: "EXP-307"
+db_path: "data/exp307/pilotai_exp307.db"
+created_by: "charles"
+
+tickers:
+  - SPY
+  - XLI
+  - XLF
+
+# ============================================================================
+# Per-ticker parameter overrides
+# Spread width scaled to ticker price level:
+#   SPY ~$560 → $12 wide (~2.1% of price)
+#   XLI ~$130 → $3  wide (~2.3% of price)
+#   XLF  ~$45 → $3  wide (~6.7% of price)
+# ============================================================================
+ticker_params:
+  SPY:
+    spread_width: 12
+    otm_pct: 0.02
+    regime_mode: combo      # 3-signal: MA200 + RSI + VIX structure
+  XLI:
+    spread_width: 3
+    otm_pct: 0.02
+    regime_mode: ma         # MA crossover only (sector ETF — no VIX3M term structure)
+  XLF:
+    spread_width: 3
+    otm_pct: 0.02
+    regime_mode: ma
+
+# ============================================================================
+# Strategy — EXP-400 Champion params extended to sector ETFs
+# ============================================================================
+strategy:
+  target_dte: 15
+  min_dte: 15
+
+  direction: both           # regime selects bull_put vs bear_call
+
+  # Default strike params (overridden per ticker via ticker_params)
+  otm_pct: 0.02
+  spread_width: 12
+
+  # Regime detection defaults (SPY uses combo, sector ETFs use ma)
+  regime_mode: combo
+  regime_config:
+    # Combo signals for SPY
+    signals:
+      - price_vs_ma200
+      - rsi_momentum
+      - vix_structure
+    ma_slow_period: 80
+    ma200_neutral_band_pct: 0.5
+    rsi_period: 14
+    rsi_bull_threshold: 50.0
+    rsi_bear_threshold: 45.0
+    vix_structure_bull: 0.95
+    vix_structure_bear: 1.05
+    bear_requires_unanimous: true
+    cooldown_days: 3
+    vix_extreme: 40.0
+    vix_extreme_regime: neutral
+
+    # MA crossover config (used for sector ETFs)
+    ma_fast_period: 50
+    ma_slow_period_cross: 200
+
+# ============================================================================
+# Risk Management
+# ============================================================================
+risk:
+  account_size: 100000
+
+  max_risk_per_trade: 8.5   # % of account per trade
+  sizing_mode: flat
+  compound: false
+
+  profit_target: 55         # 55% of credit received
+  stop_loss_multiplier: 1.25
+
+  min_credit_pct: 5         # minimum credit as % of spread width
+
+  # Contract limits
+  min_contracts: 1
+  max_contracts: 25
+
+  # Position limits — core EXP-307 multi-ticker constraint
+  max_positions_per_ticker: 2
+  max_total_positions: 6
+
+  scan_days: [0, 1, 2, 3, 4]   # Monday–Friday
+
+  # VIX entry gate
+  vix_max_entry: 40
+
+  # Drawdown circuit breaker
+  drawdown_cb_pct: 40
+  cooldown_bars: 3
+
+  # Portfolio-level risk
+  portfolio_risk:
+    max_portfolio_risk_pct: 40
+    max_single_ticker_pct: 30   # sector ETFs capped lower than SPY
+    max_same_expiration: 4
+
+# ============================================================================
+# Options Liquidity Filters
+# Enforced before any entry to avoid illiquid sector ETF options
+# ============================================================================
+liquidity:
+  min_open_interest: 50     # minimum open interest on short leg
+  min_bid: 0.05             # minimum bid on short leg ($0.05)
+  min_ask: 0.05             # minimum ask on short leg
+  max_bid_ask_spread_pct: 50  # max (ask-bid)/mid as % — filters wide markets
+
+# ============================================================================
+# Alpaca Paper Trading
+# ============================================================================
+alpaca:
+  enabled: true
+  paper: true
+  base_url: "https://paper-api.alpaca.markets"
+  api_key: "${ALPACA_API_KEY}"
+  api_secret: "${ALPACA_API_SECRET}"
+
+# ============================================================================
+# Alerts
+# ============================================================================
+alerts:
+  telegram:
+    enabled: true
+    bot_token: "${TELEGRAM_BOT_TOKEN}"
+    chat_id: "${TELEGRAM_CHAT_ID}"
+
+# ============================================================================
+# Logging
+# ============================================================================
+logging:
+  level: "INFO"
+  file: "logs/exp307_scanner.log"
+  console: true
