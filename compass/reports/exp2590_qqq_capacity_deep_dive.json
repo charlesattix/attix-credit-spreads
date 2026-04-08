@@ -1,0 +1,1079 @@
+{
+  "experiment": "EXP-2590",
+  "title": "QQQ Credit Spreads Capacity Deep Dive",
+  "timestamp": "2026-04-08T06:05:04.170854Z",
+  "qqq_standalone": {
+    "metrics": {
+      "label": "QQQ standalone",
+      "n_trades": 85,
+      "total_pnl": 9076.0,
+      "win_rate": 0.8941,
+      "sharpe": 1.859,
+      "sortino": 3.023,
+      "cagr_pct": 1.509,
+      "max_dd_pct": 0.677,
+      "avg_pnl": 106.78,
+      "median_pnl": 116.0,
+      "trades_per_yr": 14.66,
+      "avg_credit": 0.574,
+      "avg_hold_days": 5.8
+    },
+    "yearly": [
+      {
+        "year": 2020,
+        "label": "2020",
+        "n_trades": 19,
+        "total_pnl": 3100.0,
+        "win_rate": 0.9474,
+        "sharpe": 2.701,
+        "sortino": 0.0,
+        "cagr_pct": 3.1,
+        "max_dd_pct": 0.538,
+        "avg_pnl": 163.16,
+        "median_pnl": 156.0,
+        "trades_per_yr": 19.0,
+        "avg_credit": 0.687,
+        "avg_hold_days": 4.4
+      },
+      {
+        "year": 2021,
+        "label": "2021",
+        "n_trades": 15,
+        "total_pnl": 160.0,
+        "win_rate": 0.7333,
+        "sharpe": 0.177,
+        "sortino": 0.607,
+        "cagr_pct": 0.16,
+        "max_dd_pct": 0.698,
+        "avg_pnl": 10.67,
+        "median_pnl": 92.0,
+        "trades_per_yr": 15.0,
+        "avg_credit": 0.419,
+        "avg_hold_days": 4.6
+      },
+      {
+        "year": 2022,
+        "label": "2022",
+        "n_trades": 16,
+        "total_pnl": 2740.0,
+        "win_rate": 0.875,
+        "sharpe": 2.943,
+        "sortino": 5.362,
+        "cagr_pct": 2.719,
+        "max_dd_pct": 0.366,
+        "avg_pnl": 171.25,
+        "median_pnl": 156.0,
+        "trades_per_yr": 15.88,
+        "avg_credit": 0.764,
+        "avg_hold_days": 8.9
+      },
+      {
+        "year": 2023,
+        "label": "2023",
+        "n_trades": 13,
+        "total_pnl": 1644.0,
+        "win_rate": 1.0,
+        "sharpe": 6.708,
+        "sortino": 0.0,
+        "cagr_pct": 1.644,
+        "max_dd_pct": -0.0,
+        "avg_pnl": 126.46,
+        "median_pnl": 108.0,
+        "trades_per_yr": 13.0,
+        "avg_credit": 0.485,
+        "avg_hold_days": 6.2
+      },
+      {
+        "year": 2024,
+        "label": "2024",
+        "n_trades": 12,
+        "total_pnl": 620.0,
+        "win_rate": 0.9167,
+        "sharpe": 0.829,
+        "sortino": 0.0,
+        "cagr_pct": 0.62,
+        "max_dd_pct": 0.612,
+        "avg_pnl": 51.67,
+        "median_pnl": 100.0,
+        "trades_per_yr": 12.0,
+        "avg_credit": 0.438,
+        "avg_hold_days": 5.7
+      },
+      {
+        "year": 2025,
+        "label": "2025",
+        "n_trades": 10,
+        "total_pnl": 812.0,
+        "win_rate": 0.9,
+        "sharpe": 1.286,
+        "sortino": 0.0,
+        "cagr_pct": 0.812,
+        "max_dd_pct": 0.455,
+        "avg_pnl": 81.2,
+        "median_pnl": 128.0,
+        "trades_per_yr": 10.0,
+        "avg_credit": 0.569,
+        "avg_hold_days": 4.8
+      }
+    ],
+    "n_trades_source": "exp2250_qqq_trades.pkl"
+  },
+  "correlation_qqq_exp1220": 0.2376,
+  "baseline_weights": {
+    "exp1220": 0.35,
+    "xlf_cs": 0.1,
+    "xli_cs": 0.1,
+    "gld_cal": 0.1,
+    "slv_cal": 0.075,
+    "vol_arb": 0.15,
+    "v5_hedge": 0.125
+  },
+  "eight_stream_weights": {
+    "exp1220": 0.3,
+    "qqq_cs": 0.15,
+    "xlf_cs": 0.1,
+    "xli_cs": 0.1,
+    "gld_cal": 0.1,
+    "slv_cal": 0.05,
+    "vol_arb": 0.1,
+    "v5_hedge": 0.1
+  },
+  "portfolio_7stream": {
+    "n_days": 1566,
+    "cagr_pct": 13.077,
+    "sharpe": 4.535,
+    "sortino": 4.002,
+    "max_dd_pct": -3.728,
+    "vol_pct": 2.719
+  },
+  "portfolio_8stream": {
+    "n_days": 1566,
+    "cagr_pct": 10.923,
+    "sharpe": 4.938,
+    "sortino": 4.547,
+    "max_dd_pct": -2.651,
+    "vol_pct": 2.104
+  },
+  "per_sleeve_leverage_7": {
+    "exp1220": 2.1592,
+    "xlf_cs": 0.1871,
+    "xli_cs": 0.1297,
+    "gld_cal": 0.1034,
+    "slv_cal": 0.0381,
+    "vol_arb": 0.2623,
+    "v5_hedge": 0.1203
+  },
+  "per_sleeve_leverage_8": {
+    "exp1220": 1.5413,
+    "xlf_cs": 0.1558,
+    "xli_cs": 0.108,
+    "gld_cal": 0.0861,
+    "slv_cal": 0.0211,
+    "vol_arb": 0.1456,
+    "v5_hedge": 0.0801,
+    "qqq_cs": 0.8619
+  },
+  "capacity_7stream": {
+    "exp1220": {
+      "weight": 0.35,
+      "adv_notional_usd": 152489644798.02856,
+      "binding_leg": "SPY options 2,314,201 ct/d",
+      "soft_cap_aum": 4356846994.229388,
+      "hard_cap_aum": 21784234971.14694,
+      "per_tier": {
+        "$50M": {
+          "aum_usd": 50000000.0,
+          "stream_notional_usd": 17500000.0,
+          "participation_pct": 0.0115,
+          "impact_bps_per_trip": 1.61,
+          "annual_impact_bps": 80.3,
+          "flag": "OK"
+        },
+        "$100M": {
+          "aum_usd": 100000000.0,
+          "stream_notional_usd": 35000000.0,
+          "participation_pct": 0.023,
+          "impact_bps_per_trip": 2.27,
+          "annual_impact_bps": 113.6,
+          "flag": "OK"
+        },
+        "$200M": {
+          "aum_usd": 200000000.0,
+          "stream_notional_usd": 70000000.0,
+          "participation_pct": 0.0459,
+          "impact_bps_per_trip": 3.21,
+          "annual_impact_bps": 160.7,
+          "flag": "OK"
+        },
+        "$500M": {
+          "aum_usd": 500000000.0,
+          "stream_notional_usd": 175000000.0,
+          "participation_pct": 0.1148,
+          "impact_bps_per_trip": 5.08,
+          "annual_impact_bps": 254.1,
+          "flag": "OK"
+        },
+        "$1.0B": {
+          "aum_usd": 1000000000.0,
+          "stream_notional_usd": 350000000.0,
+          "participation_pct": 0.2295,
+          "impact_bps_per_trip": 7.19,
+          "annual_impact_bps": 359.3,
+          "flag": "OK"
+        },
+        "$2.0B": {
+          "aum_usd": 2000000000.0,
+          "stream_notional_usd": 700000000.0,
+          "participation_pct": 0.459,
+          "impact_bps_per_trip": 10.16,
+          "annual_impact_bps": 508.1,
+          "flag": "OK"
+        }
+      },
+      "ancillary": {}
+    },
+    "xlf_cs": {
+      "weight": 0.1,
+      "adv_notional_usd": 508596442.8909302,
+      "binding_leg": "XLF options 101,964 ct/d",
+      "soft_cap_aum": 50859644.28909302,
+      "hard_cap_aum": 254298221.4454651,
+      "per_tier": {
+        "$50M": {
+          "aum_usd": 50000000.0,
+          "stream_notional_usd": 5000000.0,
+          "participation_pct": 0.9831,
+          "impact_bps_per_trip": 14.87,
+          "annual_impact_bps": 743.6,
+          "flag": "OK"
+        },
+        "$100M": {
+          "aum_usd": 100000000.0,
+          "stream_notional_usd": 10000000.0,
+          "participation_pct": 1.9662,
+          "impact_bps_per_trip": 21.03,
+          "annual_impact_bps": 1051.7,
+          "flag": "BOTTLENECK"
+        },
+        "$200M": {
+          "aum_usd": 200000000.0,
+          "stream_notional_usd": 20000000.0,
+          "participation_pct": 3.9324,
+          "impact_bps_per_trip": 29.75,
+          "annual_impact_bps": 1487.3,
+          "flag": "BOTTLENECK"
+        },
+        "$500M": {
+          "aum_usd": 500000000.0,
+          "stream_notional_usd": 50000000.0,
+          "participation_pct": 9.831,
+          "impact_bps_per_trip": 47.03,
+          "annual_impact_bps": 2351.6,
+          "flag": "BROKEN"
+        },
+        "$1.0B": {
+          "aum_usd": 1000000000.0,
+          "stream_notional_usd": 100000000.0,
+          "participation_pct": 19.662,
+          "impact_bps_per_trip": 66.51,
+          "annual_impact_bps": 3325.6,
+          "flag": "BROKEN"
+        },
+        "$2.0B": {
+          "aum_usd": 2000000000.0,
+          "stream_notional_usd": 200000000.0,
+          "participation_pct": 39.3239,
+          "impact_bps_per_trip": 94.06,
+          "annual_impact_bps": 4703.2,
+          "flag": "BROKEN"
+        }
+      },
+      "ancillary": {}
+    },
+    "xli_cs": {
+      "weight": 0.1,
+      "adv_notional_usd": 231573348.85864258,
+      "binding_leg": "XLI options 14,068 ct/d",
+      "soft_cap_aum": 23157334.885864258,
+      "hard_cap_aum": 115786674.42932129,
+      "per_tier": {
+        "$50M": {
+          "aum_usd": 50000000.0,
+          "stream_notional_usd": 5000000.0,
+          "participation_pct": 2.1591,
+          "impact_bps_per_trip": 22.04,
+          "annual_impact_bps": 1102.1,
+          "flag": "BOTTLENECK"
+        },
+        "$100M": {
+          "aum_usd": 100000000.0,
+          "stream_notional_usd": 10000000.0,
+          "participation_pct": 4.3183,
+          "impact_bps_per_trip": 31.17,
+          "annual_impact_bps": 1558.5,
+          "flag": "BOTTLENECK"
+        },
+        "$200M": {
+          "aum_usd": 200000000.0,
+          "stream_notional_usd": 20000000.0,
+          "participation_pct": 8.6366,
+          "impact_bps_per_trip": 44.08,
+          "annual_impact_bps": 2204.1,
+          "flag": "BROKEN"
+        },
+        "$500M": {
+          "aum_usd": 500000000.0,
+          "stream_notional_usd": 50000000.0,
+          "participation_pct": 21.5914,
+          "impact_bps_per_trip": 69.7,
+          "annual_impact_bps": 3485.0,
+          "flag": "BROKEN"
+        },
+        "$1.0B": {
+          "aum_usd": 1000000000.0,
+          "stream_notional_usd": 100000000.0,
+          "participation_pct": 43.1829,
+          "impact_bps_per_trip": 98.57,
+          "annual_impact_bps": 4928.5,
+          "flag": "BROKEN"
+        },
+        "$2.0B": {
+          "aum_usd": 2000000000.0,
+          "stream_notional_usd": 200000000.0,
+          "participation_pct": 86.3657,
+          "impact_bps_per_trip": 139.4,
+          "annual_impact_bps": 6970.0,
+          "flag": "BROKEN"
+        }
+      },
+      "ancillary": {}
+    },
+    "gld_cal": {
+      "weight": 0.1,
+      "adv_notional_usd": 303845320.66345215,
+      "binding_leg": "min(GC=F futures, GLD opts)",
+      "soft_cap_aum": 30384532.066345215,
+      "hard_cap_aum": 151922660.33172607,
+      "per_tier": {
+        "$50M": {
+          "aum_usd": 50000000.0,
+          "stream_notional_usd": 5000000.0,
+          "participation_pct": 1.6456,
+          "impact_bps_per_trip": 15.39,
+          "annual_impact_bps": 769.7,
+          "flag": "BOTTLENECK"
+        },
+        "$100M": {
+          "aum_usd": 100000000.0,
+          "stream_notional_usd": 10000000.0,
+          "participation_pct": 3.2911,
+          "impact_bps_per_trip": 21.77,
+          "annual_impact_bps": 1088.5,
+          "flag": "BOTTLENECK"
+        },
+        "$200M": {
+          "aum_usd": 200000000.0,
+          "stream_notional_usd": 20000000.0,
+          "participation_pct": 6.5823,
+          "impact_bps_per_trip": 30.79,
+          "annual_impact_bps": 1539.4,
+          "flag": "BROKEN"
+        },
+        "$500M": {
+          "aum_usd": 500000000.0,
+          "stream_notional_usd": 50000000.0,
+          "participation_pct": 16.4557,
+          "impact_bps_per_trip": 48.68,
+          "annual_impact_bps": 2433.9,
+          "flag": "BROKEN"
+        },
+        "$1.0B": {
+          "aum_usd": 1000000000.0,
+          "stream_notional_usd": 100000000.0,
+          "participation_pct": 32.9115,
+          "impact_bps_per_trip": 68.84,
+          "annual_impact_bps": 3442.1,
+          "flag": "BROKEN"
+        },
+        "$2.0B": {
+          "aum_usd": 2000000000.0,
+          "stream_notional_usd": 200000000.0,
+          "participation_pct": 65.823,
+          "impact_bps_per_trip": 97.36,
+          "annual_impact_bps": 4867.9,
+          "flag": "BROKEN"
+        }
+      },
+      "ancillary": {}
+    },
+    "slv_cal": {
+      "weight": 0.075,
+      "adv_notional_usd": 132661803.13110352,
+      "binding_leg": "SI=F 342 ct/d \u00d7 5000 \u00d7 $77.58",
+      "soft_cap_aum": 17688240.41748047,
+      "hard_cap_aum": 88441202.08740234,
+      "per_tier": {
+        "$50M": {
+          "aum_usd": 50000000.0,
+          "stream_notional_usd": 3750000.0,
+          "participation_pct": 2.8267,
+          "impact_bps_per_trip": 20.18,
+          "annual_impact_bps": 1008.8,
+          "flag": "BOTTLENECK"
+        },
+        "$100M": {
+          "aum_usd": 100000000.0,
+          "stream_notional_usd": 7500000.0,
+          "participation_pct": 5.6535,
+          "impact_bps_per_trip": 28.53,
+          "annual_impact_bps": 1426.6,
+          "flag": "BROKEN"
+        },
+        "$200M": {
+          "aum_usd": 200000000.0,
+          "stream_notional_usd": 15000000.0,
+          "participation_pct": 11.3069,
+          "impact_bps_per_trip": 40.35,
+          "annual_impact_bps": 2017.5,
+          "flag": "BROKEN"
+        },
+        "$500M": {
+          "aum_usd": 500000000.0,
+          "stream_notional_usd": 37500000.0,
+          "participation_pct": 28.2674,
+          "impact_bps_per_trip": 63.8,
+          "annual_impact_bps": 3190.0,
+          "flag": "BROKEN"
+        },
+        "$1.0B": {
+          "aum_usd": 1000000000.0,
+          "stream_notional_usd": 75000000.0,
+          "participation_pct": 56.5347,
+          "impact_bps_per_trip": 90.23,
+          "annual_impact_bps": 4511.4,
+          "flag": "BROKEN"
+        },
+        "$2.0B": {
+          "aum_usd": 2000000000.0,
+          "stream_notional_usd": 150000000.0,
+          "participation_pct": 113.0695,
+          "impact_bps_per_trip": 127.6,
+          "annual_impact_bps": 6380.0,
+          "flag": "BROKEN"
+        }
+      },
+      "ancillary": {}
+    },
+    "vol_arb": {
+      "weight": 0.15,
+      "adv_notional_usd": 10261033332.817078,
+      "binding_leg": "IWM ETF shares proxy",
+      "soft_cap_aum": 684068888.8544719,
+      "hard_cap_aum": 3420344444.2723594,
+      "per_tier": {
+        "$50M": {
+          "aum_usd": 50000000.0,
+          "stream_notional_usd": 7500000.0,
+          "participation_pct": 0.0731,
+          "impact_bps_per_trip": 2.7,
+          "annual_impact_bps": 135.2,
+          "flag": "OK"
+        },
+        "$100M": {
+          "aum_usd": 100000000.0,
+          "stream_notional_usd": 15000000.0,
+          "participation_pct": 0.1462,
+          "impact_bps_per_trip": 3.82,
+          "annual_impact_bps": 191.2,
+          "flag": "OK"
+        },
+        "$200M": {
+          "aum_usd": 200000000.0,
+          "stream_notional_usd": 30000000.0,
+          "participation_pct": 0.2924,
+          "impact_bps_per_trip": 5.41,
+          "annual_impact_bps": 270.4,
+          "flag": "OK"
+        },
+        "$500M": {
+          "aum_usd": 500000000.0,
+          "stream_notional_usd": 75000000.0,
+          "participation_pct": 0.7309,
+          "impact_bps_per_trip": 8.55,
+          "annual_impact_bps": 427.5,
+          "flag": "OK"
+        },
+        "$1.0B": {
+          "aum_usd": 1000000000.0,
+          "stream_notional_usd": 150000000.0,
+          "participation_pct": 1.4618,
+          "impact_bps_per_trip": 12.09,
+          "annual_impact_bps": 604.5,
+          "flag": "BOTTLENECK"
+        },
+        "$2.0B": {
+          "aum_usd": 2000000000.0,
+          "stream_notional_usd": 300000000.0,
+          "participation_pct": 2.9237,
+          "impact_bps_per_trip": 17.1,
+          "annual_impact_bps": 854.9,
+          "flag": "BOTTLENECK"
+        }
+      },
+      "ancillary": {}
+    },
+    "v5_hedge": {
+      "weight": 0.125,
+      "adv_notional_usd": 721456879.9341202,
+      "binding_leg": "UVXY+VXX VIX proxy",
+      "soft_cap_aum": 57716550.394729614,
+      "hard_cap_aum": 288582751.9736481,
+      "per_tier": {
+        "$50M": {
+          "aum_usd": 50000000.0,
+          "stream_notional_usd": 6250000.0,
+          "participation_pct": 0.8663,
+          "impact_bps_per_trip": 13.96,
+          "annual_impact_bps": 698.1,
+          "flag": "OK"
+        },
+        "$100M": {
+          "aum_usd": 100000000.0,
+          "stream_notional_usd": 12500000.0,
+          "participation_pct": 1.7326,
+          "impact_bps_per_trip": 19.74,
+          "annual_impact_bps": 987.2,
+          "flag": "BOTTLENECK"
+        },
+        "$200M": {
+          "aum_usd": 200000000.0,
+          "stream_notional_usd": 25000000.0,
+          "participation_pct": 3.4652,
+          "impact_bps_per_trip": 27.92,
+          "annual_impact_bps": 1396.1,
+          "flag": "BOTTLENECK"
+        },
+        "$500M": {
+          "aum_usd": 500000000.0,
+          "stream_notional_usd": 62500000.0,
+          "participation_pct": 8.663,
+          "impact_bps_per_trip": 44.15,
+          "annual_impact_bps": 2207.5,
+          "flag": "BROKEN"
+        },
+        "$1.0B": {
+          "aum_usd": 1000000000.0,
+          "stream_notional_usd": 125000000.0,
+          "participation_pct": 17.3261,
+          "impact_bps_per_trip": 62.44,
+          "annual_impact_bps": 3121.8,
+          "flag": "BROKEN"
+        },
+        "$2.0B": {
+          "aum_usd": 2000000000.0,
+          "stream_notional_usd": 250000000.0,
+          "participation_pct": 34.6521,
+          "impact_bps_per_trip": 88.3,
+          "annual_impact_bps": 4415.0,
+          "flag": "BROKEN"
+        }
+      },
+      "ancillary": {}
+    },
+    "_bottleneck": {
+      "name": "slv_cal",
+      "soft_cap_aum": 17688240.41748047,
+      "hard_cap_aum": 88441202.08740234
+    }
+  },
+  "capacity_8stream": {
+    "exp1220": {
+      "weight": 0.3,
+      "adv_notional_usd": 152489644798.02856,
+      "binding_leg": "SPY options 2,314,201 ct/d",
+      "soft_cap_aum": 5082988159.934286,
+      "hard_cap_aum": 25414940799.67143,
+      "per_tier": {
+        "$50M": {
+          "aum_usd": 50000000.0,
+          "stream_notional_usd": 15000000.0,
+          "participation_pct": 0.0098,
+          "impact_bps_per_trip": 1.49,
+          "annual_impact_bps": 74.4,
+          "flag": "OK"
+        },
+        "$100M": {
+          "aum_usd": 100000000.0,
+          "stream_notional_usd": 30000000.0,
+          "participation_pct": 0.0197,
+          "impact_bps_per_trip": 2.1,
+          "annual_impact_bps": 105.2,
+          "flag": "OK"
+        },
+        "$200M": {
+          "aum_usd": 200000000.0,
+          "stream_notional_usd": 60000000.0,
+          "participation_pct": 0.0393,
+          "impact_bps_per_trip": 2.98,
+          "annual_impact_bps": 148.8,
+          "flag": "OK"
+        },
+        "$500M": {
+          "aum_usd": 500000000.0,
+          "stream_notional_usd": 150000000.0,
+          "participation_pct": 0.0984,
+          "impact_bps_per_trip": 4.7,
+          "annual_impact_bps": 235.2,
+          "flag": "OK"
+        },
+        "$1.0B": {
+          "aum_usd": 1000000000.0,
+          "stream_notional_usd": 300000000.0,
+          "participation_pct": 0.1967,
+          "impact_bps_per_trip": 6.65,
+          "annual_impact_bps": 332.7,
+          "flag": "OK"
+        },
+        "$2.0B": {
+          "aum_usd": 2000000000.0,
+          "stream_notional_usd": 600000000.0,
+          "participation_pct": 0.3935,
+          "impact_bps_per_trip": 9.41,
+          "annual_impact_bps": 470.5,
+          "flag": "OK"
+        }
+      },
+      "ancillary": {}
+    },
+    "qqq_cs": {
+      "weight": 0.15,
+      "adv_notional_usd": 11089046650.0,
+      "binding_leg": "QQQ options 188,429 ct/d \u00d7 100 \u00d7 $588.50",
+      "soft_cap_aum": 739269776.6666667,
+      "hard_cap_aum": 3696348883.3333335,
+      "per_tier": {
+        "$50M": {
+          "aum_usd": 50000000.0,
+          "stream_notional_usd": 7500000.0,
+          "participation_pct": 0.0676,
+          "impact_bps_per_trip": 3.9,
+          "annual_impact_bps": 195.0,
+          "flag": "OK"
+        },
+        "$100M": {
+          "aum_usd": 100000000.0,
+          "stream_notional_usd": 15000000.0,
+          "participation_pct": 0.1353,
+          "impact_bps_per_trip": 5.52,
+          "annual_impact_bps": 275.8,
+          "flag": "OK"
+        },
+        "$200M": {
+          "aum_usd": 200000000.0,
+          "stream_notional_usd": 30000000.0,
+          "participation_pct": 0.2705,
+          "impact_bps_per_trip": 7.8,
+          "annual_impact_bps": 390.1,
+          "flag": "OK"
+        },
+        "$500M": {
+          "aum_usd": 500000000.0,
+          "stream_notional_usd": 75000000.0,
+          "participation_pct": 0.6763,
+          "impact_bps_per_trip": 12.34,
+          "annual_impact_bps": 616.8,
+          "flag": "OK"
+        },
+        "$1.0B": {
+          "aum_usd": 1000000000.0,
+          "stream_notional_usd": 150000000.0,
+          "participation_pct": 1.3527,
+          "impact_bps_per_trip": 17.45,
+          "annual_impact_bps": 872.3,
+          "flag": "BOTTLENECK"
+        },
+        "$2.0B": {
+          "aum_usd": 2000000000.0,
+          "stream_notional_usd": 300000000.0,
+          "participation_pct": 2.7054,
+          "impact_bps_per_trip": 24.67,
+          "annual_impact_bps": 1233.6,
+          "flag": "BOTTLENECK"
+        }
+      },
+      "ancillary": {
+        "qqq_median_option_vol_contracts": 188429.0,
+        "qqq_median_option_oi_contracts": 0,
+        "qqq_price": 588.5
+      }
+    },
+    "xlf_cs": {
+      "weight": 0.1,
+      "adv_notional_usd": 508596442.8909302,
+      "binding_leg": "XLF options 101,964 ct/d",
+      "soft_cap_aum": 50859644.28909302,
+      "hard_cap_aum": 254298221.4454651,
+      "per_tier": {
+        "$50M": {
+          "aum_usd": 50000000.0,
+          "stream_notional_usd": 5000000.0,
+          "participation_pct": 0.9831,
+          "impact_bps_per_trip": 14.87,
+          "annual_impact_bps": 743.6,
+          "flag": "OK"
+        },
+        "$100M": {
+          "aum_usd": 100000000.0,
+          "stream_notional_usd": 10000000.0,
+          "participation_pct": 1.9662,
+          "impact_bps_per_trip": 21.03,
+          "annual_impact_bps": 1051.7,
+          "flag": "BOTTLENECK"
+        },
+        "$200M": {
+          "aum_usd": 200000000.0,
+          "stream_notional_usd": 20000000.0,
+          "participation_pct": 3.9324,
+          "impact_bps_per_trip": 29.75,
+          "annual_impact_bps": 1487.3,
+          "flag": "BOTTLENECK"
+        },
+        "$500M": {
+          "aum_usd": 500000000.0,
+          "stream_notional_usd": 50000000.0,
+          "participation_pct": 9.831,
+          "impact_bps_per_trip": 47.03,
+          "annual_impact_bps": 2351.6,
+          "flag": "BROKEN"
+        },
+        "$1.0B": {
+          "aum_usd": 1000000000.0,
+          "stream_notional_usd": 100000000.0,
+          "participation_pct": 19.662,
+          "impact_bps_per_trip": 66.51,
+          "annual_impact_bps": 3325.6,
+          "flag": "BROKEN"
+        },
+        "$2.0B": {
+          "aum_usd": 2000000000.0,
+          "stream_notional_usd": 200000000.0,
+          "participation_pct": 39.3239,
+          "impact_bps_per_trip": 94.06,
+          "annual_impact_bps": 4703.2,
+          "flag": "BROKEN"
+        }
+      },
+      "ancillary": {}
+    },
+    "xli_cs": {
+      "weight": 0.1,
+      "adv_notional_usd": 231573348.85864258,
+      "binding_leg": "XLI options 14,068 ct/d",
+      "soft_cap_aum": 23157334.885864258,
+      "hard_cap_aum": 115786674.42932129,
+      "per_tier": {
+        "$50M": {
+          "aum_usd": 50000000.0,
+          "stream_notional_usd": 5000000.0,
+          "participation_pct": 2.1591,
+          "impact_bps_per_trip": 22.04,
+          "annual_impact_bps": 1102.1,
+          "flag": "BOTTLENECK"
+        },
+        "$100M": {
+          "aum_usd": 100000000.0,
+          "stream_notional_usd": 10000000.0,
+          "participation_pct": 4.3183,
+          "impact_bps_per_trip": 31.17,
+          "annual_impact_bps": 1558.5,
+          "flag": "BOTTLENECK"
+        },
+        "$200M": {
+          "aum_usd": 200000000.0,
+          "stream_notional_usd": 20000000.0,
+          "participation_pct": 8.6366,
+          "impact_bps_per_trip": 44.08,
+          "annual_impact_bps": 2204.1,
+          "flag": "BROKEN"
+        },
+        "$500M": {
+          "aum_usd": 500000000.0,
+          "stream_notional_usd": 50000000.0,
+          "participation_pct": 21.5914,
+          "impact_bps_per_trip": 69.7,
+          "annual_impact_bps": 3485.0,
+          "flag": "BROKEN"
+        },
+        "$1.0B": {
+          "aum_usd": 1000000000.0,
+          "stream_notional_usd": 100000000.0,
+          "participation_pct": 43.1829,
+          "impact_bps_per_trip": 98.57,
+          "annual_impact_bps": 4928.5,
+          "flag": "BROKEN"
+        },
+        "$2.0B": {
+          "aum_usd": 2000000000.0,
+          "stream_notional_usd": 200000000.0,
+          "participation_pct": 86.3657,
+          "impact_bps_per_trip": 139.4,
+          "annual_impact_bps": 6970.0,
+          "flag": "BROKEN"
+        }
+      },
+      "ancillary": {}
+    },
+    "gld_cal": {
+      "weight": 0.1,
+      "adv_notional_usd": 303845320.66345215,
+      "binding_leg": "min(GC=F futures, GLD opts)",
+      "soft_cap_aum": 30384532.066345215,
+      "hard_cap_aum": 151922660.33172607,
+      "per_tier": {
+        "$50M": {
+          "aum_usd": 50000000.0,
+          "stream_notional_usd": 5000000.0,
+          "participation_pct": 1.6456,
+          "impact_bps_per_trip": 15.39,
+          "annual_impact_bps": 769.7,
+          "flag": "BOTTLENECK"
+        },
+        "$100M": {
+          "aum_usd": 100000000.0,
+          "stream_notional_usd": 10000000.0,
+          "participation_pct": 3.2911,
+          "impact_bps_per_trip": 21.77,
+          "annual_impact_bps": 1088.5,
+          "flag": "BOTTLENECK"
+        },
+        "$200M": {
+          "aum_usd": 200000000.0,
+          "stream_notional_usd": 20000000.0,
+          "participation_pct": 6.5823,
+          "impact_bps_per_trip": 30.79,
+          "annual_impact_bps": 1539.4,
+          "flag": "BROKEN"
+        },
+        "$500M": {
+          "aum_usd": 500000000.0,
+          "stream_notional_usd": 50000000.0,
+          "participation_pct": 16.4557,
+          "impact_bps_per_trip": 48.68,
+          "annual_impact_bps": 2433.9,
+          "flag": "BROKEN"
+        },
+        "$1.0B": {
+          "aum_usd": 1000000000.0,
+          "stream_notional_usd": 100000000.0,
+          "participation_pct": 32.9115,
+          "impact_bps_per_trip": 68.84,
+          "annual_impact_bps": 3442.1,
+          "flag": "BROKEN"
+        },
+        "$2.0B": {
+          "aum_usd": 2000000000.0,
+          "stream_notional_usd": 200000000.0,
+          "participation_pct": 65.823,
+          "impact_bps_per_trip": 97.36,
+          "annual_impact_bps": 4867.9,
+          "flag": "BROKEN"
+        }
+      },
+      "ancillary": {}
+    },
+    "slv_cal": {
+      "weight": 0.05,
+      "adv_notional_usd": 132661803.13110352,
+      "binding_leg": "SI=F 342 ct/d \u00d7 5000 \u00d7 $77.58",
+      "soft_cap_aum": 26532360.626220703,
+      "hard_cap_aum": 132661803.13110352,
+      "per_tier": {
+        "$50M": {
+          "aum_usd": 50000000.0,
+          "stream_notional_usd": 2500000.0,
+          "participation_pct": 1.8845,
+          "impact_bps_per_trip": 16.47,
+          "annual_impact_bps": 823.7,
+          "flag": "BOTTLENECK"
+        },
+        "$100M": {
+          "aum_usd": 100000000.0,
+          "stream_notional_usd": 5000000.0,
+          "participation_pct": 3.769,
+          "impact_bps_per_trip": 23.3,
+          "annual_impact_bps": 1164.8,
+          "flag": "BOTTLENECK"
+        },
+        "$200M": {
+          "aum_usd": 200000000.0,
+          "stream_notional_usd": 10000000.0,
+          "participation_pct": 7.538,
+          "impact_bps_per_trip": 32.95,
+          "annual_impact_bps": 1647.3,
+          "flag": "BROKEN"
+        },
+        "$500M": {
+          "aum_usd": 500000000.0,
+          "stream_notional_usd": 25000000.0,
+          "participation_pct": 18.8449,
+          "impact_bps_per_trip": 52.09,
+          "annual_impact_bps": 2604.6,
+          "flag": "BROKEN"
+        },
+        "$1.0B": {
+          "aum_usd": 1000000000.0,
+          "stream_notional_usd": 50000000.0,
+          "participation_pct": 37.6898,
+          "impact_bps_per_trip": 73.67,
+          "annual_impact_bps": 3683.5,
+          "flag": "BROKEN"
+        },
+        "$2.0B": {
+          "aum_usd": 2000000000.0,
+          "stream_notional_usd": 100000000.0,
+          "participation_pct": 75.3796,
+          "impact_bps_per_trip": 104.19,
+          "annual_impact_bps": 5209.3,
+          "flag": "BROKEN"
+        }
+      },
+      "ancillary": {}
+    },
+    "vol_arb": {
+      "weight": 0.1,
+      "adv_notional_usd": 10261033332.817078,
+      "binding_leg": "IWM ETF shares proxy",
+      "soft_cap_aum": 1026103333.2817078,
+      "hard_cap_aum": 5130516666.408539,
+      "per_tier": {
+        "$50M": {
+          "aum_usd": 50000000.0,
+          "stream_notional_usd": 5000000.0,
+          "participation_pct": 0.0487,
+          "impact_bps_per_trip": 2.21,
+          "annual_impact_bps": 110.4,
+          "flag": "OK"
+        },
+        "$100M": {
+          "aum_usd": 100000000.0,
+          "stream_notional_usd": 10000000.0,
+          "participation_pct": 0.0975,
+          "impact_bps_per_trip": 3.12,
+          "annual_impact_bps": 156.1,
+          "flag": "OK"
+        },
+        "$200M": {
+          "aum_usd": 200000000.0,
+          "stream_notional_usd": 20000000.0,
+          "participation_pct": 0.1949,
+          "impact_bps_per_trip": 4.41,
+          "annual_impact_bps": 220.7,
+          "flag": "OK"
+        },
+        "$500M": {
+          "aum_usd": 500000000.0,
+          "stream_notional_usd": 50000000.0,
+          "participation_pct": 0.4873,
+          "impact_bps_per_trip": 6.98,
+          "annual_impact_bps": 349.0,
+          "flag": "OK"
+        },
+        "$1.0B": {
+          "aum_usd": 1000000000.0,
+          "stream_notional_usd": 100000000.0,
+          "participation_pct": 0.9746,
+          "impact_bps_per_trip": 9.87,
+          "annual_impact_bps": 493.6,
+          "flag": "OK"
+        },
+        "$2.0B": {
+          "aum_usd": 2000000000.0,
+          "stream_notional_usd": 200000000.0,
+          "participation_pct": 1.9491,
+          "impact_bps_per_trip": 13.96,
+          "annual_impact_bps": 698.1,
+          "flag": "BOTTLENECK"
+        }
+      },
+      "ancillary": {}
+    },
+    "v5_hedge": {
+      "weight": 0.1,
+      "adv_notional_usd": 721456879.9341202,
+      "binding_leg": "UVXY+VXX VIX proxy",
+      "soft_cap_aum": 72145687.99341202,
+      "hard_cap_aum": 360728439.9670601,
+      "per_tier": {
+        "$50M": {
+          "aum_usd": 50000000.0,
+          "stream_notional_usd": 5000000.0,
+          "participation_pct": 0.693,
+          "impact_bps_per_trip": 12.49,
+          "annual_impact_bps": 624.4,
+          "flag": "OK"
+        },
+        "$100M": {
+          "aum_usd": 100000000.0,
+          "stream_notional_usd": 10000000.0,
+          "participation_pct": 1.3861,
+          "impact_bps_per_trip": 17.66,
+          "annual_impact_bps": 883.0,
+          "flag": "BOTTLENECK"
+        },
+        "$200M": {
+          "aum_usd": 200000000.0,
+          "stream_notional_usd": 20000000.0,
+          "participation_pct": 2.7722,
+          "impact_bps_per_trip": 24.97,
+          "annual_impact_bps": 1248.7,
+          "flag": "BOTTLENECK"
+        },
+        "$500M": {
+          "aum_usd": 500000000.0,
+          "stream_notional_usd": 50000000.0,
+          "participation_pct": 6.9304,
+          "impact_bps_per_trip": 39.49,
+          "annual_impact_bps": 1974.4,
+          "flag": "BROKEN"
+        },
+        "$1.0B": {
+          "aum_usd": 1000000000.0,
+          "stream_notional_usd": 100000000.0,
+          "participation_pct": 13.8608,
+          "impact_bps_per_trip": 55.85,
+          "annual_impact_bps": 2792.3,
+          "flag": "BROKEN"
+        },
+        "$2.0B": {
+          "aum_usd": 2000000000.0,
+          "stream_notional_usd": 200000000.0,
+          "participation_pct": 27.7217,
+          "impact_bps_per_trip": 78.98,
+          "annual_impact_bps": 3948.9,
+          "flag": "BROKEN"
+        }
+      },
+      "ancillary": {}
+    },
+    "_bottleneck": {
+      "name": "xli_cs",
+      "soft_cap_aum": 23157334.885864258,
+      "hard_cap_aum": 115786674.42932129
+    }
+  },
+  "delta": {
+    "sharpe": 0.403,
+    "cagr_pct": -2.154,
+    "max_dd_pct": 1.077,
+    "vol_pct": -0.615,
+    "soft_cap_multiplier": 1.31
+  },
+  "gates": {
+    "sharpe_not_regress": true,
+    "capacity_improves_or_flat": true,
+    "qqq_standalone_passes": true,
+    "qqq_diversifies": true
+  },
+  "decision": "APPROVE",
+  "rule_zero": "QQQ trades from exp2250_qqq_trades.pkl (real IronVault option_daily prices via EXP-2240 framework). 7-stream returns from exp2280_v6_sparse.pkl. Live Yahoo + IronVault ADV for capacity. No synthetic data."
+}
