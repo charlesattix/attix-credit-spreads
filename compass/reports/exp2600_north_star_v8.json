@@ -1,7 +1,7 @@
 {
   "experiment": "EXP-2600",
   "title": "North Star v8 \u2014 Add QQQ + Tune Leverage for CAGR>100%",
-  "generated": "2026-04-08T06:36:13",
+  "generated": "2026-04-08T07:33:31",
   "rule_zero": true,
   "sources": {
     "base_cube": "compass.exp2450_sparse_combined_honest.build_sparse_seven_stream_cube",

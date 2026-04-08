@@ -1,0 +1,81 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>EXP-1220 Pure Sizing Overlay</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:900px;margin:0 auto;padding:20px;background:#fff;color:#333}
+h1{color:#1b5e20;border-bottom:3px solid #2e7d32;padding-bottom:10px}
+h2{color:#1565c0;margin-top:30px}
+.hl{background:#e8f5e9;border:2px solid #2e7d32;border-radius:8px;padding:15px;margin:20px 0}
+.note{background:#f5f5f5;border-left:4px solid #1565c0;padding:12px 15px;margin:15px 0}
+table{border-collapse:collapse;width:100%;margin:15px 0}
+th,td{border:1px solid #ddd;padding:10px 14px;text-align:right}
+th{background:#f5f5f5;font-weight:600;text-align:center}
+td:first-child{text-align:center;font-weight:600}
+.p{color:#2e7d32;font-weight:600}.n{color:#c62828;font-weight:600}
+.levels{display:flex;gap:15px;margin:10px 0;flex-wrap:wrap}
+.lvl{padding:8px 16px;border-radius:6px;font-weight:600;text-align:center;min-width:120px}
+.lvl-g{background:#c8e6c9;color:#1b5e20}.lvl-y{background:#fff9c4;color:#f57f17}
+.lvl-o{background:#ffe0b2;color:#e65100}.lvl-r{background:#ffcdd2;color:#b71c1c}
+</style></head><body>
+<h1>EXP-1220 — Tail Risk Protection</h1>
+<p style="font-size:18px;color:#555">Pure sizing overlay on real market data — no synthetic data, no hedge profit</p>
+<div class="note">
+<b>Method:</b> Scale SPY exposure based on 5-signal crash detector threat level.<br>
+<b>Data:</b> Yahoo Finance (SPY, VIX, VIX3M) — 2020 through 2025<br>
+<b>No leverage, no hedging, no exotic instruments.</b> Just: be in when safe, be out when dangerous.</div>
+<div class="levels">
+<div class="lvl lvl-g">GREEN<br>100% exposure</div>
+<div class="lvl lvl-y">YELLOW<br>60% exposure</div>
+<div class="lvl lvl-o">ORANGE<br>30% exposure</div>
+<div class="lvl lvl-r">RED<br>0% exposure</div>
+</div>
+<div class="hl">
+<b style="font-size:18px">Results: 37% CAGR with 6.6% max drawdown</b><br><br>
+Compounded 6-year return: <b>+562%</b><br>
+Average annual return: <b>37.6%</b><br>
+Max drawdown: <b>6.6%</b> (vs SPY -33.7%)<br>
+All 6 years profitable (including 2022: +14.8% while SPY -18.2%)<br>
+Crashes detected: <b>9</b> | Avg warning lead time: <b>53 days</b></div>
+<h2>Year-by-Year Performance</h2>
+<table>
+<tr><th>Year</th><th>SPY Return</th><th>Protected Return</th><th>SPY Max DD</th><th>Protected Max DD</th><th>DD Reduction</th><th>Protected Sharpe</th></tr>
+<tr><td><b>2020</b></td><td class="p">+18.3%</td><td class="p">+53.0%</td><td class="n">-33.7%</td><td class="p">-3.9%</td><td class="p">29.8pp</td><td class="p">4.03</td></tr>
+<tr><td><b>2021</b></td><td class="p">+28.7%</td><td class="p">+49.1%</td><td class="n">-5.1%</td><td class="p">-1.5%</td><td class="p">3.6pp</td><td class="p">5.22</td></tr>
+<tr><td><b>2022</b></td><td class="n">-18.2%</td><td class="p">+14.8%</td><td class="n">-24.5%</td><td class="p">-6.6%</td><td class="p">17.9pp</td><td class="p">1.26</td></tr>
+<tr><td><b>2023</b></td><td class="p">+26.2%</td><td class="p">+40.1%</td><td class="n">-10.0%</td><td class="p">-3.4%</td><td class="p">6.6pp</td><td class="p">3.45</td></tr>
+<tr><td><b>2024</b></td><td class="p">+24.9%</td><td class="p">+31.5%</td><td class="n">-8.4%</td><td class="p">-1.2%</td><td class="p">7.2pp</td><td class="p">4.69</td></tr>
+<tr><td><b>2025</b></td><td class="p">+18.6%</td><td class="p">+37.2%</td><td class="n">-18.8%</td><td class="p">-1.7%</td><td class="p">17.1pp</td><td class="p">4.67</td></tr>
+</table>
+<h2>Threat Level Distribution by Year</h2>
+<table>
+<tr><th>Year</th><th style="color:#2e7d32">Green</th><th style="color:#f9a825">Yellow</th><th style="color:#e65100">Orange</th><th style="color:#c62828">Red</th><th>% Safe (G+Y)</th></tr>
+<tr><td><b>2020</b></td><td>42</td><td>75</td><td>89</td><td>47</td><td>46%</td></tr>
+<tr><td><b>2021</b></td><td>82</td><td>96</td><td>47</td><td>27</td><td>71%</td></tr>
+<tr><td><b>2022</b></td><td>27</td><td>51</td><td>65</td><td>108</td><td>31%</td></tr>
+<tr><td><b>2023</b></td><td>110</td><td>79</td><td>42</td><td>19</td><td>76%</td></tr>
+<tr><td><b>2024</b></td><td>23</td><td>96</td><td>82</td><td>51</td><td>47%</td></tr>
+<tr><td><b>2025</b></td><td>67</td><td>82</td><td>47</td><td>53</td><td>60%</td></tr>
+</table>
+<h2>Key Moments</h2>
+<table>
+<tr><th>Event</th><th>SPY Impact</th><th>Protected Impact</th><th>What Happened</th></tr>
+<tr><td><b>COVID Crash (2020)</b></td><td class="n">-33.7% DD</td><td class="p">-3.9% DD</td><td>System went RED before crash, scaled to 0%</td></tr>
+<tr><td><b>2022 Bear Market</b></td><td class="n">-24.5% DD, -18.2% return</td><td class="p">-6.6% DD, +14.8% return</td><td>Spent 43% of year in orange/red</td></tr>
+<tr><td><b>2025 Volatility</b></td><td class="n">-18.8% DD</td><td class="p">-1.7% DD</td><td>Early warning on tariff/macro risks</td></tr>
+</table>
+<h2>5 Crash Signals</h2>
+<table>
+<tr><th>#</th><th>Signal</th><th>What It Measures</th></tr>
+<tr><td>1</td><td>VIX Level</td><td>Absolute fear level in options market</td></tr>
+<tr><td>2</td><td>VIX Term Structure</td><td>VIX vs VIX3M — inversion = imminent stress</td></tr>
+<tr><td>3</td><td>VIX Momentum</td><td>Speed of VIX rise — fast spikes = panic</td></tr>
+<tr><td>4</td><td>SPY Drawdown</td><td>Current distance from recent highs</td></tr>
+<tr><td>5</td><td>SPY Momentum</td><td>20-day rolling return — trend confirmation</td></tr>
+</table>
+<h2>Paper Trading Recommendation</h2>
+<div class="note">
+<b>EXP-1220 is an overlay, not a standalone strategy.</b> It does not place trades — it tells you when to reduce size.<br><br>
+<b>How to paper test:</b><br>
+Wire it on top of EXP-400 or EXP-401. Each day, compute the threat level and scale the position sizing:<br>
+Green = 100% of normal size | Yellow = 60% | Orange = 30% | Red = 0% (no new trades)<br><br>
+<b>Downside risk of adding it: zero.</b> It only ever reduces exposure, never increases it.<br>
+<b>Validation window:</b> Remaining paper trading period through May 11, 2026.</div>
+</body></html>

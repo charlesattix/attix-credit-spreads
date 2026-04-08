@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"/>
+<title>EXP-1470-real: North Star Real IronVault Backtest</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:1200px;margin:0 auto;padding:20px;background:#0d1117;color:#c9d1d9}
+h1,h2,h3{color:#58a6ff}
+.hero{background:#161b22;border:2px solid #ef4444;border-radius:12px;padding:24px;text-align:center;margin:20px 0}
+.hero .big{font-size:1.8em;font-weight:800;color:#ef4444}
+.hero .sub{color:#8b949e;margin-top:8px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:20px 0}
+.c{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:12px;text-align:center}
+.c .l{color:#8b949e;font-size:.8em}.c .v{color:#f0f6fc;font-weight:600;font-size:1.2em;margin-top:4px}
+.c .v.green{color:#3fb950}.c .v.red{color:#ef4444}.c .v.blue{color:#58a6ff}.c .v.orange{color:#f97316}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+th,td{padding:8px 12px;text-align:right;border-bottom:1px solid #21262d}
+th{color:#8b949e;background:#161b22;font-size:.85em}
+td:first-child,th:first-child{text-align:left}
+tr:hover td{background:#161b2280}
+.section{margin:32px 0}
+.warn{background:#d2992220;border:1px solid #d29922;border-radius:8px;padding:16px;margin:20px 0;color:#d29922}
+.warn strong{color:#f0f6fc}
+.pass{background:#3fb95020;border:1px solid #3fb950;border-radius:8px;padding:16px;margin:20px 0;color:#3fb950}
+.note{color:#8b949e;font-size:.85em;margin:8px 0}
+</style></head><body>
+
+<h1>EXP-1470-real: North Star Real IronVault Backtest</h1>
+<p class="note">
+  Data source: <strong>IronVault</strong> (options_cache.db, real Polygon prices) &middot;
+  Ticker: SPY &middot; Period: 2020–2025 &middot;
+  4-strategy HRP blend
+</p>
+
+<div class="hero">
+  <div class="big">Real CAGR: 0.4% (Synthetic claimed 27.9%)</div>
+  <div class="sub">
+    Real DD: 0.0% &middot;
+    Real Sharpe: 0.00 &middot;
+    Delta: -27.4pp CAGR, -17.2 Sharpe vs synthetic
+  </div>
+</div>
+
+<div class="warn">
+  <strong>REALITY CHECK: Real results differ from synthetic claims</strong><br/>
+  The original EXP-1470 used <code>np.random</code> Monte Carlo over hard-coded strategy metrics.
+  This backtest uses <strong>real option prices from IronVault</strong> (Polygon.io historical data).
+  Real-world friction (slippage, commissions, data gaps, regime detection) reduces returns.
+</div>
+
+<div class="cards">
+  <div class="c"><div class="l">Real CAGR</div><div class="v green">0.4%</div></div>
+  <div class="c"><div class="l">Synthetic CAGR</div><div class="v">27.9%</div></div>
+  <div class="c"><div class="l">CAGR Delta</div><div class="v" style="color:#ef4444">-27.4pp</div></div>
+  <div class="c"><div class="l">Real Worst DD</div><div class="v">0.0%</div></div>
+  <div class="c"><div class="l">Real Avg Sharpe</div><div class="v">0.00</div></div>
+  <div class="c"><div class="l">Synthetic Sharpe</div><div class="v">17.21</div></div>
+  <div class="c"><div class="l">Total Trades</div><div class="v">19</div></div>
+  <div class="c"><div class="l">Avg Win Rate</div><div class="v">89.5%</div></div>
+</div>
+
+<div class="section">
+<h2>Synthetic vs Real Comparison</h2>
+<table>
+<thead><tr><th>Metric</th><th>Synthetic (EXP-1470)</th><th>Real (IronVault)</th><th>Delta</th></tr></thead>
+<tbody>
+<tr><td style="text-align:left">CAGR</td><td>27.9%</td><td><span style="color:#22c55e">+0.4%</span></td><td style="color:#ef4444">-27.4pp</td></tr>
+<tr><td style="text-align:left">Max DD</td><td>1.6%</td><td style="color:#f59e0b">0.0%</td><td>—</td></tr>
+<tr><td style="text-align:left">Sharpe</td><td>17.21</td><td>0.00</td><td style="color:#ef4444">-17.21</td></tr>
+<tr><td style="text-align:left">Win Rate</td><td>—</td><td>89.5%</td><td>—</td></tr>
+<tr><td style="text-align:left">Total Trades</td><td>0 (analytical)</td><td>19</td><td>—</td></tr>
+</tbody></table>
+</div>
+
+<div class="section">
+<h2>Portfolio Year-by-Year (Real)</h2>
+<table>
+<thead><tr><th>Year</th><th>CAGR</th><th>Max DD</th><th>Sharpe</th><th>Trades</th><th>Win Rate</th></tr></thead>
+<tbody><tr><td>2020</td><td><span style="color:#ef4444">+0.0%</span></td><td style='color:#f59e0b'>0.0%</td><td>0.00</td><td>9</td><td>77.8%</td></tr>
+<tr><td>2021</td><td><span style="color:#ef4444">+0.0%</span></td><td style='color:#f59e0b'>0.0%</td><td>0.00</td><td>0</td><td>0.0%</td></tr>
+<tr><td>2022</td><td><span style="color:#22c55e">+0.2%</span></td><td style='color:#f59e0b'>0.0%</td><td>0.00</td><td>1</td><td>100.0%</td></tr>
+<tr><td>2023</td><td><span style="color:#ef4444">+0.0%</span></td><td style='color:#f59e0b'>0.0%</td><td>0.00</td><td>0</td><td>0.0%</td></tr>
+<tr><td>2024</td><td><span style="color:#ef4444">+0.0%</span></td><td style='color:#f59e0b'>0.0%</td><td>0.00</td><td>0</td><td>0.0%</td></tr>
+<tr><td>2025</td><td><span style="color:#22c55e">+2.4%</span></td><td style='color:#f59e0b'>0.0%</td><td>0.00</td><td>9</td><td>100.0%</td></tr>
+</tbody></table>
+</div>
+
+<div class="section">
+<h2>Strategy Summary</h2>
+<table>
+<thead><tr><th>Strategy</th><th>Weight</th><th>CAGR</th><th>Max DD</th><th>Sharpe</th><th>Trades</th><th>Win Rate</th></tr></thead>
+<tbody><tr><td style='text-align:left'>ML-CS-860</td><td>40.5%</td><td><span style="color:#22c55e">+1.0%</span></td><td style='color:#f59e0b'>0.0%</td><td>0.00</td><td>10</td><td>100.0%</td></tr>
+<tr><td style='text-align:left'>Regime-Lev</td><td>20.9%</td><td><span style="color:#22c55e">+0.2%</span></td><td style='color:#f59e0b'>0.0%</td><td>0.00</td><td>1</td><td>100.0%</td></tr>
+<tr><td style='text-align:left'>Intraday-MR</td><td>20.5%</td><td><span style="color:#ef4444">-0.1%</span></td><td style='color:#f59e0b'>0.0%</td><td>0.00</td><td>8</td><td>75.0%</td></tr>
+<tr><td style='text-align:left'>Combined-750</td><td>18.1%</td><td><span style="color:#ef4444">+0.0%</span></td><td style='color:#f59e0b'>0.0%</td><td>0.00</td><td>0</td><td>0.0%</td></tr>
+</tbody></table>
+</div>
+
+<div class="section">
+<h2>Per-Strategy Year-by-Year</h2>
+<table>
+<thead><tr><th>Strategy</th><th>Year</th><th>CAGR</th><th>Max DD</th><th>Sharpe</th><th>Trades</th><th>Win Rate</th></tr></thead>
+<tbody><tr><td style='text-align:left'>ML-CS-860</td><td>2020</td><td><span style="color:#22c55e">+0.7%</span></td><td style='color:#f59e0b'>0.0%</td><td>0.00</td><td>3</td><td>100.0%</td></tr>
+<tr><td style='text-align:left'>ML-CS-860</td><td>2021</td><td><span style="color:#ef4444">+0.0%</span></td><td style='color:#f59e0b'>0.0%</td><td>0.00</td><td>0</td><td>0.0%</td></tr>
+<tr><td style='text-align:left'>ML-CS-860</td><td>2022</td><td><span style="color:#22c55e">+0.4%</span></td><td style='color:#f59e0b'>0.0%</td><td>0.00</td><td>1</td><td>100.0%</td></tr>
+<tr><td style='text-align:left'>ML-CS-860</td><td>2023</td><td><span style="color:#ef4444">+0.0%</span></td><td style='color:#f59e0b'>0.0%</td><td>0.00</td><td>0</td><td>0.0%</td></tr>
+<tr><td style='text-align:left'>ML-CS-860</td><td>2024</td><td><span style="color:#ef4444">+0.0%</span></td><td style='color:#f59e0b'>0.0%</td><td>0.00</td><td>0</td><td>0.0%</td></tr>
+<tr><td style='text-align:left'>ML-CS-860</td><td>2025</td><td><span style="color:#22c55e">+5.2%</span></td><td style='color:#f59e0b'>0.0%</td><td>0.00</td><td>6</td><td>100.0%</td></tr>
+<tr><td style='text-align:left'>Regime-Lev</td><td>2020</td><td><span style="color:#ef4444">+0.0%</span></td><td style='color:#f59e0b'>0.0%</td><td>0.00</td><td>0</td><td>0.0%</td></tr>
+<tr><td style='text-align:left'>Regime-Lev</td><td>2021</td><td><span style="color:#ef4444">+0.0%</span></td><td style='color:#f59e0b'>0.0%</td><td>0.00</td><td>0</td><td>0.0%</td></tr>
+<tr><td style='text-align:left'>Regime-Lev</td><td>2022</td><td><span style="color:#ef4444">+0.0%</span></td><td style='color:#f59e0b'>0.0%</td><td>0.00</td><td>0</td><td>0.0%</td></tr>
+<tr><td style='text-align:left'>Regime-Lev</td><td>2023</td><td><span style="color:#ef4444">+0.0%</span></td><td style='color:#f59e0b'>0.0%</td><td>0.00</td><td>0</td><td>0.0%</td></tr>
+<tr><td style='text-align:left'>Regime-Lev</td><td>2024</td><td><span style="color:#ef4444">+0.0%</span></td><td style='color:#f59e0b'>0.0%</td><td>0.00</td><td>0</td><td>0.0%</td></tr>
+<tr><td style='text-align:left'>Regime-Lev</td><td>2025</td><td><span style="color:#22c55e">+0.9%</span></td><td style='color:#f59e0b'>0.0%</td><td>0.00</td><td>1</td><td>100.0%</td></tr>
+<tr><td style='text-align:left'>Intraday-MR</td><td>2020</td><td><span style="color:#ef4444">-1.3%</span></td><td style='color:#f59e0b'>0.0%</td><td>0.00</td><td>6</td><td>66.7%</td></tr>
+<tr><td style='text-align:left'>Intraday-MR</td><td>2021</td><td><span style="color:#ef4444">+0.0%</span></td><td style='color:#f59e0b'>0.0%</td><td>0.00</td><td>0</td><td>0.0%</td></tr>
+<tr><td style='text-align:left'>Intraday-MR</td><td>2022</td><td><span style="color:#ef4444">+0.0%</span></td><td style='color:#f59e0b'>0.0%</td><td>0.00</td><td>0</td><td>0.0%</td></tr>
+<tr><td style='text-align:left'>Intraday-MR</td><td>2023</td><td><span style="color:#ef4444">+0.0%</span></td><td style='color:#f59e0b'>0.0%</td><td>0.00</td><td>0</td><td>0.0%</td></tr>
+<tr><td style='text-align:left'>Intraday-MR</td><td>2024</td><td><span style="color:#ef4444">+0.0%</span></td><td style='color:#f59e0b'>0.0%</td><td>0.00</td><td>0</td><td>0.0%</td></tr>
+<tr><td style='text-align:left'>Intraday-MR</td><td>2025</td><td><span style="color:#22c55e">+0.4%</span></td><td style='color:#f59e0b'>0.0%</td><td>0.00</td><td>2</td><td>100.0%</td></tr>
+</tbody></table>
+</div>
+
+<div class="section">
+<h2>North Star Allocation</h2>
+<table>
+<thead><tr><th>Strategy</th><th>Weight</th></tr></thead>
+<tbody>
+<tr><td style='text-align:left'>ML-CS-860</td><td>40.5%</td></tr><tr><td style='text-align:left'>Regime-Lev</td><td>20.9%</td></tr><tr><td style='text-align:left'>Intraday-MR</td><td>20.5%</td></tr><tr><td style='text-align:left'>Combined-750</td><td>18.1%</td></tr>
+</tbody></table>
+</div>
+
+<p class="note" style="margin-top:40px;text-align:center">
+  EXP-1470-real &middot; North Star Real IronVault Backtest &middot;
+  Data: options_cache.db (Polygon.io) &middot;
+  Generated by PilotAI Compass
+</p>
+
+</body></html>
