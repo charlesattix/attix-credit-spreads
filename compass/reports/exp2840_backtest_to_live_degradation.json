@@ -1,0 +1,246 @@
+{
+  "experiment": "EXP-2840",
+  "title": "Honest Backtest-to-Live Degradation Model",
+  "timestamp": "2026-04-08T14:05:43.383767Z",
+  "hypothesis": "EXP-2760 literature survey: live Sharpe = 0.5-0.7\u00d7 backtest Sharpe for options-selling strategies. Our net Alpaca Sharpe 6.00 implies a realistic live range of 3.00-4.20.",
+  "backtest_net_sharpe": 6.0,
+  "data": {
+    "streams_source": "exp2280_v6_sparse.pkl",
+    "qqq_trades_source": "exp2250_qqq_trades.pkl",
+    "n_days": 1566,
+    "start": "2020-01-01",
+    "end": "2025-12-31",
+    "streams": [
+      "exp1220",
+      "qqq_cs",
+      "xlf_cs",
+      "xli_cs",
+      "gld_cal",
+      "slv_cal",
+      "vol_arb",
+      "v5_hedge"
+    ]
+  },
+  "per_sleeve_leverage": {
+    "exp1220": 1.677,
+    "qqq_cs": 0.8038,
+    "xlf_cs": 0.1453,
+    "xli_cs": 0.1007,
+    "gld_cal": 0.0803,
+    "slv_cal": 0.0197,
+    "vol_arb": 0.1358,
+    "v5_hedge": 0.0374
+  },
+  "gross_leverage": 3.0,
+  "baseline_portfolio_metrics": {
+    "sharpe": 4.698,
+    "cagr_pct": 10.496,
+    "max_dd_pct": -2.715,
+    "vol_pct": 2.13
+  },
+  "stream_baseline_sharpes": {
+    "exp1220": 3.73,
+    "qqq_cs": 7.71,
+    "xlf_cs": 23.2,
+    "xli_cs": 14.987,
+    "gld_cal": 2.716,
+    "slv_cal": 2.309,
+    "vol_arb": 5.382,
+    "v5_hedge": -0.27
+  },
+  "uniform_degradation_scenarios": {
+    "k_1.0x": {
+      "degradation_multiplier": 1.0,
+      "implied_live_sharpe_from_headline": 6.0,
+      "portfolio_metrics": {
+        "sharpe": 4.698,
+        "cagr_pct": 10.496,
+        "max_dd_pct": -2.715,
+        "vol_pct": 2.13
+      },
+      "passes_elite": true,
+      "passes_good": true
+    },
+    "k_0.9x": {
+      "degradation_multiplier": 0.9,
+      "implied_live_sharpe_from_headline": 5.4,
+      "portfolio_metrics": {
+        "sharpe": 4.287,
+        "cagr_pct": 9.397,
+        "max_dd_pct": -2.724,
+        "vol_pct": 2.1
+      },
+      "passes_elite": true,
+      "passes_good": true
+    },
+    "k_0.8x": {
+      "degradation_multiplier": 0.8,
+      "implied_live_sharpe_from_headline": 4.8,
+      "portfolio_metrics": {
+        "sharpe": 3.86,
+        "cagr_pct": 8.309,
+        "max_dd_pct": -2.732,
+        "vol_pct": 2.074
+      },
+      "passes_elite": true,
+      "passes_good": true
+    },
+    "k_0.7x": {
+      "degradation_multiplier": 0.7,
+      "implied_live_sharpe_from_headline": 4.2,
+      "portfolio_metrics": {
+        "sharpe": 3.417,
+        "cagr_pct": 7.231,
+        "max_dd_pct": -2.741,
+        "vol_pct": 2.05
+      },
+      "passes_elite": true,
+      "passes_good": true
+    },
+    "k_0.6x": {
+      "degradation_multiplier": 0.6,
+      "implied_live_sharpe_from_headline": 3.6,
+      "portfolio_metrics": {
+        "sharpe": 2.96,
+        "cagr_pct": 6.165,
+        "max_dd_pct": -2.75,
+        "vol_pct": 2.028
+      },
+      "passes_elite": false,
+      "passes_good": true
+    },
+    "k_0.5x": {
+      "degradation_multiplier": 0.5,
+      "implied_live_sharpe_from_headline": 3.0,
+      "portfolio_metrics": {
+        "sharpe": 2.489,
+        "cagr_pct": 5.108,
+        "max_dd_pct": -2.758,
+        "vol_pct": 2.01
+      },
+      "passes_elite": false,
+      "passes_good": true
+    },
+    "k_0.4x": {
+      "degradation_multiplier": 0.4,
+      "implied_live_sharpe_from_headline": 2.4,
+      "portfolio_metrics": {
+        "sharpe": 2.006,
+        "cagr_pct": 4.062,
+        "max_dd_pct": -2.767,
+        "vol_pct": 1.995
+      },
+      "passes_elite": false,
+      "passes_good": true
+    },
+    "k_0.3x": {
+      "degradation_multiplier": 0.3,
+      "implied_live_sharpe_from_headline": 1.8,
+      "portfolio_metrics": {
+        "sharpe": 1.514,
+        "cagr_pct": 3.027,
+        "max_dd_pct": -2.775,
+        "vol_pct": 1.983
+      },
+      "passes_elite": false,
+      "passes_good": false
+    }
+  },
+  "breakpoints": {
+    "k_at_sharpe_3.0_elite": 0.6088,
+    "k_at_sharpe_2.0_good": 0.3989,
+    "k_at_sharpe_1.0": 0.1974,
+    "interpretation": "Portfolio stays above Sharpe 3.0 (elite) as long as live delivers \u2265 61% of backtest alpha per stream. At the literature midpoint (60%), portfolio Sharpe is 2.96."
+  },
+  "stream_zero_stress_tests": {
+    "zero_v5_hedge": {
+      "killed_stream": "v5_hedge",
+      "baseline_stream_sharpe": -0.27,
+      "portfolio_metrics": {
+        "sharpe": 4.684,
+        "cagr_pct": 10.53,
+        "max_dd_pct": -2.645,
+        "vol_pct": 2.143
+      },
+      "delta_sharpe": -0.014,
+      "delta_cagr_pct": 0.034
+    },
+    "zero_slv_cal": {
+      "killed_stream": "slv_cal",
+      "baseline_stream_sharpe": 2.309,
+      "portfolio_metrics": {
+        "sharpe": 4.474,
+        "cagr_pct": 9.886,
+        "max_dd_pct": -2.735,
+        "vol_pct": 2.113
+      },
+      "delta_sharpe": -0.224,
+      "delta_cagr_pct": -0.61
+    },
+    "zero_vol_arb": {
+      "killed_stream": "vol_arb",
+      "baseline_stream_sharpe": 5.382,
+      "portfolio_metrics": {
+        "sharpe": 4.316,
+        "cagr_pct": 9.368,
+        "max_dd_pct": -2.715,
+        "vol_pct": 2.08
+      },
+      "delta_sharpe": -0.382,
+      "delta_cagr_pct": -1.128
+    },
+    "zero_gld_cal": {
+      "killed_stream": "gld_cal",
+      "baseline_stream_sharpe": 2.716,
+      "portfolio_metrics": {
+        "sharpe": 4.24,
+        "cagr_pct": 9.068,
+        "max_dd_pct": -2.711,
+        "vol_pct": 2.052
+      },
+      "delta_sharpe": -0.458,
+      "delta_cagr_pct": -1.428
+    }
+  },
+  "combined_nightmare_scenario": {
+    "description": "Crisis Alpha v5 ZERO + 0.5x decay on other 7 streams",
+    "portfolio_metrics": {
+      "sharpe": 2.483,
+      "cagr_pct": 5.124,
+      "max_dd_pct": -2.702,
+      "vol_pct": 2.021
+    },
+    "delta_sharpe": -2.215
+  },
+  "expectation_bands_for_carlos": {
+    "optimistic_p95": {
+      "label": "Optimistic (k=0.8\u00d7)",
+      "degradation": 0.8,
+      "portfolio_sharpe": 3.86,
+      "portfolio_cagr_pct": 8.309,
+      "rationale": "Upper bound of literature range. Typical for well-executed high-liquidity options strategies."
+    },
+    "realistic_p50": {
+      "label": "Realistic (k=0.6\u00d7)",
+      "degradation": 0.6,
+      "portfolio_sharpe": 2.96,
+      "portfolio_cagr_pct": 6.165,
+      "rationale": "Literature midpoint. Plan for this as the base case."
+    },
+    "pessimistic_p05": {
+      "label": "Pessimistic (k=0.5\u00d7)",
+      "degradation": 0.5,
+      "portfolio_sharpe": 2.489,
+      "portfolio_cagr_pct": 5.108,
+      "rationale": "Lower bound of literature range. Triggers soul-searching but still profitable."
+    },
+    "crisis_scenario": {
+      "label": "Crisis (0.5\u00d7 + Crisis Alpha zero)",
+      "degradation": "0.5\u00d7 + v5=0",
+      "portfolio_sharpe": 2.483,
+      "portfolio_cagr_pct": 5.124,
+      "rationale": "Simultaneous alpha decay AND our weakest stream going to zero. The floor case."
+    }
+  },
+  "rule_zero": "Real stream returns from exp2280_v6_sparse.pkl + cached QQQ trades from exp2250. Degradation applied as mean shift (preserves vol) \u2014 the correct model for alpha decay. No synthetic returns, no Monte Carlo, no distributional assumptions beyond the real empirical returns."
+}
