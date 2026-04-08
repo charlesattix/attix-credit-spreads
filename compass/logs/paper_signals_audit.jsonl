@@ -1,0 +1,9 @@
+{"ts": "2026-04-08T14:05:35Z", "as_of": "2026-04-08", "regime": "BULL", "n_open": 6, "n_skip": 0, "n_no_trade": 1, "overlay_notes": []}
+{"ts": "2026-04-08T14:05:35Z", "as_of": "2026-04-08", "stream": "exp1220", "action": "OPEN", "reason": "regime=BULL overlays passed", "target_contracts": 7}
+{"ts": "2026-04-08T14:05:35Z", "as_of": "2026-04-08", "stream": "xlf_cs", "action": "OPEN", "reason": "regime=BULL overlays passed", "target_contracts": 10}
+{"ts": "2026-04-08T14:05:35Z", "as_of": "2026-04-08", "stream": "xli_cs", "action": "OPEN", "reason": "regime=BULL overlays passed", "target_contracts": 4}
+{"ts": "2026-04-08T14:05:35Z", "as_of": "2026-04-08", "stream": "qqq_cs", "action": "OPEN", "reason": "regime=BULL overlays passed", "target_contracts": 3}
+{"ts": "2026-04-08T14:05:35Z", "as_of": "2026-04-08", "stream": "gld_cal", "action": "OPEN", "reason": "regime=BULL calendar constructive", "target_contracts": 12}
+{"ts": "2026-04-08T14:05:35Z", "as_of": "2026-04-08", "stream": "slv_cal", "action": "OPEN", "reason": "regime=BULL calendar constructive", "target_contracts": 6}
+{"ts": "2026-04-08T14:05:35Z", "as_of": "2026-04-08", "stream": "cross_vol", "action": "NO_TRADE", "reason": "VRP=-0.00 < 2.0 threshold, waiting", "target_contracts": 0}
+{"ts": "2026-04-08T14:05:35Z", "as_of": "2026-04-08", "stream": "v5_hedge", "action": "HOLD_MIN", "reason": "maintain 1-contract floor, VIX=20.4", "target_contracts": 1}

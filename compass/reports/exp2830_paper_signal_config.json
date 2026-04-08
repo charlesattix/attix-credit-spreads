@@ -1,0 +1,33 @@
+{
+  "experiment": "EXP-2830",
+  "description": "Paper signal generator config for v8a portfolio",
+  "capital_base_usd": 100000.0,
+  "target_vol": 0.12,
+  "max_leverage": 3.0,
+  "stream_weights": {
+    "exp1220": 0.35,
+    "xlf_cs": 0.1,
+    "xli_cs": 0.1,
+    "gld_cal": 0.1,
+    "slv_cal": 0.05,
+    "cross_vol": 0.1,
+    "v5_hedge": 0.05,
+    "qqq_cs": 0.15
+  },
+  "gates": {
+    "vov_percentile_block": 0.85,
+    "term_structure_block_ratio": 1.05,
+    "fomc_block_days": 2,
+    "regime_block": [
+      "HIGH_VOL",
+      "CRASH"
+    ]
+  },
+  "order_defaults": {
+    "order_type": "limit_at_mid_combo",
+    "dte_days_credit_spreads": 28,
+    "dte_days_calendars_front": 30,
+    "dte_days_calendars_back": 60,
+    "otm_pct_credit_spreads": 0.05
+  }
+}
