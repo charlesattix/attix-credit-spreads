@@ -1,0 +1,295 @@
+{
+  "experiment": "EXP-2630",
+  "title": "OOS Regime Stress Test \u00b7 7-stream North Star v6",
+  "timestamp": "2026-04-08T06:34:47.548693Z",
+  "config": {
+    "streams": [
+      "exp1220",
+      "xlf_cs",
+      "xli_cs",
+      "gld_cal",
+      "slv_cal",
+      "vol_arb",
+      "v5_hedge"
+    ],
+    "capital_weights": {
+      "exp1220": 0.35,
+      "xlf_cs": 0.1,
+      "xli_cs": 0.1,
+      "gld_cal": 0.1,
+      "slv_cal": 0.075,
+      "vol_arb": 0.15,
+      "v5_hedge": 0.125
+    },
+    "target_gross_leverage": 3.0,
+    "dd_ceiling_pct": 12.0,
+    "circuit_breaker": {
+      "soft_pct": 10.0,
+      "hard_pct": 12.0,
+      "soft_leverage": 0.5,
+      "recovery_pct": 6.0
+    },
+    "stress_params": {
+      "scenario_a_corr": 0.8,
+      "scenario_a_days": 60,
+      "scenario_b_days": 90,
+      "scenario_c_days": 63,
+      "rng_seed": 20260408,
+      "insert_date": "2022-05-26",
+      "insert_index": 626
+    }
+  },
+  "baseline_metrics": {
+    "label": "baseline",
+    "n_days": 1566,
+    "cagr_pct": 13.077,
+    "sharpe": 4.535,
+    "max_dd_pct": -3.728,
+    "vol_pct": 2.719,
+    "worst_day_pct": -3.354,
+    "best_day_pct": 1.459
+  },
+  "scenarios": [
+    {
+      "scenario": "(a) corr shock \u03c1=0.80 \u00d7 60d",
+      "insert_idx": 626,
+      "window_len": 60,
+      "baseline_metrics": {
+        "label": "(a) corr shock \u03c1=0.80 \u00d7 60d (no stress)",
+        "n_days": 1566,
+        "cagr_pct": 13.077,
+        "sharpe": 4.535,
+        "max_dd_pct": -3.728,
+        "vol_pct": 2.719,
+        "worst_day_pct": -3.354,
+        "best_day_pct": 1.459
+      },
+      "stressed_raw_metrics": {
+        "label": "(a) corr shock \u03c1=0.80 \u00d7 60d (raw stress)",
+        "n_days": 1566,
+        "cagr_pct": 13.039,
+        "sharpe": 4.263,
+        "max_dd_pct": -3.728,
+        "vol_pct": 2.886,
+        "worst_day_pct": -3.354,
+        "best_day_pct": 1.459
+      },
+      "stressed_with_cb_metrics": {
+        "label": "(a) corr shock \u03c1=0.80 \u00d7 60d (with CB)",
+        "n_days": 1566,
+        "cagr_pct": 13.039,
+        "sharpe": 4.263,
+        "max_dd_pct": -3.728,
+        "vol_pct": 2.886,
+        "worst_day_pct": -3.354,
+        "best_day_pct": 1.459
+      },
+      "conditional_inside_window": {
+        "label": "(a) corr shock \u03c1=0.80 \u00d7 60d (inside window)",
+        "n_days": 60,
+        "cagr_pct": 12.889,
+        "sharpe": 2.112,
+        "max_dd_pct": -2.789,
+        "vol_pct": 5.82,
+        "worst_day_pct": -0.945,
+        "best_day_pct": 0.781
+      },
+      "conditional_inside_window_with_cb": {
+        "label": "(a) corr shock \u03c1=0.80 \u00d7 60d (inside, CB)",
+        "n_days": 60,
+        "cagr_pct": 12.889,
+        "sharpe": 2.112,
+        "max_dd_pct": -2.789,
+        "vol_pct": 5.82,
+        "worst_day_pct": -0.945,
+        "best_day_pct": 0.781
+      },
+      "circuit_breaker_diagnostics": {
+        "transitions": [],
+        "pct_days_normal": 100.0,
+        "pct_days_warn": 0.0,
+        "pct_days_halt": 0.0,
+        "n_state_changes": 0
+      },
+      "dd_under_12pct_raw": true,
+      "dd_under_12pct_with_cb": true,
+      "cb_protects": false
+    },
+    {
+      "scenario": "(b) VIX high 90d (p95/p05)",
+      "insert_idx": 626,
+      "window_len": 90,
+      "baseline_metrics": {
+        "label": "(b) VIX high 90d (p95/p05) (no stress)",
+        "n_days": 1566,
+        "cagr_pct": 13.077,
+        "sharpe": 4.535,
+        "max_dd_pct": -3.728,
+        "vol_pct": 2.719,
+        "worst_day_pct": -3.354,
+        "best_day_pct": 1.459
+      },
+      "stressed_raw_metrics": {
+        "label": "(b) VIX high 90d (p95/p05) (raw stress)",
+        "n_days": 1566,
+        "cagr_pct": 8.614,
+        "sharpe": 2.754,
+        "max_dd_pct": -18.715,
+        "vol_pct": 3.017,
+        "worst_day_pct": -3.354,
+        "best_day_pct": 1.459
+      },
+      "stressed_with_cb_metrics": {
+        "label": "(b) VIX high 90d (p95/p05) (with CB)",
+        "n_days": 1566,
+        "cagr_pct": 2.861,
+        "sharpe": 1.211,
+        "max_dd_pct": -12.123,
+        "vol_pct": 2.353,
+        "worst_day_pct": -3.354,
+        "best_day_pct": 1.339
+      },
+      "conditional_inside_window": {
+        "label": "(b) VIX high 90d (p95/p05) (inside window)",
+        "n_days": 90,
+        "cagr_pct": -43.784,
+        "sharpe": -12.722,
+        "max_dd_pct": -18.677,
+        "vol_pct": 4.514,
+        "worst_day_pct": -0.893,
+        "best_day_pct": 0.513
+      },
+      "conditional_inside_window_with_cb": {
+        "label": "(b) VIX high 90d (p95/p05) (inside, CB)",
+        "n_days": 90,
+        "cagr_pct": -30.16,
+        "sharpe": -10.071,
+        "max_dd_pct": -12.123,
+        "vol_pct": 3.556,
+        "worst_day_pct": -0.702,
+        "best_day_pct": 0.513
+      },
+      "circuit_breaker_diagnostics": {
+        "transitions": [
+          {
+            "day": 683,
+            "from": "NORMAL",
+            "to": "WARN",
+            "dd_pct": -10.173,
+            "new_leverage": 0.5
+          },
+          {
+            "day": 696,
+            "from": "WARN",
+            "to": "HALT",
+            "dd_pct": -12.123,
+            "new_leverage": 0.0
+          }
+        ],
+        "pct_days_normal": 43.61,
+        "pct_days_warn": 0.83,
+        "pct_days_halt": 55.56,
+        "n_state_changes": 2
+      },
+      "dd_under_12pct_raw": false,
+      "dd_under_12pct_with_cb": false,
+      "cb_protects": true
+    },
+    {
+      "scenario": "(c) 3-month losing run",
+      "insert_idx": 626,
+      "window_len": 63,
+      "baseline_metrics": {
+        "label": "(c) 3-month losing run (no stress)",
+        "n_days": 1566,
+        "cagr_pct": 13.077,
+        "sharpe": 4.535,
+        "max_dd_pct": -3.728,
+        "vol_pct": 2.719,
+        "worst_day_pct": -3.354,
+        "best_day_pct": 1.459
+      },
+      "stressed_raw_metrics": {
+        "label": "(c) 3-month losing run (raw stress)",
+        "n_days": 1566,
+        "cagr_pct": 10.174,
+        "sharpe": 3.477,
+        "max_dd_pct": -12.185,
+        "vol_pct": 2.798,
+        "worst_day_pct": -3.354,
+        "best_day_pct": 1.459
+      },
+      "stressed_with_cb_metrics": {
+        "label": "(c) 3-month losing run (with CB)",
+        "n_days": 1566,
+        "cagr_pct": 9.17,
+        "sharpe": 3.307,
+        "max_dd_pct": -11.228,
+        "vol_pct": 2.664,
+        "worst_day_pct": -3.354,
+        "best_day_pct": 1.459
+      },
+      "conditional_inside_window": {
+        "label": "(c) 3-month losing run (inside window)",
+        "n_days": 63,
+        "cagr_pct": -40.3,
+        "sharpe": -25.816,
+        "max_dd_pct": -11.898,
+        "vol_pct": 1.995,
+        "worst_day_pct": -0.744,
+        "best_day_pct": -0.083
+      },
+      "conditional_inside_window_with_cb": {
+        "label": "(c) 3-month losing run (inside, CB)",
+        "n_days": 63,
+        "cagr_pct": -37.696,
+        "sharpe": -28.047,
+        "max_dd_pct": -10.952,
+        "vol_pct": 1.685,
+        "worst_day_pct": -0.586,
+        "best_day_pct": -0.042
+      },
+      "circuit_breaker_diagnostics": {
+        "transitions": [
+          {
+            "day": 680,
+            "from": "NORMAL",
+            "to": "WARN",
+            "dd_pct": -10.264,
+            "new_leverage": 0.5
+          },
+          {
+            "day": 1002,
+            "from": "WARN",
+            "to": "NORMAL",
+            "dd_pct": -4.992,
+            "new_leverage": 1.0
+          }
+        ],
+        "pct_days_normal": 79.44,
+        "pct_days_warn": 20.56,
+        "pct_days_halt": 0.0,
+        "n_state_changes": 2
+      },
+      "dd_under_12pct_raw": false,
+      "dd_under_12pct_with_cb": true,
+      "cb_protects": true
+    }
+  ],
+  "sign_off": {
+    "approved": false,
+    "gates_passed": 1,
+    "gates_total": 3,
+    "gates": {
+      "raw_dd_under_12pct_all": false,
+      "cb_dd_under_12pct_all": false,
+      "cb_protects_when_needed": true
+    },
+    "reasons": [
+      "(a) corr shock \u03c1=0.80 \u00d7 60d: raw DD -3.73%  CB DD -3.73%  CB activity WARN 0.0% HALT 0.0%  [PASS]",
+      "(b) VIX high 90d (p95/p05): raw DD -18.71%  CB DD -12.12%  CB activity WARN 0.8% HALT 55.6%  [FAIL]",
+      "(c) 3-month losing run: raw DD -12.19%  CB DD -11.23%  CB activity WARN 20.6% HALT 0.0%  [PASS]"
+    ]
+  },
+  "rule_zero": "Real 7-stream returns from exp2280_v6_sparse.pkl (derived from real IronVault + Yahoo data). Stress windows inserted mid-sample via Cholesky factor model with empirical marginals for (a) and (b), and bottom-10%-percentile bootstrap resampling for (c). Rest of the path is real observed returns. No synthetic distribution fitting beyond the documented stress-window generators."
+}
