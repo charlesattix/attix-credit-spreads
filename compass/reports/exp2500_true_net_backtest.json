@@ -1,0 +1,314 @@
+{
+  "experiment": "EXP-2500",
+  "title": "TRUE Net Backtest with Cost-Aware Parameters",
+  "generated": "2026-04-08T05:37:11",
+  "rule_zero": true,
+  "sources": {
+    "cost_aware_exp1220": "real IronVault SPY chains, min_spacing=21d, otm_pct=0.93",
+    "per_trade_cost_model": "EXP-2420 commission + bid-ask + slippage, applied per-contract",
+    "other_streams_drag": "EXP-2420 per-stream annual drag at equal_risk weights",
+    "walk_forward": "compass.exp2400_combined_best_of.walk_forward_combined (LW, no circuit)",
+    "cubes": "sparse exit-date convention (matches EXP-2450)"
+  },
+  "config": {
+    "min_spacing_days": 21,
+    "otm_pct": 0.93,
+    "width": 5.0,
+    "train_days": 252,
+    "test_days": 63,
+    "target_vol_annual": 0.15
+  },
+  "cost_aware_exp1220_info": {
+    "gross_summary": {
+      "label": "cost_aware_gross",
+      "n_trades": 95,
+      "trades_per_year": 16.35,
+      "gross_total_pnl": 1912.0,
+      "net_total_pnl": -3020.4,
+      "total_cost_usd": 4932.4,
+      "avg_cost_per_trade": 51.92,
+      "gross_avg_pnl": 20.13,
+      "net_avg_pnl": -31.79,
+      "gross_win_rate": 0.8947,
+      "net_win_rate": 0.3579,
+      "avg_hold_days": 5.2
+    },
+    "net_summary": {
+      "label": "cost_aware_net",
+      "n_trades": 95,
+      "trades_per_year": 16.35,
+      "gross_total_pnl": 1912.0,
+      "net_total_pnl": -3020.4,
+      "total_cost_usd": 4932.4,
+      "avg_cost_per_trade": 51.92,
+      "gross_avg_pnl": 20.13,
+      "net_avg_pnl": -31.79,
+      "gross_win_rate": 0.8947,
+      "net_win_rate": 0.3579,
+      "avg_hold_days": 5.2
+    },
+    "parameters": {
+      "min_spacing_days": 21,
+      "otm_pct": 0.93,
+      "width": 5.0,
+      "risk_pct": 0.03,
+      "vix_block": 40.0
+    },
+    "cost_model_per_contract": {
+      "commission_4fills": 2.6,
+      "bid_ask_per_leg": 6.8,
+      "slippage_adv": 3.58,
+      "total_per_contract": 12.98
+    }
+  },
+  "stream_drag_usd": {
+    "exp1220": 979.17,
+    "v5_hedge": 1064.0,
+    "gld_cal": 4583.0,
+    "slv_cal": 6976.0,
+    "cross_vol": 5651.0,
+    "xlf_cs": 1911.61,
+    "xli_cs": 1040.45
+  },
+  "per_stream_gross_vs_net": {
+    "exp1220": {
+      "gross": {
+        "label": "exp1220_gross",
+        "n": 1566,
+        "cagr_pct": 56.14,
+        "sharpe": 4.005,
+        "max_dd_pct": 7.581,
+        "vol_pct": 11.293,
+        "calmar": 7.406
+      },
+      "net": {
+        "label": "exp1220_net",
+        "n": 1566,
+        "cagr_pct": -0.489,
+        "sharpe": -0.56,
+        "max_dd_pct": 3.12,
+        "vol_pct": 0.867,
+        "calmar": -0.157
+      }
+    },
+    "v5_hedge": {
+      "gross": {
+        "label": "v5_hedge_gross",
+        "n": 1566,
+        "cagr_pct": -1.027,
+        "sharpe": -0.129,
+        "max_dd_pct": 12.836,
+        "vol_pct": 6.419,
+        "calmar": -0.08
+      },
+      "net": {
+        "label": "v5_hedge_net",
+        "n": 1566,
+        "cagr_pct": -2.075,
+        "sharpe": -0.294,
+        "max_dd_pct": 17.019,
+        "vol_pct": 6.419,
+        "calmar": -0.122
+      }
+    },
+    "gld_cal": {
+      "gross": {
+        "label": "gld_cal_gross",
+        "n": 1566,
+        "cagr_pct": 17.399,
+        "sharpe": 2.716,
+        "max_dd_pct": 2.501,
+        "vol_pct": 5.974,
+        "calmar": 6.958
+      },
+      "net": {
+        "label": "gld_cal_net",
+        "n": 1566,
+        "cagr_pct": 12.143,
+        "sharpe": 1.949,
+        "max_dd_pct": 3.168,
+        "vol_pct": 5.974,
+        "calmar": 3.833
+      }
+    },
+    "slv_cal": {
+      "gross": {
+        "label": "slv_cal_gross",
+        "n": 1566,
+        "cagr_pct": 31.462,
+        "sharpe": 2.309,
+        "max_dd_pct": 6.079,
+        "vol_pct": 12.171,
+        "calmar": 5.176
+      },
+      "net": {
+        "label": "slv_cal_net",
+        "n": 1566,
+        "cagr_pct": 22.612,
+        "sharpe": 1.736,
+        "max_dd_pct": 6.883,
+        "vol_pct": 12.171,
+        "calmar": 3.285
+      }
+    },
+    "cross_vol": {
+      "gross": {
+        "label": "cross_vol_gross",
+        "n": 1566,
+        "cagr_pct": 7.791,
+        "sharpe": 2.142,
+        "max_dd_pct": 5.479,
+        "vol_pct": 3.532,
+        "calmar": 1.422
+      },
+      "net": {
+        "label": "cross_vol_net",
+        "n": 1566,
+        "cagr_pct": 1.87,
+        "sharpe": 0.542,
+        "max_dd_pct": 8.602,
+        "vol_pct": 3.532,
+        "calmar": 0.217
+      }
+    },
+    "xlf_cs": {
+      "gross": {
+        "label": "xlf_cs_gross",
+        "n": 1566,
+        "cagr_pct": 17.706,
+        "sharpe": 4.956,
+        "max_dd_pct": 1.304,
+        "vol_pct": 3.301,
+        "calmar": 13.575
+      },
+      "net": {
+        "label": "xlf_cs_net",
+        "n": 1566,
+        "cagr_pct": 15.479,
+        "sharpe": 4.377,
+        "max_dd_pct": 1.372,
+        "vol_pct": 3.301,
+        "calmar": 11.284
+      }
+    },
+    "xli_cs": {
+      "gross": {
+        "label": "xli_cs_gross",
+        "n": 1566,
+        "cagr_pct": 17.216,
+        "sharpe": 3.359,
+        "max_dd_pct": 3.697,
+        "vol_pct": 4.763,
+        "calmar": 4.657
+      },
+      "net": {
+        "label": "xli_cs_net",
+        "n": 1566,
+        "cagr_pct": 16.003,
+        "sharpe": 3.141,
+        "max_dd_pct": 3.753,
+        "vol_pct": 4.763,
+        "calmar": 4.264
+      }
+    }
+  },
+  "walk_forward": {
+    "gross": {
+      "pooled": {
+        "label": "gross_pooled",
+        "n": 1260,
+        "cagr_pct": 101.832,
+        "sharpe": 6.865,
+        "max_dd_pct": 4.209,
+        "vol_pct": 10.321,
+        "calmar": 24.194
+      },
+      "n_folds": 20
+    },
+    "net": {
+      "pooled": {
+        "label": "net_pooled",
+        "n": 1260,
+        "cagr_pct": 32.118,
+        "sharpe": 3.888,
+        "max_dd_pct": 4.304,
+        "vol_pct": 7.235,
+        "calmar": 7.462
+      },
+      "n_folds": 20,
+      "yearly": {
+        "2021": {
+          "label": "year_2021",
+          "n": 261,
+          "cagr_pct": 34.906,
+          "sharpe": 4.527,
+          "max_dd_pct": 0.869,
+          "vol_pct": 6.665,
+          "calmar": 40.179
+        },
+        "2022": {
+          "label": "year_2022",
+          "n": 260,
+          "cagr_pct": 42.686,
+          "sharpe": 3.972,
+          "max_dd_pct": 3.111,
+          "vol_pct": 9.059,
+          "calmar": 13.721
+        },
+        "2023": {
+          "label": "year_2023",
+          "n": 260,
+          "cagr_pct": 30.455,
+          "sharpe": 3.52,
+          "max_dd_pct": 2.689,
+          "vol_pct": 7.638,
+          "calmar": 11.327
+        },
+        "2024": {
+          "label": "year_2024",
+          "n": 262,
+          "cagr_pct": 29.047,
+          "sharpe": 4.578,
+          "max_dd_pct": 1.515,
+          "vol_pct": 5.607,
+          "calmar": 19.175
+        },
+        "2025": {
+          "label": "year_2025",
+          "n": 207,
+          "cagr_pct": 20.342,
+          "sharpe": 2.966,
+          "max_dd_pct": 4.304,
+          "vol_pct": 6.312,
+          "calmar": 4.726
+        }
+      }
+    }
+  },
+  "references": {
+    "exp2450_gross_ledoit_only": {
+      "sharpe": 6.87,
+      "cagr_pct": 101.8,
+      "max_dd_pct": 4.2
+    },
+    "exp2420_published_net": {
+      "sharpe": 4.49,
+      "cagr_pct": 124.0
+    }
+  },
+  "verdict": {
+    "net_sharpe": 3.888,
+    "net_cagr_pct": 32.118,
+    "net_max_dd_pct": 4.304,
+    "crosses_6_0": false,
+    "delta_vs_gross_ledoit": -2.982,
+    "delta_vs_published_net": -0.602
+  },
+  "honest_caveats": [
+    "Per-trade cost uses EXP-2420's per-contract rates, applied to the NEW trade contract counts. Real broker fills may have different bid-ask at the time of trade; IronVault p25 spread is an average.",
+    "The cost-aware EXP-1220 variant (21d cadence, 0.93 otm_pct) may have different chain liquidity and slippage than the EXP-2420 baseline measurement.",
+    "Other 6 streams' drag is applied at equal_risk baseline weights. The walk-forward optimizer reweights per fold, so actual stream weights differ from baseline \u2014 drag is approximately linear in weight but not exactly.",
+    "Longer holds (21d) and wider strikes (0.93) may reduce per-trade alpha. The backtest measures the actual impact.",
+    "Gross cube sanity check should reproduce EXP-2450 ledoit_only (6.87 / 101.8%). If it does not, there is a cube-build mismatch."
+  ]
+}
