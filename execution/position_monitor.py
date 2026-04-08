@@ -23,9 +23,10 @@ upsert_trade / close_trade (per-call connections, SQLite WAL mode).
 """
 
 import logging
+import re
 import threading
 from datetime import datetime, timezone
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 try:
     from zoneinfo import ZoneInfo
@@ -139,6 +140,37 @@ _STALE_CLOSE_MINUTES = 10
 # Maximum cancel-and-resubmit retries for stale close orders before alerting
 _STALE_CLOSE_MAX_RETRIES = 3
 
+# Number of consecutive missing-leg cycles before a position is marked closed_external.
+# Grace period prevents false positives from transient Alpaca API blips.
+_EXTERNAL_CLOSE_GRACE_CYCLES = 2
+
+# OCC option symbol pattern: TICKER(1-5 chars) + YYMMDD + C/P + 8-digit strike×1000
+_OCC_SYMBOL_RE = re.compile(r'^([A-Z]{1,6})(\d{6})([CP])(\d{8})$')
+
+
+def _parse_occ_symbol(symbol: str) -> Optional[Tuple[str, str, str, float]]:
+    """Parse an OCC option symbol into (ticker, expiration_YYYY-MM-DD, opt_type, strike).
+
+    Returns None if the symbol does not match the OCC format.
+    """
+    m = _OCC_SYMBOL_RE.match(symbol.upper().replace(" ", ""))
+    if not m:
+        return None
+    ticker = m.group(1)
+    yymmdd = m.group(2)
+    cp = m.group(3)
+    strike_raw = int(m.group(4))
+    try:
+        year = 2000 + int(yymmdd[:2])
+        month = int(yymmdd[2:4])
+        day = int(yymmdd[4:6])
+        exp = f"{year:04d}-{month:02d}-{day:02d}"
+    except (ValueError, IndexError):
+        return None
+    opt_type = "call" if cp == "C" else "put"
+    strike = strike_raw / 1000.0
+    return ticker, exp, opt_type, strike
+
 
 class PositionMonitor:
     """Background daemon that manages open credit spreads, iron condors, and straddles/strangles.
@@ -187,6 +219,7 @@ class PositionMonitor:
             self.profit_target_pct, self.stop_loss_mult,
             self.manage_dte if self.manage_dte > 0 else "disabled",
         )
+        self._startup_reconciliation()
         while not self._stop_event.is_set():
             try:
                 self._check_positions()
@@ -195,6 +228,62 @@ class PositionMonitor:
             self._stop_event.wait(timeout=_CHECK_INTERVAL_SECONDS)
 
         logger.info("PositionMonitor stopped")
+
+    def _startup_reconciliation(self) -> None:
+        """Log any DB↔Alpaca mismatches on startup so operators can investigate.
+
+        Checks:
+        - DB open trades with no matching Alpaca legs (phantom or externally closed)
+        - Alpaca option positions with no DB record (orphan)
+        """
+        if not self.alpaca:
+            return
+        try:
+            all_alpaca = self.alpaca.get_positions()
+            alpaca_positions = {p["symbol"]: p for p in all_alpaca}
+        except Exception as e:
+            logger.warning("PositionMonitor: startup reconciliation skipped (API error: %s)", e)
+            return
+
+        open_trades = get_trades(status="open", source="execution", path=self.db_path)
+
+        # Build the full set of OCC symbols managed by open trades
+        managed_symbols: set = set()
+        for pos in open_trades:
+            ticker = pos.get("ticker", "")
+            exp = str(pos.get("expiration", "")).split(" ")[0]
+            spread_type = str(pos.get("strategy_type", pos.get("type", ""))).lower()
+            if not ticker or not exp:
+                continue
+            try:
+                opt_type = "call" if "call" in spread_type else "put"
+                for strike in [pos.get("short_strike"), pos.get("long_strike")]:
+                    if strike:
+                        managed_symbols.add(
+                            self.alpaca._build_occ_symbol(ticker, exp, strike, opt_type)
+                        )
+            except Exception:
+                pass
+
+        # DB-open trades with no Alpaca legs
+        for pos in open_trades:
+            if self._all_legs_missing(pos, alpaca_positions):
+                logger.warning(
+                    "PositionMonitor: STARTUP — DB-open trade %s has no legs in Alpaca. "
+                    "Possible external close or assignment. Review required.",
+                    pos.get("id"),
+                )
+
+        # Alpaca option positions with no DB record
+        for symbol, pos_data in alpaca_positions.items():
+            if "option" not in str(pos_data.get("asset_class", "")).lower():
+                continue
+            if symbol not in managed_symbols:
+                logger.warning(
+                    "PositionMonitor: STARTUP — Alpaca option %s has no open DB record. "
+                    "Orphan detection will handle this on next cycle.",
+                    symbol,
+                )
 
     def stop(self):
         """Signal the monitor to stop after the current check completes."""
@@ -601,26 +690,31 @@ class PositionMonitor:
         expiration_str = str(pos.get("expiration", "")).split(" ")[0]
         contracts = int(pos.get("contracts", 1))
 
-        if not all([ticker, expiration_str, short_strike, long_strike]):
+        if not all([ticker, expiration_str, short_strike]):
             logger.warning("PositionMonitor: %s missing fields for pricing", pos.get("id"))
             return None
 
         try:
             short_sym = self.alpaca._build_occ_symbol(ticker, expiration_str, short_strike, opt_type)
-            long_sym = self.alpaca._build_occ_symbol(ticker, expiration_str, long_strike, opt_type)
+            long_sym = (
+                self.alpaca._build_occ_symbol(ticker, expiration_str, long_strike, opt_type)
+                if long_strike else None
+            )
         except Exception as e:
             logger.warning("PositionMonitor: OCC symbol error for %s: %s", pos.get("id"), e)
             return None
 
         short_pos = alpaca_positions.get(short_sym)
-        long_pos = alpaca_positions.get(long_sym)
-
-        if not short_pos or not long_pos:
+        if not short_pos:
             return None  # caller distinguishes pricing gap from external close
+
+        long_pos = alpaca_positions.get(long_sym) if long_sym else None
+        if long_sym and not long_pos:
+            return None  # 2-leg spread: need both legs to price
 
         try:
             short_mv = float(short_pos["market_value"])  # negative (liability we owe)
-            long_mv = float(long_pos["market_value"])    # positive (asset we hold)
+            long_mv = float(long_pos["market_value"]) if long_pos else 0.0
             # cost to close = buy back short (pay |short_mv|) – sell long (receive long_mv)
             cost_total = abs(short_mv) - long_mv
             cost_per_share = cost_total / (contracts * 100) if contracts > 0 else 0.0
@@ -744,13 +838,16 @@ class PositionMonitor:
             else:
                 short_strike = pos.get("short_strike")
                 long_strike = pos.get("long_strike")
-                if not all([short_strike, long_strike]):
+                if not short_strike:
                     return False
                 opt_type = "call" if "call" in spread_type else "put"
                 syms = [
                     self.alpaca._build_occ_symbol(ticker, expiration_str, short_strike, opt_type),
-                    self.alpaca._build_occ_symbol(ticker, expiration_str, long_strike, opt_type),
                 ]
+                if long_strike:
+                    syms.append(
+                        self.alpaca._build_occ_symbol(ticker, expiration_str, long_strike, opt_type)
+                    )
         except Exception:
             return False
 
@@ -759,19 +856,53 @@ class PositionMonitor:
     def _reconcile_external_closes(
         self, open_positions: List[Dict], alpaca_positions: Dict
     ) -> None:
-        """Mark positions whose legs are all gone from Alpaca as closed_external."""
+        """Mark positions whose legs are all gone from Alpaca as closed_external.
+
+        Uses a grace period of _EXTERNAL_CLOSE_GRACE_CYCLES consecutive missing cycles
+        before marking closed_external.  This prevents false positives caused by transient
+        Alpaca API gaps or a single failed get_positions call.  The missing-cycle counter
+        is persisted in the trade's metadata (_missing_legs_count) so it survives restarts.
+        """
         for pos in open_positions:
-            if not self._all_legs_missing(pos, alpaca_positions):
-                continue
             pos_id = pos.get("id", "?")
+            if not self._all_legs_missing(pos, alpaca_positions):
+                # Legs present — reset counter if it was elevated
+                if pos.get("_missing_legs_count", 0):
+                    pos["_missing_legs_count"] = 0
+                    try:
+                        upsert_trade(pos, source="execution", path=self.db_path)
+                    except Exception:
+                        pass
+                continue
+
+            missing_count = int(pos.get("_missing_legs_count", 0)) + 1
+            pos["_missing_legs_count"] = missing_count
+
+            if missing_count < _EXTERNAL_CLOSE_GRACE_CYCLES:
+                logger.debug(
+                    "PositionMonitor: %s legs not in Alpaca (missing_count=%d/%d) — "
+                    "grace period active",
+                    pos_id, missing_count, _EXTERNAL_CLOSE_GRACE_CYCLES,
+                )
+                try:
+                    upsert_trade(pos, source="execution", path=self.db_path)
+                except Exception as e:
+                    logger.error(
+                        "PositionMonitor: DB write failed updating missing count for %s: %s",
+                        pos_id, e,
+                    )
+                continue
+
             logger.warning(
-                "PositionMonitor: %s legs not found in Alpaca — marking closed_external",
-                pos_id,
+                "PositionMonitor: %s legs not found in Alpaca for %d consecutive cycle(s) — "
+                "marking closed_external",
+                pos_id, missing_count,
             )
             # Mutate in place so the subsequent exit-check loop skips this position
             pos["status"] = "closed_external"
             pos["exit_date"] = datetime.now(timezone.utc).isoformat()
             pos["exit_reason"] = "closed_external"
+            pos.pop("_missing_legs_count", None)
             try:
                 upsert_trade(pos, source="execution", path=self.db_path)
             except Exception as e:
@@ -813,6 +944,23 @@ class PositionMonitor:
                 result = self._submit_ic_close(pos, contracts, expiration_str)
             elif "straddle" in spread_type or "strangle" in spread_type:
                 result = self._submit_straddle_close(pos, contracts, expiration_str)
+            elif not pos.get("long_strike"):
+                # Single-leg synthetic orphan record — buy back the short leg only
+                opt_type = "call" if "call" in spread_type else "put"
+                logger.warning(
+                    "PositionMonitor: %s is a single-leg synthetic record — "
+                    "submitting single-leg BTC order for %s %s",
+                    pos.get("id"), ticker, opt_type,
+                )
+                result = self.alpaca.submit_single_leg(
+                    ticker=ticker,
+                    strike=pos.get("short_strike"),
+                    expiration=expiration_str,
+                    option_type=opt_type,
+                    side="buy",  # buy to close a short position
+                    contracts=contracts,
+                    limit_price=None,
+                )
             else:
                 result = self.alpaca.close_spread(
                     ticker=ticker,
@@ -1081,13 +1229,18 @@ class PositionMonitor:
     def _detect_orphans(
         self, open_positions: List[Dict], alpaca_positions: Dict
     ) -> None:
-        """Warn about option positions in Alpaca that have no corresponding DB record.
+        """Reconcile option positions in Alpaca that have no corresponding open DB record.
 
-        An orphan could be a manually-opened position, a position from a bug in DB
-        writes, or a position from another strategy sharing the same account.
-        The system does NOT try to manage orphans — it logs and alerts only.
+        For each unmanaged Alpaca option position:
+          1. Check pending_open / closed_external DB records for a matching OCC symbol.
+             If found → promote that record to status=open so it gets monitored.
+          2. If the position is SHORT (qty < 0) and no recovery candidate exists →
+             create a ``synthetic-monitor-*`` record with status=open so the normal
+             stop-loss / profit-target checks fire on the next cycle.
+          3. Long legs (qty >= 0) are skipped — they are hedge legs of an untracked
+             spread and cannot be independently managed.
         """
-        # Build the complete set of OCC symbols that all managed positions expect
+        # Build the complete set of OCC symbols from currently-tracked positions
         managed_symbols: set = set()
         for pos in open_positions:
             ticker = pos.get("ticker", "")
@@ -1126,16 +1279,117 @@ class PositionMonitor:
             except Exception:
                 pass
 
+        # Build recovery candidates from pending_open and closed_external records.
+        # These are trades the DB knows about but which are not yet (or no longer)
+        # in status=open — matching an Alpaca position means we should re-open them.
+        # We try both call and put variants of each strike to handle cases where the
+        # option type in the DB trade may not match what actually filled in Alpaca.
+        recovery_by_symbol: Dict[str, Dict] = {}
+        for rec_status in ("pending_open", "closed_external"):
+            candidates = get_trades(status=rec_status, source="execution", path=self.db_path)
+            for trade in candidates:
+                t_ticker = trade.get("ticker", "")
+                t_exp = str(trade.get("expiration", "")).split(" ")[0]
+                if not t_ticker or not t_exp:
+                    continue
+                for strike in [trade.get("short_strike"), trade.get("long_strike")]:
+                    if not strike:
+                        continue
+                    for ot in ("call", "put"):
+                        try:
+                            sym = self.alpaca._build_occ_symbol(t_ticker, t_exp, strike, ot)
+                            recovery_by_symbol.setdefault(sym, trade)
+                        except Exception:
+                            pass
+
         for symbol, pos_data in alpaca_positions.items():
             asset_class = str(pos_data.get("asset_class", "")).lower()
             if "option" not in asset_class:
-                continue  # only check option positions
-            if symbol not in managed_symbols:
-                qty = pos_data.get("qty", "?")
+                continue
+            if symbol in managed_symbols:
+                continue
+
+            qty_str = str(pos_data.get("qty", "0"))
+            try:
+                qty = float(qty_str)
+            except (ValueError, TypeError):
+                qty = 0.0
+
+            # Recovery: pending_open or closed_external record matches this Alpaca position
+            if symbol in recovery_by_symbol:
+                trade = recovery_by_symbol[symbol]
+                trade_id = trade.get("id", "?")
+                old_status = trade.get("status", "?")
                 logger.warning(
-                    "PositionMonitor: ORPHAN OPTION POSITION — %s qty=%s has no DB record. "
+                    "PositionMonitor: RECOVERY — orphan %s matches %s trade %s. "
+                    "Promoting to open so stop-loss monitoring resumes.",
+                    symbol, old_status, trade_id,
+                )
+                trade["status"] = "open"
+                trade.pop("exit_reason", None)
+                trade.pop("exit_date", None)
+                try:
+                    upsert_trade(trade, source="execution", path=self.db_path)
+                except Exception as e:
+                    logger.error(
+                        "PositionMonitor: recovery DB write failed for %s: %s", trade_id, e
+                    )
+                continue
+
+            # Long hedge legs (positive qty) belong to an untracked spread — skip
+            if qty >= 0:
+                continue
+
+            # Short orphan with no recovery candidate — create a synthetic monitoring record.
+            # This ensures stop-loss / expiration checks fire on the next cycle.
+            parsed = _parse_occ_symbol(symbol)
+            if not parsed:
+                logger.warning(
+                    "PositionMonitor: ORPHAN — could not parse OCC symbol %s. "
                     "Manual review required.",
-                    symbol, qty,
+                    symbol,
+                )
+                continue
+
+            ticker_parsed, exp_parsed, opt_type_parsed, strike_parsed = parsed
+            try:
+                avg_entry = float(pos_data.get("avg_entry_price") or 0)
+            except (ValueError, TypeError):
+                avg_entry = 0.0
+            contracts_abs = max(1, int(abs(qty)))
+            strategy_type = "bear_call" if opt_type_parsed == "call" else "bull_put"
+
+            synthetic_id = f"synthetic-monitor-{symbol}"
+            # Truncate to fit any DB string limits while keeping the symbol readable
+            if len(synthetic_id) > 60:
+                synthetic_id = f"synthetic-monitor-{symbol[:40]}"
+
+            synthetic: Dict = {
+                "id": synthetic_id,
+                "ticker": ticker_parsed,
+                "strategy_type": strategy_type,
+                "status": "open",
+                "short_strike": strike_parsed,
+                "long_strike": None,  # single-leg record; no hedge tracked
+                "expiration": exp_parsed,
+                "credit": avg_entry if avg_entry > 0 else None,
+                "contracts": contracts_abs,
+                "entry_date": datetime.now(timezone.utc).isoformat(),
+                "alpaca_symbol": symbol,
+            }
+
+            logger.warning(
+                "PositionMonitor: ORPHAN SHORT — %s qty=%s has no DB record. "
+                "Creating synthetic monitoring record %s (credit=%.4f, sl=%.1fx). "
+                "INVESTIGATE: how did this position become unmanaged?",
+                symbol, qty_str, synthetic_id, avg_entry, self.stop_loss_mult,
+            )
+            try:
+                upsert_trade(synthetic, source="execution", path=self.db_path)
+            except Exception as e:
+                logger.error(
+                    "PositionMonitor: failed to create synthetic record for %s: %s",
+                    symbol, e,
                 )
 
     # ------------------------------------------------------------------
