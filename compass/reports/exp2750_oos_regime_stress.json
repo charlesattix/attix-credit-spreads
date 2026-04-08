@@ -1,0 +1,118 @@
+{
+  "experiment": "EXP-2750",
+  "name": "Out-of-Distribution Regime Stress Test",
+  "generated": "2026-04-08T08:36:49",
+  "scope": "Pure stress test. Synthetic shocks are injected into the real v8a cube for a finite window to characterise the live allocator + vol-targeting + circuit breaker reaction. These numbers are NEVER used for backtest Sharpe claims.",
+  "rule_zero": {
+    "synthetic_used": true,
+    "purpose": "stress test only",
+    "backtest_claims_derived": false,
+    "real_cube_basis": true
+  },
+  "config": {
+    "train_days": 252,
+    "test_days": 63,
+    "target_vol_annual": 0.15,
+    "scale_cap": 13.0,
+    "cb_soft_pct": 0.03,
+    "cb_hard_pct": 0.06,
+    "stress_start_date": "2022-06-01"
+  },
+  "cube_info": {
+    "n_days": 1566,
+    "range": [
+      "2020-01-01",
+      "2025-12-31"
+    ],
+    "streams": [
+      "exp1220",
+      "v5_hedge",
+      "gld_cal",
+      "slv_cal",
+      "cross_vol",
+      "xlf_cs",
+      "xli_cs",
+      "xle_cs"
+    ]
+  },
+  "baseline": {
+    "label": "baseline_real_cube",
+    "window_start": "2020-12-18",
+    "window_end": "2025-10-16",
+    "peak_before": 1106.1614,
+    "trough": 1.0032,
+    "max_dd_pct": 4.433,
+    "recovery_date": "2025-10-16",
+    "days_to_recovery": 1763,
+    "n_soft_trips": 5,
+    "n_hard_trips": 0,
+    "final_equity": 1106.1614,
+    "window_pnl_pct": 110160.661
+  },
+  "scenarios": [
+    {
+      "id": "slow_grind_bear",
+      "description": "12 months of -2%/month equity drift",
+      "label": "slow_grind_bear",
+      "window_start": "2022-06-01",
+      "window_end": "2023-05-31",
+      "peak_before": 7.6683,
+      "trough": 6.848,
+      "max_dd_pct": 10.697,
+      "recovery_date": "2023-06-12",
+      "days_to_recovery": 28,
+      "n_soft_trips": 16,
+      "n_hard_trips": 3,
+      "final_equity": 215.5031,
+      "window_pnl_pct": -6.09
+    },
+    {
+      "id": "flash_crash_v",
+      "description": "VIX spike to 80 + 5-day mean-reversion",
+      "label": "flash_crash_v",
+      "window_start": "2022-06-01",
+      "window_end": "2022-07-31",
+      "peak_before": 7.6683,
+      "trough": 4.3601,
+      "max_dd_pct": 43.141,
+      "recovery_date": "2022-07-20",
+      "days_to_recovery": 49,
+      "n_soft_trips": 4,
+      "n_hard_trips": 1,
+      "final_equity": 314.3369,
+      "window_pnl_pct": 87.224
+    },
+    {
+      "id": "stagflation",
+      "description": "2 years flat equity + elevated vol + rates drag",
+      "label": "stagflation",
+      "window_start": "2022-06-01",
+      "window_end": "2024-05-31",
+      "peak_before": 7.6683,
+      "trough": 7.3812,
+      "max_dd_pct": 3.744,
+      "recovery_date": "2022-08-30",
+      "days_to_recovery": 67,
+      "n_soft_trips": 22,
+      "n_hard_trips": 2,
+      "final_equity": 67.8113,
+      "window_pnl_pct": 34.136
+    },
+    {
+      "id": "correlation_breakdown",
+      "description": "All streams forced to pairwise \u03c1\u22480.8 for 1 year",
+      "label": "correlation_breakdown",
+      "window_start": "2022-06-01",
+      "window_end": "2023-05-31",
+      "peak_before": 7.6683,
+      "trough": 5.3643,
+      "max_dd_pct": 30.046,
+      "recovery_date": "2023-12-11",
+      "days_to_recovery": 535,
+      "n_soft_trips": 29,
+      "n_hard_trips": 12,
+      "final_equity": 89.3588,
+      "window_pnl_pct": -19.199
+    }
+  ]
+}
