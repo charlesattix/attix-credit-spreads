@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from compass.exp1760_crypto_vol import (
+from compass.experiments.killed.exp1760_crypto_vol import (
     REGIME_CALM,
     REGIME_CRISIS,
     REGIME_ELEVATED,
