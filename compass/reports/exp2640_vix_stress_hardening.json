@@ -1,0 +1,967 @@
+{
+  "experiment": "EXP-2640",
+  "title": "VIX High-Vol Stress Hardening \u2014 Gentler Response",
+  "generated": "2026-04-08T07:07:15",
+  "rule_zero": true,
+  "sources": {
+    "streams": "compass.exp2630_regime_stress_oos.load_streams (5-stream cache)",
+    "synthetic_scenarios": "compass.exp2630_regime_stress_oos scenarios (a/b/c)",
+    "real_stress_windows": {
+      "2020_march_covid": [
+        "2020-02-24",
+        "2020-04-03"
+      ],
+      "2022_h1_bear": [
+        "2022-01-03",
+        "2022-06-30"
+      ]
+    },
+    "vix": "Yahoo ^VIX daily, shift-1d (causal)"
+  },
+  "weights": {
+    "exp1220": 2.1592,
+    "xlf_cs": 0.1871,
+    "xli_cs": 0.1297,
+    "gld_cal": 0.1034,
+    "slv_cal": 0.0381,
+    "vol_arb": 0.2623,
+    "v5_hedge": 0.1203
+  },
+  "interventions": {
+    "1_baseline_no_cb": "no intervention",
+    "2_exp2630_cb": "EXP-2630 stateful DD circuit breaker (soft 10%, hard 12%, halt leverage 0)",
+    "3_vix_gate_50": "VIX > rolling 252d 90th pct \u2192 exposure 0.5\u00d7",
+    "4_adaptive_vt": "VIX 25\u219235 linear ramp \u2192 exposure 1.0\u21920.5",
+    "5_hybrid": "vix_gate_50 \u00d7 adaptive_vt (multiplicative)"
+  },
+  "results": {
+    "scenarios": {
+      "(a) corr shock \u03c1=0.80 \u00d7 60d": {
+        "1_baseline_no_cb": {
+          "full_sample": {
+            "label": "1_baseline_no_cb_full",
+            "n_days": 1566,
+            "cagr_pct": 13.039,
+            "sharpe": 4.263,
+            "max_dd_pct": -3.728,
+            "vol_pct": 2.886,
+            "worst_day_pct": -3.354,
+            "best_day_pct": 1.459
+          },
+          "inside_window": {
+            "label": "1_baseline_no_cb_inside",
+            "n_days": 60,
+            "cagr_pct": 12.889,
+            "sharpe": 2.112,
+            "max_dd_pct": -2.789,
+            "vol_pct": 5.82,
+            "worst_day_pct": -0.945,
+            "best_day_pct": 0.781
+          },
+          "diagnostics": {}
+        },
+        "2_exp2630_cb": {
+          "full_sample": {
+            "label": "2_exp2630_cb_full",
+            "n_days": 1566,
+            "cagr_pct": 13.039,
+            "sharpe": 4.263,
+            "max_dd_pct": -3.728,
+            "vol_pct": 2.886,
+            "worst_day_pct": -3.354,
+            "best_day_pct": 1.459
+          },
+          "inside_window": {
+            "label": "2_exp2630_cb_inside",
+            "n_days": 60,
+            "cagr_pct": 12.889,
+            "sharpe": 2.112,
+            "max_dd_pct": -2.789,
+            "vol_pct": 5.82,
+            "worst_day_pct": -0.945,
+            "best_day_pct": 0.781
+          },
+          "diagnostics": {
+            "transitions": [],
+            "pct_days_normal": 100.0,
+            "pct_days_warn": 0.0,
+            "pct_days_halt": 0.0,
+            "n_state_changes": 0
+          }
+        },
+        "3_vix_gate_50": {
+          "full_sample": {
+            "label": "3_vix_gate_50_full",
+            "n_days": 1566,
+            "cagr_pct": 12.096,
+            "sharpe": 4.273,
+            "max_dd_pct": -3.728,
+            "vol_pct": 2.681,
+            "worst_day_pct": -3.354,
+            "best_day_pct": 1.339
+          },
+          "inside_window": {
+            "label": "3_vix_gate_50_inside",
+            "n_days": 60,
+            "cagr_pct": 7.777,
+            "sharpe": 1.4,
+            "max_dd_pct": -2.789,
+            "vol_pct": 5.456,
+            "worst_day_pct": -0.945,
+            "best_day_pct": 0.781
+          },
+          "diagnostics": {
+            "avg_exposure": 0.9511,
+            "days_at_half": 153
+          }
+        },
+        "4_adaptive_vt": {
+          "full_sample": {
+            "label": "4_adaptive_vt_full",
+            "n_days": 1566,
+            "cagr_pct": 12.188,
+            "sharpe": 4.753,
+            "max_dd_pct": -2.708,
+            "vol_pct": 2.427,
+            "worst_day_pct": -1.677,
+            "best_day_pct": 1.339
+          },
+          "inside_window": {
+            "label": "4_adaptive_vt_inside",
+            "n_days": 60,
+            "cagr_pct": 8.17,
+            "sharpe": 1.544,
+            "max_dd_pct": -2.708,
+            "vol_pct": 5.172,
+            "worst_day_pct": -0.77,
+            "best_day_pct": 0.781
+          },
+          "diagnostics": {
+            "avg_exposure": 0.9464,
+            "min_exposure": 0.5
+          }
+        },
+        "5_hybrid": {
+          "full_sample": {
+            "label": "5_hybrid_full",
+            "n_days": 1566,
+            "cagr_pct": 11.451,
+            "sharpe": 4.819,
+            "max_dd_pct": -2.708,
+            "vol_pct": 2.255,
+            "worst_day_pct": -1.677,
+            "best_day_pct": 1.339
+          },
+          "inside_window": {
+            "label": "5_hybrid_inside",
+            "n_days": 60,
+            "cagr_pct": 5.086,
+            "sharpe": 1.014,
+            "max_dd_pct": -2.708,
+            "vol_pct": 5.014,
+            "worst_day_pct": -0.77,
+            "best_day_pct": 0.781
+          },
+          "diagnostics": {
+            "avg_exposure": 0.906,
+            "min_exposure": 0.25
+          }
+        }
+      },
+      "(b) VIX high 90d (decoupled)": {
+        "1_baseline_no_cb": {
+          "full_sample": {
+            "label": "1_baseline_no_cb_full",
+            "n_days": 1566,
+            "cagr_pct": 8.614,
+            "sharpe": 2.754,
+            "max_dd_pct": -18.715,
+            "vol_pct": 3.017,
+            "worst_day_pct": -3.354,
+            "best_day_pct": 1.459
+          },
+          "inside_window": {
+            "label": "1_baseline_no_cb_inside",
+            "n_days": 90,
+            "cagr_pct": -43.784,
+            "sharpe": -12.722,
+            "max_dd_pct": -18.677,
+            "vol_pct": 4.514,
+            "worst_day_pct": -0.893,
+            "best_day_pct": 0.513
+          },
+          "diagnostics": {}
+        },
+        "2_exp2630_cb": {
+          "full_sample": {
+            "label": "2_exp2630_cb_full",
+            "n_days": 1566,
+            "cagr_pct": 2.861,
+            "sharpe": 1.211,
+            "max_dd_pct": -12.123,
+            "vol_pct": 2.353,
+            "worst_day_pct": -3.354,
+            "best_day_pct": 1.339
+          },
+          "inside_window": {
+            "label": "2_exp2630_cb_inside",
+            "n_days": 90,
+            "cagr_pct": -30.16,
+            "sharpe": -10.071,
+            "max_dd_pct": -12.123,
+            "vol_pct": 3.556,
+            "worst_day_pct": -0.702,
+            "best_day_pct": 0.513
+          },
+          "diagnostics": {
+            "transitions": [
+              {
+                "day": 683,
+                "from": "NORMAL",
+                "to": "WARN",
+                "dd_pct": -10.173,
+                "new_leverage": 0.5
+              },
+              {
+                "day": 696,
+                "from": "WARN",
+                "to": "HALT",
+                "dd_pct": -12.123,
+                "new_leverage": 0.0
+              }
+            ],
+            "pct_days_normal": 43.61,
+            "pct_days_warn": 0.83,
+            "pct_days_halt": 55.56,
+            "n_state_changes": 2
+          }
+        },
+        "3_vix_gate_50": {
+          "full_sample": {
+            "label": "3_vix_gate_50_full",
+            "n_days": 1566,
+            "cagr_pct": 8.133,
+            "sharpe": 2.791,
+            "max_dd_pct": -17.553,
+            "vol_pct": 2.817,
+            "worst_day_pct": -3.354,
+            "best_day_pct": 1.339
+          },
+          "inside_window": {
+            "label": "3_vix_gate_50_inside",
+            "n_days": 90,
+            "cagr_pct": -41.583,
+            "sharpe": -12.144,
+            "max_dd_pct": -17.553,
+            "vol_pct": 4.414,
+            "worst_day_pct": -0.893,
+            "best_day_pct": 0.513
+          },
+          "diagnostics": {
+            "avg_exposure": 0.9511,
+            "days_at_half": 153
+          }
+        },
+        "4_adaptive_vt": {
+          "full_sample": {
+            "label": "4_adaptive_vt_full",
+            "n_days": 1566,
+            "cagr_pct": 8.321,
+            "sharpe": 3.119,
+            "max_dd_pct": -17.208,
+            "vol_pct": 2.574,
+            "worst_day_pct": -1.677,
+            "best_day_pct": 1.339
+          },
+          "inside_window": {
+            "label": "4_adaptive_vt_inside",
+            "n_days": 90,
+            "cagr_pct": -40.798,
+            "sharpe": -12.41,
+            "max_dd_pct": -17.191,
+            "vol_pct": 4.213,
+            "worst_day_pct": -0.816,
+            "best_day_pct": 0.468
+          },
+          "diagnostics": {
+            "avg_exposure": 0.9464,
+            "min_exposure": 0.5
+          }
+        },
+        "5_hybrid": {
+          "full_sample": {
+            "label": "5_hybrid_full",
+            "n_days": 1566,
+            "cagr_pct": 7.874,
+            "sharpe": 3.16,
+            "max_dd_pct": -16.483,
+            "vol_pct": 2.408,
+            "worst_day_pct": -1.677,
+            "best_day_pct": 1.339
+          },
+          "inside_window": {
+            "label": "5_hybrid_inside",
+            "n_days": 90,
+            "cagr_pct": -39.37,
+            "sharpe": -11.86,
+            "max_dd_pct": -16.483,
+            "vol_pct": 4.207,
+            "worst_day_pct": -0.816,
+            "best_day_pct": 0.468
+          },
+          "diagnostics": {
+            "avg_exposure": 0.906,
+            "min_exposure": 0.25
+          }
+        }
+      },
+      "(b') VIX high 90d (coupled)": {
+        "1_baseline_no_cb": {
+          "full_sample": {
+            "label": "1_baseline_no_cb_full",
+            "n_days": 1566,
+            "cagr_pct": 8.614,
+            "sharpe": 2.754,
+            "max_dd_pct": -18.715,
+            "vol_pct": 3.017,
+            "worst_day_pct": -3.354,
+            "best_day_pct": 1.459
+          },
+          "inside_window": {
+            "label": "1_baseline_no_cb_inside",
+            "n_days": 90,
+            "cagr_pct": -43.784,
+            "sharpe": -12.722,
+            "max_dd_pct": -18.677,
+            "vol_pct": 4.514,
+            "worst_day_pct": -0.893,
+            "best_day_pct": 0.513
+          },
+          "diagnostics": {}
+        },
+        "2_exp2630_cb": {
+          "full_sample": {
+            "label": "2_exp2630_cb_full",
+            "n_days": 1566,
+            "cagr_pct": 2.861,
+            "sharpe": 1.211,
+            "max_dd_pct": -12.123,
+            "vol_pct": 2.353,
+            "worst_day_pct": -3.354,
+            "best_day_pct": 1.339
+          },
+          "inside_window": {
+            "label": "2_exp2630_cb_inside",
+            "n_days": 90,
+            "cagr_pct": -30.16,
+            "sharpe": -10.071,
+            "max_dd_pct": -12.123,
+            "vol_pct": 3.556,
+            "worst_day_pct": -0.702,
+            "best_day_pct": 0.513
+          },
+          "diagnostics": {
+            "transitions": [
+              {
+                "day": 683,
+                "from": "NORMAL",
+                "to": "WARN",
+                "dd_pct": -10.173,
+                "new_leverage": 0.5
+              },
+              {
+                "day": 696,
+                "from": "WARN",
+                "to": "HALT",
+                "dd_pct": -12.123,
+                "new_leverage": 0.0
+              }
+            ],
+            "pct_days_normal": 43.61,
+            "pct_days_warn": 0.83,
+            "pct_days_halt": 55.56,
+            "n_state_changes": 2
+          }
+        },
+        "3_vix_gate_50": {
+          "full_sample": {
+            "label": "3_vix_gate_50_full",
+            "n_days": 1566,
+            "cagr_pct": 8.265,
+            "sharpe": 2.842,
+            "max_dd_pct": -16.929,
+            "vol_pct": 2.809,
+            "worst_day_pct": -3.354,
+            "best_day_pct": 1.339
+          },
+          "inside_window": {
+            "label": "3_vix_gate_50_inside",
+            "n_days": 90,
+            "cagr_pct": -40.322,
+            "sharpe": -11.83,
+            "max_dd_pct": -16.879,
+            "vol_pct": 4.351,
+            "worst_day_pct": -0.893,
+            "best_day_pct": 0.513
+          },
+          "diagnostics": {
+            "avg_exposure": 0.9476,
+            "days_at_half": 164
+          }
+        },
+        "4_adaptive_vt": {
+          "full_sample": {
+            "label": "4_adaptive_vt_full",
+            "n_days": 1566,
+            "cagr_pct": 9.804,
+            "sharpe": 4.046,
+            "max_dd_pct": -9.827,
+            "vol_pct": 2.319,
+            "worst_day_pct": -1.677,
+            "best_day_pct": 1.339
+          },
+          "inside_window": {
+            "label": "4_adaptive_vt_inside",
+            "n_days": 90,
+            "cagr_pct": -24.992,
+            "sharpe": -12.722,
+            "max_dd_pct": -9.808,
+            "vol_pct": 2.257,
+            "worst_day_pct": -0.447,
+            "best_day_pct": 0.256
+          },
+          "diagnostics": {
+            "avg_exposure": 0.9223,
+            "min_exposure": 0.5
+          }
+        },
+        "5_hybrid": {
+          "full_sample": {
+            "label": "5_hybrid_full",
+            "n_days": 1566,
+            "cagr_pct": 9.388,
+            "sharpe": 4.208,
+            "max_dd_pct": -8.86,
+            "vol_pct": 2.138,
+            "worst_day_pct": -1.677,
+            "best_day_pct": 1.339
+          },
+          "inside_window": {
+            "label": "5_hybrid_inside",
+            "n_days": 90,
+            "cagr_pct": -22.72,
+            "sharpe": -11.83,
+            "max_dd_pct": -8.818,
+            "vol_pct": 2.176,
+            "worst_day_pct": -0.447,
+            "best_day_pct": 0.256
+          },
+          "diagnostics": {
+            "avg_exposure": 0.8807,
+            "min_exposure": 0.25
+          }
+        }
+      },
+      "(c) 3-month losing run": {
+        "1_baseline_no_cb": {
+          "full_sample": {
+            "label": "1_baseline_no_cb_full",
+            "n_days": 1566,
+            "cagr_pct": 10.174,
+            "sharpe": 3.477,
+            "max_dd_pct": -12.185,
+            "vol_pct": 2.798,
+            "worst_day_pct": -3.354,
+            "best_day_pct": 1.459
+          },
+          "inside_window": {
+            "label": "1_baseline_no_cb_inside",
+            "n_days": 63,
+            "cagr_pct": -40.3,
+            "sharpe": -25.816,
+            "max_dd_pct": -11.898,
+            "vol_pct": 1.995,
+            "worst_day_pct": -0.744,
+            "best_day_pct": -0.083
+          },
+          "diagnostics": {}
+        },
+        "2_exp2630_cb": {
+          "full_sample": {
+            "label": "2_exp2630_cb_full",
+            "n_days": 1566,
+            "cagr_pct": 9.17,
+            "sharpe": 3.307,
+            "max_dd_pct": -11.228,
+            "vol_pct": 2.664,
+            "worst_day_pct": -3.354,
+            "best_day_pct": 1.459
+          },
+          "inside_window": {
+            "label": "2_exp2630_cb_inside",
+            "n_days": 63,
+            "cagr_pct": -37.696,
+            "sharpe": -28.047,
+            "max_dd_pct": -10.952,
+            "vol_pct": 1.685,
+            "worst_day_pct": -0.586,
+            "best_day_pct": -0.042
+          },
+          "diagnostics": {
+            "transitions": [
+              {
+                "day": 680,
+                "from": "NORMAL",
+                "to": "WARN",
+                "dd_pct": -10.264,
+                "new_leverage": 0.5
+              },
+              {
+                "day": 1002,
+                "from": "WARN",
+                "to": "NORMAL",
+                "dd_pct": -4.992,
+                "new_leverage": 1.0
+              }
+            ],
+            "pct_days_normal": 79.44,
+            "pct_days_warn": 20.56,
+            "pct_days_halt": 0.0,
+            "n_state_changes": 2
+          }
+        },
+        "3_vix_gate_50": {
+          "full_sample": {
+            "label": "3_vix_gate_50_full",
+            "n_days": 1566,
+            "cagr_pct": 9.551,
+            "sharpe": 3.518,
+            "max_dd_pct": -11.676,
+            "vol_pct": 2.603,
+            "worst_day_pct": -3.354,
+            "best_day_pct": 1.339
+          },
+          "inside_window": {
+            "label": "3_vix_gate_50_inside",
+            "n_days": 63,
+            "cagr_pct": -38.903,
+            "sharpe": -25.478,
+            "max_dd_pct": -11.387,
+            "vol_pct": 1.931,
+            "worst_day_pct": -0.744,
+            "best_day_pct": -0.053
+          },
+          "diagnostics": {
+            "avg_exposure": 0.9511,
+            "days_at_half": 153
+          }
+        },
+        "4_adaptive_vt": {
+          "full_sample": {
+            "label": "4_adaptive_vt_full",
+            "n_days": 1566,
+            "cagr_pct": 9.715,
+            "sharpe": 3.948,
+            "max_dd_pct": -11.22,
+            "vol_pct": 2.356,
+            "worst_day_pct": -1.677,
+            "best_day_pct": 1.339
+          },
+          "inside_window": {
+            "label": "4_adaptive_vt_inside",
+            "n_days": 63,
+            "cagr_pct": -37.67,
+            "sharpe": -24.927,
+            "max_dd_pct": -10.977,
+            "vol_pct": 1.894,
+            "worst_day_pct": -0.744,
+            "best_day_pct": -0.064
+          },
+          "diagnostics": {
+            "avg_exposure": 0.9464,
+            "min_exposure": 0.5
+          }
+        },
+        "5_hybrid": {
+          "full_sample": {
+            "label": "5_hybrid_full",
+            "n_days": 1566,
+            "cagr_pct": 9.179,
+            "sharpe": 4.032,
+            "max_dd_pct": -10.893,
+            "vol_pct": 2.184,
+            "worst_day_pct": -1.677,
+            "best_day_pct": 1.339
+          },
+          "inside_window": {
+            "label": "5_hybrid_inside",
+            "n_days": 63,
+            "cagr_pct": -36.746,
+            "sharpe": -24.076,
+            "max_dd_pct": -10.649,
+            "vol_pct": 1.9,
+            "worst_day_pct": -0.744,
+            "best_day_pct": -0.032
+          },
+          "diagnostics": {
+            "avg_exposure": 0.906,
+            "min_exposure": 0.25
+          }
+        }
+      },
+      "(d) 2020 March COVID": {
+        "1_baseline_no_cb": {
+          "full_sample": {
+            "label": "1_baseline_no_cb_full",
+            "n_days": 1566,
+            "cagr_pct": 13.077,
+            "sharpe": 4.535,
+            "max_dd_pct": -3.728,
+            "vol_pct": 2.719,
+            "worst_day_pct": -3.354,
+            "best_day_pct": 1.459
+          },
+          "inside_window": {
+            "label": "1_baseline_no_cb_inside",
+            "n_days": 30,
+            "cagr_pct": -11.719,
+            "sharpe": -1.142,
+            "max_dd_pct": -3.728,
+            "vol_pct": 10.442,
+            "worst_day_pct": -3.354,
+            "best_day_pct": 0.572,
+            "start": "2020-02-24",
+            "end": "2020-04-03"
+          },
+          "diagnostics": {}
+        },
+        "2_exp2630_cb": {
+          "full_sample": {
+            "label": "2_exp2630_cb_full",
+            "n_days": 1566,
+            "cagr_pct": 13.077,
+            "sharpe": 4.535,
+            "max_dd_pct": -3.728,
+            "vol_pct": 2.719,
+            "worst_day_pct": -3.354,
+            "best_day_pct": 1.459
+          },
+          "inside_window": {
+            "label": "2_exp2630_cb_inside",
+            "n_days": 30,
+            "cagr_pct": -11.719,
+            "sharpe": -1.142,
+            "max_dd_pct": -3.728,
+            "vol_pct": 10.442,
+            "worst_day_pct": -3.354,
+            "best_day_pct": 0.572,
+            "start": "2020-02-24",
+            "end": "2020-04-03"
+          },
+          "diagnostics": {
+            "transitions": [],
+            "pct_days_normal": 100.0,
+            "pct_days_warn": 0.0,
+            "pct_days_halt": 0.0,
+            "n_state_changes": 0
+          }
+        },
+        "3_vix_gate_50": {
+          "full_sample": {
+            "label": "3_vix_gate_50_full",
+            "n_days": 1566,
+            "cagr_pct": 12.33,
+            "sharpe": 4.609,
+            "max_dd_pct": -3.728,
+            "vol_pct": 2.53,
+            "worst_day_pct": -3.354,
+            "best_day_pct": 1.339
+          },
+          "inside_window": {
+            "label": "3_vix_gate_50_inside",
+            "n_days": 30,
+            "cagr_pct": -11.059,
+            "sharpe": -1.071,
+            "max_dd_pct": -3.728,
+            "vol_pct": 10.436,
+            "worst_day_pct": -3.354,
+            "best_day_pct": 0.572,
+            "start": "2020-02-24",
+            "end": "2020-04-03"
+          },
+          "diagnostics": {
+            "avg_exposure": 0.9511,
+            "days_at_half": 153
+          }
+        },
+        "4_adaptive_vt": {
+          "full_sample": {
+            "label": "4_adaptive_vt_full",
+            "n_days": 1566,
+            "cagr_pct": 12.366,
+            "sharpe": 5.138,
+            "max_dd_pct": -1.867,
+            "vol_pct": 2.275,
+            "worst_day_pct": -1.677,
+            "best_day_pct": 1.339
+          },
+          "inside_window": {
+            "label": "4_adaptive_vt_inside",
+            "n_days": 30,
+            "cagr_pct": -5.526,
+            "sharpe": -1.058,
+            "max_dd_pct": -1.867,
+            "vol_pct": 5.244,
+            "worst_day_pct": -1.677,
+            "best_day_pct": 0.286,
+            "start": "2020-02-24",
+            "end": "2020-04-03"
+          },
+          "diagnostics": {
+            "avg_exposure": 0.9464,
+            "min_exposure": 0.5
+          }
+        },
+        "5_hybrid": {
+          "full_sample": {
+            "label": "5_hybrid_full",
+            "n_days": 1566,
+            "cagr_pct": 11.751,
+            "sharpe": 5.291,
+            "max_dd_pct": -1.867,
+            "vol_pct": 2.105,
+            "worst_day_pct": -1.677,
+            "best_day_pct": 1.339
+          },
+          "inside_window": {
+            "label": "5_hybrid_inside",
+            "n_days": 30,
+            "cagr_pct": -5.174,
+            "sharpe": -0.988,
+            "max_dd_pct": -1.867,
+            "vol_pct": 5.241,
+            "worst_day_pct": -1.677,
+            "best_day_pct": 0.286,
+            "start": "2020-02-24",
+            "end": "2020-04-03"
+          },
+          "diagnostics": {
+            "avg_exposure": 0.906,
+            "min_exposure": 0.25
+          }
+        }
+      },
+      "(e) 2022 H1 bear": {
+        "1_baseline_no_cb": {
+          "full_sample": {
+            "label": "1_baseline_no_cb_full",
+            "n_days": 1566,
+            "cagr_pct": 13.077,
+            "sharpe": 4.535,
+            "max_dd_pct": -3.728,
+            "vol_pct": 2.719,
+            "worst_day_pct": -3.354,
+            "best_day_pct": 1.459
+          },
+          "inside_window": {
+            "label": "1_baseline_no_cb_inside",
+            "n_days": 129,
+            "cagr_pct": 21.446,
+            "sharpe": 5.818,
+            "max_dd_pct": -0.837,
+            "vol_pct": 3.35,
+            "worst_day_pct": -0.837,
+            "best_day_pct": 1.339,
+            "start": "2022-01-03",
+            "end": "2022-06-30"
+          },
+          "diagnostics": {}
+        },
+        "2_exp2630_cb": {
+          "full_sample": {
+            "label": "2_exp2630_cb_full",
+            "n_days": 1566,
+            "cagr_pct": 13.077,
+            "sharpe": 4.535,
+            "max_dd_pct": -3.728,
+            "vol_pct": 2.719,
+            "worst_day_pct": -3.354,
+            "best_day_pct": 1.459
+          },
+          "inside_window": {
+            "label": "2_exp2630_cb_inside",
+            "n_days": 129,
+            "cagr_pct": 21.446,
+            "sharpe": 5.818,
+            "max_dd_pct": -0.837,
+            "vol_pct": 3.35,
+            "worst_day_pct": -0.837,
+            "best_day_pct": 1.339,
+            "start": "2022-01-03",
+            "end": "2022-06-30"
+          },
+          "diagnostics": {
+            "transitions": [],
+            "pct_days_normal": 100.0,
+            "pct_days_warn": 0.0,
+            "pct_days_halt": 0.0,
+            "n_state_changes": 0
+          }
+        },
+        "3_vix_gate_50": {
+          "full_sample": {
+            "label": "3_vix_gate_50_full",
+            "n_days": 1566,
+            "cagr_pct": 12.33,
+            "sharpe": 4.609,
+            "max_dd_pct": -3.728,
+            "vol_pct": 2.53,
+            "worst_day_pct": -3.354,
+            "best_day_pct": 1.339
+          },
+          "inside_window": {
+            "label": "3_vix_gate_50_inside",
+            "n_days": 129,
+            "cagr_pct": 16.745,
+            "sharpe": 5.166,
+            "max_dd_pct": -0.837,
+            "vol_pct": 3.006,
+            "worst_day_pct": -0.837,
+            "best_day_pct": 1.339,
+            "start": "2022-01-03",
+            "end": "2022-06-30"
+          },
+          "diagnostics": {
+            "avg_exposure": 0.9511,
+            "days_at_half": 153
+          }
+        },
+        "4_adaptive_vt": {
+          "full_sample": {
+            "label": "4_adaptive_vt_full",
+            "n_days": 1566,
+            "cagr_pct": 12.366,
+            "sharpe": 5.138,
+            "max_dd_pct": -1.867,
+            "vol_pct": 2.275,
+            "worst_day_pct": -1.677,
+            "best_day_pct": 1.339
+          },
+          "inside_window": {
+            "label": "4_adaptive_vt_inside",
+            "n_days": 129,
+            "cagr_pct": 18.604,
+            "sharpe": 5.598,
+            "max_dd_pct": -0.791,
+            "vol_pct": 3.057,
+            "worst_day_pct": -0.791,
+            "best_day_pct": 1.339,
+            "start": "2022-01-03",
+            "end": "2022-06-30"
+          },
+          "diagnostics": {
+            "avg_exposure": 0.9464,
+            "min_exposure": 0.5
+          }
+        },
+        "5_hybrid": {
+          "full_sample": {
+            "label": "5_hybrid_full",
+            "n_days": 1566,
+            "cagr_pct": 11.751,
+            "sharpe": 5.291,
+            "max_dd_pct": -1.867,
+            "vol_pct": 2.105,
+            "worst_day_pct": -1.677,
+            "best_day_pct": 1.339
+          },
+          "inside_window": {
+            "label": "5_hybrid_inside",
+            "n_days": 129,
+            "cagr_pct": 15.123,
+            "sharpe": 4.933,
+            "max_dd_pct": -0.791,
+            "vol_pct": 2.864,
+            "worst_day_pct": -0.791,
+            "best_day_pct": 1.339,
+            "start": "2022-01-03",
+            "end": "2022-06-30"
+          },
+          "diagnostics": {
+            "avg_exposure": 0.906,
+            "min_exposure": 0.25
+          }
+        }
+      }
+    }
+  },
+  "gate_check": {
+    "1_baseline_no_cb": {
+      "max_full_dd_pct": 18.715,
+      "max_inside_dd_pct": 18.677,
+      "worst_inside_scenario": "(b') VIX high 90d (coupled)",
+      "all_under_12": false,
+      "excludes_decoupled_b": true
+    },
+    "2_exp2630_cb": {
+      "max_full_dd_pct": 12.123,
+      "max_inside_dd_pct": 12.123,
+      "worst_inside_scenario": "(b') VIX high 90d (coupled)",
+      "all_under_12": false,
+      "excludes_decoupled_b": true
+    },
+    "3_vix_gate_50": {
+      "max_full_dd_pct": 16.929,
+      "max_inside_dd_pct": 16.879,
+      "worst_inside_scenario": "(b') VIX high 90d (coupled)",
+      "all_under_12": false,
+      "excludes_decoupled_b": true
+    },
+    "4_adaptive_vt": {
+      "max_full_dd_pct": 11.22,
+      "max_inside_dd_pct": 10.977,
+      "worst_inside_scenario": "(c) 3-month losing run",
+      "all_under_12": true,
+      "excludes_decoupled_b": true
+    },
+    "5_hybrid": {
+      "max_full_dd_pct": 10.893,
+      "max_inside_dd_pct": 10.649,
+      "worst_inside_scenario": "(c) 3-month losing run",
+      "all_under_12": true,
+      "excludes_decoupled_b": true
+    }
+  },
+  "winners": [
+    "4_adaptive_vt",
+    "5_hybrid"
+  ],
+  "baseline_impact": {
+    "1_baseline_no_cb": {
+      "cagr_pct": 13.077,
+      "sharpe": 4.535,
+      "dd_pct": -3.728
+    },
+    "2_exp2630_cb": {
+      "cagr_pct": 13.077,
+      "sharpe": 4.535,
+      "dd_pct": -3.728
+    },
+    "3_vix_gate_50": {
+      "cagr_pct": 12.33,
+      "sharpe": 4.609,
+      "dd_pct": -3.728
+    },
+    "4_adaptive_vt": {
+      "cagr_pct": 12.366,
+      "sharpe": 5.138,
+      "dd_pct": -1.867
+    },
+    "5_hybrid": {
+      "cagr_pct": 11.751,
+      "sharpe": 5.291,
+      "dd_pct": -1.867
+    }
+  },
+  "target_dd_pct": 12.0
+}
