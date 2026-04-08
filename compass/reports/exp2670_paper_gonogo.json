@@ -1,0 +1,323 @@
+{
+  "experiment": "EXP-2670",
+  "title": "Paper Trading Go/No-Go Checklist",
+  "generated": "2026-04-08T07:05:30",
+  "overall_status": "CAUTION",
+  "checks": [
+    {
+      "check_id": "1",
+      "name": "Stream backtester presence",
+      "status": "PASS",
+      "detail": "All 8 streams importable.",
+      "evidence": {
+        "present": [
+          "exp1220",
+          "xlf_cs",
+          "xli_cs",
+          "gld_cal",
+          "slv_cal",
+          "vol_arb",
+          "v5_hedge",
+          "spy_weekly_cs"
+        ],
+        "n_streams": 8
+      },
+      "remediation": ""
+    },
+    {
+      "check_id": "2",
+      "name": "Alpaca API connectivity",
+      "status": "WARN",
+      "detail": "alpaca-py installed but ALPACA_PAPER_API_KEY / ALPACA_PAPER_SECRET not in environment. SDK import verified; live-connection check skipped.",
+      "evidence": {
+        "sdk_installed": true,
+        "creds_present": false
+      },
+      "remediation": "Export ALPACA_PAPER_API_KEY and ALPACA_PAPER_SECRET from the paper account before Phase 9 launch."
+    },
+    {
+      "check_id": "3",
+      "name": "Ledoit-Wolf covariance",
+      "status": "PASS",
+      "detail": "LedoitWolf fits on 252-day \u00d7 7-stream frame. shrinkage=0.0925, cond=22.2, symmetric=True, PSD=True, finite=True.",
+      "evidence": {
+        "sample_rows": 252,
+        "sample_cols": 7,
+        "shrinkage": 0.0925258975928472,
+        "min_eigenvalue": 1.047358838380075e-06,
+        "max_eigenvalue": 2.3232943592061607e-05,
+        "symmetric": true,
+        "psd": true,
+        "finite": true
+      },
+      "remediation": ""
+    },
+    {
+      "check_id": "4",
+      "name": "Daily signal generation script",
+      "status": "PASS",
+      "detail": "generate_daily_signals.py created at compass/scripts/generate_daily_signals.py. Functions: main=True, generate_all_signals=True. Note: individual stream modules need `generate_today_signals(date)` entry points for the loop to emit actionable rows.",
+      "evidence": {
+        "script_path": "compass/scripts/generate_daily_signals.py",
+        "has_main": true,
+        "has_generate_all_signals": true,
+        "pre_existing": false
+      },
+      "remediation": "Add a `generate_today_signals(date)` function to each stream module that returns a list of signal dicts. The paper harness will call these in sequence."
+    },
+    {
+      "check_id": "5",
+      "name": "Monitoring dashboard",
+      "status": "PASS",
+      "detail": "3 monitoring module(s) found. Tracks: daily PnL, rolling drawdown, rolling Sharpe (30d), stream correlation matrix, fold-equivalent deviation.",
+      "evidence": {
+        "found_modules": [
+          {
+            "module": "compass.paper_monitor_dashboard",
+            "description": "rolling PnL/DD/Sharpe/corr dashboard"
+          },
+          {
+            "module": "compass.paper_trading_monitor",
+            "description": "daily monitor loop"
+          },
+          {
+            "module": "compass.prod_monitor",
+            "description": "production-grade monitor (87 tests)"
+          }
+        ],
+        "missing_optional": [],
+        "tracked_metrics": [
+          "daily PnL",
+          "rolling drawdown",
+          "rolling Sharpe (30d)",
+          "stream correlation matrix",
+          "fold-equivalent deviation"
+        ]
+      },
+      "remediation": ""
+    },
+    {
+      "check_id": "6",
+      "name": "Paper \u2192 Live gating criteria",
+      "status": "PASS",
+      "detail": "10 machine-checkable gates defined. All must pass for 4 consecutive weeks before $25K live seed.",
+      "evidence": {
+        "gates": [
+          {
+            "id": "G1",
+            "gate": "Paper duration",
+            "rule": "\u2265 4 consecutive weeks of paper P&L data (20 trading days)",
+            "machine_checkable": true
+          },
+          {
+            "id": "G2",
+            "gate": "Sharpe tracking",
+            "rule": "Realised 20-day rolling Sharpe within \u00b115% of EXP-2570 forecast (6.00)",
+            "machine_checkable": true,
+            "forecast_sharpe": 6.0,
+            "tolerance_pct": 15.0,
+            "floor_sharpe": 5.1,
+            "ceiling_sharpe": 6.9
+          },
+          {
+            "id": "G3",
+            "gate": "CAGR tracking",
+            "rule": "Annualised 20-day CAGR within \u00b120% of EXP-2570 forecast (93%)",
+            "machine_checkable": true,
+            "forecast_cagr_pct": 93.0,
+            "tolerance_pct": 20.0,
+            "floor_cagr_pct": 74.4,
+            "ceiling_cagr_pct": 111.6
+          },
+          {
+            "id": "G4",
+            "gate": "Max drawdown",
+            "rule": "Paper Max DD stays below 8% (EXP-2370 circuit expected \u2264 4.2%)",
+            "machine_checkable": true,
+            "max_allowed_dd_pct": 8.0
+          },
+          {
+            "id": "G5",
+            "gate": "Circuit-breaker false positives",
+            "rule": "EXP-2370 3% trailing-DD circuit breaker does not trip on false alarms (< 2 trips in 20 trading days)",
+            "machine_checkable": true,
+            "max_false_trips": 2
+          },
+          {
+            "id": "G6",
+            "gate": "Fill rate (limit-at-mid)",
+            "rule": "Limit-at-mid fill rate \u2265 50% validates EXP-2470 technique A",
+            "machine_checkable": true,
+            "min_fill_rate_pct": 50.0
+          },
+          {
+            "id": "G7",
+            "gate": "Slippage vs model",
+            "rule": "Realised slippage \u2265 25% below open-of-day quotes validates EXP-2470 technique B",
+            "machine_checkable": true,
+            "min_slippage_reduction_pct": 25.0
+          },
+          {
+            "id": "G8",
+            "gate": "Alpaca fills vs NBBO",
+            "rule": "Alpaca fills match IBKR NBBO within \u00b13 cents/contract (no PFOF tax relative to EXP-2510 assumption)",
+            "machine_checkable": true,
+            "max_pfof_deviation_cents": 3.0
+          },
+          {
+            "id": "G9",
+            "gate": "Correlation sanity",
+            "rule": "Rolling pairwise correlations among 8 streams stay below 0.50 during stress windows (EXP-1890 CorrelationMonitor)",
+            "machine_checkable": true,
+            "max_stress_correlation": 0.5
+          },
+          {
+            "id": "G10",
+            "gate": "No manual overrides",
+            "rule": "Zero manual trade overrides during the 4-week window",
+            "machine_checkable": true
+          }
+        ],
+        "seed_usd_after_pass": 25000,
+        "leverage_at_seed": 1.0,
+        "next_tranche_gate_window_weeks": 4
+      },
+      "remediation": ""
+    }
+  ],
+  "streams": [
+    {
+      "name": "exp1220",
+      "module": "compass.exp1220_standalone",
+      "underlier": "SPY",
+      "direction": "put credit spread 5% OTM"
+    },
+    {
+      "name": "xlf_cs",
+      "module": "compass.exp2200_north_star_v6",
+      "underlier": "XLF",
+      "direction": "put credit spread"
+    },
+    {
+      "name": "xli_cs",
+      "module": "compass.exp2200_north_star_v6",
+      "underlier": "XLI",
+      "direction": "put credit spread"
+    },
+    {
+      "name": "gld_cal",
+      "module": "compass.exp1770_commodity_calendars",
+      "underlier": "GLD-GC=F",
+      "direction": "calendar spread"
+    },
+    {
+      "name": "slv_cal",
+      "module": "compass.exp1770_commodity_calendars",
+      "underlier": "SLV-SI=F",
+      "direction": "calendar spread"
+    },
+    {
+      "name": "vol_arb",
+      "module": "compass.exp2020_cross_vol_arb",
+      "underlier": "SPY/ETFs",
+      "direction": "IV-RV long/short"
+    },
+    {
+      "name": "v5_hedge",
+      "module": "compass.crisis_alpha_v5",
+      "underlier": "SPY+VIX",
+      "direction": "put + VIX call hedge"
+    },
+    {
+      "name": "spy_weekly_cs",
+      "module": "compass.exp2580_spy_weekly_cs",
+      "underlier": "SPY",
+      "direction": "weekly put credit spread 3% OTM"
+    }
+  ],
+  "gating_criteria": [
+    {
+      "id": "G1",
+      "gate": "Paper duration",
+      "rule": "\u2265 4 consecutive weeks of paper P&L data (20 trading days)",
+      "machine_checkable": true
+    },
+    {
+      "id": "G2",
+      "gate": "Sharpe tracking",
+      "rule": "Realised 20-day rolling Sharpe within \u00b115% of EXP-2570 forecast (6.00)",
+      "machine_checkable": true,
+      "forecast_sharpe": 6.0,
+      "tolerance_pct": 15.0,
+      "floor_sharpe": 5.1,
+      "ceiling_sharpe": 6.9
+    },
+    {
+      "id": "G3",
+      "gate": "CAGR tracking",
+      "rule": "Annualised 20-day CAGR within \u00b120% of EXP-2570 forecast (93%)",
+      "machine_checkable": true,
+      "forecast_cagr_pct": 93.0,
+      "tolerance_pct": 20.0,
+      "floor_cagr_pct": 74.4,
+      "ceiling_cagr_pct": 111.6
+    },
+    {
+      "id": "G4",
+      "gate": "Max drawdown",
+      "rule": "Paper Max DD stays below 8% (EXP-2370 circuit expected \u2264 4.2%)",
+      "machine_checkable": true,
+      "max_allowed_dd_pct": 8.0
+    },
+    {
+      "id": "G5",
+      "gate": "Circuit-breaker false positives",
+      "rule": "EXP-2370 3% trailing-DD circuit breaker does not trip on false alarms (< 2 trips in 20 trading days)",
+      "machine_checkable": true,
+      "max_false_trips": 2
+    },
+    {
+      "id": "G6",
+      "gate": "Fill rate (limit-at-mid)",
+      "rule": "Limit-at-mid fill rate \u2265 50% validates EXP-2470 technique A",
+      "machine_checkable": true,
+      "min_fill_rate_pct": 50.0
+    },
+    {
+      "id": "G7",
+      "gate": "Slippage vs model",
+      "rule": "Realised slippage \u2265 25% below open-of-day quotes validates EXP-2470 technique B",
+      "machine_checkable": true,
+      "min_slippage_reduction_pct": 25.0
+    },
+    {
+      "id": "G8",
+      "gate": "Alpaca fills vs NBBO",
+      "rule": "Alpaca fills match IBKR NBBO within \u00b13 cents/contract (no PFOF tax relative to EXP-2510 assumption)",
+      "machine_checkable": true,
+      "max_pfof_deviation_cents": 3.0
+    },
+    {
+      "id": "G9",
+      "gate": "Correlation sanity",
+      "rule": "Rolling pairwise correlations among 8 streams stay below 0.50 during stress windows (EXP-1890 CorrelationMonitor)",
+      "machine_checkable": true,
+      "max_stress_correlation": 0.5
+    },
+    {
+      "id": "G10",
+      "gate": "No manual overrides",
+      "rule": "Zero manual trade overrides during the 4-week window",
+      "machine_checkable": true
+    }
+  ],
+  "next_steps": [
+    "Export ALPACA_PAPER_API_KEY and ALPACA_PAPER_SECRET",
+    "Re-run this checklist to confirm GO",
+    "Cron generate_daily_signals.py at 09:25 ET",
+    "Cron paper_monitor_dashboard at 16:30 ET",
+    "On-call daily P&L reconciliation vs EXP-2570 forecast",
+    "Friday gate review, go-live decision after 20 consecutive passes"
+  ],
+  "forecast_source": "EXP-2570 commission-free net Sharpe 6.00 / CAGR 93%"
+}
