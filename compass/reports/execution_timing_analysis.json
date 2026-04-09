@@ -1,0 +1,1206 @@
+{
+  "title": "Execution Timing Analysis \u2014 Historical Options Microstructure",
+  "timestamp": "2026-04-09T07:07:34.340314Z",
+  "tickers": [
+    "SPY",
+    "QQQ",
+    "GLD",
+    "SLV",
+    "XLF",
+    "XLI"
+  ],
+  "data_sources": {
+    "ironvault_option_daily": "options_cache.db \u2014 (H/L/C per contract per day)",
+    "ironvault_option_intraday": "options_cache.db \u2014 5-min bars (SPY only)",
+    "vix_series": "Yahoo Finance ^VIX daily closes"
+  },
+  "friction_proxy": "median (High - Low) / Close per contract (Garman-Klass style)",
+  "calibration": "LOW-VIX regime anchor = 5.0 bps",
+  "vix_regime_bounds": {
+    "LOW": "< 15.0",
+    "NORMAL": "15.0 to 25.0",
+    "HIGH": "25.0 to 35.0",
+    "CRISIS": ">= 35.0"
+  },
+  "per_ticker": {
+    "SPY": {
+      "ticker": "SPY",
+      "status": "OK",
+      "n_days": 1544,
+      "date_range": {
+        "start": "2020-01-02",
+        "end": "2026-02-24"
+      },
+      "calibration_scale_bps_per_raw": 0.004496,
+      "calibration_low_ratio_anchor": 0.11121332924460794,
+      "day_of_week": {
+        "Mon": {
+          "n_days": 287,
+          "median_raw_hl_ratio": 0.150943,
+          "median_bps": 6.79,
+          "p25_bps": 4.71,
+          "p75_bps": 9.23
+        },
+        "Tue": {
+          "n_days": 320,
+          "median_raw_hl_ratio": 0.153408,
+          "median_bps": 6.9,
+          "p25_bps": 5.0,
+          "p75_bps": 9.57
+        },
+        "Wed": {
+          "n_days": 317,
+          "median_raw_hl_ratio": 0.158189,
+          "median_bps": 7.11,
+          "p25_bps": 5.1,
+          "p75_bps": 10.01
+        },
+        "Thu": {
+          "n_days": 310,
+          "median_raw_hl_ratio": 0.161714,
+          "median_bps": 7.27,
+          "p25_bps": 5.17,
+          "p75_bps": 10.33
+        },
+        "Fri": {
+          "n_days": 310,
+          "median_raw_hl_ratio": 0.162145,
+          "median_bps": 7.29,
+          "p25_bps": 5.2,
+          "p75_bps": 10.29
+        }
+      },
+      "vix_regime": {
+        "LOW": {
+          "n_days": 283,
+          "median_raw_hl_ratio": 0.111213,
+          "median_bps": 5.0,
+          "p25_bps": 3.65,
+          "p75_bps": 6.13,
+          "multiplier_vs_low": 1.0
+        },
+        "NORMAL": {
+          "n_days": 927,
+          "median_raw_hl_ratio": 0.155844,
+          "median_bps": 7.01,
+          "p25_bps": 5.11,
+          "p75_bps": 9.43,
+          "multiplier_vs_low": 1.4
+        },
+        "HIGH": {
+          "n_days": 275,
+          "median_raw_hl_ratio": 0.222075,
+          "median_bps": 9.98,
+          "p25_bps": 7.33,
+          "p75_bps": 13.01,
+          "multiplier_vs_low": 2.0
+        },
+        "CRISIS": {
+          "n_days": 59,
+          "median_raw_hl_ratio": 0.273006,
+          "median_bps": 12.27,
+          "p25_bps": 8.69,
+          "p75_bps": 15.11,
+          "multiplier_vs_low": 2.45
+        }
+      },
+      "dow_regime_matrix_bps": {
+        "Mon": {
+          "LOW": 4.76,
+          "NORMAL": 6.79,
+          "HIGH": 9.55,
+          "CRISIS": 12.55
+        },
+        "Tue": {
+          "LOW": 4.97,
+          "NORMAL": 6.95,
+          "HIGH": 9.94,
+          "CRISIS": 14.31
+        },
+        "Wed": {
+          "LOW": 5.01,
+          "NORMAL": 7.08,
+          "HIGH": 10.91,
+          "CRISIS": 12.36
+        },
+        "Thu": {
+          "LOW": 5.13,
+          "NORMAL": 7.23,
+          "HIGH": 9.66,
+          "CRISIS": 12.28
+        },
+        "Fri": {
+          "LOW": 5.13,
+          "NORMAL": 7.27,
+          "HIGH": 10.73,
+          "CRISIS": 11.21
+        }
+      },
+      "best_dow": "Mon",
+      "worst_dow": "Fri",
+      "dow_savings_bps": 0.5
+    },
+    "QQQ": {
+      "ticker": "QQQ",
+      "status": "OK",
+      "n_days": 1499,
+      "date_range": {
+        "start": "2020-01-02",
+        "end": "2025-12-19"
+      },
+      "calibration_scale_bps_per_raw": 0.002613,
+      "calibration_low_ratio_anchor": 0.1913568041979795,
+      "day_of_week": {
+        "Mon": {
+          "n_days": 279,
+          "median_raw_hl_ratio": 0.213275,
+          "median_bps": 5.57,
+          "p25_bps": 4.03,
+          "p75_bps": 7.68
+        },
+        "Tue": {
+          "n_days": 310,
+          "median_raw_hl_ratio": 0.216153,
+          "median_bps": 5.65,
+          "p25_bps": 4.22,
+          "p75_bps": 7.9
+        },
+        "Wed": {
+          "n_days": 307,
+          "median_raw_hl_ratio": 0.239203,
+          "median_bps": 6.25,
+          "p25_bps": 4.22,
+          "p75_bps": 8.07
+        },
+        "Thu": {
+          "n_days": 302,
+          "median_raw_hl_ratio": 0.231913,
+          "median_bps": 6.06,
+          "p25_bps": 4.29,
+          "p75_bps": 8.37
+        },
+        "Fri": {
+          "n_days": 301,
+          "median_raw_hl_ratio": 0.222635,
+          "median_bps": 5.82,
+          "p25_bps": 4.35,
+          "p75_bps": 8.41
+        }
+      },
+      "vix_regime": {
+        "LOW": {
+          "n_days": 270,
+          "median_raw_hl_ratio": 0.191357,
+          "median_bps": 5.0,
+          "p25_bps": 3.75,
+          "p75_bps": 6.25,
+          "multiplier_vs_low": 1.0
+        },
+        "NORMAL": {
+          "n_days": 895,
+          "median_raw_hl_ratio": 0.220107,
+          "median_bps": 5.75,
+          "p25_bps": 4.04,
+          "p75_bps": 7.72,
+          "multiplier_vs_low": 1.15
+        },
+        "HIGH": {
+          "n_days": 275,
+          "median_raw_hl_ratio": 0.269813,
+          "median_bps": 7.05,
+          "p25_bps": 5.27,
+          "p75_bps": 9.71,
+          "multiplier_vs_low": 1.41
+        },
+        "CRISIS": {
+          "n_days": 59,
+          "median_raw_hl_ratio": 0.366505,
+          "median_bps": 9.58,
+          "p25_bps": 6.86,
+          "p75_bps": 12.43,
+          "multiplier_vs_low": 1.92
+        }
+      },
+      "dow_regime_matrix_bps": {
+        "Mon": {
+          "LOW": 4.84,
+          "NORMAL": 5.37,
+          "HIGH": 7.06,
+          "CRISIS": 9.21
+        },
+        "Tue": {
+          "LOW": 4.47,
+          "NORMAL": 5.64,
+          "HIGH": 6.1,
+          "CRISIS": 9.84
+        },
+        "Wed": {
+          "LOW": 5.12,
+          "NORMAL": 6.05,
+          "HIGH": 6.96,
+          "CRISIS": 8.54
+        },
+        "Thu": {
+          "LOW": 5.14,
+          "NORMAL": 5.99,
+          "HIGH": 6.82,
+          "CRISIS": 7.63
+        },
+        "Fri": {
+          "LOW": 5.05,
+          "NORMAL": 5.73,
+          "HIGH": 8.09,
+          "CRISIS": 8.92
+        }
+      },
+      "best_dow": "Mon",
+      "worst_dow": "Wed",
+      "dow_savings_bps": 0.68
+    },
+    "GLD": {
+      "ticker": "GLD",
+      "status": "OK",
+      "n_days": 1398,
+      "date_range": {
+        "start": "2020-01-02",
+        "end": "2025-12-19"
+      },
+      "calibration_scale_bps_per_raw": 0.003,
+      "calibration_low_ratio_anchor": 0.16666666666666666,
+      "day_of_week": {
+        "Mon": {
+          "n_days": 264,
+          "median_raw_hl_ratio": 0.107599,
+          "median_bps": 3.23,
+          "p25_bps": 2.04,
+          "p75_bps": 5.04
+        },
+        "Tue": {
+          "n_days": 290,
+          "median_raw_hl_ratio": 0.118546,
+          "median_bps": 3.56,
+          "p25_bps": 2.3,
+          "p75_bps": 5.3
+        },
+        "Wed": {
+          "n_days": 281,
+          "median_raw_hl_ratio": 0.121687,
+          "median_bps": 3.65,
+          "p25_bps": 2.47,
+          "p75_bps": 5.78
+        },
+        "Thu": {
+          "n_days": 281,
+          "median_raw_hl_ratio": 0.123191,
+          "median_bps": 3.7,
+          "p25_bps": 2.21,
+          "p75_bps": 5.29
+        },
+        "Fri": {
+          "n_days": 282,
+          "median_raw_hl_ratio": 0.117976,
+          "median_bps": 3.54,
+          "p25_bps": 2.39,
+          "p75_bps": 5.56
+        }
+      },
+      "vix_regime": {
+        "LOW": {
+          "n_days": 256,
+          "median_raw_hl_ratio": 0.166667,
+          "median_bps": 5.0,
+          "p25_bps": 3.31,
+          "p75_bps": 7.34,
+          "multiplier_vs_low": 1.0
+        },
+        "NORMAL": {
+          "n_days": 810,
+          "median_raw_hl_ratio": 0.108791,
+          "median_bps": 3.26,
+          "p25_bps": 1.9,
+          "p75_bps": 5.0,
+          "multiplier_vs_low": 0.65
+        },
+        "HIGH": {
+          "n_days": 273,
+          "median_raw_hl_ratio": 0.101372,
+          "median_bps": 3.04,
+          "p25_bps": 2.31,
+          "p75_bps": 4.47,
+          "multiplier_vs_low": 0.61
+        },
+        "CRISIS": {
+          "n_days": 59,
+          "median_raw_hl_ratio": 0.138393,
+          "median_bps": 4.15,
+          "p25_bps": 3.23,
+          "p75_bps": 6.2,
+          "multiplier_vs_low": 0.83
+        }
+      },
+      "dow_regime_matrix_bps": {
+        "Mon": {
+          "LOW": 5.35,
+          "NORMAL": 2.73,
+          "HIGH": 3.04,
+          "CRISIS": 5.63
+        },
+        "Tue": {
+          "LOW": 4.72,
+          "NORMAL": 3.16,
+          "HIGH": 3.05,
+          "CRISIS": 4.75
+        },
+        "Wed": {
+          "LOW": 5.13,
+          "NORMAL": 3.38,
+          "HIGH": 3.21,
+          "CRISIS": 3.8
+        },
+        "Thu": {
+          "LOW": 4.9,
+          "NORMAL": 3.52,
+          "HIGH": 3.24,
+          "CRISIS": 4.11
+        },
+        "Fri": {
+          "LOW": 5.04,
+          "NORMAL": 3.62,
+          "HIGH": 2.76,
+          "CRISIS": 3.81
+        }
+      },
+      "best_dow": "Mon",
+      "worst_dow": "Thu",
+      "dow_savings_bps": 0.47
+    },
+    "SLV": {
+      "ticker": "SLV",
+      "status": "DATA_GAP",
+      "n_days": 0,
+      "notes": "IronVault has zero SLV option contracts"
+    },
+    "XLF": {
+      "ticker": "XLF",
+      "status": "OK",
+      "n_days": 1544,
+      "date_range": {
+        "start": "2020-01-02",
+        "end": "2026-02-24"
+      },
+      "calibration_scale_bps_per_raw": 0.004167,
+      "calibration_low_ratio_anchor": 0.12,
+      "day_of_week": {
+        "Mon": {
+          "n_days": 287,
+          "median_raw_hl_ratio": 0.137931,
+          "median_bps": 5.75,
+          "p25_bps": 4.03,
+          "p75_bps": 7.92
+        },
+        "Tue": {
+          "n_days": 320,
+          "median_raw_hl_ratio": 0.137591,
+          "median_bps": 5.73,
+          "p25_bps": 4.37,
+          "p75_bps": 7.41
+        },
+        "Wed": {
+          "n_days": 317,
+          "median_raw_hl_ratio": 0.141176,
+          "median_bps": 5.88,
+          "p25_bps": 4.27,
+          "p75_bps": 8.1
+        },
+        "Thu": {
+          "n_days": 310,
+          "median_raw_hl_ratio": 0.14351,
+          "median_bps": 5.98,
+          "p25_bps": 4.52,
+          "p75_bps": 8.18
+        },
+        "Fri": {
+          "n_days": 310,
+          "median_raw_hl_ratio": 0.135933,
+          "median_bps": 5.66,
+          "p25_bps": 4.31,
+          "p75_bps": 8.28
+        }
+      },
+      "vix_regime": {
+        "LOW": {
+          "n_days": 283,
+          "median_raw_hl_ratio": 0.12,
+          "median_bps": 5.0,
+          "p25_bps": 3.64,
+          "p75_bps": 6.41,
+          "multiplier_vs_low": 1.0
+        },
+        "NORMAL": {
+          "n_days": 927,
+          "median_raw_hl_ratio": 0.134042,
+          "median_bps": 5.59,
+          "p25_bps": 4.18,
+          "p75_bps": 7.62,
+          "multiplier_vs_low": 1.12
+        },
+        "HIGH": {
+          "n_days": 275,
+          "median_raw_hl_ratio": 0.164729,
+          "median_bps": 6.86,
+          "p25_bps": 5.33,
+          "p75_bps": 9.61,
+          "multiplier_vs_low": 1.37
+        },
+        "CRISIS": {
+          "n_days": 59,
+          "median_raw_hl_ratio": 0.192044,
+          "median_bps": 8.0,
+          "p25_bps": 6.64,
+          "p75_bps": 11.09,
+          "multiplier_vs_low": 1.6
+        }
+      },
+      "dow_regime_matrix_bps": {
+        "Mon": {
+          "LOW": 5.03,
+          "NORMAL": 5.35,
+          "HIGH": 7.03,
+          "CRISIS": 8.56
+        },
+        "Tue": {
+          "LOW": 5.05,
+          "NORMAL": 5.6,
+          "HIGH": 6.58,
+          "CRISIS": 9.49
+        },
+        "Wed": {
+          "LOW": 4.86,
+          "NORMAL": 5.59,
+          "HIGH": 6.91,
+          "CRISIS": 8.47
+        },
+        "Thu": {
+          "LOW": 5.43,
+          "NORMAL": 5.74,
+          "HIGH": 8.05,
+          "CRISIS": 7.9
+        },
+        "Fri": {
+          "LOW": 4.7,
+          "NORMAL": 5.57,
+          "HIGH": 6.63,
+          "CRISIS": 7.05
+        }
+      },
+      "best_dow": "Fri",
+      "worst_dow": "Thu",
+      "dow_savings_bps": 0.32
+    },
+    "XLI": {
+      "ticker": "XLI",
+      "status": "OK",
+      "n_days": 1544,
+      "date_range": {
+        "start": "2020-01-02",
+        "end": "2026-02-24"
+      },
+      "calibration_scale_bps_per_raw": 0.004248,
+      "calibration_low_ratio_anchor": 0.11769230769230768,
+      "day_of_week": {
+        "Mon": {
+          "n_days": 287,
+          "median_raw_hl_ratio": 0.117241,
+          "median_bps": 4.98,
+          "p25_bps": 3.47,
+          "p75_bps": 7.18
+        },
+        "Tue": {
+          "n_days": 320,
+          "median_raw_hl_ratio": 0.121599,
+          "median_bps": 5.17,
+          "p25_bps": 3.63,
+          "p75_bps": 7.09
+        },
+        "Wed": {
+          "n_days": 317,
+          "median_raw_hl_ratio": 0.121748,
+          "median_bps": 5.17,
+          "p25_bps": 3.37,
+          "p75_bps": 7.95
+        },
+        "Thu": {
+          "n_days": 310,
+          "median_raw_hl_ratio": 0.125164,
+          "median_bps": 5.32,
+          "p25_bps": 3.79,
+          "p75_bps": 7.53
+        },
+        "Fri": {
+          "n_days": 310,
+          "median_raw_hl_ratio": 0.132315,
+          "median_bps": 5.62,
+          "p25_bps": 4.06,
+          "p75_bps": 8.17
+        }
+      },
+      "vix_regime": {
+        "LOW": {
+          "n_days": 283,
+          "median_raw_hl_ratio": 0.117692,
+          "median_bps": 5.0,
+          "p25_bps": 3.27,
+          "p75_bps": 6.84,
+          "multiplier_vs_low": 1.0
+        },
+        "NORMAL": {
+          "n_days": 927,
+          "median_raw_hl_ratio": 0.125,
+          "median_bps": 5.31,
+          "p25_bps": 3.8,
+          "p75_bps": 7.4,
+          "multiplier_vs_low": 1.06
+        },
+        "HIGH": {
+          "n_days": 275,
+          "median_raw_hl_ratio": 0.121951,
+          "median_bps": 5.18,
+          "p25_bps": 3.33,
+          "p75_bps": 7.88,
+          "multiplier_vs_low": 1.04
+        },
+        "CRISIS": {
+          "n_days": 59,
+          "median_raw_hl_ratio": 0.158621,
+          "median_bps": 6.74,
+          "p25_bps": 4.34,
+          "p75_bps": 8.83,
+          "multiplier_vs_low": 1.35
+        }
+      },
+      "dow_regime_matrix_bps": {
+        "Mon": {
+          "LOW": 3.98,
+          "NORMAL": 5.22,
+          "HIGH": 4.72,
+          "CRISIS": 5.98
+        },
+        "Tue": {
+          "LOW": 5.06,
+          "NORMAL": 5.28,
+          "HIGH": 4.39,
+          "CRISIS": 6.7
+        },
+        "Wed": {
+          "LOW": 5.01,
+          "NORMAL": 5.06,
+          "HIGH": 5.68,
+          "CRISIS": 7.66
+        },
+        "Thu": {
+          "LOW": 4.96,
+          "NORMAL": 5.39,
+          "HIGH": 5.58,
+          "CRISIS": 6.62
+        },
+        "Fri": {
+          "LOW": 5.52,
+          "NORMAL": 5.55,
+          "HIGH": 5.79,
+          "CRISIS": 7.32
+        }
+      },
+      "best_dow": "Mon",
+      "worst_dow": "Fri",
+      "dow_savings_bps": 0.64
+    }
+  },
+  "spy_intraday": {
+    "status": "OK",
+    "n_bar_time_buckets": 79,
+    "n_samples_total": 484321,
+    "calibration_low_anchor": 0.011992263056092793,
+    "calibration_scale_bps_per_raw": 0.041694,
+    "time_of_day_bps": {
+      "09:30": {
+        "n_samples": 13907,
+        "median_bps": 16.09,
+        "p25_bps": 6.84,
+        "p75_bps": 28.89
+      },
+      "09:35": {
+        "n_samples": 10818,
+        "median_bps": 11.19,
+        "p25_bps": 3.87,
+        "p75_bps": 21.05
+      },
+      "09:40": {
+        "n_samples": 10047,
+        "median_bps": 10.36,
+        "p25_bps": 3.14,
+        "p75_bps": 21.05
+      },
+      "09:45": {
+        "n_samples": 9619,
+        "median_bps": 10.77,
+        "p25_bps": 3.48,
+        "p75_bps": 21.27
+      },
+      "09:50": {
+        "n_samples": 8980,
+        "median_bps": 9.67,
+        "p25_bps": 2.64,
+        "p75_bps": 19.85
+      },
+      "09:55": {
+        "n_samples": 8347,
+        "median_bps": 8.42,
+        "p25_bps": 2.0,
+        "p75_bps": 17.72
+      },
+      "10:00": {
+        "n_samples": 9358,
+        "median_bps": 11.27,
+        "p25_bps": 3.47,
+        "p75_bps": 22.7
+      },
+      "10:05": {
+        "n_samples": 8398,
+        "median_bps": 9.28,
+        "p25_bps": 2.19,
+        "p75_bps": 19.47
+      },
+      "10:10": {
+        "n_samples": 8195,
+        "median_bps": 9.06,
+        "p25_bps": 1.9,
+        "p75_bps": 18.95
+      },
+      "10:15": {
+        "n_samples": 8009,
+        "median_bps": 8.38,
+        "p25_bps": 1.67,
+        "p75_bps": 17.74
+      },
+      "10:20": {
+        "n_samples": 7659,
+        "median_bps": 8.2,
+        "p25_bps": 1.7,
+        "p75_bps": 18.13
+      },
+      "10:25": {
+        "n_samples": 7503,
+        "median_bps": 7.89,
+        "p25_bps": 1.34,
+        "p75_bps": 17.33
+      },
+      "10:30": {
+        "n_samples": 7669,
+        "median_bps": 8.27,
+        "p25_bps": 1.6,
+        "p75_bps": 17.27
+      },
+      "10:35": {
+        "n_samples": 7137,
+        "median_bps": 7.92,
+        "p25_bps": 1.53,
+        "p75_bps": 17.45
+      },
+      "10:40": {
+        "n_samples": 7031,
+        "median_bps": 7.34,
+        "p25_bps": 1.15,
+        "p75_bps": 15.73
+      },
+      "10:45": {
+        "n_samples": 6873,
+        "median_bps": 7.07,
+        "p25_bps": 0.98,
+        "p75_bps": 16.35
+      },
+      "10:50": {
+        "n_samples": 6579,
+        "median_bps": 6.98,
+        "p25_bps": 1.13,
+        "p75_bps": 15.64
+      },
+      "10:55": {
+        "n_samples": 6439,
+        "median_bps": 6.32,
+        "p25_bps": 0.89,
+        "p75_bps": 14.54
+      },
+      "11:00": {
+        "n_samples": 6717,
+        "median_bps": 7.3,
+        "p25_bps": 1.25,
+        "p75_bps": 15.73
+      },
+      "11:05": {
+        "n_samples": 6314,
+        "median_bps": 6.55,
+        "p25_bps": 0.74,
+        "p75_bps": 15.44
+      },
+      "11:10": {
+        "n_samples": 6048,
+        "median_bps": 6.38,
+        "p25_bps": 0.47,
+        "p75_bps": 14.67
+      },
+      "11:15": {
+        "n_samples": 6102,
+        "median_bps": 6.12,
+        "p25_bps": 0.48,
+        "p75_bps": 14.54
+      },
+      "11:20": {
+        "n_samples": 5809,
+        "median_bps": 6.09,
+        "p25_bps": 0.39,
+        "p75_bps": 13.75
+      },
+      "11:25": {
+        "n_samples": 5774,
+        "median_bps": 5.82,
+        "p25_bps": 0.64,
+        "p75_bps": 13.24
+      },
+      "11:30": {
+        "n_samples": 6037,
+        "median_bps": 6.06,
+        "p25_bps": 0.29,
+        "p75_bps": 14.25
+      },
+      "11:35": {
+        "n_samples": 5566,
+        "median_bps": 5.64,
+        "p25_bps": 0.27,
+        "p75_bps": 13.37
+      },
+      "11:40": {
+        "n_samples": 5599,
+        "median_bps": 5.84,
+        "p25_bps": 0.0,
+        "p75_bps": 14.05
+      },
+      "11:45": {
+        "n_samples": 5326,
+        "median_bps": 5.53,
+        "p25_bps": 0.0,
+        "p75_bps": 13.05
+      },
+      "11:50": {
+        "n_samples": 5379,
+        "median_bps": 5.28,
+        "p25_bps": 0.0,
+        "p75_bps": 13.03
+      },
+      "11:55": {
+        "n_samples": 5248,
+        "median_bps": 5.28,
+        "p25_bps": 0.0,
+        "p75_bps": 12.79
+      },
+      "12:00": {
+        "n_samples": 5441,
+        "median_bps": 5.52,
+        "p25_bps": 0.0,
+        "p75_bps": 13.15
+      },
+      "12:05": {
+        "n_samples": 5276,
+        "median_bps": 5.37,
+        "p25_bps": 0.0,
+        "p75_bps": 12.41
+      },
+      "12:10": {
+        "n_samples": 5177,
+        "median_bps": 5.01,
+        "p25_bps": 0.0,
+        "p75_bps": 11.97
+      },
+      "12:15": {
+        "n_samples": 5173,
+        "median_bps": 5.28,
+        "p25_bps": 0.0,
+        "p75_bps": 12.63
+      },
+      "12:20": {
+        "n_samples": 5106,
+        "median_bps": 5.22,
+        "p25_bps": 0.0,
+        "p75_bps": 12.92
+      },
+      "12:25": {
+        "n_samples": 4823,
+        "median_bps": 4.91,
+        "p25_bps": 0.0,
+        "p75_bps": 11.76
+      },
+      "12:30": {
+        "n_samples": 5093,
+        "median_bps": 5.37,
+        "p25_bps": 0.0,
+        "p75_bps": 12.65
+      },
+      "12:35": {
+        "n_samples": 4731,
+        "median_bps": 4.89,
+        "p25_bps": 0.0,
+        "p75_bps": 12.23
+      },
+      "12:40": {
+        "n_samples": 4797,
+        "median_bps": 4.63,
+        "p25_bps": 0.0,
+        "p75_bps": 11.91
+      },
+      "12:45": {
+        "n_samples": 4969,
+        "median_bps": 4.76,
+        "p25_bps": 0.0,
+        "p75_bps": 11.91
+      },
+      "12:50": {
+        "n_samples": 4929,
+        "median_bps": 5.04,
+        "p25_bps": 0.0,
+        "p75_bps": 13.27
+      },
+      "12:55": {
+        "n_samples": 4871,
+        "median_bps": 4.6,
+        "p25_bps": 0.0,
+        "p75_bps": 12.0
+      },
+      "13:00": {
+        "n_samples": 5319,
+        "median_bps": 5.71,
+        "p25_bps": 0.0,
+        "p75_bps": 14.57
+      },
+      "13:05": {
+        "n_samples": 4966,
+        "median_bps": 5.35,
+        "p25_bps": 0.0,
+        "p75_bps": 13.1
+      },
+      "13:10": {
+        "n_samples": 4763,
+        "median_bps": 4.85,
+        "p25_bps": 0.0,
+        "p75_bps": 11.58
+      },
+      "13:15": {
+        "n_samples": 4888,
+        "median_bps": 4.61,
+        "p25_bps": 0.0,
+        "p75_bps": 12.4
+      },
+      "13:20": {
+        "n_samples": 4788,
+        "median_bps": 5.18,
+        "p25_bps": 0.0,
+        "p75_bps": 12.65
+      },
+      "13:25": {
+        "n_samples": 4818,
+        "median_bps": 5.07,
+        "p25_bps": 0.0,
+        "p75_bps": 13.12
+      },
+      "13:30": {
+        "n_samples": 4965,
+        "median_bps": 5.6,
+        "p25_bps": 0.25,
+        "p75_bps": 13.34
+      },
+      "13:35": {
+        "n_samples": 4825,
+        "median_bps": 5.28,
+        "p25_bps": 0.0,
+        "p75_bps": 13.03
+      },
+      "13:40": {
+        "n_samples": 4869,
+        "median_bps": 4.91,
+        "p25_bps": 0.0,
+        "p75_bps": 12.81
+      },
+      "13:45": {
+        "n_samples": 4817,
+        "median_bps": 4.92,
+        "p25_bps": 0.0,
+        "p75_bps": 12.76
+      },
+      "13:50": {
+        "n_samples": 4731,
+        "median_bps": 4.63,
+        "p25_bps": 0.0,
+        "p75_bps": 12.45
+      },
+      "13:55": {
+        "n_samples": 4716,
+        "median_bps": 4.68,
+        "p25_bps": 0.0,
+        "p75_bps": 11.39
+      },
+      "14:00": {
+        "n_samples": 5644,
+        "median_bps": 6.51,
+        "p25_bps": 0.0,
+        "p75_bps": 16.44
+      },
+      "14:05": {
+        "n_samples": 5242,
+        "median_bps": 5.82,
+        "p25_bps": 0.0,
+        "p75_bps": 14.63
+      },
+      "14:10": {
+        "n_samples": 4875,
+        "median_bps": 5.58,
+        "p25_bps": 0.06,
+        "p75_bps": 13.67
+      },
+      "14:15": {
+        "n_samples": 5097,
+        "median_bps": 5.15,
+        "p25_bps": 0.0,
+        "p75_bps": 13.43
+      },
+      "14:20": {
+        "n_samples": 4979,
+        "median_bps": 5.46,
+        "p25_bps": 0.0,
+        "p75_bps": 14.43
+      },
+      "14:25": {
+        "n_samples": 4972,
+        "median_bps": 5.21,
+        "p25_bps": 0.0,
+        "p75_bps": 13.2
+      },
+      "14:30": {
+        "n_samples": 5339,
+        "median_bps": 6.15,
+        "p25_bps": 0.47,
+        "p75_bps": 15.53
+      },
+      "14:35": {
+        "n_samples": 5016,
+        "median_bps": 5.56,
+        "p25_bps": 0.0,
+        "p75_bps": 14.13
+      },
+      "14:40": {
+        "n_samples": 5329,
+        "median_bps": 5.52,
+        "p25_bps": 0.0,
+        "p75_bps": 14.21
+      },
+      "14:45": {
+        "n_samples": 5213,
+        "median_bps": 5.56,
+        "p25_bps": 0.0,
+        "p75_bps": 14.64
+      },
+      "14:50": {
+        "n_samples": 5351,
+        "median_bps": 5.71,
+        "p25_bps": 0.0,
+        "p75_bps": 13.9
+      },
+      "14:55": {
+        "n_samples": 5349,
+        "median_bps": 5.53,
+        "p25_bps": 0.0,
+        "p75_bps": 13.55
+      },
+      "15:00": {
+        "n_samples": 5790,
+        "median_bps": 6.72,
+        "p25_bps": 0.72,
+        "p75_bps": 16.07
+      },
+      "15:05": {
+        "n_samples": 5565,
+        "median_bps": 5.92,
+        "p25_bps": 0.27,
+        "p75_bps": 14.49
+      },
+      "15:10": {
+        "n_samples": 5610,
+        "median_bps": 5.65,
+        "p25_bps": 0.0,
+        "p75_bps": 14.04
+      },
+      "15:15": {
+        "n_samples": 5666,
+        "median_bps": 6.13,
+        "p25_bps": 0.62,
+        "p75_bps": 15.04
+      },
+      "15:20": {
+        "n_samples": 5821,
+        "median_bps": 6.15,
+        "p25_bps": 0.55,
+        "p75_bps": 14.35
+      },
+      "15:25": {
+        "n_samples": 5843,
+        "median_bps": 5.87,
+        "p25_bps": 0.67,
+        "p75_bps": 14.65
+      },
+      "15:30": {
+        "n_samples": 6425,
+        "median_bps": 6.95,
+        "p25_bps": 0.99,
+        "p75_bps": 16.51
+      },
+      "15:35": {
+        "n_samples": 6429,
+        "median_bps": 6.51,
+        "p25_bps": 0.58,
+        "p75_bps": 14.89
+      },
+      "15:40": {
+        "n_samples": 6532,
+        "median_bps": 6.9,
+        "p25_bps": 1.14,
+        "p75_bps": 16.04
+      },
+      "15:45": {
+        "n_samples": 7200,
+        "median_bps": 7.27,
+        "p25_bps": 1.3,
+        "p75_bps": 16.68
+      },
+      "15:50": {
+        "n_samples": 8497,
+        "median_bps": 8.97,
+        "p25_bps": 2.21,
+        "p75_bps": 19.21
+      },
+      "15:55": {
+        "n_samples": 10064,
+        "median_bps": 9.7,
+        "p25_bps": 3.09,
+        "p75_bps": 19.52
+      },
+      "16:00": {
+        "n_samples": 1135,
+        "median_bps": 6.35,
+        "p25_bps": 1.37,
+        "p75_bps": 13.91
+      }
+    },
+    "time_of_day_buckets": {
+      "Open (09:30-10:00)": {
+        "median_bps": 11.08,
+        "min_bps": 8.42,
+        "max_bps": 16.09,
+        "n_bar_times": 6
+      },
+      "Morning (10:00-11:30)": {
+        "median_bps": 7.57,
+        "min_bps": 5.82,
+        "max_bps": 11.27,
+        "n_bar_times": 18
+      },
+      "Midday (11:30-14:00)": {
+        "median_bps": 5.17,
+        "min_bps": 4.6,
+        "max_bps": 6.06,
+        "n_bar_times": 30
+      },
+      "Afternoon (14:00-15:30)": {
+        "median_bps": 5.79,
+        "min_bps": 5.15,
+        "max_bps": 6.72,
+        "n_bar_times": 18
+      },
+      "Close (15:30-16:00)": {
+        "median_bps": 7.52,
+        "min_bps": 6.35,
+        "max_bps": 9.7,
+        "n_bar_times": 7
+      }
+    },
+    "best_bar_time": "12:55",
+    "worst_bar_time": "09:30",
+    "best_bar_time_bps": 4.6,
+    "worst_bar_time_bps": 16.09,
+    "intraday_savings_bps": 11.49
+  },
+  "execution_savings": {
+    "round_trips_per_year": 50,
+    "production_weights": {
+      "SPY": 0.35,
+      "QQQ": 0.15,
+      "XLF": 0.1,
+      "XLI": 0.1,
+      "GLD": 0.1,
+      "SLV": 0.05
+    },
+    "per_ticker": {
+      "SPY": {
+        "status": "OK",
+        "weight": 0.35,
+        "dow_savings_bps": 0.5,
+        "intraday_savings_bps": 11.49,
+        "total_savings_bps_per_trip": 6.25,
+        "savings_bps_per_year": 312.2,
+        "weighted_savings_bps_per_year": 109.29
+      },
+      "QQQ": {
+        "status": "OK",
+        "weight": 0.15,
+        "dow_savings_bps": 0.68,
+        "intraday_savings_bps": 0.0,
+        "total_savings_bps_per_trip": 0.68,
+        "savings_bps_per_year": 34.0,
+        "weighted_savings_bps_per_year": 5.1
+      },
+      "GLD": {
+        "status": "OK",
+        "weight": 0.1,
+        "dow_savings_bps": 0.47,
+        "intraday_savings_bps": 0.0,
+        "total_savings_bps_per_trip": 0.47,
+        "savings_bps_per_year": 23.5,
+        "weighted_savings_bps_per_year": 2.35
+      },
+      "SLV": {
+        "status": "DATA_GAP",
+        "weight": 0.05,
+        "savings_bps_per_trip": 0,
+        "savings_bps_per_year": 0
+      },
+      "XLF": {
+        "status": "OK",
+        "weight": 0.1,
+        "dow_savings_bps": 0.32,
+        "intraday_savings_bps": 0.0,
+        "total_savings_bps_per_trip": 0.32,
+        "savings_bps_per_year": 16.0,
+        "weighted_savings_bps_per_year": 1.6
+      },
+      "XLI": {
+        "status": "OK",
+        "weight": 0.1,
+        "dow_savings_bps": 0.64,
+        "intraday_savings_bps": 0.0,
+        "total_savings_bps_per_trip": 0.64,
+        "savings_bps_per_year": 32.0,
+        "weighted_savings_bps_per_year": 3.2
+      }
+    },
+    "total_weighted_savings_bps_per_year": 121.5,
+    "approx_sharpe_lift": 0.122,
+    "method_note": "Savings = DoW best-vs-worst median bps + 0.5 \u00d7 intraday best-vs-worst (SPY only). Annualized at 50 round-trips/yr. Weighted by production sleeve allocation. Sharpe lift estimate uses the EXP-2420 calibration (\u2248100 bps/yr \u2192 +0.1 Sh)."
+  },
+  "rule_zero": "All friction numbers come from real IronVault option_daily and option_intraday tables (SPY only for intraday). VIX regime classification from real Yahoo ^VIX closes. No synthetic data, no extrapolation. SLV is honestly reported as a data gap."
+}
