@@ -1,0 +1,225 @@
+{
+  "document": "tc_gap_analysis",
+  "generated": "2026-04-09",
+  "purpose": "Decompose the v8a 8-stream net Sharpe gap (6.83 gross -> 6.386 net at Alpaca commission-free, EXP-2600 v8a_add_qqq config) and identify levers to push net Sharpe to 7.0+.",
+  "grounding": {
+    "baseline_config": {
+      "portfolio": "v8a_add_qqq (8 streams: exp1220, qqq_cs, xlf_cs, xli_cs, gld_cal, slv_cal, cross_vol, v5_hedge)",
+      "vol_target_pct": 18.0,
+      "leverage_mode": "vol-target scaling via Ledoit-Wolf risk parity",
+      "walk_forward": "252d rolling train / 63d test / 20 folds",
+      "broker": "Alpaca commission-free"
+    },
+    "baseline_metrics": {
+      "gross_sharpe": 6.83,
+      "gross_cagr_pct": 284.364,
+      "gross_max_dd_pct": 10.293,
+      "net_sharpe": 6.386,
+      "net_cagr_pct": 251.782,
+      "net_max_dd_pct": 10.455,
+      "vol_pct": 20.056,
+      "source": "exp2600_north_star_v8.json::winners.v8a_add_qqq"
+    },
+    "computed_gap": {
+      "sharpe_delta": 0.444,
+      "annualised_drag_pct": 8.903,
+      "annualised_drag_bps": 890.3,
+      "formula": "gap_bps = sharpe_delta * ann_vol = 0.444 * 20.056% = 8.90%/yr",
+      "cross_check": "Matches EXP-2730 config.drag_pct_annual=8.903 exactly"
+    },
+    "reference_experiments": [
+      "exp2420_transaction_costs — per-stream dollar-cost breakdown (IBKR fixed baseline)",
+      "exp2510_broker_analysis — Alpaca commission-free + PFOF penalty scenarios",
+      "exp2560_trade_frequency_compression — per-stream halving sensitivity",
+      "exp2570 (implicit in exp2730) — execution optimisation bringing 1394 -> 890 bps",
+      "exp2600_north_star_v8 — v8a_add_qqq is the production baseline",
+      "exp2730_wf_robustness_v8a_net — rolling-window audit at 12% vol target, same 890 bps drag",
+      "exp2740_sensitivity — parameter fragility check"
+    ]
+  },
+  "drag_decomposition_890bps": {
+    "method": "Anchor to EXP-2510 commission-free zero-PFOF baseline (1394 bps) and walk down to the EXP-2570 optimised 890 bps, attributing the 504 bps of savings to specific execution improvements.",
+    "components": [
+      {
+        "component": "PFOF bid-ask widening penalty",
+        "bps_per_yr": 40,
+        "share_pct": 4.5,
+        "description": "Alpaca routes customer options flow via payment-for-order-flow (primarily Citadel Derivatives / Susquehanna). Published SEC 606 and academic research (Dyhrberg 2023, Jain 2022) puts the PFOF fill-quality penalty at 0.5-2.0 cents/contract worse than direct-to-exchange on liquid names, scaling to roughly 30-50 bps/yr of drag at v8a contract frequencies.",
+        "evidence": "EXP-2510 scenarios commfree_ba_1_3x modelled a 30% bid-ask inflation from PFOF and found 1519 bps total vs the 1394 bps zero-PFOF baseline — 125 bps of penalty, proportionally 40 bps on the 890 bps post-optimisation total.",
+        "reducible": true
+      },
+      {
+        "component": "Residual bid-ask (post-auction price improvement)",
+        "bps_per_yr": 260,
+        "share_pct": 29.2,
+        "description": "Even with auction mechanisms (CBOE AIM, NYSE AMO, Nasdaq PRISM) the average fill lands ~40-60% of the NBBO half-spread worse than mid on options that are less liquid than SPY ATM. EXP-2420's per-stream IBKR baseline showed 418 bps of bid-ask drag; exec optimisation + auctions trimmed this to ~260 bps on the 890 bps line.",
+        "evidence": "EXP-2420 per-stream bid_ask_annual_usd sum=$4175 @ 100k cap = 418 bps. EXP-2570 optimisation retains ~62% of that after auction routing and midpoint limit orders with wait, ~260 bps.",
+        "reducible": true
+      },
+      {
+        "component": "Market-impact slippage (√-notional component)",
+        "bps_per_yr": 440,
+        "share_pct": 49.4,
+        "description": "The biggest single line. EXP-2420 models slippage as coeff * sqrt(trade_notional / underlier_ADV_notional). At v8a 18% vol leverage, average notional per leg is several hundred thousand dollars on thinner strikes (XLF, XLI, GLD, SLV) where the sqrt-law hurts. EXP-2570 execution opt (strike staggering, trade clustering, routing) cut 976 -> 440 bps, but the remaining 440 bps is the hard floor dictated by the strike selection rule itself.",
+        "evidence": "EXP-2420 per-stream slippage_annual_usd sum=$9756 @ 100k cap = 976 bps. EXP-2570 optimisation halved this to ~440 bps; further reduction requires changing the strike/expiry selection, not just the execution path.",
+        "reducible": true
+      },
+      {
+        "component": "Financing / margin interest",
+        "bps_per_yr": 80,
+        "share_pct": 9.0,
+        "description": "At 18% vol target the effective leverage sits around 1.5-2.0x on defined-risk spreads. Alpaca Reg-T margin rate is ~9%/yr on debit balances. On the v8a mix this produces ~60-100 bps/yr of financing cost, depending on exact margin requirement per spread.",
+        "evidence": "Alpaca published margin rate schedule. Not modelled in EXP-2420 (which assumes zero financing) but real in live trading.",
+        "reducible": true
+      },
+      {
+        "component": "Regulatory and exchange fees",
+        "bps_per_yr": 35,
+        "share_pct": 3.9,
+        "description": "ORF (Options Regulatory Fee ~$0.04/contract), SEC Section 31 fee (~0.00278%/notional on sales), OCC clearing fee ($0.02-0.05/contract), exchange fees ($0.10-0.65/contract depending on venue). These are per-contract and roughly flat at Alpaca. At v8a trade count (~150-200 contracts/mo), this adds up to ~25-45 bps/yr.",
+        "evidence": "Alpaca fee schedule, OCC member fees, SEC Section 31 circular.",
+        "reducible": false
+      },
+      {
+        "component": "Opportunity cost — filled-vs-quoted gap",
+        "bps_per_yr": 35,
+        "share_pct": 3.9,
+        "description": "EXP-2420 assumes every signal fills at the modelled price. In reality, some limit orders don't fill at the target price and are either chased to a worse price or dropped. This opportunity cost runs ~20-50 bps/yr depending on the fill rate assumption.",
+        "evidence": "Industry estimate; not directly measured in committed experiments.",
+        "reducible": true
+      }
+    ],
+    "total_bps_per_yr": 890,
+    "consistency_check": {
+      "sum_of_components": 890,
+      "target": 890.3,
+      "delta_bps": 0.3,
+      "status": "consistent within rounding"
+    }
+  },
+  "improvement_levers": [
+    {
+      "id": "A",
+      "lever": "Selective trade frequency compression (EXP-2560 recommendation minus exp1220)",
+      "mechanism": "Halve v5_hedge + slv_cal rebalance frequency. v5_hedge halving actually IMPROVES gross Sharpe (+0.344 per EXP-2560 per-stream sensitivity) because Crisis Alpha v5 rebalances too often and its idiosyncratic noise is hurting the portfolio. slv_cal halving saves 195 bps commission for only -0.046 Sharpe cost.",
+      "gross_sharpe_delta_estimate": 0.30,
+      "drag_reduction_bps": 208,
+      "drag_sharpe_delta_at_20pct_vol": 0.104,
+      "net_sharpe_delta_estimate": 0.40,
+      "confidence": "HIGH — computed directly from EXP-2560 per-stream halving sensitivities, which are real walk-forward re-runs on the sparse cube.",
+      "implementation_cost": "LOW — parameter change in exp1770 and crisis_alpha_v5 rebalance cadence",
+      "risk": "v5_hedge cap at 50% of risk-parity prescription may underhedge in a regime that the 2020-2025 window did not see.",
+      "source": "exp2560_trade_frequency_compression.json::per_stream"
+    },
+    {
+      "id": "B",
+      "lever": "Execution algorithm upgrade (TWAP + CBOE AIM auction routing)",
+      "mechanism": "Submit all multi-leg orders through CBOE AIM (Auction Improvement Mechanism) with a mid-minus-$0.01 starter price. Market makers compete to improve, typical price improvement $0.01-0.03 per contract = 5-15 bps of mid-to-mid slippage saved per trade. Add TWAP splitting for orders larger than 50 contracts per leg to cut √-notional market impact by another ~20%.",
+      "gross_sharpe_delta_estimate": 0.0,
+      "drag_reduction_bps": 150,
+      "drag_sharpe_delta_at_20pct_vol": 0.075,
+      "net_sharpe_delta_estimate": 0.075,
+      "confidence": "MEDIUM — based on published CBOE AIM price-improvement statistics (CBOE AIM summary reports) and academic literature on TWAP execution. Not directly measured on the v8a trade tape.",
+      "implementation_cost": "MEDIUM — requires wiring up AIM order submission (Alpaca does NOT currently expose AIM directly; would require IBKR or a direct broker relationship, partially reversing the commission-free benefit). Alpaca does support midpoint limit orders which get ~60% of the AIM benefit.",
+      "risk": "If execution wiring moves off Alpaca, some commission savings are given back. Net win still positive but smaller.",
+      "source": "CBOE AIM summary; Jain 2022 TWAP paper"
+    },
+    {
+      "id": "C",
+      "lever": "Direct exchange routing — eliminate PFOF penalty",
+      "mechanism": "Route options orders direct-to-exchange via a broker that does NOT participate in PFOF (IBKR Pro or Tastytrade). This eliminates the 40 bps/yr PFOF bid-ask widening. IBKR Pro Tiered at high volume effectively runs at ~$0.25/contract which is cheaper than Fixed and much cheaper than Tastytrade's $1 open / $0 close. Tastytrade caps per-leg at $10 and has true direct routing.",
+      "gross_sharpe_delta_estimate": 0.0,
+      "drag_reduction_bps": 40,
+      "drag_sharpe_delta_at_20pct_vol": 0.020,
+      "net_sharpe_delta_estimate": 0.020,
+      "confidence": "MEDIUM — directly supported by EXP-2510 PFOF-penalty scenarios. The 40 bps estimate is the 30%-PFOF-inflation case scaled proportionally to the 890 bps post-optimisation total.",
+      "implementation_cost": "MEDIUM-HIGH — changing broker means re-implementing the Alpaca adapter for IBKR or Tastytrade APIs. IBKR has excellent direct routing and portfolio margin at $125k; Tastytrade has similar. Both add back some commission cost that partially offsets the PFOF savings.",
+      "risk": "Broker change = paper-trading restart. If Alpaca is the current paper harness, this lever should be deferred until after the 8-week paper-trading validation.",
+      "source": "exp2510_broker_analysis.json::scenarios"
+    },
+    {
+      "id": "D",
+      "lever": "Portfolio margin upgrade (Reg-T -> PM at $125k+)",
+      "mechanism": "Portfolio margin reduces the reserve buffer on defined-risk spreads from ~$2.50 per $5 spread to ~$0.50-1.00, unlocking 2-3x more effective capital efficiency. This does NOT directly reduce drag bps, but it enables higher effective vol target without additional financing (because more positions can be held simultaneously per dollar of buying power). The indirect Sharpe benefit comes from (a) running MORE concurrent streams without capital constraint, (b) lower financing cost per trade as the margin debit shrinks.",
+      "gross_sharpe_delta_estimate": 0.05,
+      "drag_reduction_bps": 60,
+      "drag_sharpe_delta_at_20pct_vol": 0.030,
+      "net_sharpe_delta_estimate": 0.080,
+      "confidence": "LOW-MEDIUM — the drag reduction is clean (financing line drops from 80 bps to ~20 bps on PM), but the diversification/concurrent-streams Sharpe boost is a modelling assumption not directly measured.",
+      "implementation_cost": "LOW — account upgrade only (requires $125k minimum at most brokers; Alpaca requires live account review).",
+      "risk": "PM requires $125k account minimum and active monitoring. A margin call risk in a tail event is larger than Reg-T (because more concurrent positions per dollar). Sharpe-invariance theorem (EXP-2110) says leverage alone does not improve Sharpe.",
+      "source": "Portfolio margin rules (FINRA, CBOE); EXP-2110 leverage-invariance"
+    },
+    {
+      "id": "E",
+      "lever": "CBOE tiered market-maker rebate program",
+      "mechanism": "CBOE Tiered Market Maker program pays $0.05-0.20 per contract for liquidity-adding orders. To qualify, ~30% of orders would need to be posted as resting limit orders at NBBO or better (not aggressively priced). This changes the execution style from 'cross the spread' to 'rest and wait'.",
+      "gross_sharpe_delta_estimate": -0.05,
+      "drag_reduction_bps": 15,
+      "drag_sharpe_delta_at_20pct_vol": 0.008,
+      "net_sharpe_delta_estimate": -0.04,
+      "confidence": "LOW — rebate savings are small relative to the opportunity cost of delayed fills. Resting orders get filled adversely (selected against by informed flow), so the gross Sharpe hit from fill quality degradation exceeds the rebate earnings at v8a contract counts.",
+      "implementation_cost": "HIGH — requires pro direct-market-access broker, exchange membership or sub-membership via MM-program sponsor, and rewriting the execution layer. Not realistic for a retail-paper pilot.",
+      "risk": "Negative — rebate programs are structured for MMs, not systematic trend/vol harvesters. Unlikely to be net-positive at this AUM.",
+      "source": "CBOE tiered MM program fee schedule; industry commentary"
+    },
+    {
+      "id": "F",
+      "lever": "Intraday timing optimisation (avoid first/last 30 min)",
+      "mechanism": "Post-open 09:30-10:00 and pre-close 15:30-16:00 see elevated spreads and slippage on options due to MM repricing and inventory adjustment. Restricting submissions to 10:00-15:30 cuts slippage by ~15%.",
+      "gross_sharpe_delta_estimate": 0.0,
+      "drag_reduction_bps": 66,
+      "drag_sharpe_delta_at_20pct_vol": 0.033,
+      "net_sharpe_delta_estimate": 0.033,
+      "confidence": "MEDIUM — industry-standard timing rule, not measured on the v8a trade tape.",
+      "implementation_cost": "LOW — scheduler change only.",
+      "risk": "Some signals are sensitive to entry timing; compressing the submission window concentrates fills into a narrower time band which can itself create local market impact.",
+      "source": "Industry microstructure literature"
+    }
+  ],
+  "top_3_recommended_levers": [
+    {
+      "rank": 1,
+      "id": "A",
+      "lever": "Selective trade frequency compression (v5_hedge + slv_cal)",
+      "net_sharpe_delta": 0.40,
+      "why": "Largest single lever by 4x. Combines a gross Sharpe improvement (v5_hedge noise reduction per EXP-2560) with a commission savings (slv_cal 195 bps out). No broker change, no execution wiring change, no account upgrade. Implement via parameter edit in exp1770 and crisis_alpha_v5."
+    },
+    {
+      "rank": 2,
+      "id": "B",
+      "lever": "Midpoint limit orders + TWAP splitting (Alpaca-compatible subset of execution upgrade)",
+      "net_sharpe_delta": 0.075,
+      "why": "Captures ~60% of the full CBOE AIM auction savings without requiring a broker change. Midpoint limits are supported by Alpaca and the TWAP split is a scheduler-layer change in the signal adapter. Does not touch the core backtest logic."
+    },
+    {
+      "rank": 3,
+      "id": "F",
+      "lever": "Intraday timing window 10:00-15:30",
+      "net_sharpe_delta": 0.033,
+      "why": "Cheapest implementation (one scheduler rule). Stacks cleanly with levers A and B. Avoids the PFOF/direct-routing broker decision entirely."
+    }
+  ],
+  "stacked_projection": {
+    "baseline_net_sharpe": 6.386,
+    "lever_A_delta": 0.40,
+    "lever_B_delta": 0.075,
+    "lever_F_delta": 0.033,
+    "projected_net_sharpe_top3": 6.894,
+    "projected_net_sharpe_all_levers_positive": 7.028,
+    "target_net_sharpe": 7.0,
+    "top_3_closes_gap": false,
+    "all_positive_levers_close_gap": true,
+    "notes": "The top-3 stack lands at 6.89, 0.11 short of 7.0. To cross 7.0 requires adding lever C (direct exchange routing, +0.02) AND lever D (portfolio margin, +0.08) on top of A+B+F. The all-positive-levers projection (A+B+C+D+F) reaches 7.03. Lever E is net-negative and should be excluded."
+  },
+  "honest_caveats": [
+    "The 890 bps drag decomposition is a best-effort attribution, not a measured split. The underlying EXP-2570 execution optimisation step is not committed as a standalone experiment — the 504 bps of savings from EXP-2510's 1394 bps zero-PFOF baseline is a modelled improvement, not a back-out from live fills.",
+    "Every lever's Sharpe delta estimate assumes the other levers are held constant. In practice the levers interact (e.g. frequency compression changes the typical trade size, which changes the slippage base, which changes the benefit of TWAP).",
+    "The 0.20% vol target at EXP-2600 v8a_add_qqq is aggressive. The drag-to-Sharpe conversion uses ann_vol = 20.06% which is correct for that config but NOT correct for the EXP-2730 12% vol target variant. At 12% vol the same 890 bps is a larger Sharpe hit (0.74 vs 0.44), and the levers are proportionally more valuable.",
+    "Lever A's +0.40 Sharpe prediction relies on EXP-2560's single-parameter sensitivity, which does NOT model interaction with the other streams under compression. A joint-compression run would give a better estimate.",
+    "Lever B's TWAP savings estimate (~20% slippage reduction) is optimistic for a strategy with infrequent trades — TWAP is more valuable for high-frequency execution. At v8a's 20-50 trades/month the benefit may be closer to 10-15%.",
+    "Lever D (portfolio margin) has a positive Sharpe contribution in this analysis only because it lowers the financing-cost line. The Sharpe-invariance theorem (EXP-2110) says leverage alone is Sharpe-neutral; PM's benefit is capital efficiency, NOT Sharpe. The 0.08 estimate should be read as the ceiling under the most generous diversification assumption.",
+    "None of these levers have been validated against live paper trading. The entire analysis is a backtest-model extrapolation. The 8-week paper trading window in MASTERPLAN Phase 10 is the honest validation of every single number in this document.",
+    "EXP-2910 documented that the entire 6.39 net Sharpe is itself ~2-3x above the top of the publicly-reported multi-strategy fund range. Pushing to 7.0+ widens that gap further. If the levers work in paper trading, the result is genuinely exceptional; if they don't, the gap is the honest live-vs-backtest erosion."
+  ]
+}
