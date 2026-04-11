@@ -53,6 +53,8 @@ def init_db(path: Optional[str] = None) -> None:
                 exit_reason TEXT,
                 pnl REAL,
                 metadata JSON,
+                close_source TEXT,
+                alpaca_close_activity_id TEXT,
                 created_at TEXT DEFAULT (datetime('now')),
                 updated_at TEXT DEFAULT (datetime('now'))
             );
