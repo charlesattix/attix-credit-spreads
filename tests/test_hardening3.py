@@ -317,12 +317,18 @@ class TestStartupReconciliationPhantom:
         alpaca._build_occ_symbol.side_effect = lambda t, e, s, o: f"{t}{e}{o}{int(s)}"
         return PositionReconciler(alpaca=alpaca, db_path=db)
 
-    def test_open_trade_not_in_alpaca_marked_needs_investigation(self, tmp_path):
+    def test_open_trade_not_in_alpaca_expired_resolves_with_pnl(self, tmp_path):
+        """Phantom trade with past expiration is now resolved as expired_worthless (not needs_investigation).
+
+        The enhanced reconciler (proposal §3.5) first tries activities API (returns nothing
+        from the mock) then falls back to expiration-date estimation for credit positions.
+        Expiration "2026-01-16" is in the past → status becomes closed_profit.
+        """
         from shared.database import get_trades, init_db, upsert_trade
         db = str(tmp_path / "trades.db")
         init_db(db)
 
-        # Insert an open trade
+        # Insert an open trade with a past expiration
         upsert_trade({
             "id": "phantom-001",
             "ticker": "SPY",
@@ -336,15 +342,21 @@ class TestStartupReconciliationPhantom:
         }, source="execution", path=db)
 
         reconciler = self._make_reconciler(db)
-        # Alpaca returns empty positions (trade expired/closed while system was down)
+        # Alpaca returns empty positions (trade expired while system was down)
         reconciler.alpaca.get_positions.return_value = []
+        # Activities API returns no matching events (mock default → empty iterator)
+        reconciler.alpaca.get_account_activities.return_value = []
 
         result = reconciler.reconcile()
 
+        # Expired credit spread with no matching activity → estimated expired_worthless
         assert result.phantom_resolved == 1
+        assert result.expirations_processed == 1
         trades = get_trades(path=db)
         t = next(x for x in trades if x["id"] == "phantom-001")
-        assert t["status"] == "needs_investigation"
+        # Full credit kept minus entry commission
+        assert t["status"] == "closed_profit"
+        assert t["pnl"] is not None and t["pnl"] > 0
 
     def test_open_trade_still_in_alpaca_not_touched(self, tmp_path):
         from shared.database import get_trades, init_db, upsert_trade

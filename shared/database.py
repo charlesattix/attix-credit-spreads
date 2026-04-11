@@ -325,8 +325,24 @@ def close_trade(
     pnl: float,
     reason: str,
     path: Optional[str] = None,
+    close_source: Optional[str] = None,
+    alpaca_close_activity_id: Optional[str] = None,
 ) -> None:
-    """Close a trade by setting status, exit_date, pnl, and exit_reason."""
+    """Close a trade by setting status, exit_date, pnl, and exit_reason.
+
+    Args:
+        trade_id: Trade primary key.
+        pnl: Realised P&L in dollars.
+        reason: Human-readable close reason string.  Special values:
+            "manual" → status=closed_manual
+            "closed_external" → status=closed_external
+            All others: status derived from pnl sign.
+        close_source: How the close was detected — "system", "external",
+            "expiration", "assignment", "expired_worthless", "expired_itm",
+            "external_fill".  Stored in the close_source column.
+        alpaca_close_activity_id: Alpaca activity ID that confirmed the close,
+            stored in alpaca_close_activity_id column for audit trail.
+    """
     conn = get_db(path)
     try:
         status = "closed_profit" if pnl > 0 else "closed_loss" if pnl < 0 else "closed_expiry"
@@ -335,9 +351,21 @@ def close_trade(
         elif reason == "closed_external":
             status = "closed_external"
         conn.execute("""
-            UPDATE trades SET status=?, exit_date=?, exit_reason=?, pnl=?, updated_at=datetime('now')
+            UPDATE trades
+            SET status=?, exit_date=?, exit_reason=?, pnl=?,
+                close_source=COALESCE(?, close_source),
+                alpaca_close_activity_id=COALESCE(?, alpaca_close_activity_id),
+                updated_at=datetime('now')
             WHERE id=?
-        """, (status, datetime.now(timezone.utc).isoformat(), reason, pnl, trade_id))
+        """, (
+            status,
+            datetime.now(timezone.utc).isoformat(),
+            reason,
+            pnl,
+            close_source,
+            alpaca_close_activity_id,
+            trade_id,
+        ))
         conn.commit()
     finally:
         conn.close()

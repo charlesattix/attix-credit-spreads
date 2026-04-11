@@ -40,8 +40,21 @@ from strategies.base import MarketSnapshot, PositionAction
 
 logger = logging.getLogger(__name__)
 
-# How often to check positions (seconds)
-_CHECK_INTERVAL_SECONDS = 300  # 5 minutes
+# Tier 1: how often to run pending resolution + activity check (seconds)
+_CHECK_INTERVAL_SECONDS = 60
+
+# Tier 2: minimum interval between full position-check cycles (seconds)
+_TIER2_INTERVAL_SECONDS = 300  # 5 minutes
+
+# Tier 3 EOD reconciliation window: 16:15–16:30 ET (runs once per day)
+_EOD_RECONCILE_HOUR_ET = 16
+_EOD_RECONCILE_MIN_ET = 15
+_EOD_RECONCILE_END_MIN_ET = 30  # stop trying after 16:30 (shouldn't matter)
+
+# Tier 3b morning reconciliation window: 9:35–9:45 ET (runs once per day)
+_MORNING_RECONCILE_HOUR_ET = 9
+_MORNING_RECONCILE_MIN_ET = 35
+_MORNING_RECONCILE_END_HOUR_ET = 10  # stop trying after 10:00
 
 # Eastern time zone for market hours gate
 _ET = ZoneInfo("America/New_York")
@@ -204,6 +217,13 @@ class PositionMonitor:
         self.manage_dte = int(strategy.get("manage_dte", 0))  # 0 = disabled (matches backtester: no DTE exit)
         # Tracks consecutive Alpaca API failures for escalation alerting
         self._consecutive_api_failures = 0
+
+        # Three-tier reconciliation scheduling
+        # _last_tier2_run: wall-clock time of the last Tier 2 (full position check) run
+        self._last_tier2_run: Optional[datetime] = None
+        # _last_eod_date / _last_morning_date: YYYY-MM-DD of last Tier 3 / Tier 3b run
+        self._last_eod_date: Optional[str] = None
+        self._last_morning_date: Optional[str] = None
 
         # Strategy registry — maps strategy_name → strategy instance for manage_position()
         self._strategy_registry: Dict[str, object] = {}
@@ -380,20 +400,56 @@ class PositionMonitor:
     # ------------------------------------------------------------------
 
     def _check_positions(self):
-        """Main check cycle. Runs entirely inside market hours gate."""
+        """Main check cycle — dispatches Tier 1 / Tier 2 / Tier 3 reconciliation.
+
+        Tier 1 (every 60s):
+          - Pending-open resolution (promotes intra-day fills → open)
+          - Activity-based close detection (OPEXP / FILL from Alpaca activities feed)
+          - Pending-close fill tracking
+
+        Tier 2 (every 5 min, market hours only):
+          - Full position comparison: load open DB trades, fetch Alpaca positions
+          - Detect external closes whose legs have disappeared
+          - Check exit conditions (profit target, stop loss, DTE)
+          - Orphan detection
+
+        Tier 3 EOD (once daily, 4:15 PM ET):
+          - reconcile_eod(): expiration processing + full position pass
+
+        Tier 3b morning (once daily, 9:35 AM ET):
+          - reconcile_morning(): catch overnight settlement activity
+        """
+        now_et = datetime.now(_ET)
+        date_str = now_et.strftime("%Y-%m-%d")
+
+        # Tier 3 EOD: runs outside normal market hours — check first
+        if self._should_run_eod(now_et, date_str):
+            self._run_eod_reconciliation(date_str)
+
+        # Tier 3b morning
+        if self._should_run_morning(now_et, date_str):
+            self._run_morning_reconciliation(date_str)
+
+        # All Tier 1 / Tier 2 work requires market hours
         if not self._is_market_hours():
-            logger.debug("PositionMonitor: market closed, skipping check")
+            logger.debug("PositionMonitor: market closed, skipping Tier1/2 checks")
             return
 
-        # Step 0: Promote pending_open → open for intra-day orders (fill tracking)
+        # Tier 1: pending resolution + activity check (every 60s cycle)
         # Critical: without this, orders placed during the session are never monitored
         # for stop-loss or profit-target until the next process restart.
         if self.alpaca:
             self._reconcile_pending_opens()
 
-        # Step 1: Reconcile pending_close positions (check for fills since last cycle)
+        # Tier 1: Reconcile pending_close positions (check for fills since last cycle)
         if self.alpaca:
             self._reconcile_pending_closes()
+
+        # Tier 2 gate: only run the expensive position check every 5 min
+        if not self._should_run_tier2():
+            return
+        self._last_tier2_run = datetime.now(timezone.utc)
+        logger.debug("PositionMonitor: running Tier2 position check")
 
         # Step 2: Load open positions (also include pending_open so orphan detection
         # doesn't flag positions whose orders are still in flight)
@@ -1316,6 +1372,83 @@ class PositionMonitor:
                 )
         except Exception as e:
             logger.warning("PositionMonitor: pending_open reconciliation error: %s", e)
+
+    # ------------------------------------------------------------------
+    # Three-tier scheduling helpers
+    # ------------------------------------------------------------------
+
+    def _should_run_tier2(self) -> bool:
+        """Return True if enough time has elapsed since the last Tier 2 run."""
+        if self._last_tier2_run is None:
+            return True
+        elapsed = (datetime.now(timezone.utc) - self._last_tier2_run).total_seconds()
+        return elapsed >= _TIER2_INTERVAL_SECONDS
+
+    def _should_run_eod(self, now_et: datetime, date_str: str) -> bool:
+        """Return True if the EOD reconciliation should fire now.
+
+        Fires once per trading day between 4:15 PM and 4:30 PM ET.
+        Only fires on weekdays (market days — holiday check is lightweight here
+        since EOD is low-volume; the reconciler itself handles no-op gracefully).
+        """
+        if now_et.weekday() not in _MARKET_DAYS:
+            return False
+        now_mins = now_et.hour * 60 + now_et.minute
+        window_start = _EOD_RECONCILE_HOUR_ET * 60 + _EOD_RECONCILE_MIN_ET
+        window_end = _EOD_RECONCILE_HOUR_ET * 60 + _EOD_RECONCILE_END_MIN_ET
+        if not (window_start <= now_mins < window_end):
+            return False
+        return self._last_eod_date != date_str
+
+    def _should_run_morning(self, now_et: datetime, date_str: str) -> bool:
+        """Return True if the morning reconciliation should fire now.
+
+        Fires once per trading day between 9:35 AM and 10:00 AM ET.
+        """
+        if now_et.weekday() not in _MARKET_DAYS:
+            return False
+        now_mins = now_et.hour * 60 + now_et.minute
+        window_start = _MORNING_RECONCILE_HOUR_ET * 60 + _MORNING_RECONCILE_MIN_ET
+        window_end = _MORNING_RECONCILE_END_HOUR_ET * 60
+        if not (window_start <= now_mins < window_end):
+            return False
+        return self._last_morning_date != date_str
+
+    def _run_eod_reconciliation(self, date_str: str) -> None:
+        """Execute Tier 3 EOD reconciliation via PositionReconciler."""
+        if not self.alpaca:
+            logger.info("PositionMonitor: EOD reconciliation skipped (no Alpaca client)")
+            self._last_eod_date = date_str
+            return
+        try:
+            from shared.reconciler import PositionReconciler
+            reconciler = PositionReconciler(alpaca=self.alpaca, db_path=self.db_path)
+            result = reconciler.reconcile_eod()
+            logger.info(
+                "PositionMonitor: EOD reconciliation complete — %s", result
+            )
+        except Exception as e:
+            logger.error("PositionMonitor: EOD reconciliation failed: %s", e, exc_info=True)
+        finally:
+            self._last_eod_date = date_str
+
+    def _run_morning_reconciliation(self, date_str: str) -> None:
+        """Execute Tier 3b morning reconciliation via PositionReconciler."""
+        if not self.alpaca:
+            logger.info("PositionMonitor: morning reconciliation skipped (no Alpaca client)")
+            self._last_morning_date = date_str
+            return
+        try:
+            from shared.reconciler import PositionReconciler
+            reconciler = PositionReconciler(alpaca=self.alpaca, db_path=self.db_path)
+            result = reconciler.reconcile_morning()
+            logger.info(
+                "PositionMonitor: morning reconciliation complete — %s", result
+            )
+        except Exception as e:
+            logger.error("PositionMonitor: morning reconciliation failed: %s", e, exc_info=True)
+        finally:
+            self._last_morning_date = date_str
 
     # ------------------------------------------------------------------
     # Assignment detection
