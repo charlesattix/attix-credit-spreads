@@ -134,6 +134,18 @@ def init_db(path: Optional[str] = None) -> None:
                 deviation_score REAL,
                 timestamp TEXT DEFAULT (datetime('now'))
             );
+
+            CREATE TABLE IF NOT EXISTS trade_legs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                trade_id TEXT NOT NULL REFERENCES trades(id),
+                leg_type TEXT NOT NULL,
+                strike REAL NOT NULL,
+                occ_symbol TEXT,
+                status TEXT DEFAULT 'open',
+                UNIQUE(trade_id, leg_type)
+            );
+            CREATE INDEX IF NOT EXISTS idx_trade_legs_occ ON trade_legs(occ_symbol);
+            CREATE INDEX IF NOT EXISTS idx_trade_legs_trade_id ON trade_legs(trade_id);
         """)
         conn.commit()
 
@@ -318,6 +330,8 @@ def close_trade(
         status = "closed_profit" if pnl > 0 else "closed_loss" if pnl < 0 else "closed_expiry"
         if reason == "manual":
             status = "closed_manual"
+        elif reason == "closed_external":
+            status = "closed_external"
         conn.execute("""
             UPDATE trades SET status=?, exit_date=?, exit_reason=?, pnl=?, updated_at=datetime('now')
             WHERE id=?

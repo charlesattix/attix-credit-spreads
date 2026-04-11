@@ -903,12 +903,127 @@ class PositionMonitor:
             pos["exit_date"] = datetime.now(timezone.utc).isoformat()
             pos["exit_reason"] = "closed_external"
             pos.pop("_missing_legs_count", None)
-            try:
-                upsert_trade(pos, source="execution", path=self.db_path)
-            except Exception as e:
-                logger.error(
-                    "PositionMonitor: DB write failed for external close %s: %s", pos_id, e
+
+            pnl = self._estimate_external_close_pnl(pos)
+            if pnl is not None:
+                try:
+                    close_trade(pos_id, pnl, "closed_external", path=self.db_path)
+                    pos["pnl"] = pnl
+                    logger.info(
+                        "PositionMonitor: %s closed_external — pnl=%.2f%s",
+                        pos_id, pnl,
+                        " [estimated]" if pos.get("pnl_estimated") else "",
+                    )
+                except Exception as e:
+                    logger.error(
+                        "PositionMonitor: DB close_trade failed for external close %s: %s",
+                        pos_id, e,
+                    )
+            else:
+                pos["pnl_needs_review"] = True
+                logger.warning(
+                    "PositionMonitor: %s closed_external — PnL could not be determined, "
+                    "manual review required",
+                    pos_id,
                 )
+                try:
+                    upsert_trade(pos, source="execution", path=self.db_path)
+                except Exception as e:
+                    logger.error(
+                        "PositionMonitor: DB write failed for external close %s: %s", pos_id, e
+                    )
+
+    def _estimate_external_close_pnl(self, pos: Dict) -> Optional[float]:
+        """Estimate PnL for an externally-closed position.
+
+        Strategy A (preferred): Query Alpaca OPEXP/FILL activities for the position's
+        underlying symbol after entry_date. If an expiration activity is found the
+        spread expired worthless and full credit is kept.
+
+        Strategy B (fallback): If today is past the expiration date we assume the
+        spread expired worthless (covers >80 % of external-close cases for credit
+        spreads). Sets pos["pnl_estimated"] = True to flag for audit.
+
+        Returns the estimated PnL in dollars, or None if we cannot determine it
+        (non-expiration external close without matching Alpaca activity).
+        """
+        credit = float(pos.get("credit") or 0)
+        contracts = int(pos.get("contracts", 1))
+        spread_type = str(pos.get("strategy_type", pos.get("type", ""))).lower()
+        num_legs = 4 if "condor" in spread_type else 2
+        pos_id = pos.get("id", "?")
+
+        commission_per_contract = float(
+            self.config.get("execution", {}).get("commission_per_contract", 0.65)
+        )
+        # Entry-side only (no close order submitted): open legs × contracts
+        entry_commission = commission_per_contract * contracts * num_legs
+
+        # --- Strategy A: Alpaca account activities ---
+        if self.alpaca:
+            try:
+                since = pos.get("entry_date")
+                ticker = pos.get("ticker", "")
+                # OPEXP = option expiration; FILL covers manual/assignment closes
+                for act_type in ("OPEXP", "FILL"):
+                    activities = self.alpaca.get_account_activities(
+                        activity_type=act_type, since=since
+                    )
+                    for act in activities:
+                        sym = str(act.get("symbol", ""))
+                        # Match by underlying ticker prefix (OCC symbol starts with ticker)
+                        if not sym.upper().startswith(ticker.upper()):
+                            continue
+                        if act_type == "OPEXP":
+                            # Expired worthless — full credit kept (entry commission only)
+                            pnl = credit * contracts * 100 - entry_commission
+                            logger.info(
+                                "PositionMonitor: %s — OPEXP activity matched (%s), "
+                                "pnl=%.2f (credit=%.4f × %d × 100 - comm=%.2f)",
+                                pos_id, sym, pnl, credit, contracts, entry_commission,
+                            )
+                            pos["pnl_estimated"] = True
+                            return pnl
+                        # FILL activity: use net_amount if available
+                        net = act.get("net_amount")
+                        if net is not None:
+                            try:
+                                pnl = float(net)
+                                logger.info(
+                                    "PositionMonitor: %s — FILL activity matched (%s), "
+                                    "net_amount=%.2f",
+                                    pos_id, sym, pnl,
+                                )
+                                return pnl
+                            except (TypeError, ValueError):
+                                pass
+            except Exception as e:
+                logger.warning(
+                    "PositionMonitor: %s — Alpaca activities query failed: %s", pos_id, e
+                )
+
+        # --- Strategy B: expiration-date fallback ---
+        exp_str = str(pos.get("expiration", "")).split(" ")[0]
+        try:
+            exp_date = datetime.fromisoformat(exp_str)
+            if exp_date.tzinfo is None:
+                exp_date = exp_date.replace(tzinfo=timezone.utc)
+            expired = datetime.now(timezone.utc) > exp_date
+        except (ValueError, TypeError):
+            expired = False
+
+        if expired and credit > 0:
+            pnl = credit * contracts * 100 - entry_commission
+            logger.info(
+                "PositionMonitor: %s — expiration fallback (exp=%s), "
+                "pnl=%.2f (credit=%.4f × %d × 100 - comm=%.2f) [estimated]",
+                pos_id, exp_str, pnl, credit, contracts, entry_commission,
+            )
+            pos["pnl_estimated"] = True
+            return pnl
+
+        # Cannot determine PnL — caller will flag pnl_needs_review
+        return None
 
     # ------------------------------------------------------------------
     # Closing
