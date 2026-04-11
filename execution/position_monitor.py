@@ -33,7 +33,7 @@ try:
 except ImportError:                        # pragma: no cover — Python < 3.9
     from backports.zoneinfo import ZoneInfo  # type: ignore
 
-from shared.database import close_trade, get_trades, upsert_trade, init_db
+from shared.database import close_trade, get_open_leg_symbols, get_trades, upsert_trade, init_db
 from shared.strategy_adapter import trade_dict_to_position
 from shared.telegram_alerts import notify_api_failure
 from strategies.base import MarketSnapshot, PositionAction
@@ -506,6 +506,20 @@ class PositionMonitor:
                     "PositionMonitor: cannot parse expiration '%s': %s", expiration_str, e
                 )
 
+        # RC4: Guard against synthetic single-leg records (no hedge) before pricing
+        _spread_type_guard = str(pos.get("strategy_type", pos.get("type", ""))).lower()
+        if (
+            pos.get("long_strike") is None
+            and "straddle" not in _spread_type_guard
+            and "strangle" not in _spread_type_guard
+        ):
+            logger.error(
+                "PositionMonitor: %s has no long_strike — skipping SL/PT "
+                "(likely a synthetic orphan record). Manual review required.",
+                pos.get("id"),
+            )
+            return None
+
         # 1b. Strategy dispatch — delegate to strategy.manage_position()
         strategy_name = pos.get("strategy_name", "")
         strategy = self._strategy_registry.get(strategy_name) if strategy_name else None
@@ -903,12 +917,127 @@ class PositionMonitor:
             pos["exit_date"] = datetime.now(timezone.utc).isoformat()
             pos["exit_reason"] = "closed_external"
             pos.pop("_missing_legs_count", None)
-            try:
-                upsert_trade(pos, source="execution", path=self.db_path)
-            except Exception as e:
-                logger.error(
-                    "PositionMonitor: DB write failed for external close %s: %s", pos_id, e
+
+            pnl = self._estimate_external_close_pnl(pos)
+            if pnl is not None:
+                try:
+                    close_trade(pos_id, pnl, "closed_external", path=self.db_path)
+                    pos["pnl"] = pnl
+                    logger.info(
+                        "PositionMonitor: %s closed_external — pnl=%.2f%s",
+                        pos_id, pnl,
+                        " [estimated]" if pos.get("pnl_estimated") else "",
+                    )
+                except Exception as e:
+                    logger.error(
+                        "PositionMonitor: DB close_trade failed for external close %s: %s",
+                        pos_id, e,
+                    )
+            else:
+                pos["pnl_needs_review"] = True
+                logger.warning(
+                    "PositionMonitor: %s closed_external — PnL could not be determined, "
+                    "manual review required",
+                    pos_id,
                 )
+                try:
+                    upsert_trade(pos, source="execution", path=self.db_path)
+                except Exception as e:
+                    logger.error(
+                        "PositionMonitor: DB write failed for external close %s: %s", pos_id, e
+                    )
+
+    def _estimate_external_close_pnl(self, pos: Dict) -> Optional[float]:
+        """Estimate PnL for an externally-closed position.
+
+        Strategy A (preferred): Query Alpaca OPEXP/FILL activities for the position's
+        underlying symbol after entry_date. If an expiration activity is found the
+        spread expired worthless and full credit is kept.
+
+        Strategy B (fallback): If today is past the expiration date we assume the
+        spread expired worthless (covers >80 % of external-close cases for credit
+        spreads). Sets pos["pnl_estimated"] = True to flag for audit.
+
+        Returns the estimated PnL in dollars, or None if we cannot determine it
+        (non-expiration external close without matching Alpaca activity).
+        """
+        credit = float(pos.get("credit") or 0)
+        contracts = int(pos.get("contracts", 1))
+        spread_type = str(pos.get("strategy_type", pos.get("type", ""))).lower()
+        num_legs = 4 if "condor" in spread_type else 2
+        pos_id = pos.get("id", "?")
+
+        commission_per_contract = float(
+            self.config.get("execution", {}).get("commission_per_contract", 0.65)
+        )
+        # Entry-side only (no close order submitted): open legs × contracts
+        entry_commission = commission_per_contract * contracts * num_legs
+
+        # --- Strategy A: Alpaca account activities ---
+        if self.alpaca:
+            try:
+                since = pos.get("entry_date")
+                ticker = pos.get("ticker", "")
+                # OPEXP = option expiration; FILL covers manual/assignment closes
+                for act_type in ("OPEXP", "FILL"):
+                    activities = self.alpaca.get_account_activities(
+                        activity_type=act_type, since=since
+                    )
+                    for act in activities:
+                        sym = str(act.get("symbol", ""))
+                        # Match by underlying ticker prefix (OCC symbol starts with ticker)
+                        if not sym.upper().startswith(ticker.upper()):
+                            continue
+                        if act_type == "OPEXP":
+                            # Expired worthless — full credit kept (entry commission only)
+                            pnl = credit * contracts * 100 - entry_commission
+                            logger.info(
+                                "PositionMonitor: %s — OPEXP activity matched (%s), "
+                                "pnl=%.2f (credit=%.4f × %d × 100 - comm=%.2f)",
+                                pos_id, sym, pnl, credit, contracts, entry_commission,
+                            )
+                            pos["pnl_estimated"] = True
+                            return pnl
+                        # FILL activity: use net_amount if available
+                        net = act.get("net_amount")
+                        if net is not None:
+                            try:
+                                pnl = float(net)
+                                logger.info(
+                                    "PositionMonitor: %s — FILL activity matched (%s), "
+                                    "net_amount=%.2f",
+                                    pos_id, sym, pnl,
+                                )
+                                return pnl
+                            except (TypeError, ValueError):
+                                pass
+            except Exception as e:
+                logger.warning(
+                    "PositionMonitor: %s — Alpaca activities query failed: %s", pos_id, e
+                )
+
+        # --- Strategy B: expiration-date fallback ---
+        exp_str = str(pos.get("expiration", "")).split(" ")[0]
+        try:
+            exp_date = datetime.fromisoformat(exp_str)
+            if exp_date.tzinfo is None:
+                exp_date = exp_date.replace(tzinfo=timezone.utc)
+            expired = datetime.now(timezone.utc) > exp_date
+        except (ValueError, TypeError):
+            expired = False
+
+        if expired and credit > 0:
+            pnl = credit * contracts * 100 - entry_commission
+            logger.info(
+                "PositionMonitor: %s — expiration fallback (exp=%s), "
+                "pnl=%.2f (credit=%.4f × %d × 100 - comm=%.2f) [estimated]",
+                pos_id, exp_str, pnl, credit, contracts, entry_commission,
+            )
+            pos["pnl_estimated"] = True
+            return pnl
+
+        # Cannot determine PnL — caller will flag pnl_needs_review
+        return None
 
     # ------------------------------------------------------------------
     # Closing
@@ -1240,8 +1369,15 @@ class PositionMonitor:
           3. Long legs (qty >= 0) are skipped — they are hedge legs of an untracked
              spread and cannot be independently managed.
         """
-        # Build the complete set of OCC symbols from currently-tracked positions
-        managed_symbols: set = set()
+        # RC4: Seed managed_symbols from trade_legs table (exact OCC match, no reconstruction)
+        try:
+            managed_symbols: set = get_open_leg_symbols(path=self.db_path)
+        except Exception as _legs_err:
+            logger.warning(
+                "PositionMonitor: trade_legs lookup failed (%s) — falling back to strike reconstruction",
+                _legs_err,
+            )
+            managed_symbols = set()
         for pos in open_positions:
             ticker = pos.get("ticker", "")
             exp = str(pos.get("expiration", "")).split(" ")[0]
@@ -1340,56 +1476,23 @@ class PositionMonitor:
             if qty >= 0:
                 continue
 
-            # Short orphan with no recovery candidate — create a synthetic monitoring record.
-            # This ensures stop-loss / expiration checks fire on the next cycle.
-            parsed = _parse_occ_symbol(symbol)
-            if not parsed:
-                logger.warning(
-                    "PositionMonitor: ORPHAN — could not parse OCC symbol %s. "
-                    "Manual review required.",
-                    symbol,
-                )
-                continue
-
-            ticker_parsed, exp_parsed, opt_type_parsed, strike_parsed = parsed
-            try:
-                avg_entry = float(pos_data.get("avg_entry_price") or 0)
-            except (ValueError, TypeError):
-                avg_entry = 0.0
-            contracts_abs = max(1, int(abs(qty)))
-            strategy_type = "bear_call" if opt_type_parsed == "call" else "bull_put"
-
-            synthetic_id = f"synthetic-monitor-{symbol}"
-            # Truncate to fit any DB string limits while keeping the symbol readable
-            if len(synthetic_id) > 60:
-                synthetic_id = f"synthetic-monitor-{symbol[:40]}"
-
-            synthetic: Dict = {
-                "id": synthetic_id,
-                "ticker": ticker_parsed,
-                "strategy_type": strategy_type,
-                "status": "open",
-                "short_strike": strike_parsed,
-                "long_strike": None,  # single-leg record; no hedge tracked
-                "expiration": exp_parsed,
-                "credit": avg_entry if avg_entry > 0 else None,
-                "contracts": contracts_abs,
-                "entry_date": datetime.now(timezone.utc).isoformat(),
-                "alpaca_symbol": symbol,
-            }
-
-            logger.warning(
-                "PositionMonitor: ORPHAN SHORT — %s qty=%s has no DB record. "
-                "Creating synthetic monitoring record %s (credit=%.4f, sl=%.1fx). "
+            # RC4: Short orphan with no recovery candidate — alert only, do NOT create
+            # a synthetic-monitor record. Synthetic records have long_strike=None and
+            # cause mispriced SL/PT checks, accumulating as zombie positions.
+            logger.critical(
+                "PositionMonitor: UNTRACKED SHORT POSITION %s qty=%s — "
+                "no DB record found. Manual intervention required. "
                 "INVESTIGATE: how did this position become unmanaged?",
-                symbol, qty_str, synthetic_id, avg_entry, self.stop_loss_mult,
+                symbol, qty_str,
             )
             try:
-                upsert_trade(synthetic, source="execution", path=self.db_path)
-            except Exception as e:
+                notify_api_failure(
+                    error_msg=f"Untracked short option {symbol} qty={qty_str}",
+                    context="orphan_detection_critical",
+                )
+            except Exception as alert_err:
                 logger.error(
-                    "PositionMonitor: failed to create synthetic record for %s: %s",
-                    symbol, e,
+                    "PositionMonitor: Telegram alert failed for orphan %s: %s", symbol, alert_err
                 )
 
     # ------------------------------------------------------------------

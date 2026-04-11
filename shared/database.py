@@ -318,6 +318,8 @@ def close_trade(
         status = "closed_profit" if pnl > 0 else "closed_loss" if pnl < 0 else "closed_expiry"
         if reason == "manual":
             status = "closed_manual"
+        elif reason == "closed_external":
+            status = "closed_external"
         conn.execute("""
             UPDATE trades SET status=?, exit_date=?, exit_reason=?, pnl=?, updated_at=datetime('now')
             WHERE id=?
