@@ -36,7 +36,7 @@ try:
 except ImportError:
     pass
 
-from shared.database import close_trade, get_db, get_trades
+from shared.database import close_trade, get_db, get_trades, upsert_trade
 
 logging.basicConfig(
     level=logging.INFO,
@@ -60,14 +60,18 @@ def _build_alpaca_client():
         return None
     try:
         from strategy.alpaca_provider import AlpacaProvider
-        return AlpacaProvider(api_key=api_key, api_secret=api_secret, paper=paper)
+        return AlpacaProvider(
+            api_key=api_key,
+            api_secret=api_secret,
+            paper=paper,
+        )
     except Exception as e:
         logger.warning("AlpacaProvider init failed (%s) — activity lookup disabled", e)
         return None
 
 
 def _query_activities(alpaca, ticker: str, since: Optional[str]) -> Dict[str, List[Dict]]:
-    """Return {"OPEXP": [...], "FILL": [...]} activity lists matching *ticker*."""
+    """Return {"OPEXP": [...], "FILL": [...]} activity lists for *ticker*."""
     result: Dict[str, List[Dict]] = {"OPEXP": [], "FILL": []}
     for act_type in ("OPEXP", "FILL"):
         try:
@@ -85,7 +89,7 @@ def _query_activities(alpaca, ticker: str, since: Optional[str]) -> Dict[str, Li
 # PnL estimation
 # ---------------------------------------------------------------------------
 
-def _entry_commission(pos: Dict, commission_per_contract: float) -> float:
+def _commission_entry(pos: Dict, commission_per_contract: float) -> float:
     spread_type = str(pos.get("strategy_type", pos.get("type", ""))).lower()
     num_legs = 4 if "condor" in spread_type else 2
     contracts = int(pos.get("contracts", 1))
@@ -100,15 +104,14 @@ def _estimate_pnl(
     """Return estimated PnL in dollars, or None if undetermined."""
     credit = float(pos.get("credit") or 0)
     contracts = int(pos.get("contracts", 1))
-    entry_comm = _entry_commission(pos, commission_per_contract)
+    entry_comm = _commission_entry(pos, commission_per_contract)
 
-    # Strategy A: Alpaca OPEXP activity match → expired worthless
+    # Strategy A: Alpaca OPEXP activity match
     if activities:
         for act in activities.get("OPEXP", []):
             pnl = credit * contracts * 100 - entry_comm
             logger.debug("  OPEXP match: sym=%s → pnl=%.2f", act.get("symbol"), pnl)
             return pnl
-        # Strategy A: FILL activity → use net_amount
         for act in activities.get("FILL", []):
             net = act.get("net_amount")
             if net is not None:
@@ -142,18 +145,18 @@ def _estimate_pnl(
 # ---------------------------------------------------------------------------
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
-    )
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--db", default=None, help="Path to trades DB (default: shared.database default)")
     parser.add_argument("--dry-run", action="store_true", help="Print changes without writing to DB")
     parser.add_argument("--include-zero", action="store_true", help="Also update records where pnl=0")
     parser.add_argument("--commission", type=float, default=0.65, help="Commission per contract (default: 0.65)")
     args = parser.parse_args()
 
+    # Fetch all closed_external trades
     trades = get_trades(status="closed_external", path=args.db)
     logger.info("Found %d closed_external trade(s) in DB", len(trades))
 
+    # Filter to those with NULL (or zero, if --include-zero) pnl
     candidates = []
     for t in trades:
         pnl_val = t.get("pnl")
@@ -170,6 +173,7 @@ def main() -> None:
     alpaca = _build_alpaca_client()
 
     updated = 0
+    skipped = 0
     needs_review = 0
 
     for pos in candidates:
@@ -195,18 +199,23 @@ def main() -> None:
             tag = " [estimated]" if estimated else ""
             logger.info("  → pnl=%.2f%s", pnl, tag)
             if not args.dry_run:
+                # Update metadata to record pnl_estimated flag
+                metadata = pos.get("metadata") or {}
+                if isinstance(metadata, str):
+                    try:
+                        metadata = json.loads(metadata)
+                    except Exception:
+                        metadata = {}
+                if estimated:
+                    metadata["pnl_estimated"] = True
+
                 # close_trade preserves closed_external status (fixed in database.py)
                 close_trade(pos_id, pnl, "closed_external", path=args.db)
+
+                # Write pnl_estimated flag into metadata via upsert if needed
                 if estimated:
                     conn = get_db(args.db)
                     try:
-                        metadata = pos.get("metadata") or {}
-                        if isinstance(metadata, str):
-                            try:
-                                metadata = json.loads(metadata)
-                            except Exception:
-                                metadata = {}
-                        metadata["pnl_estimated"] = True
                         conn.execute(
                             "UPDATE trades SET metadata=?, updated_at=datetime('now') WHERE id=?",
                             (json.dumps(metadata), pos_id),
@@ -214,22 +223,25 @@ def main() -> None:
                         conn.commit()
                     finally:
                         conn.close()
+
                 logger.info("  ✓ Updated")
             else:
                 logger.info("  (dry-run — not written)")
             updated += 1
         else:
-            logger.warning("  → PnL undetermined — marking pnl_needs_review")
+            logger.warning(
+                "  → PnL undetermined — marking pnl_needs_review (requires manual reconciliation)"
+            )
             if not args.dry_run:
+                metadata = pos.get("metadata") or {}
+                if isinstance(metadata, str):
+                    try:
+                        metadata = json.loads(metadata)
+                    except Exception:
+                        metadata = {}
+                metadata["pnl_needs_review"] = True
                 conn = get_db(args.db)
                 try:
-                    metadata = pos.get("metadata") or {}
-                    if isinstance(metadata, str):
-                        try:
-                            metadata = json.loads(metadata)
-                        except Exception:
-                            metadata = {}
-                    metadata["pnl_needs_review"] = True
                     conn.execute(
                         "UPDATE trades SET metadata=?, updated_at=datetime('now') WHERE id=?",
                         (json.dumps(metadata), pos_id),
@@ -239,7 +251,10 @@ def main() -> None:
                     conn.close()
             needs_review += 1
 
-    logger.info("Done. updated=%d  needs_review=%d", updated, needs_review)
+    logger.info(
+        "Done. updated=%d  needs_review=%d  skipped=%d",
+        updated, needs_review, skipped,
+    )
     if args.dry_run:
         logger.info("(dry-run — no changes written)")
 
