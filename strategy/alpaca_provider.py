@@ -46,6 +46,21 @@ _NON_RETRYABLE_HTTP_PREFIXES = ("400", "401", "403", "404", "409", "422")
 _DEFAULT_RATE_LIMIT_SLEEP = 30.0
 
 
+def _normalize_order_status(status) -> str:
+    """Normalize Alpaca order status to a lowercase bare string.
+
+    alpaca-py enums serialize as "OrderStatus.FILLED" (or similar). This function
+    strips the "OrderStatus." prefix and lowercases the result so downstream
+    comparisons like ``status == "filled"`` always work regardless of SDK version.
+    """
+    if status is None:
+        return ""
+    s = str(status)
+    if "." in s:
+        s = s.split(".", 1)[1]
+    return s.lower()
+
+
 def _is_non_retryable(exc: Exception) -> bool:
     """Return True if this exception represents a client error that won't succeed on retry."""
     # Try to detect HTTP status from alpaca-py APIError or similar SDK exceptions.
@@ -562,7 +577,7 @@ class AlpacaProvider:
             {
                 "id": str(o.id),
                 "client_order_id": o.client_order_id,
-                "status": str(o.status),
+                "status": _normalize_order_status(o.status),
                 "order_class": str(o.order_class),
                 "type": str(o.type),
                 "side": str(o.side) if o.side else None,
@@ -590,7 +605,7 @@ class AlpacaProvider:
         order = self._circuit_breaker.call(self.client.get_order_by_id, order_id)
         return {
             "id": str(order.id),
-            "status": str(order.status),
+            "status": _normalize_order_status(order.status),
             "filled_avg_price": str(order.filled_avg_price) if order.filled_avg_price else None,
             "filled_at": str(order.filled_at) if order.filled_at else None,
             "filled_qty": str(order.filled_qty) if order.filled_qty else None,
@@ -843,7 +858,7 @@ class AlpacaProvider:
             return {
                 "id": str(order.id),
                 "client_order_id": order.client_order_id,
-                "status": str(order.status),
+                "status": _normalize_order_status(order.status),
                 "filled_avg_price": (
                     str(order.filled_avg_price) if order.filled_avg_price else None
                 ),

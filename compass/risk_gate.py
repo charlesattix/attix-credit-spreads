@@ -181,6 +181,37 @@ class RiskGate:
                 logger.warning("RiskGate BLOCKED: %s", reason)
                 return (False, reason)
 
+        # 5.6 Same-expiration concentration limit.
+        #     Prevents gamma / pin-risk pile-up when many positions share an
+        #     expiry date.  Config: risk.portfolio_risk.max_same_expiration (int).
+        #     Falls back to risk.max_same_expiration if the nested key is absent.
+        #     Skipped entirely when the config key is not present (fail-open).
+        max_same_exp = (
+            self.config.get("risk", {}).get("portfolio_risk", {}).get("max_same_expiration")
+            or self.config.get("risk", {}).get("max_same_expiration")
+        )
+        if max_same_exp is not None:
+            max_same_exp = int(max_same_exp)
+            # Derive expiration from legs (Alert has no top-level expiration field)
+            _raw_exp = (
+                getattr(alert, "expiration", None)
+                or (alert.legs[0].expiration if alert.legs else None)
+                or ""
+            )
+            alert_exp = str(_raw_exp).split(" ")[0].split("T")[0]
+            if alert_exp:
+                same_exp_count = sum(
+                    1 for p in account_state.get("open_positions", [])
+                    if str(p.get("expiration", "")).split(" ")[0].split("T")[0] == alert_exp
+                )
+                if same_exp_count >= max_same_exp:
+                    reason = (
+                        f"{alert.ticker}: already {same_exp_count} position(s) expiring "
+                        f"{alert_exp} (max_same_expiration={max_same_exp})"
+                    )
+                    logger.warning("RiskGate BLOCKED: %s", reason)
+                    return (False, reason)
+
         # 6. Cooldown after stop-out on same ticker
         now = datetime.now(timezone.utc)
         for stop in account_state.get("recent_stops", []):

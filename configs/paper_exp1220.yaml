@@ -1,0 +1,193 @@
+# ============================================================================
+# paper_exp1220.yaml — EXP-1220 Dynamic Leverage 1.5× Paper Trading Config
+# ============================================================================
+# Strategy: Bull put spreads on SPY with 3× static leverage and VIX-based
+#           tail risk protection. Regime-adaptive entry.
+# Validation: CAGR 99.2%, Sharpe 3.83, Max DD 11.2% (full period)
+#             OOS 2022-25: CAGR 92.7%, Sharpe 3.40
+#             Walk-forward: all 4 OOS years profitable
+#
+# Source: configs/deploy_exp1220_1.5x.yaml (deployment spec)
+#
+# Usage:
+#   python main.py scan --config configs/paper_exp1220.yaml \
+#                       --env-file .env.exp1220 \
+#                       --db data/pilotai_exp1220.db
+#
+# Required env vars:
+#   ALPACA_API_KEY         — Alpaca paper trading API key
+#   ALPACA_API_SECRET      — Alpaca paper trading API secret
+#   POLYGON_API_KEY        — Polygon.io API key (options chain data)
+#   TELEGRAM_BOT_TOKEN     — (optional) Telegram alert bot token
+#   TELEGRAM_CHAT_ID       — (optional) Telegram chat ID for alerts
+# ============================================================================
+
+# --- Paper trading safety flags ---
+paper_mode: true
+db_path: "data/pilotai_exp1220.db"
+experiment_id: "EXP-1220"
+created_by: "maximus"
+
+# Tickers
+tickers:
+  - SPY
+
+# ============================================================================
+# Credit Spread Strategy — 1.5× Leverage
+# ============================================================================
+strategy:
+  # --- DTE (from deploy spec: target 30, min 21, max 45) ---
+  min_dte: 21
+  max_dte: 45
+  target_dte: 30
+
+  manage_dte: 5             # Close if DTE drops below 5 (gamma risk)
+
+  # --- Direction: primarily bull puts, bear calls in downtrend ---
+  direction: both
+
+  # --- Strike selection: 5% OTM ---
+  otm_pct: 0.05
+  use_delta_selection: false
+  target_delta: 0.15
+  min_delta: 0.08
+  max_delta: 0.20
+
+  # --- Spread construction: $5 wide ---
+  spread_width: 5
+  spread_width_high_iv: 5
+  spread_width_low_iv: 5
+
+  # --- Min credit: $0.30 (6% of width) ---
+  min_credit_pct: 0.06
+
+  # --- IV filters ---
+  min_iv_rank: 0
+  min_iv_percentile: 0
+
+  # --- Iron Condor: DISABLED for EXP-1220 ---
+  iron_condor:
+    enabled: false
+
+  # --- Technical filters (20-day MA trend filter from deploy spec) ---
+  technical:
+    use_trend_filter: true
+    use_rsi_filter: false
+    use_support_resistance: false
+    fast_ma: 20
+    slow_ma: 50
+    rsi_period: 14
+    rsi_oversold: 30
+    rsi_overbought: 70
+
+  # --- Regime detection (VIX-based from deploy spec) ---
+  regime_mode: combo
+  regime_config:
+    signals:
+      - price_vs_ma200
+      - rsi_momentum
+      - vix_structure
+    ma_slow_period: 50
+
+  # --- VIX entry filters (tail risk protection) ---
+  vix_max_entry: 35.0       # Don't enter when VIX > 35
+  vix_min_entry: 10.0       # Don't enter when VIX < 10 (no premium)
+
+# ============================================================================
+# Risk Management — 1.5× Leverage
+# ============================================================================
+risk:
+  account_size: 100000
+
+  # 3× leverage: 5% risk per trade (accounts for macro/VIX scaling)
+  max_risk_per_trade: 5.0
+
+  # Sizing: flat
+  sizing_mode: flat
+  compound: false
+
+  # Contract limits
+  min_contracts: 1
+  max_contracts: 20
+
+  # Position limits (max 5 concurrent from deploy spec)
+  max_positions: 5
+  max_positions_per_ticker: 5
+
+  # Scan on Mondays only (weekly cadence from deploy spec)
+  scan_days: [0]  # Monday only
+
+  # Exit rules
+  profit_target: 50          # Close at 50% of max profit
+  stop_loss_multiplier: 2.0  # Close if loss reaches 2× credit
+  stop_loss_pct_of_width: 90
+
+  # Momentum filter
+  momentum_filter_pct: 2.0
+
+  # Portfolio-level risk limits
+  portfolio_risk:
+    max_portfolio_risk_pct: 25   # Hard cap for 3× leverage (accounts for scaling)
+    max_single_ticker_pct: 25
+    max_same_expiration: 3
+
+  # Drawdown circuit breaker (10% halt from deploy spec)
+  drawdown_cb_pct: 10
+  cooldown_bars: 5
+
+  # No rolling
+  enable_rolling: false
+  max_rolls_per_position: 0
+
+# ============================================================================
+# Alpaca Paper Trading
+# ============================================================================
+alpaca:
+  enabled: true
+  paper: true
+  base_url: "https://paper-api.alpaca.markets"
+  api_key: "${ALPACA_API_KEY}"
+  api_secret: "${ALPACA_API_SECRET}"
+
+# ============================================================================
+# Alerts
+# ============================================================================
+alerts:
+  output_json: true
+  output_text: true
+  output_csv: true
+  json_file: "alerts_exp1220.json"
+  text_file: "alerts_exp1220.txt"
+  csv_file: "alerts_exp1220.csv"
+
+  telegram:
+    enabled: true
+    bot_token: "${TELEGRAM_BOT_TOKEN}"
+    chat_id: "${TELEGRAM_CHAT_ID}"
+
+# ============================================================================
+# Logging
+# ============================================================================
+logging:
+  level: "INFO"
+  file: "logs/paper_exp1220.log"
+  console: true
+
+# ============================================================================
+# Data
+# ============================================================================
+data:
+  provider: polygon
+  cache_dir: "data/options_cache"
+
+# ============================================================================
+# Backtester Reference
+# ============================================================================
+backtest:
+  starting_capital: 100000
+  commission_per_contract: 0.65
+  slippage: 0.05
+  exit_slippage: 0.10
+  score_threshold: 25
+  generate_reports: true
+  report_dir: "output/backtest_reports"

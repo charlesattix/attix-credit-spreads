@@ -583,6 +583,7 @@ class CreditSpreadSystem:
                     "contracts": contracts,
                     "unrealized_pl": unrealized_pl,
                     "risk_pct": risk_pct,
+                    "expiration": str(db_pos.get('expiration') or ''),
                 })
 
             # Daily / weekly realized P&L from closed trades
@@ -605,8 +606,8 @@ class CreditSpreadSystem:
 
             daily_pnl = sum(t.get('pnl') or 0 for t in closed_all if _days_ago(t, 1))
             weekly_pnl = sum(t.get('pnl') or 0 for t in closed_all if _days_ago(t, 7))
-            daily_pnl_pct = (daily_pnl / account_value * 100) if account_value > 0 else 0.0
-            weekly_pnl_pct = (weekly_pnl / account_value * 100) if account_value > 0 else 0.0
+            daily_pnl_pct = (daily_pnl / account_value) if account_value > 0 else 0.0
+            weekly_pnl_pct = (weekly_pnl / account_value) if account_value > 0 else 0.0
 
             recent_stops = [
                 {"ticker": t.get('ticker'), "stopped_at": t.get('exit_date')}
