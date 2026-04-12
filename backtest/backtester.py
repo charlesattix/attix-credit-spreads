@@ -690,6 +690,12 @@ class Backtester:
                 len(open_positions), self._current_iv_rank, self._current_vix,
             )
 
+            # Capture equity before position management for daily loss limit gate.
+            # Mirrors live _build_account_state daily_pnl computation (main.py).
+            _equity_sod = self.capital + sum(
+                p.get('current_value', 0) for p in open_positions
+            )
+
             # Check existing positions
             open_positions = self._manage_positions(
                 open_positions, current_date, current_price, ticker
@@ -735,15 +741,16 @@ class Backtester:
             # Heuristic mode: one scan per week on Monday (backward compat).
 
             # Drawdown circuit breaker: pause NEW entries when equity drops too far.
-            # In compound mode: uses high-water mark (peak equity) as the reference.
-            # In fixed mode: uses starting capital as the reference (original behavior).
+            # Always uses high-water mark (peak_capital) as CB reference regardless of
+            # compound/flat mode — matching live ExecutionEngine._check_drawdown_cb()
+            # which always uses peak_equity. The old flat-mode reference (starting_capital)
+            # understated real drawdown risk after profitable runs: a +30% year followed
+            # by -15% is a genuine -15% drawdown from peak, not from starting capital.
+            # Alignment fix: alignment_fix=drawdown_cb_ref (audit §8).
             # Threshold is configurable via risk.drawdown_cb_pct (default -20%).
             _cb_threshold = -abs(self.risk_params.get('drawdown_cb_pct', 20)) / 100
-            if self._compound:
-                self._peak_capital = max(self._peak_capital, self.capital)
-                _drawdown_pct = (self.capital - self._peak_capital) / self._peak_capital
-            else:
-                _drawdown_pct = (self.capital - self.starting_capital) / self.starting_capital
+            self._peak_capital = max(self._peak_capital, self.capital)
+            _drawdown_pct = (self.capital - self._peak_capital) / self._peak_capital
 
             # IV Rank entry gate: only sell premium when implied vol overstates realized vol
             # (market is pricing in fear → favorable conditions for premium selling).
@@ -761,11 +768,35 @@ class Backtester:
             _month_str = current_date.strftime("%Y-%m")
             _excluded_month = _month_str in self._exclude_months
 
+            # Daily loss limit — mirrors live RiskGate rule 3 (DAILY_LOSS_LIMIT = 8%).
+            # Blocks all new entries once the portfolio has lost more than
+            # daily_loss_limit_pct% of equity since market open on the current day.
+            # Default 0 = disabled (preserves pre-fix backtester behavior for all
+            # existing configs). Set risk.daily_loss_limit_pct=8 in config to match
+            # the live system's DAILY_LOSS_LIMIT constant.
+            # Alignment fix: alignment_fix=daily_loss_limit (audit §8).
+            _daily_loss_limit_pct = self.risk_params.get('daily_loss_limit_pct', 0.0)
+            _daily_loss_triggered = False
+            if _daily_loss_limit_pct > 0 and _equity_sod > 0:
+                _equity_eod = self.capital + sum(
+                    p.get('current_value', 0) for p in open_positions
+                )
+                _daily_pnl_frac = (_equity_eod - _equity_sod) / _equity_sod
+                if _daily_pnl_frac < -(_daily_loss_limit_pct / 100.0):
+                    _daily_loss_triggered = True
+                    logger.debug(
+                        "%s  Daily loss limit: pnl=%.2f%% < -%.1f%% — "
+                        "skipping new entries (mirrors live DAILY_LOSS_LIMIT)",
+                        current_date.strftime("%Y-%m-%d"),
+                        _daily_pnl_frac * 100, _daily_loss_limit_pct,
+                    )
+
             _skip_new_entries = (
                 _drawdown_pct < _cb_threshold
                 or _iv_too_low
                 or _vix_too_high
                 or _excluded_month
+                or _daily_loss_triggered
                 or self._ruin_triggered  # P1-D: halt all entries after capital reaches zero
             )
 
@@ -994,7 +1025,7 @@ class Backtester:
             else:
                 # Heuristic mode: one opportunity scan per week on Monday
                 if current_date.weekday() == 0 and not _skip_new_entries:
-                    if len(open_positions) < self.risk_params['max_positions']:
+                    if len(open_positions) < _effective_max:
                         new_position = None
                         if _want_puts:
                             new_position = self._find_backtest_opportunity(
@@ -1007,7 +1038,7 @@ class Backtester:
                             else:
                                 open_positions.append(new_position)
 
-                        if not new_position and _want_calls and len(open_positions) < self.risk_params['max_positions']:
+                        if not new_position and _want_calls and len(open_positions) < _effective_max:
                             bear_call = self._find_bear_call_opportunity(
                                 ticker, current_date, current_price, price_data
                             )
