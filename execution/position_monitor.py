@@ -213,8 +213,8 @@ class PositionMonitor:
         risk = config.get("risk", {})
         strategy = config.get("strategy", {})
         self.profit_target_pct = float(risk.get("profit_target", 50))
-        self.stop_loss_mult = float(risk.get("stop_loss_multiplier", 3.5))
-        self.manage_dte = int(strategy.get("manage_dte", 0))  # 0 = disabled (matches backtester: no DTE exit)
+        self.stop_loss_mult = float(risk.get("stop_loss_multiplier", 2.5))
+        self.manage_dte = int(strategy.get("manage_dte", 0))  # 0 = disabled
         # Tracks consecutive Alpaca API failures for escalation alerting
         self._consecutive_api_failures = 0
 
@@ -708,6 +708,15 @@ class PositionMonitor:
                 "(credit=%.4f × (1+%.1f), width=%.0f) — verify credit field units",
                 pos.get("id"), sl_threshold, _sw * 100, credit, sl_mult, _sw,
             )
+
+        # Apply 90%-of-width cap: close when spread reaches 90% of max possible loss.
+        # For ICs the max loss spans both wings (2×wing_width). Skipped if width unknown.
+        # Matches backtester._capped_stop_loss() — both must use identical logic.
+        if _sw > 0:
+            _is_ic = "condor" in str(pos.get("strategy_type", pos.get("type", ""))).lower()
+            _width_cap = (_sw * 2.0 if _is_ic else _sw) * 0.90
+            if _width_cap > credit:
+                sl_threshold = min(sl_threshold, _width_cap)
 
         if current_value >= sl_threshold:
             logger.warning(

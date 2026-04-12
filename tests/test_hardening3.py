@@ -60,10 +60,12 @@ def _make_open_pos(tmp_path, trade_id="pos-001", credit=1.50, short_strike=545.0
 # ===========================================================================
 
 class TestStopLossThreshold:
-    """Verify SL uses formula-only threshold matching the backtester.
+    """Verify SL uses the lower of formula threshold and 90%-of-width cap.
 
-    Backtester: fires when spread_value >= (1 + stop_loss_mult) × credit.
-    The 90% spread-width cap was removed (backtester has no width cap).
+    Both PositionMonitor and Backtester apply:
+      threshold = min((1 + sl_mult) × credit, spread_width × 0.90)
+    For ICs: spread_width × 0.90 uses 2 × wing_width (total IC max-loss span).
+    When spread_width is unknown (no strike data), formula-only applies.
     """
 
     def _check_sl(self, monitor, pos, current_value):
@@ -71,21 +73,28 @@ class TestStopLossThreshold:
         with patch.object(monitor, "_get_spread_value", return_value=current_value):
             return monitor._check_exit_conditions(pos, {})
 
-    def test_narrow_spread_sl_does_not_fire_below_formula_threshold(self, tmp_path):
-        """$5 spread, $1.50 credit: formula threshold = (1+3.5)×$1.50 = $6.75.
-        Since spread_width ($5) < threshold ($6.75), SL via formula is unreachable.
-        At $4.50 (old 90% cap level), SL must NOT fire — no width cap anymore."""
+    def test_narrow_spread_sl_fires_at_90pct_width_cap(self, tmp_path):
+        """$5 spread, $1.50 credit: 90% cap = $4.50 < formula ($6.75).
+        Cap is the effective threshold — SL fires at $4.50."""
         monitor, _ = _make_monitor(tmp_path)
         pos = _make_open_pos(tmp_path, credit=1.50, short_strike=545.0, long_strike=540.0)
-        # Value at $4.50 — below formula threshold $6.75 → no SL (no width cap)
+        # At exactly 90% cap → fires
         result = self._check_sl(monitor, pos, current_value=4.50)
+        assert result == "stop_loss"
+
+    def test_narrow_spread_sl_does_not_fire_below_cap(self, tmp_path):
+        """$5 spread, $1.50 credit: SL must NOT fire at $4.49 (just below 90% cap $4.50)."""
+        monitor, _ = _make_monitor(tmp_path)
+        pos = _make_open_pos(tmp_path, credit=1.50, short_strike=545.0, long_strike=540.0)
+        # One cent below cap → no fire
+        result = self._check_sl(monitor, pos, current_value=4.49)
         assert result != "stop_loss"
 
-    def test_narrow_spread_sl_fires_at_formula_threshold(self, tmp_path):
-        """SL fires when spread_value reaches formula threshold (1+mult)×credit."""
+    def test_narrow_spread_sl_fires_above_cap(self, tmp_path):
+        """SL fires at any value ≥ 90% cap even if below formula threshold."""
         monitor, _ = _make_monitor(tmp_path)
         pos = _make_open_pos(tmp_path, credit=1.50, short_strike=545.0, long_strike=540.0)
-        # Threshold = (1+3.5) × 1.50 = 6.75 — fires exactly at threshold
+        # $6.75 formula threshold — also above cap ($4.50) → fires
         result = self._check_sl(monitor, pos, current_value=6.75)
         assert result == "stop_loss"
 
@@ -104,8 +113,9 @@ class TestStopLossThreshold:
         result = self._check_sl(monitor, pos, current_value=13.49)
         assert result != "stop_loss"
 
-    def test_missing_strike_data_falls_back_to_formula(self, tmp_path):
-        """When strike data is missing, no spread_width cap; formula-only threshold."""
+    def test_missing_strike_data_skips_exit_check(self, tmp_path):
+        """RC4 guard: positions with no long_strike are skipped (require manual review).
+        _check_exit_conditions returns None rather than applying formula or cap."""
         monitor, _ = _make_monitor(tmp_path)
         pos = {
             "id": "no-strikes",
@@ -118,9 +128,9 @@ class TestStopLossThreshold:
             "contracts": 1,
             "status": "open",
         }
-        # Without spread_width, formula SL = 4.5 × $1.50 = $6.75
+        # RC4 guard returns None — no SL/PT decision for orphan records
         result = self._check_sl(monitor, pos, current_value=6.75)
-        assert result == "stop_loss"
+        assert result is None
 
     def test_sl_threshold_matches_backtester_formula(self, tmp_path):
         """Confirm the formula (1 + mult) × credit matches what backtester uses.

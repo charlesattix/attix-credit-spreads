@@ -439,6 +439,8 @@ class Backtester:
 
         # Profit target — configurable (config stores as %, e.g. 50 → close at 50% of credit)
         self._profit_target_pct: float = float(self.risk_params.get('profit_target', 50)) / 100.0
+        # DTE management: close early when DTE ≤ manage_dte (0 = disabled). Mirrors PositionMonitor.
+        self._manage_dte: int = int(self.strategy_params.get('manage_dte', 0))
 
         # Direction filter — "both" | "bull_put" | "bear_call"
         # Controls which spread types are entered during the scan loop.
@@ -1643,6 +1645,11 @@ class Backtester:
         )
         commission_cost = self.commission * 4 * contracts  # 4 legs × contracts
 
+        # 90%-of-width stop cap for IC: total IC max loss = 2×wing_width. Mirrors PositionMonitor.
+        _ic_sl_raw = combined_credit * stop_loss_multiplier
+        _ic_sl_width_cap = spread_width * 2 * 0.90 - combined_credit
+        _ic_stop_loss = min(_ic_sl_raw, _ic_sl_width_cap) if _ic_sl_width_cap > 0 else _ic_sl_raw
+
         position = {
             'ticker': ticker,
             'type': 'iron_condor',
@@ -1665,7 +1672,7 @@ class Backtester:
             'contracts': contracts,
             'max_loss': max_loss,
             'profit_target': combined_credit * self._profit_target_pct,
-            'stop_loss': combined_credit * stop_loss_multiplier,
+            'stop_loss': _ic_stop_loss,
             'commission': commission_cost,  # round-trip: 4 legs at entry (deducted at line 1107) + 4 legs at exit (deducted from PnL in _record_close) = 8 legs total
             'status': 'open',
             'option_type': 'IC',
@@ -1954,6 +1961,12 @@ class Backtester:
 
         commission_cost = self.commission * 2 * contracts  # Two legs × contracts
 
+        # 90%-of-width stop cap: mirrors PositionMonitor — close before full max-loss is reached.
+        # stop_loss is the LOSS AMOUNT that triggers exit: spread_value - credit >= stop_loss
+        _sl_raw = credit * self.risk_params['stop_loss_multiplier']
+        _sl_width_cap = spread_width * 0.90 - credit  # remaining loss room before 90%-width hit
+        _stop_loss = min(_sl_raw, _sl_width_cap) if _sl_width_cap > 0 else _sl_raw
+
         position = {
             'ticker': ticker,
             'type': spread_type,
@@ -1965,7 +1978,7 @@ class Backtester:
             'contracts': contracts,
             'max_loss': max_loss,
             'profit_target': credit * self._profit_target_pct,
-            'stop_loss': credit * self.risk_params['stop_loss_multiplier'],
+            'stop_loss': _stop_loss,
             'commission': commission_cost,
             'status': 'open',
             'current_value': 0,  # unrealized PnL at entry ≈ 0; _manage_positions updates each day
@@ -2102,6 +2115,15 @@ class Backtester:
                         continue
                     # 'no_trigger' — had intraday data but no exit; skip daily close check
                     pos['current_value'] = (pos['credit'] - spread_value) * pos['contracts'] * 100
+                    # DTE management check (intraday path) — mirrors PositionMonitor.manage_dte
+                    if self._manage_dte > 0:
+                        _dte_i = (pos['expiration'].date() - current_date.date()).days
+                        if _dte_i <= self._manage_dte:
+                            _slip_i = 2 if pos['type'] == 'iron_condor' else 1
+                            _exit_i = spread_value + _slip_i * self._vix_scaled_exit_slippage()
+                            _pnl_i = (pos['credit'] - _exit_i) * pos['contracts'] * 100 - pos['commission']
+                            self._record_close(pos, current_date, _pnl_i, 'dte_management')
+                            continue
                     remaining_positions.append(pos)
                     continue
 
@@ -2140,6 +2162,16 @@ class Backtester:
                 # No historical data — carry position forward without marking
                 remaining_positions.append(pos)
                 continue
+
+            # DTE management check (daily close fallback path) — mirrors PositionMonitor.manage_dte
+            if self._manage_dte > 0:
+                _dte_d = (pos['expiration'].date() - current_date.date()).days
+                if _dte_d <= self._manage_dte:
+                    _slip_d = 2 if pos['type'] == 'iron_condor' else 1
+                    _exit_d = current_spread_value + _slip_d * self._vix_scaled_exit_slippage()
+                    _pnl_d = (pos['credit'] - _exit_d) * pos['contracts'] * 100 - pos['commission']
+                    self._record_close(pos, current_date, _pnl_d, 'dte_management')
+                    continue
 
             # P&L check: profit = credit - current spread value (daily close fallback)
             profit = pos['credit'] - current_spread_value
