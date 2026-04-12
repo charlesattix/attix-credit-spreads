@@ -396,8 +396,9 @@ class CreditSpreadStrategy:
 
                     combined_credit = round(bp['credit'] + bc['credit'], 2)
 
-                    # Max loss = width of one wing - total credit (only one side can lose)
-                    max_loss = round(spread_width - combined_credit, 2)
+                    # Max loss = both wings' width minus combined credit
+                    # (worst case: both sides ITM simultaneously — matches backtester line 1505)
+                    max_loss = round(2 * spread_width - combined_credit, 2)
 
                     if max_loss <= 0:
                         continue
