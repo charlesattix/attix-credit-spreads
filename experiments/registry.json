@@ -1,6 +1,6 @@
 {
     "schema_version": "2.0",
-    "last_updated": "2026-04-06",
+    "last_updated": "2026-04-11",
     "experiments": {
         "EXP-400": {
             "id": "EXP-400",
@@ -84,6 +84,61 @@
             "description": "Direction-adaptive credit spreads on IBIT (Bitcoin ETF). MA50-based trend detection, 14 DTE, 10% OTM. No ML. Optimized via mega parameter sweep (139% avg annual backtest).",
             "notes": "IBIT direction-adaptive credit spreads. Mega sweep config #14. DTE=14, OTM=10%, Width=$5, PT=30%, SL=2.5x, MA50 adaptive, MaxPos=5, Risk=15%, Kelly=1.0. 139.2% avg annual, -19.4% max DD, 0.95 overfit."
         },
+        "EXP-601": {
+            "id": "EXP-601",
+            "name": "IBIT ML Signal Filter",
+            "created_by": "charles",
+            "created_date": "2026-03-22",
+            "status": "in_development",
+            "ticker": "IBIT",
+            "account_id": null,
+            "live_since": null,
+            "paper_config": null,
+            "backtest_config": null,
+            "notes": "XGBoost binary classifier (win/loss) trained on EXP-600 champion config trade features. Time-series CV only. max_depth=3, min_child_weight=5. Backtest comparison: EXP-600 with vs without ML filter."
+        },
+        "EXP-700": {
+            "id": "EXP-700",
+            "name": "ML-Filtered Champion",
+            "created_by": "charles",
+            "created_date": "2026-04-09",
+            "status": "retired",
+            "ticker": "SPY",
+            "account_id": null,
+            "retired_reason": "API keys revoked (401 Unauthorized). Ran 2 trading days (2026-04-09 to 2026-04-10, 10 trades). Superseded by EXP-800.",
+            "paper_config": "configs/paper_exp700.yaml",
+            "backtest_config": null,
+            "description": "EXP-400 champion params (DTE=15, OTM=2%, Width=$12, SL=1.25x, PT=55%, Risk=8.5%) gated by EXP-305 ensemble ML filter (AUC=0.793, threshold=0.65). Ensemble: XGBoost 34.1%, RandomForest 33.1%, ExtraTrees 32.8%. Holdout 2025: +13.8pp return, +5pp win rate vs no filter.",
+            "notes": "ML-Filtered Champion on EXP-400 params. API keys dead. Short-lived (2 trading days, 10 trades). Superseded by EXP-800."
+        },
+        "EXP-800": {
+            "id": "EXP-800",
+            "name": "Safe Kelly 4/7/9",
+            "created_by": "charles",
+            "created_date": "2026-03-28",
+            "status": "paper_trading",
+            "ticker": "SPY",
+            "account_id": "PA3QWQIZO09S",
+            "live_since": "2026-03-28",
+            "paper_config": "configs/paper_exp800.yaml",
+            "backtest_config": null,
+            "description": "EXP-400 champion signal generation (DTE=15, OTM=2%, Width=$12, SL=1.25x, PT=55%) with Safe Kelly criterion position sizing and 3-tier portfolio drawdown circuit breakers. Kelly fractions by regime: bull=9%, neutral=7%, bear=4%. Circuit breakers: Tier 1 DD\u2264-8% halves sizing, Tier 2 DD\u2264-10% floors to 2%, Tier 3 DD\u2264-12% halts new entries for 30 trades. Regime: ComboRegimeDetector (MA80+RSI+VIX structure). VIX gate: block above 40.",
+            "notes": "Safe Kelly 4/7/9. Dynamic regime-based sizing with drawdown circuit breakers. Live PA3QWQIZO09S. Equity $114,897 (2026-04-11). 6 open positions. Deployed 2026-03-28."
+        },
+        "EXP-1220": {
+            "id": "EXP-1220",
+            "name": "Leverage 3x",
+            "created_by": "maximus",
+            "created_date": "2026-04-05",
+            "status": "paper_trading",
+            "ticker": "SPY",
+            "account_id": "PA3YFVQCXTD6",
+            "live_since": "2026-04-06",
+            "paper_config": "configs/paper_exp1220.yaml",
+            "backtest_config": null,
+            "description": "EXP-1220 with 1.5x static leverage. Tail risk protection via VIX signals. Validated: CAGR 99.2%, Sharpe 3.83, Max DD 11.2%. Walk-forward: all 4 OOS years profitable.",
+            "notes": "1.5x static leverage, VIX tail risk protection. Deployed 2026-04-06."
+        },
         "EXP-031": {
             "id": "EXP-031",
             "name": "Compound Bull Put",
@@ -143,19 +198,6 @@
             "paper_config": "configs/paper_exp305.yaml",
             "backtest_config": null,
             "notes": "Multi-ticker experiment, superseded by EXP-400/401"
-        },
-        "EXP-601": {
-            "id": "EXP-601",
-            "name": "IBIT ML Signal Filter",
-            "created_by": "charles",
-            "created_date": "2026-03-22",
-            "status": "in_development",
-            "ticker": "IBIT",
-            "account_id": null,
-            "live_since": null,
-            "paper_config": null,
-            "backtest_config": null,
-            "notes": "XGBoost binary classifier (win/loss) trained on EXP-600 champion config trade features. Time-series CV only. max_depth=3, min_child_weight=5. Backtest comparison: EXP-600 with vs without ML filter."
         },
         "EXP-810-max": {
             "id": "EXP-810-max",
@@ -393,20 +435,6 @@
             "status": "completed",
             "description": "~180 test files consolidated. Coverage analysis.",
             "verdict": "DELIVERED \u2014 test infrastructure validated"
-        },
-        "EXP-1220": {
-            "id": "EXP-1220",
-            "name": "Leverage 3x",
-            "created_by": "maximus",
-            "created_date": "2026-04-05",
-            "status": "paper_trading",
-            "ticker": "SPY",
-            "account_id": "PA3YFVQCXTD6",
-            "live_since": "2026-04-06",
-            "paper_config": "configs/paper_exp1220.yaml",
-            "backtest_config": null,
-            "description": "EXP-1220 with 1.5x static leverage. Tail risk protection via VIX signals. Validated: CAGR 99.2%, Sharpe 3.83, Max DD 11.2%. Walk-forward: all 4 OOS years profitable.",
-            "notes": "1.5x static leverage, VIX tail risk protection. Deployed 2026-04-06."
         }
     }
 }
