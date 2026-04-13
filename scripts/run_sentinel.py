@@ -1049,8 +1049,8 @@ def cmd_retroactive(args: argparse.Namespace) -> int:
     _save_state(state)
 
     # Summary
-    certified = sum(1 for r in results if "VERIFIED" in r.get("status", ""))
-    unverified = sum(1 for r in results if "UNVERIFIED" in r.get("status", ""))
+    certified = sum(1 for r in results if r.get("status") == "GRANDFATHERED_VERIFIED")
+    unverified = sum(1 for r in results if r.get("status") == "GRANDFATHERED_UNVERIFIED")
     skipped = sum(1 for r in results if r.get("status") in ("already_certified", "failed_no_config"))
 
     print(f"""
