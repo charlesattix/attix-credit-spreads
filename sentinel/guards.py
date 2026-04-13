@@ -4,7 +4,8 @@ sentinel/guards.py — Pre-scan enforcement guard.
 PRIMARY ENFORCEMENT MECHANISM for SENTINEL.  Called at startup of every live
 scanner.  Completes in <1 second.  Raises SystemExit on halt.
 
-Three checks, in order:
+Four checks, in order:
+  0. Registry status   — not active/paused → sys.exit(1)
   1. Experiment status  — halted → sys.exit(1); paused → DRY_RUN=1
   2. Config fingerprint — drift vs stored SHA-256 → halt
   3. Alpaca API health  — 401 Unauthorized → halt
@@ -62,12 +63,17 @@ def pre_scan_check(experiment_id: str, config_path: Optional[str] = None) -> Non
     Raises:
         SystemExit(1): experiment is halted, config drifted, or API key dead.
     """
+    # ------------------------------------------------------------------
+    # 0. Registry status check (experiments/registry.json)
+    # ------------------------------------------------------------------
+    _check_registry_status(experiment_id)
+
     state = _load_state()
     exp_state = state.get("experiments", {}).get(experiment_id, {})
     status = exp_state.get("status", "active")
 
     # ------------------------------------------------------------------
-    # 1. Status check
+    # 1. Sentinel state status check (sentinel_state.json)
     # ------------------------------------------------------------------
     if status == "halted":
         reason = exp_state.get("halt_reason", "no reason given")
@@ -155,6 +161,50 @@ def pre_scan_check(experiment_id: str, config_path: Optional[str] = None) -> Non
     _check_alpaca_health(experiment_id)
 
     logger.debug("SENTINEL: %s guard passed (status=%s)", experiment_id, status)
+
+
+# ---------------------------------------------------------------------------
+# Gate 0 — Registry status enforcement
+# ---------------------------------------------------------------------------
+
+
+def _check_registry_status(experiment_id: str) -> None:
+    """Block scanners for experiments not active/paused in registry.json.
+
+    Graceful degradation: passes silently if registry can't be loaded or
+    experiment is not found (scanners work before registry enrollment).
+    """
+    try:
+        from experiments.registry import load_registry
+        registry = load_registry()
+    except Exception:
+        return  # registry unavailable — pass silently
+
+    exp = registry.get("experiments", {}).get(experiment_id)
+    if exp is None:
+        return  # not in registry — graceful degradation
+
+    status = exp.get("status", "")
+    if status in ("active", "paper_trading"):
+        return  # allowed to run
+    if status == "paused":
+        logger.warning(
+            "SENTINEL GATE 0: %s is PAUSED in registry — forcing DRY_RUN=1",
+            experiment_id,
+        )
+        os.environ["DRY_RUN"] = "1"
+        return
+
+    # All other statuses (stopped, retired, registered, configuring, failed) → block
+    msg = (
+        f"🛡️ SENTINEL — GATE 0 BLOCKED\n"
+        f"🛑 <b>{experiment_id}</b> registry status is <b>{status}</b>.\n"
+        f"Only active or paused experiments may run scanners.\n"
+        f"Update via: <code>python scripts/registry_cli.py activate {experiment_id}</code>"
+    )
+    logger.critical("SENTINEL GATE 0: %s status=%s — blocking scanner.", experiment_id, status)
+    _send_alert(msg)
+    sys.exit(1)
 
 
 # ---------------------------------------------------------------------------
