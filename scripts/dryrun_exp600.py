@@ -25,6 +25,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+# ── SENTINEL pre-scan guard (must run before any project imports) ─────────────
+from sentinel.guards import pre_scan_check  # noqa: E402
+pre_scan_check("EXP-600")  # halts if status=halted; sets DRY_RUN if paused
+
 logging.basicConfig(level=logging.WARNING, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
 

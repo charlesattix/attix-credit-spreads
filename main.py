@@ -933,6 +933,23 @@ Examples:
 
         # Execute command
         if args.command == 'scan':
+            # ── SENTINEL pre-scan guard ───────────────────────────────────────
+            try:
+                import yaml as _sentinel_yaml
+                with open(args.config or 'config.yaml') as _sf:
+                    _sentinel_cfg = _sentinel_yaml.safe_load(_sf) or {}
+                _sentinel_exp_id = _sentinel_cfg.get('experiment_id', '')
+                if _sentinel_exp_id:
+                    from sentinel.guards import pre_scan_check
+                    pre_scan_check(_sentinel_exp_id)
+            except SystemExit:
+                raise
+            except Exception as _sg_exc:
+                logging.getLogger(__name__).warning(
+                    "SENTINEL guard skipped (config unreadable): %s", _sg_exc
+                )
+            # ─────────────────────────────────────────────────────────────────
+
             # Per-experiment file lock: prevent two overlapping scan processes
             # for the same experiment (e.g. cron fires while previous run is
             # still executing).  Lock path: /tmp/pilotai_{exp_id}.lock
