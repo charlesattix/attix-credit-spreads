@@ -514,12 +514,19 @@ async def sentinel_dashboard():
     exp_rows = ""
     for eid, exp in sorted(experiments.items()):
         status = exp.get("status", "unknown")
-        live_wr = exp.get("live_win_rate")
-        bt_wr = exp.get("backtest_win_rate")
-        pnl = exp.get("total_pnl", 0)
-        orphans = exp.get("orphan_count", 0)
-        stuck = exp.get("stuck_positions", 0)
-        sizing_dev = exp.get("sizing_deviation")
+        metrics = exp.get("metrics", {})
+        baseline = exp.get("baseline", {})
+        gates = exp.get("gates", {})
+        live_wr = metrics.get("win_rate")
+        bt_wr = baseline.get("win_rate")
+        pnl = metrics.get("total_pnl", 0) or 0
+        # Orphan/stuck from gates
+        g7 = gates.get("gate7_orphans", {})
+        g9 = gates.get("gate9_lifecycle", {})
+        orphans = len(g7.get("metrics", {}).get("orphans", [])) if isinstance(g7.get("metrics"), dict) else 0
+        stuck = len(g9.get("metrics", {}).get("stuck", [])) if isinstance(g9.get("metrics"), dict) else 0
+        g6 = gates.get("gate6_sizing", {})
+        sizing_dev = g6.get("metrics", {}).get("deviation_pct") if isinstance(g6.get("metrics"), dict) else None
 
         # Status pill
         if status == "halted":
@@ -568,19 +575,28 @@ async def sentinel_dashboard():
             <td class="{issue_cls}">{issue_str}</td>
         </tr>"""
 
-    # Config rows
+    # Config rows — config_integrity is a list of {check, status, detail}
     config_rows = ""
-    checks = [
-        ("Config Schema", config.get("schema_valid", True)),
-        ("Registry Integrity", config.get("registry_valid", True)),
-        ("Config Drift", config.get("no_drift", True)),
-        ("DB Schema", config.get("db_valid", True)),
-        ("Certification", config.get("all_certified", True)),
-    ]
-    for name, ok in checks:
-        cls = "p-pass" if ok else "p-crit"
-        txt = "PASS" if ok else "FAIL"
-        config_rows += f'<tr><td>{name}</td><td><span class="p {cls}">{txt}</span></td></tr>'
+    if isinstance(config, list):
+        for item in config:
+            name = item.get("check", "—")
+            st = item.get("status", "pass").lower()
+            detail = item.get("detail", "")
+            cls = "p-pass" if st == "pass" else ("p-warn" if st == "warning" else "p-crit")
+            txt = st.upper()
+            config_rows += f'<tr><td>{name}</td><td><span class="p {cls}">{txt}</span></td><td class="muted">{detail}</td></tr>'
+    else:
+        checks = [
+            ("Config Schema", config.get("schema_valid", True)),
+            ("Registry Integrity", config.get("registry_valid", True)),
+            ("Config Drift", config.get("no_drift", True)),
+            ("DB Schema", config.get("db_valid", True)),
+            ("Certification", config.get("all_certified", True)),
+        ]
+        for name, ok in checks:
+            cls = "p-pass" if ok else "p-crit"
+            txt = "PASS" if ok else "FAIL"
+            config_rows += f'<tr><td>{name}</td><td><span class="p {cls}">{txt}</span></td><td></td></tr>'
 
     # Alert rows
     alert_rows = ""
@@ -699,7 +715,7 @@ async def sentinel_dashboard():
       <p><strong>What:</strong> Valid configs, matching registry, correct DB schema, approved certification. <strong>Why:</strong> Bad config = bad trades.</p>
     </div>
     <table>
-      <thead><tr><th>Check</th><th>Status</th></tr></thead>
+      <thead><tr><th>Check</th><th>Status</th><th>Detail</th></tr></thead>
       <tbody>{config_rows}</tbody>
     </table>
   </div>
