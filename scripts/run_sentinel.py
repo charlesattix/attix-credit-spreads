@@ -97,6 +97,17 @@ except ImportError:
     logger.debug("sentinel.equivalence not available — behavioral tests skipped")
 
 try:
+    from sentinel.runtime import (
+        check_position_lifecycle,
+        check_all_position_lifecycles,
+        format_lifecycle_report,
+    )
+    _HAS_LIFECYCLE = True
+except ImportError:
+    _HAS_LIFECYCLE = False
+    logger.debug("sentinel.runtime (Gate 9) not available — lifecycle check skipped")
+
+try:
     from shared.telegram_alerts import send_message as _tg_send
     _HAS_TELEGRAM = True
 except ImportError:
@@ -256,6 +267,30 @@ def cmd_daily(args: argparse.Namespace) -> int:
         print("   Aggregating portfolio risk…")
         portfolio_risk = aggregate_portfolio_risk(registry, _PROJECT_ROOT)
 
+    # Gate 9 — Position lifecycle
+    lifecycle_results = None
+    if _HAS_LIFECYCLE:
+        print("   Checking position lifecycles (Gate 9)…")
+        lifecycle_results = {}
+        for exp_id in exp_ids:
+            lc = check_position_lifecycle(exp_id)
+            lifecycle_results[exp_id] = lc
+            if lc.stuck:
+                crits_lc = sum(1 for s in lc.stuck if s.severity == "critical")
+                warns_lc = len(lc.stuck) - crits_lc
+                for s in lc.stuck:
+                    db.record_alert(
+                        s.severity,
+                        f"Gate9 {s.message}",
+                        experiment_id=exp_id,
+                    )
+                if crits_lc:
+                    print(f"   🛑 {exp_id}: {crits_lc} CRITICAL stuck position(s)")
+                elif warns_lc:
+                    print(f"   ⚠️  {exp_id}: {warns_lc} stuck position(s)")
+            else:
+                print(f"   ✅ {exp_id}: positions healthy ({lc.total_open} open)")
+
     # Build summary
     summary = db.get_daily_summary(exp_ids)
 
@@ -375,7 +410,24 @@ def cmd_audit(args: argparse.Namespace) -> int:
                 except Exception as e:
                     logger.debug("comparator error for %s: %s", exp_id, e)
 
-    print(f"\n   {'✅ All configs match' if issues_found == 0 else f'⚠️  {issues_found} issue(s) found'}")
+    # Gate 9 — Position lifecycle audit
+    if _HAS_LIFECYCLE:
+        print("\n   Position lifecycle audit (Gate 9):")
+        for exp_id in sorted(active):
+            lc = check_position_lifecycle(exp_id)
+            if lc.stuck:
+                for s in lc.stuck:
+                    icon = "🛑" if s.severity == "critical" else "⚠️"
+                    print(f"   {icon} {exp_id}: {s.message}")
+                    issues_found += 1
+            elif lc.errors:
+                for e in lc.errors:
+                    print(f"   ❌ {exp_id}: {e}")
+                    issues_found += 1
+            else:
+                print(f"   ✅ {exp_id}: {lc.total_open} open — all healthy")
+
+    print(f"\n   {'✅ All checks pass' if issues_found == 0 else f'⚠️  {issues_found} issue(s) found'}")
     return 1 if issues_found > 0 else 0
 
 

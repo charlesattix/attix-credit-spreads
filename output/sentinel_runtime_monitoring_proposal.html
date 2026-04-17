@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SENTINEL Runtime Monitoring — Gates 6–9 Proposal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ── Reset & Base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 15px; scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: #ffffff;
+    color: #1a1a2e;
+    line-height: 1.65;
+  }
+
+  /* ── Layout ── */
+  .page-wrap { max-width: 1100px; margin: 0 auto; padding: 0 2rem 4rem; }
+
+  /* ── Typography ── */
+  h1 { font-size: 2.2rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1.2; }
+  h2 { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em; margin: 2.5rem 0 1rem; color: #1a1a2e; }
+  h3 { font-size: 1.05rem; font-weight: 600; margin: 1.5rem 0 0.6rem; color: #2c3e50; }
+  p  { margin-bottom: 0.85rem; color: #374151; }
+  ul, ol { margin: 0.5rem 0 0.85rem 1.4rem; color: #374151; }
+  li { margin-bottom: 0.3rem; }
+  code {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.82em;
+    background: #f1f5f9;
+    color: #c0392b;
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+  }
+  strong { font-weight: 600; color: #1a1a2e; }
+
+  /* ── Header ── */
+  .doc-header {
+    padding: 2.8rem 0 2rem;
+    border-bottom: 3px solid #1a1a2e;
+    margin-bottom: 2.5rem;
+  }
+  .doc-header .eyebrow {
+    font-size: 0.75rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; color: #6b7280; margin-bottom: 0.6rem;
+  }
+  .doc-header .subtitle {
+    font-size: 1.05rem; color: #4b5563; margin-top: 0.5rem; font-weight: 400;
+  }
+  .doc-meta {
+    display: flex; gap: 2rem; margin-top: 1.2rem;
+    font-size: 0.82rem; color: #6b7280;
+  }
+  .doc-meta span { display: flex; align-items: center; gap: 0.3rem; }
+
+  /* ── Section Divider ── */
+  .section-label {
+    font-size: 0.7rem; font-weight: 700; letter-spacing: 0.15em;
+    text-transform: uppercase; color: #9ca3af;
+    border-top: 1px solid #e5e7eb; padding-top: 1.5rem; margin-top: 2.5rem;
+  }
+
+  /* ── KPI Cards ── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin: 1.2rem 0 1.8rem;
+  }
+  .kpi-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 1.1rem 1.2rem;
+    background: #fafafa;
+  }
+  .kpi-card.red    { border-left: 4px solid #e94560; background: #fff5f6; }
+  .kpi-card.orange { border-left: 4px solid #f59e0b; background: #fffbf2; }
+  .kpi-card.green  { border-left: 4px solid #10b981; background: #f0fdf4; }
+  .kpi-card.blue   { border-left: 4px solid #3b82f6; background: #eff6ff; }
+  .kpi-label { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.07em;
+               text-transform: uppercase; color: #6b7280; margin-bottom: 0.3rem; }
+  .kpi-value { font-size: 1.9rem; font-weight: 700; line-height: 1; color: #1a1a2e; }
+  .kpi-sub   { font-size: 0.78rem; color: #6b7280; margin-top: 0.3rem; }
+
+  /* ── Tables ── */
+  .table-wrap { overflow-x: auto; margin: 1rem 0 1.5rem; border-radius: 8px;
+                border: 1px solid #e5e7eb; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  thead th {
+    background: #1a1a2e; color: #e2e8f0;
+    padding: 0.65rem 0.9rem; text-align: left;
+    font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+  thead th:first-child { border-radius: 8px 0 0 0; }
+  thead th:last-child  { border-radius: 0 8px 0 0; }
+  tbody tr { border-bottom: 1px solid #f1f5f9; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:nth-child(even) { background: #fafafa; }
+  tbody td { padding: 0.6rem 0.9rem; vertical-align: top; }
+  tbody tr:hover { background: #f0f9ff; }
+  tfoot td { background: #f8fafc; font-weight: 600;
+             border-top: 2px solid #e5e7eb; padding: 0.65rem 0.9rem; }
+
+  /* ── Severity Badges ── */
+  .badge {
+    display: inline-block; padding: 0.15em 0.55em; border-radius: 4px;
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em;
+    text-transform: uppercase; white-space: nowrap;
+  }
+  .badge-critical { background: #fee2e2; color: #991b1b; }
+  .badge-warning  { background: #fef3c7; color: #92400e; }
+  .badge-advisory { background: #e0f2fe; color: #075985; }
+  .badge-ok       { background: #d1fae5; color: #065f46; }
+  .badge-blocker  { background: #fce7f3; color: #831843; }
+
+  /* ── Alert Box ── */
+  .alert-box {
+    border-radius: 8px; padding: 1rem 1.2rem; margin: 1rem 0;
+    border-left: 4px solid;
+  }
+  .alert-box.critical { border-color: #e94560; background: #fff5f6; }
+  .alert-box.warning  { border-color: #f59e0b; background: #fffbf2; }
+  .alert-box.info     { border-color: #3b82f6; background: #eff6ff; }
+  .alert-box .alert-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 0.3rem; }
+  .alert-box.critical .alert-title { color: #991b1b; }
+  .alert-box.warning  .alert-title { color: #92400e; }
+  .alert-box.info     .alert-title { color: #1d4ed8; }
+
+  /* ── Gate Cards ── */
+  .gate-header {
+    display: flex; align-items: flex-start; gap: 1rem;
+    padding: 1.4rem 1.4rem 1rem;
+    background: #1a1a2e; border-radius: 10px 10px 0 0; color: #fff;
+    margin-top: 2rem;
+  }
+  .gate-number {
+    background: #e94560; color: #fff; border-radius: 8px;
+    font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em;
+    padding: 0.25em 0.6em; text-transform: uppercase; white-space: nowrap;
+    margin-top: 0.15rem;
+  }
+  .gate-number.g7 { background: #f59e0b; }
+  .gate-number.g8 { background: #8b5cf6; }
+  .gate-number.g9 { background: #10b981; }
+  .gate-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.2rem; }
+  .gate-tagline { font-size: 0.85rem; color: #94a3b8; }
+  .gate-body {
+    border: 1px solid #e5e7eb; border-top: none;
+    border-radius: 0 0 10px 10px; padding: 1.4rem;
+    margin-bottom: 0.5rem;
+  }
+
+  /* ── Two-col layout ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin: 1rem 0; }
+  @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+
+  .info-block {
+    background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 8px;
+    padding: 1rem 1.1rem;
+  }
+  .info-block h4 { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em;
+                   text-transform: uppercase; color: #6b7280; margin-bottom: 0.6rem; }
+  .info-block ul { margin-left: 1.1rem; font-size: 0.87rem; }
+
+  /* ── Complexity Pills ── */
+  .complexity-row {
+    display: flex; align-items: center; gap: 0.6rem; margin-top: 0.8rem;
+    font-size: 0.82rem; flex-wrap: wrap;
+  }
+  .pill {
+    border-radius: 20px; padding: 0.2em 0.75em; font-size: 0.75rem; font-weight: 600;
+    border: 1px solid;
+  }
+  .pill-low    { background: #d1fae5; border-color: #10b981; color: #065f46; }
+  .pill-medium { background: #fef3c7; border-color: #f59e0b; color: #92400e; }
+  .pill-high   { background: #fee2e2; border-color: #e94560; color: #991b1b; }
+
+  /* ── Threshold Table ── */
+  .threshold-row-green { color: #065f46; font-weight: 600; }
+  .threshold-row-warn  { color: #92400e; font-weight: 600; }
+  .threshold-row-crit  { color: #991b1b; font-weight: 600; }
+
+  /* ── Arch Diagram ── */
+  .arch-box {
+    background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 10px;
+    padding: 1.4rem; margin: 1.2rem 0;
+    font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;
+    color: #374151; line-height: 1.8; overflow-x: auto;
+    white-space: pre;
+  }
+
+  /* ── Roadmap ── */
+  .roadmap-item {
+    display: flex; gap: 1rem; padding: 0.9rem 0;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .roadmap-item:last-child { border-bottom: none; }
+  .rm-phase {
+    min-width: 90px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em;
+    text-transform: uppercase; color: #6b7280; padding-top: 0.1rem;
+  }
+  .rm-content h4 { font-size: 0.92rem; font-weight: 600; color: #1a1a2e; margin-bottom: 0.25rem; }
+  .rm-content p  { font-size: 0.84rem; color: #4b5563; margin-bottom: 0; }
+
+  /* ── Footer ── */
+  .doc-footer {
+    margin-top: 3rem; padding-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+    font-size: 0.78rem; color: #9ca3af;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;
+  }
+
+  /* ── Misc ── */
+  .text-right { text-align: right; }
+  .text-center { text-align: center; }
+  .mono { font-family: 'JetBrains Mono', monospace; font-size: 0.82em; }
+  .gap-above { margin-top: 1.2rem; }
+  hr.divider { border: none; border-top: 1px solid #e5e7eb; margin: 2rem 0; }
+  .note { font-size: 0.82rem; color: #6b7280; font-style: italic; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+<!-- ═══════════════════════════════════════════════════════════
+     HEADER
+═══════════════════════════════════════════════════════════ -->
+<header class="doc-header">
+  <div class="eyebrow">SENTINEL — Proposal Document</div>
+  <h1>Runtime Trade Monitoring<br>Gates 6–9</h1>
+  <div class="subtitle">Extending SENTINEL from static config governance to live behavioral enforcement</div>
+  <div class="doc-meta">
+    <span>📅 2026-04-17</span>
+    <span>⚗️ Scope: all 6 active experiments</span>
+    <span>🔒 SENTINEL v1.0 foundation required</span>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════════
+     EXECUTIVE SUMMARY
+═══════════════════════════════════════════════════════════ -->
+<div class="section-label">Executive Summary</div>
+
+<p>SENTINEL currently enforces <strong>pre-scan static checks</strong>: config fingerprints, API key health, and experiment status. It cannot see what trades are actually happening. As of today, that gap has produced measurable damage across every live experiment.</p>
+
+<div class="alert-box critical">
+  <div class="alert-title">🛑 Visibility Gap — Confirmed Real-Money Exposure</div>
+  <p style="margin:0">
+    Across five active experiments, <strong>119 trades are in untracked or unresolved states</strong>
+    — representing 49% of all trades placed since March 15. SENTINEL's config fingerprint
+    guard passed clean on every scan while this was happening. The system has zero knowledge
+    of any of it.
+  </p>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi-card red">
+    <div class="kpi-label">Unmanaged / Orphan Trades</div>
+    <div class="kpi-value">99</div>
+    <div class="kpi-sub">across EXP-400/401/503/600/1220</div>
+  </div>
+  <div class="kpi-card red">
+    <div class="kpi-label">Needs Investigation</div>
+    <div class="kpi-value">20</div>
+    <div class="kpi-sub">split-leg failures, missing strikes</div>
+  </div>
+  <div class="kpi-card orange">
+    <div class="kpi-label">EXP-400 Win Rate Gap</div>
+    <div class="kpi-value">−21pp</div>
+    <div class="kpi-sub">57% live vs 78% backtest</div>
+  </div>
+  <div class="kpi-card blue">
+    <div class="kpi-label">Gates Currently Monitoring Runtime</div>
+    <div class="kpi-value">0 of 5</div>
+    <div class="kpi-sub">Gates 1–5 are pre-deploy static only</div>
+  </div>
+</div>
+
+<p>This proposal defines four new runtime enforcement gates to close that gap. All four are designed to integrate with the existing SENTINEL architecture — using the same <code>sentinel_state.json</code> enforcement state, <code>sentinel/db/sentinel.db</code> audit trail, and Telegram alert infrastructure already in production.</p>
+
+<!-- ═══════════════════════════════════════════════════════════
+     CURRENT STATE — THE DAMAGE
+═══════════════════════════════════════════════════════════ -->
+<div class="section-label">Current State — The Damage</div>
+<h2>What SENTINEL Is Missing Right Now</h2>
+
+<p>The following data is pulled directly from each experiment's live SQLite database as of 2026-04-17. SENTINEL has no record of any of this.</p>
+
+<h3>Position Status Breakdown</h3>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Experiment</th>
+        <th class="text-center">Total Trades</th>
+        <th class="text-center">Unmanaged</th>
+        <th class="text-center">Needs Invest.</th>
+        <th class="text-center">Pending Close</th>
+        <th class="text-center">Failed Open</th>
+        <th class="text-center">Closed (tracked)</th>
+        <th class="text-center">Problem %</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>EXP-400</strong></td>
+        <td class="text-center">54</td>
+        <td class="text-center"><span class="badge badge-critical">14</span></td>
+        <td class="text-center"><span class="badge badge-warning">5</span></td>
+        <td class="text-center"><span class="badge badge-warning">2</span></td>
+        <td class="text-center">8</td>
+        <td class="text-center">21</td>
+        <td class="text-center text-right"><strong style="color:#e94560">39%</strong></td>
+      </tr>
+      <tr>
+        <td><strong>EXP-401</strong></td>
+        <td class="text-center">49</td>
+        <td class="text-center"><span class="badge badge-critical">10</span></td>
+        <td class="text-center"><span class="badge badge-critical">11</span></td>
+        <td class="text-center">—</td>
+        <td class="text-center">9</td>
+        <td class="text-center">16</td>
+        <td class="text-center"><strong style="color:#e94560">43%</strong></td>
+      </tr>
+      <tr>
+        <td><strong>EXP-503</strong></td>
+        <td class="text-center">53</td>
+        <td class="text-center"><span class="badge badge-critical">27</span></td>
+        <td class="text-center"><span class="badge badge-warning">4</span></td>
+        <td class="text-center">—</td>
+        <td class="text-center">6</td>
+        <td class="text-center">14</td>
+        <td class="text-center"><strong style="color:#e94560">58%</strong></td>
+      </tr>
+      <tr>
+        <td><strong>EXP-600</strong></td>
+        <td class="text-center">38</td>
+        <td class="text-center"><span class="badge badge-critical">22</span></td>
+        <td class="text-center">—</td>
+        <td class="text-center">—</td>
+        <td class="text-center">2</td>
+        <td class="text-center">14</td>
+        <td class="text-center"><strong style="color:#e94560">58%</strong></td>
+      </tr>
+      <tr>
+        <td><strong>EXP-1220</strong></td>
+        <td class="text-center">49</td>
+        <td class="text-center"><span class="badge badge-critical">26</span></td>
+        <td class="text-center">—</td>
+        <td class="text-center">—</td>
+        <td class="text-center">2</td>
+        <td class="text-center">19</td>
+        <td class="text-center"><strong style="color:#e94560">53%</strong></td>
+      </tr>
+      <tr>
+        <td><strong>EXP-800</strong></td>
+        <td class="text-center" colspan="6" style="color:#9ca3af; font-style:italic">No trades table — DB exists but Kelly scanner uses separate state machine</td>
+        <td class="text-center">—</td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr>
+        <td><strong>TOTAL</strong></td>
+        <td class="text-center">243</td>
+        <td class="text-center"><strong>99</strong></td>
+        <td class="text-center"><strong>20</strong></td>
+        <td class="text-center"><strong>2</strong></td>
+        <td class="text-center">27</td>
+        <td class="text-center">84</td>
+        <td class="text-center"><strong style="color:#e94560">49%</strong></td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+<p class="note">Unmanaged = position in Alpaca not tracked in DB (orphan). Needs Investigation = DB record exists with missing leg data (split-leg failures). Problem % = (unmanaged + needs_investigation + pending_close) / total trades.</p>
+
+<h3>Live Win Rate vs Backtest Expectation</h3>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Experiment</th>
+        <th class="text-center">Closed Trades</th>
+        <th class="text-center">Live Win Rate</th>
+        <th class="text-center">Backtest Win Rate</th>
+        <th class="text-center">Gap</th>
+        <th class="text-center">Alert Threshold (−15pp)</th>
+        <th class="text-center">Live Avg P&amp;L</th>
+        <th class="text-center">BT Avg P&amp;L (est.)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>EXP-400</strong></td>
+        <td class="text-center">21</td>
+        <td class="text-center"><strong style="color:#e94560">57.1%</strong></td>
+        <td class="text-center">78%</td>
+        <td class="text-center"><strong style="color:#e94560">−20.9pp</strong></td>
+        <td class="text-center"><span class="badge badge-critical">BREACH</span></td>
+        <td class="text-center">−$416</td>
+        <td class="text-center">+$525</td>
+      </tr>
+      <tr>
+        <td><strong>EXP-401</strong></td>
+        <td class="text-center">16</td>
+        <td class="text-center">68.8%</td>
+        <td class="text-center">72%</td>
+        <td class="text-center">−3.2pp</td>
+        <td class="text-center"><span class="badge badge-ok">OK</span></td>
+        <td class="text-center" style="color:#10b981">+$348</td>
+        <td class="text-center">+$825</td>
+      </tr>
+      <tr>
+        <td><strong>EXP-503</strong></td>
+        <td class="text-center">14</td>
+        <td class="text-center" style="color:#10b981">78.6%</td>
+        <td class="text-center">68%</td>
+        <td class="text-center" style="color:#10b981">+10.6pp</td>
+        <td class="text-center"><span class="badge badge-ok">ON TRACK</span></td>
+        <td class="text-center" style="color:#10b981">+$4,393</td>
+        <td class="text-center">+$750</td>
+      </tr>
+      <tr>
+        <td><strong>EXP-600</strong></td>
+        <td class="text-center">14</td>
+        <td class="text-center" style="color:#10b981">92.9%</td>
+        <td class="text-center">75%</td>
+        <td class="text-center" style="color:#10b981">+17.9pp</td>
+        <td class="text-center"><span class="badge badge-ok">OUTPERFORMING</span></td>
+        <td class="text-center" style="color:#10b981">+$2,476</td>
+        <td class="text-center">+$850</td>
+      </tr>
+      <tr>
+        <td><strong>EXP-1220</strong></td>
+        <td class="text-center">19</td>
+        <td class="text-center">68.4%</td>
+        <td class="text-center">80%</td>
+        <td class="text-center" style="color:#f59e0b">−11.6pp</td>
+        <td class="text-center"><span class="badge badge-warning">WATCH</span></td>
+        <td class="text-center" style="color:#10b981">+$1,199</td>
+        <td class="text-center">+$1,200</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<p class="note">Backtest win rates from SENTINEL certification metadata. Live stats include only <code>closed_profit</code>, <code>closed_loss</code>, and <code>closed_external</code> — open and unmanaged trades excluded. EXP-400 and EXP-1220 are trending below expectation; EXP-400 is in active breach.</p>
+
+<h3>Notable Event: April 8 Drawdown Cluster — EXP-400</h3>
+<p>
+  The <code>trade_deviations</code> table in EXP-400's database already records a partial signal.
+  On 2026-04-08, five consecutive trades posted actual P&amp;L of approximately −53% to −54%
+  vs the expected +55% (profit target). Deviation scores ranged 0.55–0.57 (the table's max is ~1.0).
+  These were all stop-loss exits triggered by a single-day VIX spike. The event contributed
+  $25,000+ in realized losses and pulled EXP-400's cumulative P&amp;L from +$12,178 to −$17,999.
+  <strong>SENTINEL had no visibility into any of this.</strong>
+</p>
+
+<div class="two-col gap-above">
+  <div class="info-block">
+    <h4>What SENTINEL Saw (Apr 8)</h4>
+    <ul>
+      <li>Config fingerprint: ✅ matches</li>
+      <li>Alpaca API health: ✅ 200 OK</li>
+      <li>Experiment status: ✅ active</li>
+      <li>Pre-scan guard: <strong>PASSED</strong></li>
+    </ul>
+  </div>
+  <div class="info-block">
+    <h4>What Actually Happened (Apr 8)</h4>
+    <ul>
+      <li>5 stop-loss exits in one session</li>
+      <li>−$25,000+ realized losses</li>
+      <li>Deviation scores: 0.55–0.57 (extreme)</li>
+      <li>All 5 trades: backtest expected WIN → live LOSS</li>
+    </ul>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ═══════════════════════════════════════════════════════════
+     PROPOSED ARCHITECTURE OVERVIEW
+═══════════════════════════════════════════════════════════ -->
+<div class="section-label">Proposed Architecture</div>
+<h2>How the Four Runtime Gates Fit Into SENTINEL</h2>
+
+<p>
+  The existing SENTINEL flow is: <em>scan startup → <code>pre_scan_check()</code> → execute scan → exit</em>.
+  The runtime gates run <strong>after trade execution</strong>, either inline at scan end or on a
+  separate scheduled cadence. They write to the same <code>sentinel.db</code> audit tables and
+  emit Telegram alerts via <code>shared.telegram_alerts</code>.
+</p>
+
+<div class="arch-box">
+ ┌─────────────────────────── Every Scan Cycle ────────────────────────────┐
+ │                                                                          │
+ │  [PRE-SCAN]       [SCAN EXECUTION]        [POST-SCAN (new)]             │
+ │                                                                          │
+ │  Gate 1–5         main.py scan            Gate 6: sizing check          │
+ │  (static)         exp800 scanner          Gate 7: orphan detector       │
+ │                   ── orders placed ──     Gate 9: lifecycle monitor     │
+ │                                                                          │
+ │  [ROLLING WINDOW — every scan cycle accumulates data]                   │
+ │  Gate 8: Live-vs-Backtest Drift Tracker                                  │
+ │  (checks rolling 30-trade window; fires if threshold breached)          │
+ │                                                                          │
+ └──────────────────────────────────────────────────────────────────────────┘
+
+ Data Sources:
+   trades DB       ──→ Gate 6, 7, 8, 9
+   Alpaca API       ──→ Gate 7 (position reconciliation)
+   sentinel_state.json ──→ read by all gates; written by Gate 8 on halt
+   sentinel.db      ──→ alerts_log, experiment_snapshots written by all gates
+</div>
+
+<p>
+  Each gate calls <code>from sentinel.guards import pre_scan_check</code> as an existing pattern but
+  <strong>does not replace it</strong> — the existing 5-gate foundation remains unchanged.
+  Runtime gates are additive, non-breaking.
+</p>
+
+<hr class="divider">
+
+<!-- ═══════════════════════════════════════════════════════════
+     GATE 6
+═══════════════════════════════════════════════════════════ -->
+<div class="section-label">Runtime Gate</div>
+
+<!-- GATE 6 -->
+<div class="gate-header">
+  <div class="gate-number">Gate 6</div>
+  <div>
+    <div class="gate-title">Trade Sizing Validator</div>
+    <div class="gate-tagline">Verify that actual contracts placed match the backtest sizing formula</div>
+  </div>
+</div>
+<div class="gate-body">
+
+  <h3>What It Checks</h3>
+  <p>
+    Every trade placed in paper trading is sized by the formula:
+    <code>floor(account_equity × risk_per_trade / max_loss_per_spread)</code>.
+    Live execution can diverge from this — order rounding, stale equity reads, concurrent
+    position interference, or scanner bugs. Gate 6 computes the expected contract count
+    for each newly placed trade and flags when actual sizing deviates by more than 15%.
+  </p>
+  <p>
+    <strong>Note:</strong> The <code>trade_deviations</code> table already exists in each experiment DB
+    and tracks credit and P&amp;L deviations. Gate 6 extends this pattern with a contracts-count column.
+  </p>
+
+  <h3>How It Works</h3>
+  <ol>
+    <li>On scan completion, query <code>trades</code> where <code>status = 'open'</code> and <code>entry_date ≥ scan_start_time</code> (new trades only).</li>
+    <li>For each new trade: fetch <code>account_equity</code> from Alpaca <code>GET /v2/account</code> (already called in Gate 3 health check — re-use the response).</li>
+    <li>Reconstruct expected contracts: <code>expected = floor(equity × risk_pct / (spread_width × 100))</code>. <code>risk_pct</code> and <code>spread_width</code> read from the locked config fingerprint.</li>
+    <li>Compare: <code>deviation_pct = abs(actual − expected) / expected</code>. If > 15%, emit alert.</li>
+    <li>Write result to <code>trade_deviations</code> (new column: <code>expected_contracts</code>, <code>actual_contracts</code>, <code>sizing_deviation_pct</code>).</li>
+  </ol>
+
+  <h3>Data Sources</h3>
+  <div class="two-col">
+    <div class="info-block">
+      <h4>Inputs</h4>
+      <ul>
+        <li><code>trades</code> table — <code>contracts</code>, <code>entry_date</code></li>
+        <li>Alpaca <code>/v2/account</code> → <code>equity</code></li>
+        <li>Paper YAML config → <code>risk_per_trade</code>, <code>spread_width</code></li>
+        <li><code>sentinel_state.json</code> → <code>config_fingerprint</code> (guard)</li>
+      </ul>
+    </div>
+    <div class="info-block">
+      <h4>Outputs</h4>
+      <ul>
+        <li><code>trade_deviations</code> — new sizing columns</li>
+        <li><code>alerts_log</code> — on threshold breach</li>
+        <li>Telegram alert — warning or critical</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Alert Thresholds</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Deviation</th><th>Severity</th><th>Action</th><th>Example</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="threshold-row-green">0–15%</td>
+          <td><span class="badge badge-ok">OK</span></td>
+          <td>Log only (normal rounding)</td>
+          <td>Expected 9 contracts, placed 9</td>
+        </tr>
+        <tr>
+          <td class="threshold-row-warn">15–35%</td>
+          <td><span class="badge badge-warning">WARNING</span></td>
+          <td>Telegram alert, log to <code>alerts_log</code></td>
+          <td>Expected 10 contracts, placed 7</td>
+        </tr>
+        <tr>
+          <td class="threshold-row-crit">&gt; 35%</td>
+          <td><span class="badge badge-critical">CRITICAL</span></td>
+          <td>Telegram alert + pause experiment on repeat</td>
+          <td>Expected 10 contracts, placed 1</td>
+        </tr>
+        <tr>
+          <td class="threshold-row-crit">0 contracts placed, order accepted</td>
+          <td><span class="badge badge-blocker">HALT</span></td>
+          <td>Immediate halt — sizing formula broken</td>
+          <td>Floor returned 0 due to equity read error</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Implementation Complexity</h3>
+  <div class="complexity-row">
+    <span class="pill pill-low">Low–Medium</span>
+    <span>~180 lines of Python. Extends existing <code>trade_deviations</code> schema (1 migration). Alpaca equity call already happens in Gate 3 health check — re-use cached response to avoid double API call.</span>
+  </div>
+
+  <h3>Integration Points</h3>
+  <ul>
+    <li>Add <code>run_gate6_sizing_check(exp_id, new_trade_ids)</code> call at end of every scanner's main loop.</li>
+    <li>Inject via same pattern as <code>pre_scan_check()</code>: two lines at the bottom of the scan execution block.</li>
+    <li>Schema migration: <code>ALTER TABLE trade_deviations ADD COLUMN expected_contracts INTEGER;</code> and two more columns.</li>
+  </ul>
+
+</div><!-- /gate-body -->
+
+
+<!-- GATE 7 -->
+<div class="gate-header" style="margin-top:2rem">
+  <div class="gate-number g7">Gate 7</div>
+  <div>
+    <div class="gate-title">Orphan / Unmanaged Position Detector</div>
+    <div class="gate-tagline">Real-time reconciliation of Alpaca positions vs DB state — every scan cycle</div>
+  </div>
+</div>
+<div class="gate-body">
+
+  <h3>What It Checks</h3>
+  <p>
+    Gate 7 is the most urgent of the four proposals. It is the direct solution to the
+    <strong>99 unmanaged orphan trades</strong> currently invisible to SENTINEL.
+  </p>
+  <p>
+    A reconciler already exists at <code>shared/reconciler.py</code> (~1,400 lines) and runs
+    three-tier reconciliation within each scanner. However, the reconciler operates
+    <em>within</em> the scanner's own state — it has no channel to SENTINEL.
+    Gate 7 is the SENTINEL-side consumer of reconciler output: it queries the DB
+    immediately after each scan, identifies the delta, and fires alerts.
+  </p>
+
+  <h3>Two Failure Modes</h3>
+  <div class="two-col">
+    <div class="info-block">
+      <h4>🔴 Orphan</h4>
+      <p style="font-size:0.87rem">Position exists in Alpaca but <strong>not</strong> in the trades DB
+      (or DB status ≠ open). Broker opened or retained a position the system doesn't know about.
+      Risk: uncontrolled exposure accumulating silently.</p>
+      <p style="font-size:0.87rem"><em>Current examples:</em> 14 unmanaged in EXP-400, 27 in EXP-503 — all have <code>contracts=0</code> and <code>short_strike=0</code>, indicating leg-tracking failure at order submission.</p>
+    </div>
+    <div class="info-block">
+      <h4>👻 Ghost</h4>
+      <p style="font-size:0.87rem">Position exists in DB as <code>status=open</code> but
+      <strong>not</strong> in Alpaca. Broker closed outside the system (manual close, margin call,
+      corporate action, Alpaca-side expiration handling). Risk: system believes it has
+      protection it no longer has; potential double-entry on next scan.</p>
+      <p style="font-size:0.87rem"><em>Current examples:</em> 5 <code>needs_investigation</code> in EXP-401 match this pattern — DB open, Alpaca confirms closed.</p>
+    </div>
+  </div>
+
+  <h3>How It Works</h3>
+  <ol>
+    <li>Call Alpaca <code>GET /v2/positions</code> — returns all current open positions for the account.</li>
+    <li>Query <code>trades</code> where <code>status = 'open'</code>.</li>
+    <li>Compute set delta: orphans (Alpaca ∖ DB), ghosts (DB ∖ Alpaca).</li>
+    <li>For orphans: create a placeholder <code>trades</code> record with <code>status='unmanaged'</code>, fire WARNING alert. Do NOT close — hands-off. Gate 7 detects, humans resolve.</li>
+    <li>For ghosts: update trade to <code>status='needs_investigation'</code>, fire CRITICAL alert.</li>
+    <li>Track consecutive-scan count: if same orphan persists for ≥ 3 scans without resolution, escalate severity.</li>
+  </ol>
+  <p class="note">
+    The reconciler already does this at Tier 2 (~5 min) and Tier 3 (EOD). Gate 7 does not replace it —
+    it gives SENTINEL independent visibility and ensures the <code>alerts_log</code> is always up to date.
+  </p>
+
+  <h3>Data Sources</h3>
+  <div class="two-col">
+    <div class="info-block">
+      <h4>Inputs</h4>
+      <ul>
+        <li>Alpaca <code>/v2/positions</code> — live broker positions</li>
+        <li><code>trades</code> table — <code>status='open'</code> records</li>
+        <li><code>scanner_state</code> — <code>last_orphan_check</code> timestamp</li>
+        <li><code>reconciliation_events</code> — prior reconciler actions</li>
+      </ul>
+    </div>
+    <div class="info-block">
+      <h4>Outputs</h4>
+      <ul>
+        <li><code>trades</code> — new <code>unmanaged</code> stub records for orphans</li>
+        <li><code>alerts_log</code> — one row per detected orphan/ghost</li>
+        <li><code>scanner_state.last_orphan_check</code> — updated</li>
+        <li>Telegram: immediate alert with count + position IDs</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Alert Thresholds</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Condition</th><th>Severity</th><th>Telegram Message</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>New orphan detected (1st scan)</td>
+          <td><span class="badge badge-warning">WARNING</span></td>
+          <td>⚠️ EXP-400: 1 new orphan position detected. Symbol: SPY. Investigate within 24h.</td>
+        </tr>
+        <tr>
+          <td>Same orphan persists ≥ 3 scans</td>
+          <td><span class="badge badge-critical">CRITICAL</span></td>
+          <td>🛑 EXP-400: orphan position unresolved for 3+ scans. Manual close required.</td>
+        </tr>
+        <tr>
+          <td>Ghost position detected</td>
+          <td><span class="badge badge-critical">CRITICAL</span></td>
+          <td>🛑 EXP-400: DB shows open trade but Alpaca has no position. Possible double-entry risk.</td>
+        </tr>
+        <tr>
+          <td>≥ 5 orphans simultaneously</td>
+          <td><span class="badge badge-blocker">HALT</span></td>
+          <td>🛡️ SENTINEL — EXP-400 HALTED. 5+ untracked positions. Scanner blocked until resolved.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Implementation Complexity</h3>
+  <div class="complexity-row">
+    <span class="pill pill-low">Low</span>
+    <span>~150 lines. Logic is nearly identical to the reconciler's Tier 2 check — Gate 7 is a read-only SENTINEL wrapper around work that already runs. Primary effort: consuming <code>reconciliation_events</code> to avoid duplicate alerts.</span>
+  </div>
+
+  <h3>Why Not Just Use the Reconciler?</h3>
+  <p>
+    The reconciler operates within each scanner process and logs to its own <code>reconciliation_events</code>
+    table. SENTINEL has no subscription to that table and no cross-experiment view. Gate 7 provides:
+    (1) cross-experiment orphan count visibility, (2) escalation when reconciler fails to clear an orphan,
+    and (3) automatic HALT if orphan count exceeds safe threshold.
+  </p>
+
+</div><!-- /gate-body -->
+
+
+<!-- GATE 8 -->
+<div class="gate-header" style="margin-top:2rem">
+  <div class="gate-number g8">Gate 8</div>
+  <div>
+    <div class="gate-title">Live-vs-Backtest Drift Tracker</div>
+    <div class="gate-tagline">Rolling statistical comparison of live performance vs backtest expectations</div>
+  </div>
+</div>
+<div class="gate-body">
+
+  <h3>What It Checks</h3>
+  <p>
+    Gate 8 answers the question SENTINEL currently cannot: <em>"Is this experiment still trading
+    like the backtested strategy?"</em> It tracks three rolling metrics over the last 30 closed trades,
+    comparing each to the certified backtest baseline.
+  </p>
+  <p>
+    This gate is what would have caught <strong>EXP-400's win rate collapsing to 57%</strong>
+    (21pp below the 78% backtest expectation) and triggered a review before additional capital
+    was deployed into stop-loss conditions.
+  </p>
+
+  <h3>Three Tracked Metrics</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Metric</th>
+          <th>Backtest Baseline</th>
+          <th>Warning Threshold</th>
+          <th>Critical Threshold</th>
+          <th>Halt Threshold</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Win Rate</strong> (rolling 30)</td>
+          <td>Per experiment (cert metadata)</td>
+          <td>−10pp below backtest</td>
+          <td class="threshold-row-crit">−15pp below backtest</td>
+          <td class="threshold-row-crit">−20pp + confirmed by ≥ 10 trades</td>
+        </tr>
+        <tr>
+          <td><strong>Avg Loss per Losing Trade</strong></td>
+          <td>From backtest avg loss</td>
+          <td>1.5× backtest avg loss</td>
+          <td class="threshold-row-crit">2× backtest avg loss</td>
+          <td class="threshold-row-crit">3× backtest avg loss</td>
+        </tr>
+        <tr>
+          <td><strong>Cumulative Drawdown</strong></td>
+          <td>Backtest worst-case MC DD</td>
+          <td>80% of backtest MC worst DD</td>
+          <td class="threshold-row-crit">100% of backtest MC worst DD</td>
+          <td class="threshold-row-crit">110% of backtest MC worst DD</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Current Metric Status (as of 2026-04-17)</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Experiment</th>
+          <th class="text-center">Live Win Rate</th>
+          <th class="text-center">BT Win Rate</th>
+          <th class="text-center">Win Rate Status</th>
+          <th class="text-center">Live Avg Loss</th>
+          <th class="text-center">Cum P&amp;L</th>
+          <th class="text-center">BT Max DD</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>EXP-400</strong></td>
+          <td class="text-center" style="color:#e94560"><strong>57.1%</strong></td>
+          <td class="text-center">78%</td>
+          <td class="text-center"><span class="badge badge-critical">CRITICAL −20.9pp</span></td>
+          <td class="text-center">−$5,450</td>
+          <td class="text-center" style="color:#e94560">−$7,895</td>
+          <td class="text-center">−25.5%</td>
+        </tr>
+        <tr>
+          <td><strong>EXP-401</strong></td>
+          <td class="text-center">68.8%</td>
+          <td class="text-center">72%</td>
+          <td class="text-center"><span class="badge badge-ok">OK</span></td>
+          <td class="text-center">−$7,034</td>
+          <td class="text-center" style="color:#10b981">+$5,560</td>
+          <td class="text-center">−7.0%</td>
+        </tr>
+        <tr>
+          <td><strong>EXP-503</strong></td>
+          <td class="text-center" style="color:#10b981">78.6%</td>
+          <td class="text-center">68%</td>
+          <td class="text-center"><span class="badge badge-ok">OUTPERFORMING</span></td>
+          <td class="text-center">—</td>
+          <td class="text-center" style="color:#10b981">+$48,320</td>
+          <td class="text-center">−14.2%</td>
+        </tr>
+        <tr>
+          <td><strong>EXP-600</strong></td>
+          <td class="text-center" style="color:#10b981">92.9%</td>
+          <td class="text-center">75%</td>
+          <td class="text-center"><span class="badge badge-ok">OUTPERFORMING</span></td>
+          <td class="text-center">—</td>
+          <td class="text-center" style="color:#10b981">+$32,190</td>
+          <td class="text-center">−19.4%</td>
+        </tr>
+        <tr>
+          <td><strong>EXP-1220</strong></td>
+          <td class="text-center">68.4%</td>
+          <td class="text-center">80%</td>
+          <td class="text-center"><span class="badge badge-warning">WATCH −11.6pp</span></td>
+          <td class="text-center">−$269</td>
+          <td class="text-center" style="color:#10b981">+$16,787</td>
+          <td class="text-center">−11.2%</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">
+    EXP-400 win rate breach (−20.9pp) would have triggered a CRITICAL Gate 8 alert after trade #10 closed.
+    EXP-1220 at −11.6pp is in the WATCH zone; would move to WARNING if it drops 1.4pp further without
+    recovery.
+  </p>
+
+  <h3>How It Works</h3>
+  <ol>
+    <li>After each scan, query last 30 closed trades from the trades DB.</li>
+    <li>Compute: win rate, avg loss per losing trade, peak-to-current drawdown from <code>scanner_state.peak_equity</code>.</li>
+    <li>Compare against thresholds stored in <code>sentinel_state.json</code> under a new <code>backtest_baseline</code> key (written at certification time by <code>certify_all.py</code>).</li>
+    <li>Write rolling snapshot to <code>experiment_snapshots</code> table in <code>sentinel.db</code>.</li>
+    <li>On threshold breach: log to <code>alerts_log</code>, Telegram, and — on HALT level — call <code>state.set_halt(exp_id)</code>.</li>
+  </ol>
+
+  <h3>Backtest Baselines (from Certification Metadata)</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Experiment</th>
+          <th class="text-center">Win Rate</th>
+          <th class="text-center">Avg P&amp;L / Trade</th>
+          <th class="text-center">Avg Loss / Loser</th>
+          <th class="text-center">MC Worst DD</th>
+          <th class="text-center">Ann. Return</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>EXP-400</strong></td>
+          <td class="text-center">78%</td>
+          <td class="text-center">+$525</td>
+          <td class="text-center">~$2,100</td>
+          <td class="text-center">−41.5%</td>
+          <td class="text-center">+32.7%</td>
+        </tr>
+        <tr>
+          <td><strong>EXP-401</strong></td>
+          <td class="text-center">72%</td>
+          <td class="text-center">+$825</td>
+          <td class="text-center">~$2,800</td>
+          <td class="text-center">−10.5%</td>
+          <td class="text-center">+40.3%</td>
+        </tr>
+        <tr>
+          <td><strong>EXP-503</strong></td>
+          <td class="text-center">68%</td>
+          <td class="text-center">+$750</td>
+          <td class="text-center">~$2,200</td>
+          <td class="text-center">−21.3%</td>
+          <td class="text-center">+39.6%</td>
+        </tr>
+        <tr>
+          <td><strong>EXP-600</strong></td>
+          <td class="text-center">75%</td>
+          <td class="text-center">+$850</td>
+          <td class="text-center">~$2,500</td>
+          <td class="text-center">−29.1%</td>
+          <td class="text-center">+139.2%</td>
+        </tr>
+        <tr>
+          <td><strong>EXP-800</strong></td>
+          <td class="text-center">82%</td>
+          <td class="text-center">+$1,100</td>
+          <td class="text-center">~$3,200</td>
+          <td class="text-center">−27.8%</td>
+          <td class="text-center">+89.7%</td>
+        </tr>
+        <tr>
+          <td><strong>EXP-1220</strong></td>
+          <td class="text-center">80%</td>
+          <td class="text-center">+$1,200</td>
+          <td class="text-center">~$1,800</td>
+          <td class="text-center">−16.8%</td>
+          <td class="text-center">+99.2%</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">Baselines sourced from SENTINEL certification metadata (<code>scripts/certify_all.py BACKTEST_METADATA</code>). Avg loss per loser is derived from (avg_pnl × total_trades) / (1 − win_rate) where backtest avg loss data is available; otherwise estimated at 4× avg win.</p>
+
+  <h3>Minimum Trade Sample Size</h3>
+  <p>
+    Win rate is not meaningful over fewer than 10 trades. Gate 8 uses a <strong>minimum 10-trade sample</strong>
+    before firing win rate alerts, and downgrades all alerts by one severity level for fewer than 20 trades.
+    This prevents false alerts on new experiments.
+  </p>
+
+  <h3>Implementation Complexity</h3>
+  <div class="complexity-row">
+    <span class="pill pill-medium">Medium</span>
+    <span>~300 lines. Requires: (1) adding <code>backtest_baseline</code> block to <code>sentinel_state.json</code> schema — populated at certification time, (2) writing rolling window query, (3) hooking into post-scan execution flow. The <code>experiment_snapshots</code> table in <code>sentinel.db</code> already exists and accepts win_rate/total_pnl fields.</span>
+  </div>
+
+  <h3>State Persistence</h3>
+  <p>
+    Rolling window state is re-computed from the DB on each run — no in-memory state required.
+    This means the gate is crash-safe and correct after scanner restarts. Alert deduplication uses
+    the existing <code>alert_dedup</code> table in each experiment DB.
+  </p>
+
+</div><!-- /gate-body -->
+
+
+<!-- GATE 9 -->
+<div class="gate-header" style="margin-top:2rem">
+  <div class="gate-number g9">Gate 9</div>
+  <div>
+    <div class="gate-title">Position Lifecycle Monitor</div>
+    <div class="gate-tagline">Time-based enforcement: every open position must progress or be explained</div>
+  </div>
+</div>
+<div class="gate-body">
+
+  <h3>What It Checks</h3>
+  <p>
+    Gate 9 enforces time-bounded position lifecycle. Credit spread strategies have a defined
+    lifecycle: <em>open → managed (PT or SL hit) → closed</em>. Any trade stuck in an intermediate
+    state for more than a threshold duration is a silent failure — the strategy is not being managed
+    as designed.
+  </p>
+  <p>
+    Currently there are <strong>2 pending_close trades in EXP-400</strong> from 2026-04-02 that have
+    been stuck for 15 days with no resolution. SENTINEL never noticed.
+  </p>
+
+  <h3>Monitored States and Thresholds</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>State</th>
+          <th>Description</th>
+          <th>Warning After</th>
+          <th>Critical After</th>
+          <th>Severity</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>pending_open</code></td>
+          <td>Order submitted but not confirmed filled</td>
+          <td>30 min</td>
+          <td class="threshold-row-crit">2 hours</td>
+          <td><span class="badge badge-warning">WARNING → CRITICAL</span></td>
+        </tr>
+        <tr>
+          <td><code>pending_close</code></td>
+          <td>Close order submitted but not confirmed</td>
+          <td>30 min</td>
+          <td class="threshold-row-crit">2 hours</td>
+          <td><span class="badge badge-critical">CRITICAL</span></td>
+        </tr>
+        <tr>
+          <td><code>needs_investigation</code></td>
+          <td>Reconciler flagged — requires manual review</td>
+          <td>4 hours</td>
+          <td class="threshold-row-crit">24 hours</td>
+          <td><span class="badge badge-critical">CRITICAL → HALT</span></td>
+        </tr>
+        <tr>
+          <td><code>open</code> past DTE expiry</td>
+          <td>Option expired but trade still shows open</td>
+          <td>Immediate</td>
+          <td class="threshold-row-crit">Next scan</td>
+          <td><span class="badge badge-blocker">HALT</span></td>
+        </tr>
+        <tr>
+          <td><code>unmanaged</code> (new)</td>
+          <td>Orphan detected in Gate 7</td>
+          <td>1 scan</td>
+          <td class="threshold-row-crit">3 scans without resolution</td>
+          <td><span class="badge badge-warning">WARNING → CRITICAL</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="alert-box warning" style="margin-top:1rem">
+    <div class="alert-title">Current Violation: EXP-400 pending_close (2026-04-02)</div>
+    Two trades stuck in <code>pending_close</code> since 2026-04-02 — 15 days past threshold.
+    Under Gate 9, this would have triggered CRITICAL within 2 hours of the close order being placed
+    and escalated to HALT on the following scan.
+  </div>
+
+  <h3>How It Works</h3>
+  <ol>
+    <li>On every scan: query all trades where <code>status IN ('pending_open', 'pending_close', 'needs_investigation')</code>.</li>
+    <li>For each: compute <code>age_hours = (now − entry_date or updated_at)</code>.</li>
+    <li>Apply threshold ladder. Update <code>alerts_log</code> if threshold crossed.</li>
+    <li>Separately: query all <code>status='open'</code> trades where <code>expiration &lt; today</code>. These are expired-but-open, requiring immediate action.</li>
+    <li>Alert deduplication: suppress re-alert for same trade_id at same severity within 4 hours using <code>alert_dedup</code> table.</li>
+  </ol>
+
+  <h3>Data Sources</h3>
+  <div class="two-col">
+    <div class="info-block">
+      <h4>Inputs</h4>
+      <ul>
+        <li><code>trades</code> — status, entry_date, expiration, updated_at</li>
+        <li><code>alert_dedup</code> — deduplication</li>
+        <li>Wall clock (scan timestamp)</li>
+      </ul>
+    </div>
+    <div class="info-block">
+      <h4>Outputs</h4>
+      <ul>
+        <li><code>alerts_log</code> in <code>sentinel.db</code></li>
+        <li>Telegram alerts</li>
+        <li><code>sentinel_state.json</code> status → <code>halted</code> on severe cases</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Implementation Complexity</h3>
+  <div class="complexity-row">
+    <span class="pill pill-low">Low</span>
+    <span>~120 lines. Purely time-based DB queries — no external API calls required. Can share the alert dedup infrastructure already present in each experiment DB.</span>
+  </div>
+
+</div><!-- /gate-body -->
+
+<hr class="divider">
+
+<!-- ═══════════════════════════════════════════════════════════
+     INTEGRATION ARCHITECTURE
+═══════════════════════════════════════════════════════════ -->
+<div class="section-label">Integration</div>
+<h2>Sentinel Architecture After Gates 6–9</h2>
+
+<p>All four gates share infrastructure and follow the same injection pattern used by the existing <code>pre_scan_check()</code>. The proposed entry point is a new module: <code>sentinel/runtime.py</code>.</p>
+
+<div class="arch-box">
+# sentinel/runtime.py — proposed
+
+def post_scan_check(exp_id: str, db_path: str, config: dict) -> None:
+    """
+    Called at the end of every scanner's main execution block.
+    Runs Gates 6–9 in sequence. Never raises — logs errors internally.
+    """
+    run_gate6_sizing_check(exp_id, db_path, config)   # Trade Sizing
+    run_gate7_orphan_check(exp_id, db_path, config)   # Orphan Detector
+    run_gate8_drift_check(exp_id, db_path, config)    # Drift Tracker
+    run_gate9_lifecycle_check(exp_id, db_path)         # Lifecycle Monitor
+
+
+# Injection into each scanner (2 lines):
+from sentinel.runtime import post_scan_check
+post_scan_check("EXP-400", db_path, config)
+
+
+# sentinel_state.json — new fields added at certification:
+{
+  "experiments": {
+    "EXP-400": {
+      ...
+      "backtest_baseline": {           # NEW — written by certify_all.py
+        "win_rate_pct": 78,
+        "avg_pnl_per_trade": 525,
+        "avg_loss_per_loser": 2100,
+        "mc_worst_dd_pct": -41.5
+      },
+      "runtime_monitoring": {          # NEW — updated by Gate 8 each scan
+        "rolling_win_rate": null,
+        "rolling_win_rate_n": 0,
+        "last_drift_check": null,
+        "consecutive_breach_count": 0
+      }
+    }
+  }
+}
+</div>
+
+<h3>Sentinel DB — New Columns / Tables</h3>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Target</th><th>Change</th><th>Purpose</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>trade_deviations</code> (per-exp DB)</td>
+        <td>3 new columns: <code>expected_contracts</code>, <code>actual_contracts</code>, <code>sizing_deviation_pct</code></td>
+        <td>Gate 6 sizing records</td>
+      </tr>
+      <tr>
+        <td><code>experiment_snapshots</code> (sentinel.db)</td>
+        <td>Existing table — already has <code>win_rate</code>, <code>total_pnl</code>, <code>open_positions</code></td>
+        <td>Gate 8 rolling state (no migration needed)</td>
+      </tr>
+      <tr>
+        <td><code>alerts_log</code> (sentinel.db)</td>
+        <td>No change — existing table supports all four gates</td>
+        <td>All gates write here</td>
+      </tr>
+      <tr>
+        <td><code>sentinel_state.json</code></td>
+        <td>New keys: <code>backtest_baseline</code>, <code>runtime_monitoring</code> per experiment</td>
+        <td>Gates 8 read baseline; write rolling state</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<hr class="divider">
+
+<!-- ═══════════════════════════════════════════════════════════
+     IMPLEMENTATION ROADMAP
+═══════════════════════════════════════════════════════════ -->
+<div class="section-label">Implementation Roadmap</div>
+<h2>Phased Delivery</h2>
+
+<div>
+  <div class="roadmap-item">
+    <div class="rm-phase">Phase 1<br>Week 1</div>
+    <div class="rm-content">
+      <h4>Gate 7 — Orphan Detector (highest priority, lowest effort)</h4>
+      <p>
+        Ships <code>sentinel/runtime.py</code> skeleton + Gate 7 implementation.
+        Immediately alerts on the 99 existing orphans.
+        Requires: <code>sentinel/runtime.py</code> (~150 lines), 2-line injection into all 5 scanners.
+        No schema migrations.
+      </p>
+    </div>
+  </div>
+
+  <div class="roadmap-item">
+    <div class="rm-phase">Phase 2<br>Week 1–2</div>
+    <div class="rm-content">
+      <h4>Gate 9 — Position Lifecycle Monitor</h4>
+      <p>
+        Catches stuck pending_close and needs_investigation states.
+        Ships as additional function in <code>sentinel/runtime.py</code>.
+        Requires: ~120 lines. No migrations. Can be developed concurrently with Phase 1.
+      </p>
+    </div>
+  </div>
+
+  <div class="roadmap-item">
+    <div class="rm-phase">Phase 3<br>Week 2–3</div>
+    <div class="rm-content">
+      <h4>Gate 8 — Drift Tracker</h4>
+      <p>
+        Adds rolling win rate and drawdown monitoring.
+        Requires: populate <code>backtest_baseline</code> in <code>sentinel_state.json</code> via
+        <code>certify_all.py</code> update, then implement Gate 8 (~300 lines).
+        One-time update to <code>sentinel_state.json</code> per experiment.
+      </p>
+    </div>
+  </div>
+
+  <div class="roadmap-item">
+    <div class="rm-phase">Phase 4<br>Week 3–4</div>
+    <div class="rm-content">
+      <h4>Gate 6 — Trade Sizing Validator</h4>
+      <p>
+        Lowest urgency (sizing has not been the failure mode to date).
+        Requires: schema migration on <code>trade_deviations</code> in all 5 DBs,
+        Alpaca equity response caching in scanner init, ~180 lines.
+      </p>
+    </div>
+  </div>
+</div>
+
+<h3>Complexity Summary</h3>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Gate</th>
+        <th>Name</th>
+        <th>Priority</th>
+        <th>Lines est.</th>
+        <th>Schema Changes</th>
+        <th>External API Calls</th>
+        <th>Effort</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Gate 7</strong></td>
+        <td>Orphan Detector</td>
+        <td><span class="badge badge-critical">URGENT</span></td>
+        <td class="text-center">~150</td>
+        <td>None</td>
+        <td>Alpaca <code>/v2/positions</code></td>
+        <td><span class="pill pill-low">Low</span></td>
+      </tr>
+      <tr>
+        <td><strong>Gate 9</strong></td>
+        <td>Lifecycle Monitor</td>
+        <td><span class="badge badge-critical">HIGH</span></td>
+        <td class="text-center">~120</td>
+        <td>None</td>
+        <td>None</td>
+        <td><span class="pill pill-low">Low</span></td>
+      </tr>
+      <tr>
+        <td><strong>Gate 8</strong></td>
+        <td>Drift Tracker</td>
+        <td><span class="badge badge-warning">MEDIUM</span></td>
+        <td class="text-center">~300</td>
+        <td><code>sentinel_state.json</code> fields</td>
+        <td>None</td>
+        <td><span class="pill pill-medium">Medium</span></td>
+      </tr>
+      <tr>
+        <td><strong>Gate 6</strong></td>
+        <td>Sizing Validator</td>
+        <td><span class="badge badge-advisory">NORMAL</span></td>
+        <td class="text-center">~180</td>
+        <td>3 columns on <code>trade_deviations</code></td>
+        <td>Alpaca <code>/v2/account</code> (cached)</td>
+        <td><span class="pill pill-low">Low–Med</span></td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="3"><strong>Total</strong></td>
+        <td class="text-center"><strong>~750 lines</strong></td>
+        <td colspan="3">All 4 gates in a single <code>sentinel/runtime.py</code> module</td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+
+<hr class="divider">
+
+<!-- ═══════════════════════════════════════════════════════════
+     APPENDIX
+═══════════════════════════════════════════════════════════ -->
+<div class="section-label">Appendix</div>
+<h2>Current SENTINEL Alerts Log (2026-04-17)</h2>
+<p>All 16 existing alerts are unresolved. None relate to runtime behavior — they are all staleness pings and grandfathered config warnings.</p>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Time</th><th>Severity</th><th>Experiment</th><th>Message</th><th>Resolved</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="mono">2026-04-16 11:18</td><td><span class="badge badge-warning">WARNING</span></td><td>EXP-503</td><td>Stale: last order 3 market days ago</td><td>❌</td></tr>
+      <tr><td class="mono">2026-04-16 11:18</td><td><span class="badge badge-warning">WARNING</span></td><td>EXP-1220</td><td>Stale: last order 3 market days ago</td><td>❌</td></tr>
+      <tr><td class="mono">2026-04-15 11:18</td><td><span class="badge badge-warning">WARNING</span></td><td>EXP-400</td><td>Stale: last order 4 market days ago</td><td>❌</td></tr>
+      <tr><td class="mono">2026-04-15 11:18</td><td><span class="badge badge-warning">WARNING</span></td><td>EXP-401</td><td>Stale: last order 4 market days ago</td><td>❌</td></tr>
+      <tr><td class="mono">2026-04-14 11:18</td><td><span class="badge badge-warning">WARNING</span></td><td>EXP-400</td><td>Stale: last order 3 market days ago</td><td>❌</td></tr>
+      <tr><td class="mono">2026-04-14 11:18</td><td><span class="badge badge-warning">WARNING</span></td><td>EXP-401</td><td>Stale: last order 3 market days ago</td><td>❌</td></tr>
+      <tr><td class="mono">2026-04-13 11:19</td><td><span class="badge badge-warning">WARNING</span></td><td>EXP-503</td><td>Stale: last order 3 market days ago</td><td>❌</td></tr>
+      <tr><td class="mono">2026-04-13 11:19</td><td><span class="badge badge-warning">WARNING</span></td><td>EXP-600</td><td>Stale: last order 3 market days ago</td><td>❌</td></tr>
+      <tr><td class="mono">2026-04-13 11:19</td><td><span class="badge badge-warning">WARNING</span></td><td>EXP-800</td><td>Stale: last order 7 market days ago</td><td>❌</td></tr>
+      <tr><td class="mono">2026-04-13 00:32</td><td><span class="badge badge-warning">WARNING</span></td><td>EXP-1220</td><td>GRANDFATHERED — no backtest config. Provide within 30 days.</td><td>❌</td></tr>
+      <tr><td class="mono">2026-04-13 00:32</td><td><span class="badge badge-warning">WARNING</span></td><td>EXP-401</td><td>GRANDFATHERED — no backtest config. Provide within 30 days.</td><td>❌</td></tr>
+      <tr><td class="mono">2026-04-13 00:32</td><td><span class="badge badge-warning">WARNING</span></td><td>EXP-600</td><td>GRANDFATHERED — no backtest config. Provide within 30 days.</td><td>❌</td></tr>
+      <tr><td class="mono">2026-04-13 00:32</td><td><span class="badge badge-warning">WARNING</span></td><td>EXP-800</td><td>GRANDFATHERED — no backtest config. Provide within 30 days.</td><td>❌</td></tr>
+    </tbody>
+  </table>
+</div>
+<p class="note">
+  The 4 GRANDFATHERED warnings were issued before the 2026-04-15 retroactive certification pass.
+  These can now be resolved — all 6 experiments were certified at 2026-04-15T17:44.
+</p>
+
+<h2>What Already Exists (Don't Rebuild)</h2>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Component</th><th>Location</th><th>Relevance to New Gates</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>shared/reconciler.py</code></td>
+        <td>~1,400 lines</td>
+        <td>Gate 7 wraps its output rather than duplicating its logic. Tier 2 reconcile already detects orphans — Gate 7 consumes <code>reconciliation_events</code>.</td>
+      </tr>
+      <tr>
+        <td><code>trade_deviations</code> table</td>
+        <td>Each experiment DB</td>
+        <td>Gate 6 extends this with 3 sizing columns rather than creating a new table.</td>
+      </tr>
+      <tr>
+        <td><code>experiment_snapshots</code> table</td>
+        <td><code>sentinel/db/sentinel.db</code></td>
+        <td>Gate 8 writes rolling win rate and P&amp;L snapshots here — table schema already supports it.</td>
+      </tr>
+      <tr>
+        <td><code>alert_dedup</code> table</td>
+        <td>Each experiment DB</td>
+        <td>Gates 7 and 9 use this for alert rate limiting.</td>
+      </tr>
+      <tr>
+        <td><code>scanner_state</code> table</td>
+        <td>Each experiment DB</td>
+        <td><code>last_orphan_check</code>, <code>peak_equity</code> already maintained here — Gates 7 and 8 read these directly.</td>
+      </tr>
+      <tr>
+        <td><code>sentinel/state.py:set_halt()</code></td>
+        <td><code>sentinel/state.py</code></td>
+        <td>Gates 7 and 8 call this on HALT-level breaches — same mechanism as config drift halt.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════════════════════ -->
+<div class="doc-footer">
+  <span>SENTINEL Runtime Monitoring — Gates 6–9 Proposal</span>
+  <span>Generated 2026-04-17 · pilotai-credit-spreads</span>
+</div>
+
+</div><!-- /page-wrap -->
+</body>
+</html>

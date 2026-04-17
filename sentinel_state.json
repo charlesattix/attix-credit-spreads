@@ -1,6 +1,7 @@
 {
     "_comment": "SENTINEL enforcement state. Read by every scanner at startup. Written by sentinel/state.py. Do not edit manually.",
-    "sentinel_version": "1.0",
+    "sentinel_version": "1.1",
+    "runtime_gates_enabled": true,
     "created_at": "2026-04-12",
     "last_updated": "2026-04-12",
     "experiments": {
