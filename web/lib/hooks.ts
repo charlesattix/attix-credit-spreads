@@ -248,6 +248,10 @@ export interface SentinelData {
   experiment_count: number
   experiments: Record<string, SentinelExperiment>
   config_integrity: Array<{
+    check: string
+    status: string
+    detail: string
+  } | {
     exp_id: string
     paper_config: string | null
     stored_fingerprint: string | null

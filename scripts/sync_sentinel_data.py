@@ -146,7 +146,7 @@ def _collect_trade_metrics(db_path: Path, window: int = 30) -> dict:
 
         pnls = [float(r["pnl"]) for r in rows]
         wins = [p for p in pnls if p > 0]
-        losses = [p for p in pnls if p <= 0]
+        losses = [p for p in pnls if p < 0]
 
         # Total PnL (all trades, not just window)
         total_pnl_row = conn.execute(

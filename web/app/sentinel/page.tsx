@@ -26,7 +26,7 @@ function formatMinutes(mins: number): string {
   return `${(hrs / 24).toFixed(1)}d`
 }
 
-type Severity = 'pass' | 'ok' | 'warning' | 'critical' | 'halt' | 'watch' | 'error' | 'not_enrolled' | 'drift' | 'resolved' | 'info'
+type Severity = 'pass' | 'ok' | 'warning' | 'critical' | 'halt' | 'watch' | 'error' | 'not_enrolled' | 'drift' | 'resolved' | 'info' | 'fail'
 
 function SeverityPill({ severity, label }: { severity: Severity; label?: string }) {
   const styles: Record<string, string> = {
@@ -235,7 +235,8 @@ export default function SentinelPage() {
             </thead>
             <tbody>
               {configIntegrity.map((ci, i) => {
-                const check = ci.check || ci.exp_id || `Check ${i + 1}`
+                const check = ('check' in ci ? ci.check : null) || ('exp_id' in ci ? ci.exp_id : null) || `Check ${i + 1}`
+                const detail = 'detail' in ci ? ci.detail : ('paper_config' in ci ? ci.paper_config : null)
                 const status = ci.status as Severity
                 return (
                   <tr key={i} className="border-b border-gray-100 hover:bg-gray-50">
@@ -243,7 +244,7 @@ export default function SentinelPage() {
                     <td className="py-2 px-2">
                       <SeverityPill severity={status === 'fail' ? 'critical' : status} label={status === 'pass' ? 'PASS' : status === 'fail' ? 'FAIL' : status.toUpperCase()} />
                     </td>
-                    <td className="py-2 px-2 text-gray-500 text-xs">{ci.detail || '\u2014'}</td>
+                    <td className="py-2 px-2 text-gray-500 text-xs">{detail || '\u2014'}</td>
                   </tr>
                 )
               })}
