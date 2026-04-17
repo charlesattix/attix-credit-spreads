@@ -228,28 +228,25 @@ export default function SentinelPage() {
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="border-b-2 border-gray-200">
-                <th className="text-left py-2 px-2 text-[11px] font-bold uppercase tracking-wider text-gray-400">Experiment</th>
+                <th className="text-left py-2 px-2 text-[11px] font-bold uppercase tracking-wider text-gray-400">Check</th>
                 <th className="text-left py-2 px-2 text-[11px] font-bold uppercase tracking-wider text-gray-400">Status</th>
                 <th className="text-left py-2 px-2 text-[11px] font-bold uppercase tracking-wider text-gray-400">Detail</th>
               </tr>
             </thead>
             <tbody>
-              {configIntegrity.map(ci => (
-                <tr key={ci.exp_id} className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="py-2 px-2 font-bold text-gray-900">{ci.exp_id}</td>
-                  <td className="py-2 px-2">
-                    <SeverityPill severity={ci.status as Severity} label={ci.status === 'pass' ? 'PASS' : ci.status.toUpperCase()} />
-                  </td>
-                  <td className="py-2 px-2 text-gray-500 text-xs">
-                    {ci.stored_fingerprint ? (
-                      <code className="bg-gray-100 px-1 py-0.5 rounded text-[11px]">{ci.stored_fingerprint}</code>
-                    ) : 'No fingerprint stored'}
-                    {ci.paper_config && (
-                      <span className="ml-2 text-gray-400">{ci.paper_config}</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
+              {configIntegrity.map((ci, i) => {
+                const check = ci.check || ci.exp_id || `Check ${i + 1}`
+                const status = ci.status as Severity
+                return (
+                  <tr key={i} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="py-2 px-2 font-medium text-gray-900">{check}</td>
+                    <td className="py-2 px-2">
+                      <SeverityPill severity={status === 'fail' ? 'critical' : status} label={status === 'pass' ? 'PASS' : status === 'fail' ? 'FAIL' : status.toUpperCase()} />
+                    </td>
+                    <td className="py-2 px-2 text-gray-500 text-xs">{ci.detail || '\u2014'}</td>
+                  </tr>
+                )
+              })}
               {configIntegrity.length === 0 && (
                 <tr><td colSpan={3} className="py-4 text-center text-gray-400">No config data available</td></tr>
               )}
@@ -275,7 +272,7 @@ export default function SentinelPage() {
           if (sizingRows.length === 0) {
             return (
               <div className="text-center py-6 text-gray-400 text-sm">
-                All experiments within sizing tolerance. No deviations detected.
+                Gate 6 data collection not yet implemented. Sizing deviations will appear here once <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">sync_sentinel_data.py</code> includes Gate 6 results.
               </div>
             )
           }
@@ -531,7 +528,13 @@ export default function SentinelPage() {
               </thead>
               <tbody>
                 {alerts.slice(0, 20).map((a, i) => {
-                  const time = a.time ? new Date(a.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : '??:??'
+                  const alertDate = a.time ? new Date(a.time) : null
+                  const isOld = alertDate ? (Date.now() - alertDate.getTime()) > 86_400_000 : false
+                  const time = alertDate
+                    ? isOld
+                      ? alertDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + alertDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
+                      : alertDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
+                    : '??:??'
                   const sev = a.resolved ? 'resolved' : (a.severity as Severity)
                   return (
                     <tr key={i} className="border-b border-gray-100 hover:bg-gray-50">

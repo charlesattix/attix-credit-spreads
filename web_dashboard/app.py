@@ -452,14 +452,20 @@ async def push_sentinel(request: Request, _key: str = Depends(require_api_key_on
     Stores as data/sentinel_dashboard.json.
     """
     import json as _json
-    body = await request.json()
+
+    # Guard against oversized payloads (OOM protection for Railway container)
+    raw = await request.body()
+    if len(raw) > 10_000_000:  # 10 MB
+        raise HTTPException(status_code=413, detail="Payload too large (>10MB)")
+    body = _json.loads(raw)
     if not isinstance(body, dict):
         raise HTTPException(status_code=400, detail="Expected JSON object")
 
     body["pushed_at"] = datetime.now(timezone.utc).isoformat()
     SENTINEL_DATA_PATH.parent.mkdir(parents=True, exist_ok=True)
-    SENTINEL_DATA_PATH.write_text(_json.dumps(body, indent=2))
-    logger.info(f"Received Sentinel data: {len(_json.dumps(body))} bytes")
+    serialized = _json.dumps(body, indent=2)
+    SENTINEL_DATA_PATH.write_text(serialized)
+    logger.info(f"Received Sentinel data: {len(raw)} bytes")
     return {"status": "ok", "message": "Sentinel data received", "pushed_at": body["pushed_at"]}
 
 

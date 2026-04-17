@@ -273,7 +273,7 @@ def _collect_gate7_orphans(db_path: Path) -> dict:
         orphan_count = 0
         try:
             row = conn.execute(
-                "SELECT value FROM scanner_state WHERE key LIKE 'sentinel_orphan_counts%'"
+                "SELECT value FROM scanner_state WHERE key = 'sentinel_orphan_counts'"
             ).fetchone()
             if row:
                 orphan_count = int(row["value"])
@@ -329,6 +329,112 @@ def _collect_alerts_from_sentinel_db() -> List[dict]:
         conn.close()
 
 
+def _collect_config_integrity(
+    experiments: Dict[str, Any],
+    experiments_state: dict,
+    registry: dict,
+) -> List[dict]:
+    """Collect Gates 1-5 config integrity checks."""
+    checks: List[dict] = []
+
+    # Gate 1: Config Schema — verify each experiment's YAML is loadable
+    schema_ok = True
+    schema_detail_parts: List[str] = []
+    for exp_id in sorted(experiments):
+        exp_s = experiments_state.get(exp_id, {})
+        paper_config = exp_s.get("paper_config")
+        if paper_config:
+            cfg_path = PROJECT_ROOT / paper_config
+            if cfg_path.exists():
+                try:
+                    import yaml
+                    with open(cfg_path) as f:
+                        yaml.safe_load(f)
+                except Exception:
+                    schema_ok = False
+                    schema_detail_parts.append(f"{exp_id}: invalid YAML")
+            else:
+                schema_ok = False
+                schema_detail_parts.append(f"{exp_id}: file missing")
+    checks.append({
+        "check": "Config Schema",
+        "status": "pass" if schema_ok else "fail",
+        "detail": f"All {len(experiments)} experiment YAMLs valid" if schema_ok else "; ".join(schema_detail_parts),
+    })
+
+    # Gate 2: Registry Integrity — verify registry matches sentinel_state
+    reg_exps = set(registry.get("experiments", {}).keys())
+    state_exps = set(experiments_state.keys())
+    active_reg = {k for k, v in registry.get("experiments", {}).items() if v.get("status") == "paper_trading"}
+    missing_from_state = active_reg - state_exps
+    registry_ok = len(missing_from_state) == 0
+    checks.append({
+        "check": "Registry Integrity",
+        "status": "pass" if registry_ok else "warning",
+        "detail": "Registry matches sentinel_state" if registry_ok else f"Missing from state: {', '.join(sorted(missing_from_state))}",
+    })
+
+    # Gate 3: Config Drift — fingerprint comparison
+    drift_ok = True
+    drift_details: List[str] = []
+    for exp_id in sorted(experiments):
+        exp_s = experiments_state.get(exp_id, {})
+        stored_fp = exp_s.get("config_fingerprint")
+        paper_config = exp_s.get("paper_config")
+        if stored_fp and paper_config:
+            try:
+                from sentinel.state import compute_fingerprint
+                current_fp = compute_fingerprint(paper_config)
+                if current_fp != stored_fp:
+                    drift_ok = False
+                    drift_details.append(exp_id)
+                    experiments[exp_id]["fingerprint_ok"] = False
+            except Exception:
+                drift_details.append(f"{exp_id} (error)")
+        elif not stored_fp:
+            pass  # Not enrolled, handled elsewhere
+    checks.append({
+        "check": "Config Drift",
+        "status": "pass" if drift_ok else "fail",
+        "detail": "No changes since certification" if drift_ok else f"Drift: {', '.join(drift_details)}",
+    })
+
+    # Gate 4: DB Schema — verify each experiment DB has expected tables
+    db_ok = True
+    db_count = 0
+    expected_tables = {"trades", "scanner_state"}
+    for exp_id in sorted(experiments):
+        db_path = _resolve_db_path(exp_id, {"experiments": experiments_state}, registry)
+        if db_path:
+            try:
+                import sqlite3
+                conn = sqlite3.connect(str(db_path))
+                tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
+                conn.close()
+                if expected_tables.issubset(tables):
+                    db_count += 1
+                else:
+                    db_ok = False
+            except Exception:
+                db_ok = False
+    checks.append({
+        "check": "DB Schema",
+        "status": "pass" if db_ok else "warning",
+        "detail": f"{db_count} databases verified" if db_ok else f"{db_count}/{len(experiments)} DBs valid",
+    })
+
+    # Gate 5: Certification — check sentinel_state for certified_at
+    certified = sum(1 for e in experiments_state.values() if e.get("sentinel_certified_at"))
+    total = len(experiments)
+    checks.append({
+        "check": "Certification",
+        "status": "pass" if certified >= total else "warning",
+        "detail": f"{certified}/{total} experiments certified" if certified < total else f"{total}/{total} experiments certified",
+    })
+
+    return checks
+
+
 def collect_sentinel_data() -> dict:
     """Collect all Sentinel data into a single JSON payload."""
     state = _load_sentinel_state()
@@ -374,8 +480,10 @@ def collect_sentinel_data() -> dict:
                 live_wr = metrics.get("win_rate", 0)
                 wr_delta = bl_wr - live_wr if live_wr is not None else 0
 
-                bl_al = baseline.get("avg_loss", 0)
-                live_al = metrics.get("avg_loss", 0)
+                # Both avg_loss values are positive (abs of losses). Guard with abs()
+                # to ensure consistent sign convention regardless of source.
+                bl_al = abs(baseline.get("avg_loss", 0))
+                live_al = abs(metrics.get("avg_loss", 0))
                 al_ratio = (live_al / bl_al) if bl_al and live_al else 0
 
                 drift_alerts = []
@@ -421,30 +529,8 @@ def collect_sentinel_data() -> dict:
 
         experiments[exp_id] = exp_data
 
-    # Config integrity (Gates 1-5): check fingerprints
-    config_integrity = []
-    for exp_id, exp_data in experiments.items():
-        exp_s = experiments_state.get(exp_id, {})
-        stored_fp = exp_s.get("config_fingerprint")
-        paper_config = exp_s.get("paper_config")
-        check = {
-            "exp_id": exp_id,
-            "paper_config": paper_config,
-            "stored_fingerprint": stored_fp[:16] + "..." if stored_fp else None,
-            "status": "pass",
-        }
-        if stored_fp and paper_config:
-            try:
-                from sentinel.state import compute_fingerprint
-                current_fp = compute_fingerprint(paper_config)
-                if current_fp != stored_fp:
-                    check["status"] = "drift"
-                    experiments[exp_id]["fingerprint_ok"] = False
-            except Exception:
-                check["status"] = "error"
-        elif not stored_fp:
-            check["status"] = "not_enrolled"
-        config_integrity.append(check)
+    # Config integrity (Gates 1-5): per-gate checks
+    config_integrity = _collect_config_integrity(experiments, experiments_state, registry)
 
     # Alerts from sentinel.db
     alerts = _collect_alerts_from_sentinel_db()
