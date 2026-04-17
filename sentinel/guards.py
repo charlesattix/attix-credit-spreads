@@ -19,7 +19,6 @@ silently (graceful degradation — scanners work before SENTINEL is onboarded).
 """
 from __future__ import annotations
 
-import hashlib
 import json
 import logging
 import os
@@ -27,6 +26,11 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
+
+from sentinel.state import (
+    compute_fingerprint as _state_compute_fingerprint,
+    set_halt as _state_set_halt,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -103,7 +107,10 @@ def pre_scan_check(experiment_id: str, config_path: Optional[str] = None) -> Non
         # Resolve config path: explicit arg > state file > skip
         cfg_path = config_path or exp_state.get("paper_config")
         if cfg_path:
-            current_fp = _compute_fingerprint(cfg_path)
+            try:
+                current_fp = _state_compute_fingerprint(cfg_path)
+            except Exception:
+                current_fp = None
             if current_fp and current_fp != stored_fp:
                 msg = (
                     f"🛡️ SENTINEL — SCANNER BLOCKED\n"
@@ -119,11 +126,13 @@ def pre_scan_check(experiment_id: str, config_path: Optional[str] = None) -> Non
                     "stored=%s current=%s. Aborting scan.",
                     experiment_id, stored_fp[:24], current_fp[:24],
                 )
-                _update_state(
-                    experiment_id,
-                    status="halted",
-                    halt_reason=f"config drift detected (scan startup fingerprint check)",
-                )
+                try:
+                    _state_set_halt(
+                        experiment_id,
+                        "config drift detected (scan startup fingerprint check)",
+                    )
+                except Exception as exc:
+                    logger.error("SENTINEL: failed to persist halt for %s: %s", experiment_id, exc)
                 _send_alert(msg)
                 sys.exit(1)
             elif not current_fp:
@@ -164,65 +173,7 @@ def _load_state() -> dict:
     return {}
 
 
-def _update_state(experiment_id: str, *, status: str, **kwargs) -> None:
-    """Persist a status change to sentinel_state.json (e.g. halt on drift)."""
-    try:
-        state = _load_state()
-        experiments = state.setdefault("experiments", {})
-        entry = experiments.setdefault(experiment_id, {})
-        entry["status"] = status
-        entry.update(kwargs)
-        if status == "halted":
-            entry.setdefault("halted_at", datetime.now(timezone.utc).isoformat())
-            entry.setdefault("halted_by", "sentinel_guard")
-        with open(_STATE_PATH, "w", encoding="utf-8") as fh:
-            json.dump(state, fh, indent=2)
-            fh.write("\n")
-    except Exception as exc:
-        logger.error("SENTINEL: could not write %s: %s", _STATE_PATH, exc)
-
-
-# ---------------------------------------------------------------------------
-# Config fingerprinting
-# ---------------------------------------------------------------------------
-
-
-def _compute_fingerprint(config_path: str) -> str:
-    """
-    Compute a deterministic SHA-256 fingerprint of a config file.
-
-    The file is parsed as YAML (or JSON), re-serialised with sorted keys, then
-    hashed.  This makes the fingerprint insensitive to whitespace/comment
-    changes while catching any parameter-value change.
-
-    Returns 64-char hex digest or "" on error.
-    """
-    try:
-        path = Path(config_path)
-        if not path.is_absolute():
-            path = _PROJECT_ROOT / path
-        if not path.exists():
-            logger.warning("SENTINEL: config not found at %s", path)
-            return ""
-
-        raw = path.read_text(encoding="utf-8")
-
-        # Try YAML first (covers .yaml/.yml); fall back to JSON
-        data: object
-        try:
-            import yaml  # PyYAML — always present in this project
-            data = yaml.safe_load(raw)
-        except Exception:
-            data = json.loads(raw)
-
-        canonical = json.dumps(data, sort_keys=True, separators=(",", ":"),
-                               default=str)
-        return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
-    except Exception as exc:
-        logger.warning(
-            "SENTINEL: fingerprint computation failed for %s: %s", config_path, exc,
-        )
-        return ""
+    # _update_state and _compute_fingerprint are consolidated into sentinel.state
 
 
 # ---------------------------------------------------------------------------

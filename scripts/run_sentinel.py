@@ -53,10 +53,21 @@ logger = logging.getLogger(__name__)
 # ─────────────────────────────────────────────────────────────────────────────
 
 try:
-    from sentinel.history import SentinelDB, compute_fingerprint
+    from sentinel.history import SentinelDB, compute_fingerprint as history_fingerprint
 except ImportError as e:
     print(f"FATAL: sentinel.history not found: {e}")
     sys.exit(1)
+
+# Canonical state I/O — single source of truth for sentinel_state.json
+from sentinel.state import (
+    load_state as _load_state,
+    save_state as _save_state,
+    compute_fingerprint as state_fingerprint,
+)
+
+# For backwards compat, use the history fingerprint for audit trail and
+# state fingerprint for sentinel_state.json enforcement
+compute_fingerprint = history_fingerprint
 
 try:
     from sentinel.report import (
@@ -116,26 +127,9 @@ except ImportError:
 # ─────────────────────────────────────────────────────────────────────────────
 # sentinel_state.json helpers
 # ─────────────────────────────────────────────────────────────────────────────
-
-_STATE_PATH = _PROJECT_ROOT / "sentinel_state.json"
-
-
-def _load_state() -> Dict[str, Any]:
-    """Load sentinel_state.json; return empty dict if not found."""
-    if _STATE_PATH.exists():
-        try:
-            return json.loads(_STATE_PATH.read_text())
-        except Exception:
-            pass
-    return {}
-
-
-def _save_state(state: Dict[str, Any]) -> None:
-    """Write sentinel_state.json atomically."""
-    tmp = _STATE_PATH.with_suffix(".json.tmp")
-    tmp.write_text(json.dumps(state, indent=2, default=str))
-    tmp.replace(_STATE_PATH)
-    logger.info("sentinel_state.json updated")
+# _load_state and _save_state are imported from sentinel.state above.
+# _set_experiment_state writes to the nested "experiments" dict — matching
+# the schema that guards.py reads from.
 
 
 def _set_experiment_state(
@@ -144,14 +138,22 @@ def _set_experiment_state(
     fingerprint: Optional[str] = None,
     **extra,
 ) -> None:
-    """Update a single experiment's entry in sentinel_state.json."""
-    state = _load_state()
-    entry: Dict[str, Any] = state.get(exp_id, {})
+    """Update a single experiment's entry in sentinel_state.json.
+
+    Writes to state["experiments"][exp_id] (nested schema), matching the
+    format that guards.py and sentinel/state.py expect.
+    """
+    try:
+        state = _load_state()
+    except FileNotFoundError:
+        state = {"experiments": {}}
+    experiments = state.setdefault("experiments", {})
+    entry: Dict[str, Any] = experiments.get(exp_id, {})
     entry["status"] = status
     if fingerprint:
-        entry["fingerprint"] = fingerprint
+        entry["config_fingerprint"] = fingerprint
     entry.update(extra)
-    state[exp_id] = entry
+    experiments[exp_id] = entry
     _save_state(state)
 
 
@@ -372,7 +374,7 @@ def cmd_audit(args: argparse.Namespace) -> int:
         current_fp = compute_fingerprint(cfg)
 
         # Compare against sentinel_state.json
-        stored_fp = state.get(exp_id, {}).get("fingerprint")
+        stored_fp = state.get("experiments", {}).get(exp_id, {}).get("config_fingerprint")
 
         if not stored_fp:
             print(f"   ⚠️  {exp_id}: no stored fingerprint (not onboarded)")
@@ -521,9 +523,12 @@ def cmd_resume(args: argparse.Namespace) -> int:
         return 1
 
     db = SentinelDB()
-    state = _load_state()
+    try:
+        state = _load_state()
+    except FileNotFoundError:
+        state = {"experiments": {}}
 
-    current = state.get(exp_id, {})
+    current = state.get("experiments", {}).get(exp_id, {})
     current_status = current.get("status", "unknown")
 
     if current_status == "active":
@@ -984,7 +989,10 @@ def cmd_retroactive(args: argparse.Namespace) -> int:
     """
     registry = _load_registry()
     db = SentinelDB()
-    state = _load_state()
+    try:
+        state = _load_state()
+    except FileNotFoundError:
+        state = {"experiments": {}}
 
     active = {
         k: v
@@ -1060,7 +1068,8 @@ def cmd_retroactive(args: argparse.Namespace) -> int:
             )
 
         # Arm in sentinel_state.json
-        existing_state_entry = state.get(exp_id, {})
+        experiments = state.setdefault("experiments", {})
+        existing_state_entry = experiments.get(exp_id, {})
         ticker = exp.get("ticker", "?")
         if isinstance(cfg.get("tickers"), list) and cfg["tickers"]:
             ticker = cfg["tickers"][0]
@@ -1069,7 +1078,7 @@ def cmd_retroactive(args: argparse.Namespace) -> int:
 
         entry: Dict[str, Any] = {
             "status": existing_state_entry.get("status", "active"),
-            "fingerprint": fingerprint,
+            "config_fingerprint": fingerprint,
             "grandfathered": True,
             "grandfathered_since": today_str,
             "account_id": exp.get("account_id", "?"),
@@ -1081,7 +1090,7 @@ def cmd_retroactive(args: argparse.Namespace) -> int:
             entry["status"] = "halted"
             entry["halt_reason"] = existing_state_entry.get("halt_reason", "pre-existing halt")
 
-        state[exp_id] = entry
+        experiments[exp_id] = entry
 
         status_emoji = "✅" if has_backtest else "⚠️ "
         print(f"   {status_emoji} {cert_status}")

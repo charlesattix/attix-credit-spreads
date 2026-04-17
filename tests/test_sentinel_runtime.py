@@ -1140,3 +1140,282 @@ class TestEdgeCases:
         )
         assert a.low_confidence is False
         assert a.exp_id == "EXP-400"
+
+
+# ===========================================================================
+# T1-T9: Additional test coverage for code review findings
+# ===========================================================================
+
+
+class TestGhostDBMutation:
+    """T1: Verify ghost detection mutates DB (status → needs_investigation + reconciliation_events)."""
+
+    def test_ghost_marks_needs_investigation(self, tmp_db):
+        from sentinel.runtime import check_orphan_positions
+
+        db_path, conn = tmp_db
+        spy_occ = _occ("SPY")
+        conn.execute(
+            "INSERT INTO trades (id, ticker, status) VALUES ('t1', 'SPY', 'open')"
+        )
+        conn.execute(
+            "INSERT INTO trade_legs (trade_id, leg_type, occ_symbol) "
+            "VALUES ('t1', 'short', ?)", (spy_occ,)
+        )
+        conn.commit()
+
+        # Alpaca has nothing → t1 is a ghost
+        check_orphan_positions("EXP-400", [], db_path=db_path)
+
+        # Verify status changed
+        row = conn.execute("SELECT status FROM trades WHERE id = 't1'").fetchone()
+        assert row["status"] == "needs_investigation"
+
+        # Verify reconciliation event created
+        event = conn.execute(
+            "SELECT event_type FROM reconciliation_events WHERE trade_id = 't1'"
+        ).fetchone()
+        assert event is not None
+        assert event["event_type"] == "ghost_detected"
+
+
+class TestOrphanPlaceholderCreation:
+    """T2: Verify orphan creates placeholder trade with status=unmanaged."""
+
+    def test_orphan_creates_placeholder(self, tmp_db):
+        from sentinel.runtime import check_orphan_positions
+
+        db_path, conn = tmp_db
+        spy_occ = _occ("SPY")
+
+        # Alpaca has position, DB doesn't
+        check_orphan_positions(
+            "EXP-400", [{"symbol": spy_occ}], db_path=db_path
+        )
+
+        row = conn.execute(
+            "SELECT * FROM trades WHERE id = ?", (f"orphan_{spy_occ}",)
+        ).fetchone()
+        assert row is not None
+        assert row["status"] == "unmanaged"
+        assert row["source"] == "sentinel"
+
+    def test_orphan_idempotent(self, tmp_db):
+        """INSERT OR IGNORE should not fail on second run."""
+        from sentinel.runtime import check_orphan_positions
+
+        db_path, conn = tmp_db
+        spy_occ = _occ("SPY")
+
+        check_orphan_positions("EXP-400", [{"symbol": spy_occ}], db_path=db_path)
+        # Run again — should not raise
+        check_orphan_positions("EXP-400", [{"symbol": spy_occ}], db_path=db_path)
+
+        count = conn.execute(
+            "SELECT COUNT(*) FROM trades WHERE id = ?", (f"orphan_{spy_occ}",)
+        ).fetchone()[0]
+        assert count == 1
+
+
+class TestOrphanGateWrapper:
+    """T3: Test orphan_gate() convenience wrapper."""
+
+    def test_orphan_gate_no_creds_skips(self):
+        from sentinel.runtime import orphan_gate
+
+        with patch.dict(os.environ, {}, clear=True):
+            # Remove any Alpaca keys
+            for k in ("ALPACA_API_KEY", "APCA_API_KEY_ID", "ALPACA_API_SECRET", "APCA_API_SECRET_KEY"):
+                os.environ.pop(k, None)
+            orphan_gate("EXP-400")  # Should silently return
+
+    def test_orphan_gate_halt_on_mass_orphans(self, tmp_db):
+        from sentinel.runtime import orphan_gate, _ORPHAN_SIMULTANEOUS_HALT
+
+        db_path, _ = tmp_db
+        # Mock Alpaca to return many positions not in DB
+        positions = [MagicMock(symbol=_occ("SPY", strike=f"005{i:02d}000")) for i in range(_ORPHAN_SIMULTANEOUS_HALT + 1)]
+
+        with patch.dict(os.environ, {"ALPACA_API_KEY": "key", "ALPACA_API_SECRET": "secret"}), \
+             patch("alpaca.trading.client.TradingClient") as mock_client_cls, \
+             patch("sentinel.state.set_halt") as mock_halt:
+            mock_client = MagicMock()
+            mock_client.get_all_positions.return_value = positions
+            mock_client_cls.return_value = mock_client
+
+            with pytest.raises(SystemExit):
+                orphan_gate("EXP-400", db_path=db_path)
+
+
+class TestComputeMetrics:
+    """T5: Test compute_metrics with real DB data."""
+
+    def test_compute_metrics_returns_correct_stats(self, tmp_db):
+        from sentinel.runtime import compute_metrics
+
+        db_path, conn = tmp_db
+        # Insert 10 closed trades: 7 wins, 3 losses
+        for i in range(7):
+            conn.execute(
+                "INSERT INTO trades (id, ticker, status, pnl, exit_date) "
+                "VALUES (?, 'SPY', 'closed', ?, ?)",
+                (f"win_{i}", 100.0, f"2026-01-{10+i:02d}"),
+            )
+        for i in range(3):
+            conn.execute(
+                "INSERT INTO trades (id, ticker, status, pnl, exit_date) "
+                "VALUES (?, 'SPY', 'closed', ?, ?)",
+                (f"loss_{i}", -200.0, f"2026-01-{20+i:02d}"),
+            )
+        conn.commit()
+
+        with patch("sentinel.runtime._resolve_db_path", return_value=Path(db_path)), \
+             patch("sentinel.runtime._get_paper_config_path", return_value=None):
+            metrics = compute_metrics("EXP-400", window=30)
+
+        assert metrics is not None
+        assert metrics.window_size == 10
+        assert metrics.wins == 7
+        assert metrics.losses == 3
+        assert metrics.win_rate == 70.0
+        assert metrics.avg_loss == 200.0
+
+
+class TestPostScanCheckHalt:
+    """T6: Test post_scan_check halt flow for Gates 8 and 9."""
+
+    def test_gate8_halt_persists(self, tmp_db, base_config):
+        from sentinel.runtime import post_scan_check, DriftAlert
+
+        db_path, _ = tmp_db
+        halt_alert = DriftAlert(
+            exp_id="EXP-400", metric="win_rate", severity="halt",
+            message="Win rate catastrophic", live_value=50.0, baseline_value=78.0,
+        )
+
+        with patch("sentinel.runtime._resolve_db_path") as mock_resolve, \
+             patch("sentinel.runtime._get_baseline", return_value=None), \
+             patch("sentinel.runtime.check_runtime_drift", return_value=[halt_alert]), \
+             patch("sentinel.state.set_halt") as mock_halt:
+            mock_resolve.return_value = Path(db_path)
+            result = post_scan_check("EXP-400", db_path, base_config)
+
+        assert result["halted"] is True
+        mock_halt.assert_called_once()
+
+    def test_gate9_halt_persists(self, tmp_db, base_config):
+        from sentinel.runtime import post_scan_check, LifecycleResult, StuckPosition
+
+        db_path, _ = tmp_db
+        lc = LifecycleResult(exp_id="EXP-400", stuck=[
+            StuckPosition(
+                trade_id="t1", exp_id="EXP-400", status="pending_close",
+                ticker="SPY", short_strike=520.0, expiration="2026-04-18",
+                minutes_in_state=300.0, severity="critical",
+                message="pending_close for 5h",
+            )
+        ])
+
+        with patch("sentinel.runtime._resolve_db_path") as mock_resolve, \
+             patch("sentinel.runtime._get_baseline", return_value=None), \
+             patch("sentinel.runtime.check_runtime_drift", return_value=[]), \
+             patch("sentinel.runtime.check_position_lifecycle", return_value=lc), \
+             patch("sentinel.state.set_halt") as mock_halt:
+            mock_resolve.return_value = Path(db_path)
+            result = post_scan_check("EXP-400", db_path, base_config)
+
+        assert result["halted"] is True
+        mock_halt.assert_called_once()
+
+
+class TestDrawdownCriticalTier:
+    """T7: Test drawdown drift detection at critical/halt thresholds."""
+
+    def test_drawdown_critical(self):
+        from sentinel.runtime import detect_drift, RuntimeMetrics
+
+        metrics = RuntimeMetrics(
+            exp_id="EXP-400", window_size=30, total_closed=30,
+            win_rate=78.0, avg_loss=2100.0, peak_drawdown_pct=42.0,
+        )
+        baseline = {"win_rate": 78.0, "avg_loss": 2100.0, "mc_worst_dd_pct": 41.5}
+        alerts = detect_drift(metrics, baseline)
+        dd_alerts = [a for a in alerts if a.metric == "drawdown"]
+        assert len(dd_alerts) >= 1
+        assert dd_alerts[0].severity in ("critical", "halt")
+
+    def test_drawdown_halt(self):
+        from sentinel.runtime import detect_drift, RuntimeMetrics
+
+        metrics = RuntimeMetrics(
+            exp_id="EXP-400", window_size=30, total_closed=30,
+            win_rate=78.0, avg_loss=2100.0, peak_drawdown_pct=46.0,
+        )
+        baseline = {"win_rate": 78.0, "avg_loss": 2100.0, "mc_worst_dd_pct": 41.5}
+        alerts = detect_drift(metrics, baseline)
+        dd_alerts = [a for a in alerts if a.metric == "drawdown"]
+        assert len(dd_alerts) >= 1
+        assert dd_alerts[0].severity == "halt"
+
+
+class TestMultiLegOCC:
+    """T8: Test multi-leg OCC symbol extraction (ticker > 6 chars)."""
+
+    def test_ticker_from_occ_standard(self):
+        from sentinel.runtime import _ticker_from_occ
+        assert _ticker_from_occ("SPY   260418P00520000") == "SPY"
+
+    def test_ticker_from_occ_long(self):
+        from sentinel.runtime import _ticker_from_occ
+        assert _ticker_from_occ("GOOGL 260418C01500000") == "GOOGL"
+
+    def test_ticker_from_occ_short_symbol(self):
+        from sentinel.runtime import _ticker_from_occ
+        assert _ticker_from_occ("XY") == "XY"
+
+
+class TestFormatDriftReportNone:
+    """M1: format_drift_report handles None avg_loss and peak_drawdown_pct."""
+
+    def test_format_with_none_metrics(self):
+        from sentinel.runtime import format_drift_report, RuntimeMetrics
+        m = RuntimeMetrics(exp_id="EXP-400", window_size=10, win_rate=70.0,
+                          avg_loss=None, peak_drawdown_pct=None)
+        text = format_drift_report({"EXP-400": []}, {"EXP-400": m})
+        assert "N/A" in text
+        assert "EXP-400" in text
+
+
+class TestCheckAllPositionLifecycles:
+    """T9: Test check_all_position_lifecycles and check_all_runtime_drift."""
+
+    def test_check_all_lifecycles_empty(self):
+        from sentinel.runtime import check_all_position_lifecycles
+
+        with patch("sentinel.state.load_state", return_value={"experiments": {}}):
+            results = check_all_position_lifecycles()
+        assert results == {}
+
+    def test_check_all_lifecycles_with_halt(self, tmp_db):
+        from sentinel.runtime import check_all_position_lifecycles
+
+        db_path, conn = tmp_db
+        now = datetime.now(timezone.utc)
+        old_time = (now - timedelta(hours=5)).isoformat()
+        conn.execute(
+            "INSERT INTO trades (id, ticker, status, created_at, updated_at) "
+            "VALUES ('t1', 'SPY', 'pending_close', ?, ?)",
+            (old_time, old_time),
+        )
+        conn.commit()
+
+        with patch("sentinel.state.load_state", return_value={
+                "experiments": {"EXP-400": {"status": "active", "paper_config": "configs/test.yaml"}}
+             }), \
+             patch("sentinel.runtime._resolve_db_path", return_value=Path(db_path)), \
+             patch("sentinel.state.set_halt") as mock_halt:
+            results = check_all_position_lifecycles(halt_on_critical=True)
+
+        assert "EXP-400" in results
+        assert results["EXP-400"].has_critical
+        mock_halt.assert_called_once()

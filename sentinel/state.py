@@ -40,7 +40,7 @@ _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 STATE_PATH = _PROJECT_ROOT / "sentinel_state.json"
 
 # Valid experiment statuses in sentinel_state.json
-VALID_SENTINEL_STATUSES = {"active", "halted", "retired"}
+VALID_SENTINEL_STATUSES = {"active", "halted", "paused", "retired"}
 
 
 # ---------------------------------------------------------------------------

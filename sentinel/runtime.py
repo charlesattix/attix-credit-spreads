@@ -280,8 +280,9 @@ def compute_metrics(exp_id: str, window: int = WINDOW_SIZE) -> Optional[RuntimeM
             total_pnl = float(total_pnl_row["total"]) if total_pnl_row and total_pnl_row["total"] else 0.0
 
             # Read account_size from config
-            cfg_path = _PROJECT_ROOT / _get_paper_config_path(exp_id)
-            if cfg_path.exists():
+            _cfg_rel = _get_paper_config_path(exp_id)
+            cfg_path = _PROJECT_ROOT / _cfg_rel if _cfg_rel else None
+            if cfg_path and cfg_path.exists():
                 with open(cfg_path) as f:
                     cfg = yaml.safe_load(f)
                 account_size = float(cfg.get("risk", {}).get("account_size", 100000))
@@ -308,14 +309,14 @@ def compute_metrics(exp_id: str, window: int = WINDOW_SIZE) -> Optional[RuntimeM
         conn.close()
 
 
-def _get_paper_config_path(exp_id: str) -> str:
-    """Get paper_config relative path from sentinel_state.json."""
+def _get_paper_config_path(exp_id: str) -> Optional[str]:
+    """Get paper_config relative path from sentinel_state.json. Returns None if not found."""
     try:
         from sentinel.state import load_state
         state = load_state()
-        return state.get("experiments", {}).get(exp_id, {}).get("paper_config", "")
+        return state.get("experiments", {}).get(exp_id, {}).get("paper_config")
     except Exception:
-        return ""
+        return None
 
 
 # ---------------------------------------------------------------------------
@@ -605,9 +606,11 @@ def format_drift_report(
         if not alerts:
             # Clean — show summary metrics if available
             if m and m.win_rate is not None:
+                avg_loss_str = f"${m.avg_loss:,.0f}" if m.avg_loss is not None else "N/A"
+                dd_str = f"{m.peak_drawdown_pct:.1f}%" if m.peak_drawdown_pct is not None else "N/A"
                 lines.append(
                     f"  ✅ {exp_id}: WR={m.win_rate:.0f}% "
-                    f"avgL=${m.avg_loss:,.0f} DD={m.peak_drawdown_pct:.1f}% "
+                    f"avgL={avg_loss_str} DD={dd_str} "
                     f"({m.window_size}t)"
                 )
             else:
@@ -1155,13 +1158,14 @@ def check_orphan_positions(
         except Exception:
             pass  # trade_legs table may not exist
 
-        if not db_symbols:
-            # Fallback: parse metadata JSON for leg symbols
-            rows = conn.execute(
+        # Always merge metadata symbols (covers DBs without trade_legs table
+        # and catches any legs stored only in metadata JSON)
+        try:
+            meta_rows = conn.execute(
                 "SELECT metadata FROM trades "
                 "WHERE status IN ('open', 'pending_open', 'pending_close')"
             ).fetchall()
-            for r in rows:
+            for r in meta_rows:
                 try:
                     meta = json.loads(r[0]) if r[0] else {}
                     for key in ("short_leg_symbol", "long_leg_symbol",
@@ -1172,6 +1176,8 @@ def check_orphan_positions(
                             db_symbols.add(str(sym).upper())
                 except (json.JSONDecodeError, TypeError):
                     pass
+        except Exception:
+            pass  # metadata query is best-effort
 
         # --- Detect orphans and ghosts ---
         result.orphans = sorted(alpaca_symbols - db_symbols)
@@ -1185,7 +1191,7 @@ def check_orphan_positions(
                         "SELECT DISTINCT t.id, t.ticker, t.status "
                         "FROM trades t "
                         "JOIN trade_legs tl ON tl.trade_id = t.id "
-                        "WHERE t.status IN ('open', 'pending_open') "
+                        "WHERE t.status IN ('open', 'pending_open', 'pending_close') "
                         "AND UPPER(tl.occ_symbol) = ?",
                         (sym,),
                     ).fetchall()
@@ -1325,16 +1331,11 @@ def orphan_gate(
 
 
 def _create_orphan_record(conn, exp_id: str, occ_symbol: str) -> None:
-    """Insert a placeholder trade for an orphan position (idempotent)."""
+    """Insert a placeholder trade for an orphan position (idempotent via INSERT OR IGNORE)."""
     trade_id = f"orphan_{occ_symbol}"
     try:
-        existing = conn.execute(
-            "SELECT id FROM trades WHERE id = ?", (trade_id,)
-        ).fetchone()
-        if existing:
-            return
         conn.execute(
-            "INSERT INTO trades (id, source, ticker, strategy_type, status, "
+            "INSERT OR IGNORE INTO trades (id, source, ticker, strategy_type, status, "
             "metadata, created_at, updated_at) "
             "VALUES (?, 'sentinel', ?, 'unknown', 'unmanaged', ?, "
             "datetime('now'), datetime('now'))",
@@ -1355,11 +1356,15 @@ def _create_orphan_record(conn, exp_id: str, occ_symbol: str) -> None:
 
 
 def _mark_ghost_record(conn, ghost: Dict[str, Any]) -> None:
-    """Mark a ghost trade as needs_investigation and log reconciliation event."""
+    """Mark a ghost trade as needs_investigation and log reconciliation event.
+
+    Both writes happen in a single transaction to avoid partial updates.
+    """
     trade_id = ghost.get("id")
     if not trade_id or trade_id == "unknown":
         return
     try:
+        conn.execute("BEGIN")
         conn.execute(
             "UPDATE trades SET status = 'needs_investigation', "
             "updated_at = datetime('now') WHERE id = ?",
@@ -1378,8 +1383,9 @@ def _mark_ghost_record(conn, ghost: Dict[str, Any]) -> None:
                 }),
             ),
         )
-        conn.commit()
+        conn.execute("COMMIT")
     except Exception as exc:
+        conn.execute("ROLLBACK")
         logger.error("GATE7: failed to mark ghost %s: %s", trade_id, exc)
 
 
@@ -1405,8 +1411,8 @@ def _write_orphan_scan_count(conn, exp_id: str, count: int) -> None:
              datetime.now(timezone.utc).isoformat()),
         )
         conn.commit()
-    except Exception:
-        pass  # scanner_state table may not exist in all experiment DBs
+    except Exception as exc:
+        logger.debug("GATE7: failed to write orphan scan count for %s: %s", exp_id, exc)
 
 
 # ---------------------------------------------------------------------------
@@ -1522,6 +1528,13 @@ def post_scan_check(
             results["gate8"] = check_runtime_drift(exp_id, record_snapshot=True)
             halt_alerts = [a for a in results["gate8"] if a.severity == "halt"]
             if halt_alerts:
+                reason = "; ".join(a.message for a in halt_alerts)
+                try:
+                    from sentinel.state import set_halt
+                    set_halt(exp_id, f"Gate 8: {reason}"[:200])
+                    logger.critical("SENTINEL HALT via Gate 8: %s", exp_id)
+                except Exception as e:
+                    logger.error("Failed to halt %s via Gate 8: %s", exp_id, e)
                 results["halted"] = True
         except Exception as e:
             logger.error("SENTINEL Gate 8 error for %s: %s", exp_id, e)
@@ -1532,6 +1545,14 @@ def post_scan_check(
         try:
             results["gate9"] = check_position_lifecycle(exp_id)
             if results["gate9"].has_critical:
+                stuck_msgs = [s.message for s in results["gate9"].stuck if s.severity == "critical"]
+                reason = f"Gate 9: {'; '.join(stuck_msgs)}"
+                try:
+                    from sentinel.state import set_halt
+                    set_halt(exp_id, reason[:200])
+                    logger.critical("SENTINEL HALT via Gate 9: %s", exp_id)
+                except Exception as e:
+                    logger.error("Failed to halt %s via Gate 9: %s", exp_id, e)
                 results["halted"] = True
         except Exception as e:
             logger.error("SENTINEL Gate 9 error for %s: %s", exp_id, e)
