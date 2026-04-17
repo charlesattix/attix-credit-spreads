@@ -35,6 +35,7 @@ const navItems = [
   { name: 'My Trades', href: '/my-trades' },
   { name: 'Backtest', href: '/backtest' },
   { name: 'System Results', href: '/paper-trading' },
+  { name: 'Sentinel', href: '/sentinel' },
   { name: 'Learn', href: '/settings' },
 ]
 

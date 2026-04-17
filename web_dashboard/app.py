@@ -12,6 +12,8 @@ FastAPI web app serving:
   GET  /api/v1/experiments/{id}/positions — Open positions (X-API-Key or session)
   GET  /api/v1/summary                   — Combined summary (X-API-Key or session)
   POST /api/admin/push-data              — Data push from sync script (X-API-Key)
+  POST /api/admin/push-sentinel          — Sentinel data push (X-API-Key)
+  GET  /api/v1/sentinel                  — Latest Sentinel snapshot (X-API-Key or session)
 
 Environment variables:
   ATTIX_ROOT         — path to attix-credit-spreads repo (default: parent dir)
@@ -434,6 +436,51 @@ async def push_data(request: Request, _key: str = Depends(require_api_key_only))
     _cache.clear()  # bust cache so next request uses fresh data
     logger.info(f"Received pushed data: {len(_json.dumps(body))} bytes")
     return {"status": "ok", "message": "Data received", "pushed_at": body["pushed_at"]}
+
+
+# ---------------------------------------------------------------------------
+# Admin — Sentinel data push
+# ---------------------------------------------------------------------------
+
+SENTINEL_DATA_PATH = PUSHED_DATA_PATH.parent / "sentinel_dashboard.json"
+
+
+@app.post("/api/admin/push-sentinel")
+async def push_sentinel(request: Request, _key: str = Depends(require_api_key_only)):
+    """
+    Accept a Sentinel dashboard snapshot from sync_sentinel_data.py.
+    Stores as data/sentinel_dashboard.json.
+    """
+    import json as _json
+
+    # Guard against oversized payloads (OOM protection for Railway container)
+    raw = await request.body()
+    if len(raw) > 10_000_000:  # 10 MB
+        raise HTTPException(status_code=413, detail="Payload too large (>10MB)")
+    body = _json.loads(raw)
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=400, detail="Expected JSON object")
+
+    body["pushed_at"] = datetime.now(timezone.utc).isoformat()
+    SENTINEL_DATA_PATH.parent.mkdir(parents=True, exist_ok=True)
+    serialized = _json.dumps(body, indent=2)
+    SENTINEL_DATA_PATH.write_text(serialized)
+    logger.info(f"Received Sentinel data: {len(raw)} bytes")
+    return {"status": "ok", "message": "Sentinel data received", "pushed_at": body["pushed_at"]}
+
+
+@app.get("/api/v1/sentinel")
+async def get_sentinel(_key: str = Depends(require_api_key)):
+    """Return the latest Sentinel dashboard snapshot."""
+    import json as _json
+    if not SENTINEL_DATA_PATH.exists():
+        return {"error": "No sentinel data available", "experiments": {}}
+    try:
+        with open(SENTINEL_DATA_PATH) as f:
+            return _json.load(f)
+    except Exception as e:
+        logger.error(f"Failed to read sentinel data: {e}")
+        return {"error": str(e), "experiments": {}}
 
 
 # ---------------------------------------------------------------------------

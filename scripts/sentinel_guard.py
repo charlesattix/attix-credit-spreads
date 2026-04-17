@@ -25,7 +25,6 @@ if str(_ROOT) not in sys.path:
 
 from sentinel.guards import (  # noqa: E402 — must come after sys.path setup
     pre_scan_check,
-    _compute_fingerprint,
     _load_state,
     _send_alert,
 )

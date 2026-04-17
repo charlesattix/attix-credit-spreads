@@ -170,6 +170,107 @@ export function useExperiments() {
   })
 }
 
+// ---------------------------------------------------------------------------
+// Sentinel dashboard
+// ---------------------------------------------------------------------------
+
+export interface SentinelExperiment {
+  status: string
+  name: string
+  config_fingerprint: string | null
+  fingerprint_ok: boolean
+  paper_config: string | null
+  baseline?: {
+    win_rate: number
+    avg_loss: number
+    mc_worst_dd_pct: number
+    avg_pnl?: number
+  }
+  metrics?: {
+    total_trades: number
+    total_open?: number
+    window_size?: number
+    win_rate: number | null
+    avg_pnl: number | null
+    avg_win?: number | null
+    avg_loss?: number | null
+    wins?: number
+    losses?: number
+    total_pnl: number
+    peak_equity?: number | null
+    error?: string
+  }
+  gates: {
+    gate6_sizing?: {
+      passed: boolean
+      deviations?: Array<{
+        trade_id: string
+        ticker: string
+        expected: number
+        actual: number
+        deviation_pct: number
+        severity: string
+      }>
+    }
+    gate7_orphans?: {
+      passed: boolean
+      orphans: number
+      ghosts: number
+      consecutive_scans: number
+    }
+    gate8_drift?: {
+      passed: boolean
+      metrics: { win_rate: number | null; avg_loss: number | null; peak_dd_pct: number | null }
+      baseline: { win_rate: number; avg_loss: number; mc_worst_dd_pct: number }
+      alerts: Array<{ metric: string; severity: string; delta?: number; ratio?: number }>
+    }
+    gate9_lifecycle?: {
+      passed: boolean
+      stuck: Array<{
+        trade_id: string
+        ticker: string
+        status: string
+        minutes: number
+        severity: string
+        short_strike?: number
+        expiration?: string
+      }>
+      total_open: number
+      total_pending: number
+    }
+  }
+}
+
+export interface SentinelData {
+  generated_at: string
+  pushed_at?: string
+  sentinel_version: string
+  experiment_count: number
+  experiments: Record<string, SentinelExperiment>
+  config_integrity: Array<{
+    exp_id: string
+    paper_config: string | null
+    stored_fingerprint: string | null
+    status: string
+  }>
+  alerts: Array<{
+    time: string
+    severity: string
+    exp_id: string
+    message: string
+    resolved: boolean
+  }>
+  error?: string
+}
+
+export function useSentinel() {
+  return useSWR<SentinelData>('/api/sentinel', fetcher<SentinelData>, {
+    refreshInterval: 300_000,     // 5 min
+    dedupingInterval: 60_000,
+    revalidateOnFocus: true,
+  })
+}
+
 export function useConfig() {
   const { data, error, isLoading, mutate } = useSWR<Config>(
     '/api/config',
