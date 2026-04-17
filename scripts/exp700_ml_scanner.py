@@ -44,6 +44,10 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+# ── SENTINEL pre-scan guard (must run before any project imports) ─────────────
+from sentinel.guards import pre_scan_check  # noqa: E402
+pre_scan_check("EXP-700")  # halts if status=halted; sets DRY_RUN if paused
+
 # ── Logging setup (before any imports that log) ──────────────────────────────
 logging.basicConfig(
     level=logging.WARNING,
