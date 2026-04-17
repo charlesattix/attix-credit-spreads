@@ -484,6 +484,248 @@ async def get_sentinel(_key: str = Depends(require_api_key)):
 
 
 # ---------------------------------------------------------------------------
+# Sentinel Dashboard — server-rendered HTML
+# ---------------------------------------------------------------------------
+
+from fastapi.responses import HTMLResponse
+
+
+@app.get("/sentinel", response_class=HTMLResponse)
+@app.get("/sentinel/", response_class=HTMLResponse)
+async def sentinel_dashboard():
+    """Serve the Sentinel dashboard as a self-contained HTML page."""
+    import json as _json
+
+    # Load data
+    data = {}
+    if SENTINEL_DATA_PATH.exists():
+        try:
+            with open(SENTINEL_DATA_PATH) as f:
+                data = _json.load(f)
+        except Exception:
+            pass
+
+    experiments = data.get("experiments", {})
+    config = data.get("config_integrity", {})
+    alerts = data.get("alerts", [])
+    generated = data.get("generated_at", "—")
+
+    # Build experiment rows
+    exp_rows = ""
+    for eid, exp in sorted(experiments.items()):
+        status = exp.get("status", "unknown")
+        live_wr = exp.get("live_win_rate")
+        bt_wr = exp.get("backtest_win_rate")
+        pnl = exp.get("total_pnl", 0)
+        orphans = exp.get("orphan_count", 0)
+        stuck = exp.get("stuck_positions", 0)
+        sizing_dev = exp.get("sizing_deviation")
+
+        # Status pill
+        if status == "halted":
+            s_cls, s_txt = "p-halt", "HALTED"
+        elif orphans > 0 or stuck > 0 or (sizing_dev and abs(sizing_dev) > 30):
+            s_cls, s_txt = "p-crit", "CRITICAL"
+        elif (sizing_dev and abs(sizing_dev) > 15) or (bt_wr and live_wr and (live_wr - bt_wr) < -10):
+            s_cls, s_txt = "p-warn", "WARNING"
+        elif bt_wr and live_wr and (live_wr - bt_wr) < -8:
+            s_cls, s_txt = "p-warn", "WATCH"
+        else:
+            s_cls, s_txt = "p-pass", "OK"
+
+        # WR drift
+        if live_wr is not None and bt_wr is not None:
+            drift = live_wr - bt_wr
+            drift_str = f"{drift:+.0f} pts"
+            drift_cls = "red" if drift < -15 else ("yellow" if drift < -8 else ("green" if drift > 5 else "muted"))
+        else:
+            drift_str = "—"
+            drift_cls = "muted"
+
+        wr_str = f"{live_wr:.0f}%" if live_wr is not None else "—"
+        pnl_cls = "green" if pnl > 0 else ("red" if pnl < 0 else "muted")
+        pnl_str = f"${pnl:+,.0f}" if pnl != 0 else "$0"
+
+        # Issues
+        issues = []
+        if orphans > 0:
+            issues.append(f"{orphans} orphans")
+        if stuck > 0:
+            issues.append(f"{stuck} stuck")
+        if sizing_dev and abs(sizing_dev) > 15:
+            issues.append(f"Sizing {sizing_dev:+.0f}%")
+        if bt_wr and live_wr and (live_wr - bt_wr) < -8:
+            issues.append("WR drifting")
+        issue_str = " · ".join(issues) if issues else "—"
+        issue_cls = "" if issues else "muted"
+
+        exp_rows += f"""<tr>
+            <td class="bold">{eid}</td>
+            <td><span class="p {s_cls}">{s_txt}</span></td>
+            <td>{wr_str}</td>
+            <td class="{drift_cls}">{drift_str}</td>
+            <td class="{pnl_cls}">{pnl_str}</td>
+            <td class="{issue_cls}">{issue_str}</td>
+        </tr>"""
+
+    # Config rows
+    config_rows = ""
+    checks = [
+        ("Config Schema", config.get("schema_valid", True)),
+        ("Registry Integrity", config.get("registry_valid", True)),
+        ("Config Drift", config.get("no_drift", True)),
+        ("DB Schema", config.get("db_valid", True)),
+        ("Certification", config.get("all_certified", True)),
+    ]
+    for name, ok in checks:
+        cls = "p-pass" if ok else "p-crit"
+        txt = "PASS" if ok else "FAIL"
+        config_rows += f'<tr><td>{name}</td><td><span class="p {cls}">{txt}</span></td></tr>'
+
+    # Alert rows
+    alert_rows = ""
+    for a in (alerts or [])[:20]:
+        sev = a.get("severity", "info").lower()
+        sev_cls = {"critical": "p-crit", "warning": "p-warn", "halt": "p-halt"}.get(sev, "p-pass")
+        sev_txt = sev.upper()[:4]
+        ts = a.get("timestamp", "")[-8:-3] if a.get("timestamp") else "—"
+        exp_id = a.get("experiment_id", "—")
+        msg = a.get("message", "—")
+        alert_rows += f"""<tr>
+            <td class="mono muted">{ts}</td>
+            <td><span class="p {sev_cls}">{sev_txt}</span></td>
+            <td class="bold">{exp_id}</td>
+            <td>{msg}</td>
+        </tr>"""
+
+    if not alert_rows:
+        alert_rows = '<tr><td colspan="4" class="muted" style="text-align:center;padding:1rem">No alerts</td></tr>'
+
+    # Count stats
+    total = len(experiments)
+    passing = sum(1 for e in experiments.values() if e.get("status") != "halted" and e.get("orphan_count", 0) == 0)
+    halted = sum(1 for e in experiments.values() if e.get("status") == "halted")
+    alert_count = len(alerts or [])
+    total_pnl = sum(e.get("total_pnl", 0) for e in experiments.values())
+
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SENTINEL Dashboard</title>
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  body {{ font-family: -apple-system, system-ui, sans-serif; background: #fff; color: #1a1a2e; padding: 2.5rem; line-height: 1.55; }}
+  .page {{ max-width: 860px; margin: 0 auto; }}
+  .header {{ margin-bottom: 2.5rem; padding-bottom: 1.2rem; border-bottom: 2px solid #1a1a2e; display: flex; justify-content: space-between; align-items: baseline; }}
+  .header h1 {{ font-size: 1.4rem; font-weight: 800; }}
+  .meta {{ font-size: 0.78rem; color: #888; }}
+  .top-row {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.8rem; margin-bottom: 2rem; }}
+  .top-card {{ padding: 1rem; border-radius: 8px; border: 1px solid #eee; }}
+  .top-card .label {{ font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 0.3rem; }}
+  .top-card .val {{ font-size: 1.5rem; font-weight: 800; }}
+  .top-card .sub {{ font-size: 0.72rem; color: #888; margin-top: 0.15rem; }}
+  .top-card.green {{ border-left: 3px solid #10b981; }}
+  .top-card.red {{ border-left: 3px solid #e94560; }}
+  .top-card.yellow {{ border-left: 3px solid #f59e0b; }}
+  .top-card.blue {{ border-left: 3px solid #3b82f6; }}
+  .section {{ margin-bottom: 2.8rem; }}
+  .section-header {{ margin-bottom: 1.2rem; }}
+  .section-header h2 {{ font-size: 1.05rem; font-weight: 700; margin-bottom: 0.3rem; }}
+  .section-header p {{ font-size: 0.8rem; color: #666; line-height: 1.5; }}
+  table {{ width: 100%; border-collapse: collapse; font-size: 0.82rem; }}
+  th {{ text-align: left; padding: 0.45rem 0.6rem; border-bottom: 2px solid #ddd; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #999; }}
+  td {{ padding: 0.5rem 0.6rem; border-bottom: 1px solid #f3f3f3; }}
+  tr:hover {{ background: #fafafa; }}
+  .p {{ display: inline-block; padding: 0.12em 0.5em; border-radius: 3px; font-size: 0.67rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; }}
+  .p-pass {{ background: #d1fae5; color: #065f46; }}
+  .p-warn {{ background: #fef3c7; color: #92400e; }}
+  .p-crit {{ background: #fee2e2; color: #991b1b; }}
+  .p-halt {{ background: #fce7f3; color: #831843; }}
+  .red {{ color: #e94560; font-weight: 600; }}
+  .green {{ color: #10b981; font-weight: 600; }}
+  .yellow {{ color: #d97706; font-weight: 600; }}
+  .muted {{ color: #999; }}
+  .mono {{ font-family: ui-monospace, monospace; font-size: 0.78rem; }}
+  .bold {{ font-weight: 700; }}
+  .divider {{ border: none; border-top: 1px solid #eee; margin: 2.5rem 0; }}
+  .footer {{ font-size: 0.7rem; color: #bbb; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #eee; }}
+  @media (max-width: 600px) {{ .top-row {{ grid-template-columns: repeat(2, 1fr); }} }}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <h1>🛡️ SENTINEL</h1>
+    <span class="meta">Updated: {generated}</span>
+  </div>
+
+  <div class="top-row">
+    <div class="top-card green">
+      <div class="label">Experiments OK</div>
+      <div class="val">{passing} / {total}</div>
+    </div>
+    <div class="top-card {'red' if alert_count > 0 else 'green'}">
+      <div class="label">Alerts</div>
+      <div class="val">{alert_count}</div>
+    </div>
+    <div class="top-card {'yellow' if halted > 0 else 'green'}">
+      <div class="label">Halted</div>
+      <div class="val">{halted}</div>
+    </div>
+    <div class="top-card blue">
+      <div class="label">Total P&amp;L</div>
+      <div class="val">${total_pnl:+,.0f}</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <h2>Experiments</h2>
+      <p><strong>What:</strong> Health of each experiment at a glance. <strong>Why:</strong> If something is wrong, you see it here first.</p>
+    </div>
+    <table>
+      <thead><tr><th>Experiment</th><th>Status</th><th>Win Rate</th><th>vs Backtest</th><th>P&amp;L</th><th>Issues</th></tr></thead>
+      <tbody>{exp_rows if exp_rows else '<tr><td colspan="6" class="muted" style="text-align:center">No data yet — run sync_sentinel_data.py</td></tr>'}</tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <div class="section">
+    <div class="section-header">
+      <h2>Config Integrity</h2>
+      <p><strong>What:</strong> Valid configs, matching registry, correct DB schema, approved certification. <strong>Why:</strong> Bad config = bad trades.</p>
+    </div>
+    <table>
+      <thead><tr><th>Check</th><th>Status</th></tr></thead>
+      <tbody>{config_rows}</tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <div class="section">
+    <div class="section-header">
+      <h2>Recent Alerts</h2>
+      <p><strong>What:</strong> Every alert Sentinel has fired. <strong>Why:</strong> Single place to see what happened and whether it's addressed.</p>
+    </div>
+    <table>
+      <thead><tr><th>Time</th><th>Severity</th><th>Experiment</th><th>Alert</th></tr></thead>
+      <tbody>{alert_rows}</tbody>
+    </table>
+  </div>
+
+  <div class="footer">SENTINEL v2.0 · Data synced from Mac Studio · <a href="/api/v1/sentinel" style="color:#3b82f6">Raw JSON</a></div>
+</div>
+</body>
+</html>"""
+
+    return HTMLResponse(content=html)
+
+
+# ---------------------------------------------------------------------------
 # Startup log
 # ---------------------------------------------------------------------------
 
