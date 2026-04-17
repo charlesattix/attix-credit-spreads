@@ -482,8 +482,8 @@ def collect_sentinel_data() -> dict:
 
                 # Both avg_loss values are positive (abs of losses). Guard with abs()
                 # to ensure consistent sign convention regardless of source.
-                bl_al = abs(baseline.get("avg_loss", 0))
-                live_al = abs(metrics.get("avg_loss", 0))
+                bl_al = abs(baseline.get("avg_loss") or 0)
+                live_al = abs(metrics.get("avg_loss") or 0)
                 al_ratio = (live_al / bl_al) if bl_al and live_al else 0
 
                 drift_alerts = []
