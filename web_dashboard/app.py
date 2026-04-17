@@ -550,8 +550,29 @@ async def sentinel_dashboard():
             drift_cls = "muted"
 
         wr_str = f"{live_wr:.0f}%" if live_wr is not None else "—"
-        pnl_cls = "green" if pnl > 0 else ("red" if pnl < 0 else "muted")
-        pnl_str = f"${pnl:+,.0f}" if pnl != 0 else "$0"
+
+        # P&L: realized, unrealized, total
+        realized_pnl = metrics.get("realized_pnl", pnl)
+        unrealized_pnl = metrics.get("unrealized_pnl")
+        total_pnl_val = metrics.get("total_pnl", pnl)
+
+        real_cls = "green" if realized_pnl > 0 else ("red" if realized_pnl < 0 else "muted")
+        real_str = f"${realized_pnl:+,.0f}" if realized_pnl else "$0"
+
+        if unrealized_pnl is not None:
+            unreal_cls = "green" if unrealized_pnl > 0 else ("red" if unrealized_pnl < 0 else "muted")
+            unreal_str = f"${unrealized_pnl:+,.0f}"
+        else:
+            unreal_cls = "muted"
+            unreal_str = "—"
+
+        total_cls = "green" if total_pnl_val > 0 else ("red" if total_pnl_val < 0 else "muted")
+        total_str = f"${total_pnl_val:+,.0f}" if total_pnl_val else "$0"
+
+        # Reconciliation warning
+        recon = exp.get("reconciliation", {})
+        recon_ok = recon.get("reconciled", True) if recon else True
+        recon_div = recon.get("divergence", 0) if recon else 0
 
         # Issues
         issues = []
@@ -563,6 +584,8 @@ async def sentinel_dashboard():
             issues.append(f"Sizing {sizing_dev:+.0f}%")
         if bt_wr and live_wr and (live_wr - bt_wr) < -8:
             issues.append("WR drifting")
+        if not recon_ok:
+            issues.append(f"Recon ${recon_div:+,.0f}")
         issue_str = " · ".join(issues) if issues else "—"
         issue_cls = "" if issues else "muted"
 
@@ -571,7 +594,9 @@ async def sentinel_dashboard():
             <td><span class="p {s_cls}">{s_txt}</span></td>
             <td>{wr_str}</td>
             <td class="{drift_cls}">{drift_str}</td>
-            <td class="{pnl_cls}">{pnl_str}</td>
+            <td class="{real_cls}">{real_str}</td>
+            <td class="{unreal_cls}">{unreal_str}</td>
+            <td class="{total_cls} bold">{total_str}</td>
             <td class="{issue_cls}">{issue_str}</td>
         </tr>"""
 
@@ -622,7 +647,10 @@ async def sentinel_dashboard():
     passing = sum(1 for e in experiments.values() if e.get("status") != "halted" and e.get("orphan_count", 0) == 0)
     halted = sum(1 for e in experiments.values() if e.get("status") == "halted")
     alert_count = len(alerts or [])
-    total_pnl = sum(e.get("total_pnl", 0) for e in experiments.values())
+    total_pnl = sum(e.get("metrics", {}).get("total_pnl", 0) or 0 for e in experiments.values())
+    total_realized = sum(e.get("metrics", {}).get("realized_pnl", 0) or 0 for e in experiments.values())
+    total_unrealized = sum(e.get("metrics", {}).get("unrealized_pnl", 0) or 0 for e in experiments.values() if e.get("metrics", {}).get("unrealized_pnl") is not None)
+    recon_warnings = sum(1 for e in experiments.values() if not e.get("reconciliation", {}).get("reconciled", True))
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -690,9 +718,10 @@ async def sentinel_dashboard():
       <div class="label">Halted</div>
       <div class="val">{halted}</div>
     </div>
-    <div class="top-card blue">
+    <div class="top-card {'red' if recon_warnings > 0 else 'blue'}">
       <div class="label">Total P&amp;L</div>
       <div class="val">${total_pnl:+,.0f}</div>
+      <div class="sub">Realized ${total_realized:+,.0f} · Unrealized ${total_unrealized:+,.0f}{'  · ' + str(recon_warnings) + ' recon warning' + ('s' if recon_warnings != 1 else '') if recon_warnings > 0 else ''}</div>
     </div>
   </div>
 
@@ -702,8 +731,8 @@ async def sentinel_dashboard():
       <p><strong>What:</strong> Health of each experiment at a glance. <strong>Why:</strong> If something is wrong, you see it here first.</p>
     </div>
     <table>
-      <thead><tr><th>Experiment</th><th>Status</th><th>Win Rate</th><th>vs Backtest</th><th>P&amp;L</th><th>Issues</th></tr></thead>
-      <tbody>{exp_rows if exp_rows else '<tr><td colspan="6" class="muted" style="text-align:center">No data yet — run sync_sentinel_data.py</td></tr>'}</tbody>
+      <thead><tr><th>Experiment</th><th>Status</th><th>Win Rate</th><th>vs Backtest</th><th>Realized</th><th>Unrealized</th><th>Total P&amp;L</th><th>Issues</th></tr></thead>
+      <tbody>{exp_rows if exp_rows else '<tr><td colspan="8" class="muted" style="text-align:center">No data yet — run sync_sentinel_data.py</td></tr>'}</tbody>
     </table>
   </div>
 

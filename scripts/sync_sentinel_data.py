@@ -25,9 +25,12 @@ import json
 import os
 import sqlite3
 import sys
+import logging
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -329,6 +332,112 @@ def _collect_alerts_from_sentinel_db() -> List[dict]:
         conn.close()
 
 
+def _find_env_file(exp_id: str) -> Optional[Path]:
+    """Locate the .env file for an experiment (same logic as sentinel/monitor.py)."""
+    numeric = exp_id.removeprefix("EXP-").lower()
+    candidates = [PROJECT_ROOT / f".env.exp{numeric}"]
+    if exp_id == "EXP-400":
+        candidates.append(PROJECT_ROOT / ".env.champion")
+    for c in candidates:
+        if c.exists():
+            return c
+    return None
+
+
+def _load_env_file(path: Path) -> Dict[str, str]:
+    """Parse a .env file into a plain dict."""
+    env: Dict[str, str] = {}
+    try:
+        for line in path.read_text().splitlines():
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if "=" in line:
+                k, _, v = line.partition("=")
+                env[k.strip()] = v.strip().strip('"').strip("'")
+    except Exception:
+        pass
+    return env
+
+
+def _fetch_alpaca_account_data(exp_id: str) -> Optional[dict]:
+    """
+    Fetch account equity and open position market values from Alpaca.
+
+    Returns dict with:
+      - alpaca_equity: total account equity (mark-to-market)
+      - alpaca_cash: cash balance
+      - unrealized_pnl: sum of unrealized P&L across all open positions
+      - open_position_count: number of open positions
+      - positions: list of {symbol, qty, market_value, unrealized_pl}
+    Returns None if credentials missing or API unreachable.
+    """
+    env_file = _find_env_file(exp_id)
+    if not env_file:
+        return None
+
+    env = _load_env_file(env_file)
+    api_key = env.get("ALPACA_API_KEY")
+    api_secret = env.get("ALPACA_API_SECRET") or env.get("ALPACA_SECRET_KEY")
+    if not api_key or not api_secret:
+        return None
+
+    try:
+        from alpaca.trading.client import TradingClient
+
+        paper = env.get("ALPACA_PAPER", "true").lower() != "false"
+        client = TradingClient(api_key, api_secret, paper=paper)
+
+        acct = client.get_account()
+        positions = client.get_all_positions()
+
+        unrealized_pnl = sum(float(p.unrealized_pl) for p in positions)
+
+        pos_details = []
+        for p in positions:
+            pos_details.append({
+                "symbol": p.symbol,
+                "qty": str(p.qty),
+                "market_value": round(float(p.market_value), 2),
+                "unrealized_pl": round(float(p.unrealized_pl), 2),
+            })
+
+        return {
+            "alpaca_equity": round(float(acct.equity), 2),
+            "alpaca_cash": round(float(acct.cash), 2),
+            "unrealized_pnl": round(unrealized_pnl, 2),
+            "open_position_count": len(positions),
+            "positions": pos_details,
+        }
+    except Exception as e:
+        logger.warning("Failed to fetch Alpaca data for %s: %s", exp_id, e)
+        return None
+
+
+def _reconcile_pnl(
+    realized_pnl: float,
+    unrealized_pnl: float,
+    alpaca_equity: float,
+    initial_deposit: float,
+) -> dict:
+    """
+    Compare our computed total P&L against Alpaca's equity.
+
+    Returns reconciliation result with warning if divergence > $100.
+    """
+    computed_total = realized_pnl + unrealized_pnl
+    alpaca_implied_pnl = alpaca_equity - initial_deposit
+    divergence = computed_total - alpaca_implied_pnl
+
+    return {
+        "computed_total_pnl": round(computed_total, 2),
+        "alpaca_implied_pnl": round(alpaca_implied_pnl, 2),
+        "divergence": round(divergence, 2),
+        "reconciled": abs(divergence) < 100.0,
+        "initial_deposit": initial_deposit,
+    }
+
+
 def _collect_config_integrity(
     experiments: Dict[str, Any],
     experiments_state: dict,
@@ -469,9 +578,34 @@ def collect_sentinel_data() -> dict:
         if baseline:
             exp_data["baseline"] = baseline
 
+        # Alpaca account data (unrealized P&L + equity)
+        alpaca = _fetch_alpaca_account_data(exp_id)
+        if alpaca:
+            exp_data["alpaca"] = alpaca
+
         # Trade metrics
         if db_path:
             exp_data["metrics"] = _collect_trade_metrics(db_path)
+
+            # Inject Alpaca-derived fields into metrics for dashboard consumption
+            realized_pnl = exp_data["metrics"].get("total_pnl", 0) or 0
+            if alpaca:
+                unrealized = alpaca["unrealized_pnl"]
+                exp_data["metrics"]["realized_pnl"] = round(realized_pnl, 2)
+                exp_data["metrics"]["unrealized_pnl"] = round(unrealized, 2)
+                exp_data["metrics"]["total_pnl"] = round(realized_pnl + unrealized, 2)
+                exp_data["metrics"]["alpaca_equity"] = alpaca["alpaca_equity"]
+
+                # Reconciliation check
+                initial_deposit = reg_entry.get("initial_deposit", 100_000.0)
+                recon = _reconcile_pnl(
+                    realized_pnl, unrealized, alpaca["alpaca_equity"], initial_deposit,
+                )
+                exp_data["reconciliation"] = recon
+            else:
+                # No Alpaca data — keep realized-only, mark unrealized as unavailable
+                exp_data["metrics"]["realized_pnl"] = round(realized_pnl, 2)
+                exp_data["metrics"]["unrealized_pnl"] = None
 
             # Gate 8 drift comparison
             if baseline and exp_data.get("metrics", {}).get("win_rate") is not None:
