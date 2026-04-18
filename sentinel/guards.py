@@ -56,8 +56,14 @@ def pre_scan_check(experiment_id: str, config_path: Optional[str] = None) -> Non
                        available, the fingerprint check is skipped.
 
     Raises:
-        SystemExit(1): experiment is halted, config drifted, or API key dead.
+        SystemExit(1): experiment is halted, config drifted, API key dead,
+                       or registry status is not 'active'.
     """
+    # ------------------------------------------------------------------
+    # Gate 0: Registry status check (registry.json is the source of truth)
+    # ------------------------------------------------------------------
+    _check_registry_status(experiment_id)
+
     state = _load_state()
     exp_state = state.get("experiments", {}).get(experiment_id, {})
     status = exp_state.get("status", "active")
@@ -312,6 +318,74 @@ def _check_alpaca_health(experiment_id: str) -> None:
             "SENTINEL: %s Alpaca health check error (%s) — continuing",
             experiment_id, exc,
         )
+
+
+# ---------------------------------------------------------------------------
+# Gate 0: Registry status enforcement
+# ---------------------------------------------------------------------------
+
+
+def _check_registry_status(experiment_id: str) -> None:
+    """
+    Verify the experiment is registered and has status='active' in
+    experiments/registry.json.
+
+    Behavior:
+      - 'active' → pass
+      - 'paused' → set DRY_RUN=1, continue
+      - not found in registry → pass (graceful degradation for legacy scanners)
+      - any other status → log error + sys.exit(1)
+      - registry unreadable → pass with warning (never block on I/O errors)
+    """
+    try:
+        from experiments.registry import load_registry
+    except ImportError:
+        logger.debug("SENTINEL: experiments.registry not importable — Gate 0 skipped")
+        return
+
+    try:
+        registry = load_registry()
+    except Exception as exc:
+        logger.warning("SENTINEL: could not load registry.json — Gate 0 skipped: %s", exc)
+        return
+
+    exp = registry.get("experiments", {}).get(experiment_id)
+    if not exp:
+        logger.debug(
+            "SENTINEL: %s not found in registry.json — Gate 0 skipped (graceful degradation)",
+            experiment_id,
+        )
+        return
+
+    reg_status = exp.get("status", "")
+
+    if reg_status == "active":
+        logger.debug("SENTINEL: %s registry status=active — Gate 0 passed", experiment_id)
+        return
+
+    if reg_status == "paused":
+        reason = exp.get("status_reason", "registry status=paused")
+        logger.warning(
+            "SENTINEL: %s registry status=paused — forcing DRY_RUN=1 (%s)",
+            experiment_id, reason,
+        )
+        os.environ["DRY_RUN"] = "1"
+        return
+
+    # Any non-active/non-paused status → block
+    msg = (
+        f"\U0001f6e1\ufe0f SENTINEL — SCANNER BLOCKED\n"
+        f"\U0001f6d1 <b>{experiment_id}</b> is not active in the experiment registry.\n"
+        f"<b>Registry status:</b> {reg_status}\n"
+        f"Nothing can run without being registered as active.\n"
+        f"<code>python scripts/registry_cli.py activate {experiment_id}</code>"
+    )
+    logger.critical(
+        "SENTINEL GATE 0: %s registry status=%s (not active). Aborting scan.",
+        experiment_id, reg_status,
+    )
+    _send_alert(msg)
+    sys.exit(1)
 
 
 # ---------------------------------------------------------------------------

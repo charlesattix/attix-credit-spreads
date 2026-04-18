@@ -487,7 +487,7 @@ def build_export(report_date: str) -> dict:
 
     live_exps = [
         exp for exp in registry["experiments"].values()
-        if exp.get("status") == "paper_trading"
+        if exp.get("status") in ("active", "paper_trading")
     ]
     live_exps.sort(key=lambda e: e["id"])
 

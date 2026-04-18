@@ -98,7 +98,7 @@ def get_live_experiments(registry: dict | None = None) -> list[dict]:
         registry = load_registry()
     exps = [
         e for e in registry["experiments"].values()
-        if e.get("status") == "paper_trading"
+        if e.get("status") in ("active", "paper_trading")
     ]
     return sorted(exps, key=lambda e: e["id"])
 

@@ -109,7 +109,7 @@ def aggregate_portfolio_risk(
     all_expirations: List[str] = []
 
     for exp_id, exp in registry.get("experiments", {}).items():
-        if exp.get("status") != "paper_trading":
+        if exp.get("status") not in ("active", "paper_trading"):
             continue
         paper_config = exp.get("paper_config")
         if not paper_config:

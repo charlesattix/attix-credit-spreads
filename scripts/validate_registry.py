@@ -21,9 +21,12 @@ REGISTRY_PATH = Path(__file__).resolve().parent.parent / "experiments" / "regist
 
 VALID_CREATORS = {"maximus", "charles"}
 VALID_STATUSES = {
+    # Schema v3.0 statuses
+    "registered", "configuring", "active", "paused", "stopped", "retired", "failed", "completed",
+    # Legacy v2.1 statuses (kept for backward compatibility)
     "data_collection", "backtesting", "validated",
     "paper_trading", "paper_trading_prep", "deployed", "in_development",
-    "retired", "pending", "awaiting_deploy", "completed",
+    "pending", "awaiting_deploy",
 }
 
 REQUIRED_FIELDS = ["id", "name", "created_by", "created_date", "status"]
