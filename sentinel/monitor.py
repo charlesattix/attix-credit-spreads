@@ -133,7 +133,7 @@ def check_experiment(
 
     # Nothing to check without an account
     if not account_id:
-        if registry_status == "paper_trading":
+        if registry_status in ("active", "paper_trading"):
             health.issues.append("paper_trading status but no account_id in registry")
         return health
 
@@ -141,7 +141,7 @@ def check_experiment(
     if not env_file or not env_file.exists():
         expected = f".env.exp{exp_id.removeprefix('EXP-').lower()}"
         health.issues.append(f"env file not found (expected {expected})")
-        if registry_status == "paper_trading":
+        if registry_status in ("active", "paper_trading"):
             health.is_ghost = True
         return health
 
@@ -152,7 +152,7 @@ def check_experiment(
     if not api_key or not api_secret:
         health.api_error = "missing ALPACA_API_KEY / ALPACA_API_SECRET in env file"
         health.issues.append(health.api_error)
-        if registry_status == "paper_trading":
+        if registry_status in ("active", "paper_trading"):
             health.is_ghost = True
         return health
 
@@ -194,7 +194,7 @@ def check_experiment(
         else:
             health.issues.append(f"API error: {health.api_error}")
 
-        if registry_status == "paper_trading":
+        if registry_status in ("active", "paper_trading"):
             health.is_ghost = True
         return health
 
@@ -206,7 +206,7 @@ def check_experiment(
         )
 
     # --- Stale: active but no trades in 3+ market days ---
-    if registry_status == "paper_trading" and health.api_ok:
+    if registry_status in ("active", "paper_trading") and health.api_ok:
         if health.last_order_at is None:
             health.is_stale = True
             health.issues.append("STALE: no order history on this account")

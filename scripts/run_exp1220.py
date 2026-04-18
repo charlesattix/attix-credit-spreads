@@ -36,6 +36,13 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+# ── SENTINEL pre-scan guard ──────────────────────────────────────────────────
+# Deferred to main() so the module remains importable for tests.
+# The guard runs before any trading logic executes.
+def _sentinel_guard() -> None:
+    from sentinel.guards import pre_scan_check
+    pre_scan_check("EXP-1220")  # halts if not active; sets DRY_RUN if paused
+
 LOG_DIR = ROOT / "logs"
 LOG_DIR.mkdir(exist_ok=True)
 
@@ -922,6 +929,7 @@ def run_health_check() -> int:
 # ═══════════════════════════════════════════════════════════════════════════
 
 def main():
+    _sentinel_guard()  # Gate 0: registry + sentinel enforcement
     parser = argparse.ArgumentParser(description="EXP-1220 Paper Trading Scanner")
     parser.add_argument("--dry-run", action="store_true",
                         help="Show trades without submitting to Alpaca")

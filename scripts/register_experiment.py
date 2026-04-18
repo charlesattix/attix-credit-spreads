@@ -34,9 +34,12 @@ REGISTRY_PATH = Path(__file__).resolve().parent.parent / "experiments" / "regist
 
 VALID_CREATORS = ["maximus", "charles"]
 VALID_STATUSES = [
+    # Schema v3.0 statuses
+    "registered", "configuring", "active", "paused", "stopped", "retired", "failed", "completed",
+    # Legacy v2.1 statuses (kept for backward compatibility)
     "in_development", "data_collection", "backtesting",
     "validated", "awaiting_deploy", "paper_trading", "deployed",
-    "pending", "retired",
+    "pending",
 ]
 
 CREATOR_RANGES = {

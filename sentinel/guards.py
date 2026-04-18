@@ -61,7 +61,8 @@ def pre_scan_check(experiment_id: str, config_path: Optional[str] = None) -> Non
                        available, the fingerprint check is skipped.
 
     Raises:
-        SystemExit(1): experiment is halted, config drifted, or API key dead.
+        SystemExit(1): experiment is halted, config drifted, API key dead,
+                       or registry status is not 'active'.
     """
     # ------------------------------------------------------------------
     # 0. Registry status check (experiments/registry.json)

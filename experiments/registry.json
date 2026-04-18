@@ -1,101 +1,152 @@
 {
-    "schema_version": "2.1",
-    "last_updated": "2026-04-12",
+    "schema_version": "3.0",
+    "last_updated": "2026-04-18",
     "experiments": {
         "EXP-400": {
             "id": "EXP-400",
             "name": "The Champion",
             "created_by": "maximus",
             "created_date": "2026-03-05",
-            "status": "paper_trading",
+            "status": "active",
             "ticker": "SPY",
             "account_id": "PA36XFVLG0WE",
             "live_since": "2026-03-15",
             "paper_config": "configs/paper_champion.yaml",
             "backtest_config": "configs/champion.json",
             "description": "Regime-adaptive credit spreads & iron condors on SPY. Switches between bull puts and bear calls based on trend detection (MA crossovers). No ML. Robustness score: 0.870.",
-            "notes": "Regime-adaptive CS + IC (SPY). ROBUST 0.870."
+            "notes": "Regime-adaptive CS + IC (SPY). ROBUST 0.870.",
+            "config_path": "configs/paper_champion.yaml",
+            "alpaca_account_id": "PA36XFVLG0WE",
+            "env_file": ".env.exp400",
+            "db_path": "data/pilotai_exp400.db",
+            "strategy_type": "iron_condor",
+            "created_at": "2026-03-05T00:00:00+00:00",
+            "updated_at": "2026-04-18T21:21:51.083040+00:00",
+            "last_started_at": "2026-03-15T00:00:00+00:00"
         },
         "EXP-401": {
             "id": "EXP-401",
             "name": "The Blend",
             "created_by": "maximus",
             "created_date": "2026-03-12",
-            "status": "paper_trading",
+            "status": "active",
             "ticker": "SPY",
             "account_id": "PA3Y2XDYB9I3",
             "live_since": "2026-03-15",
             "paper_config": "configs/paper_exp401.yaml",
             "backtest_config": null,
             "description": "Blended strategy combining credit spreads with straddles/strangles on SPY. Uses volatility regime detection to select optimal structure. No ML. Walk-forward validated (3/3 passed).",
-            "notes": "CS + Straddle/Strangle. WF 3/3 passed."
+            "notes": "CS + Straddle/Strangle. WF 3/3 passed.",
+            "config_path": "configs/paper_exp401.yaml",
+            "alpaca_account_id": "PA3Y2XDYB9I3",
+            "env_file": ".env.exp401",
+            "db_path": "data/pilotai_exp401.db",
+            "strategy_type": "straddle_strangle",
+            "created_at": "2026-03-12T00:00:00+00:00",
+            "updated_at": "2026-04-18T21:21:51.083040+00:00",
+            "last_started_at": "2026-03-15T00:00:00+00:00"
         },
         "EXP-500": {
             "id": "EXP-500",
             "name": "ML Champion",
             "created_by": "maximus",
             "created_date": "2026-03-12",
-            "status": "in_development",
+            "status": "registered",
             "ticker": "SPY",
             "phase": "Phase 1 complete. ML work shipped via EXP-503.",
             "next_step": "Model validation \u2014 assess EXP-503 paper trading results",
             "paper_config": null,
             "backtest_config": null,
-            "notes": "XGBoost confidence overlay on EXP-400."
+            "notes": "XGBoost confidence overlay on EXP-400.",
+            "config_path": null,
+            "env_file": null,
+            "db_path": null,
+            "strategy_type": "ml_credit_spread",
+            "created_at": "2026-03-12T00:00:00+00:00",
+            "updated_at": "2026-04-18T21:21:51.083040+00:00"
         },
         "EXP-501": {
             "id": "EXP-501",
             "name": "ML Blend",
             "created_by": "maximus",
             "created_date": "2026-03-12",
-            "status": "in_development",
+            "status": "registered",
             "ticker": "SPY",
             "phase": "0 \u2014 Blocked",
             "next_step": "Blocked on EXP-500. Start after EXP-500 proves concept.",
             "paper_config": null,
             "backtest_config": null,
-            "notes": "XGBoost overlay on EXP-401. Starts after EXP-500."
+            "notes": "XGBoost overlay on EXP-401. Starts after EXP-500.",
+            "config_path": null,
+            "env_file": null,
+            "db_path": null,
+            "strategy_type": "ml_credit_spread",
+            "created_at": "2026-03-12T00:00:00+00:00",
+            "updated_at": "2026-04-18T21:21:51.083040+00:00"
         },
         "EXP-503": {
             "id": "EXP-503",
             "name": "ML V2 Aggressive",
             "created_by": "maximus",
             "created_date": "2026-03-22",
-            "status": "paper_trading",
+            "status": "active",
             "ticker": "SPY",
             "account_id": "PA3Z9PLVYUL5",
             "live_since": "2026-03-22",
             "paper_config": "configs/paper_exp503.yaml",
             "backtest_config": "configs/exp_503_lowvol_narrow_spread.json",
             "description": "Machine learning-driven credit spreads on SPY. XGBoost regime classifier routes trades through ML-optimized position sizing. Aggressive Kelly sizing with model confidence weighting.",
-            "notes": "CreditSpread + RegimeModelRouter ML sizing. Deployed 2026-03-22."
+            "notes": "CreditSpread + RegimeModelRouter ML sizing. Deployed 2026-03-22.",
+            "config_path": "configs/paper_exp503.yaml",
+            "alpaca_account_id": "PA3Z9PLVYUL5",
+            "env_file": ".env.exp503",
+            "db_path": "data/exp503/pilotai_exp503.db",
+            "strategy_type": "ml_credit_spread",
+            "created_at": "2026-03-22T00:00:00+00:00",
+            "updated_at": "2026-04-18T21:21:51.083040+00:00",
+            "last_started_at": "2026-03-22T00:00:00+00:00"
         },
         "EXP-600": {
             "id": "EXP-600",
             "name": "IBIT Adaptive",
             "created_by": "charles",
             "created_date": "2026-03-22",
-            "status": "paper_trading",
+            "status": "active",
             "ticker": "IBIT",
             "account_id": "PA3O14JAJHJ0",
             "live_since": "2026-03-22",
             "paper_config": "configs/paper_exp600.yaml",
             "backtest_config": null,
             "description": "Direction-adaptive credit spreads on IBIT (Bitcoin ETF). MA50-based trend detection, 14 DTE, 10% OTM. No ML. Optimized via mega parameter sweep (139% avg annual backtest).",
-            "notes": "IBIT direction-adaptive credit spreads. Mega sweep config #14. DTE=14, OTM=10%, Width=$5, PT=30%, SL=2.5x, MA50 adaptive, MaxPos=5, Risk=15%, Kelly=1.0. 139.2% avg annual, -19.4% max DD, 0.95 overfit."
+            "notes": "IBIT direction-adaptive credit spreads. Mega sweep config #14. DTE=14, OTM=10%, Width=$5, PT=30%, SL=2.5x, MA50 adaptive, MaxPos=5, Risk=15%, Kelly=1.0. 139.2% avg annual, -19.4% max DD, 0.95 overfit.",
+            "config_path": "configs/paper_exp600.yaml",
+            "alpaca_account_id": "PA3O14JAJHJ0",
+            "env_file": ".env.exp600",
+            "db_path": "data/exp600/pilotai_exp600.db",
+            "strategy_type": "ml_credit_spread",
+            "created_at": "2026-03-22T00:00:00+00:00",
+            "updated_at": "2026-04-18T21:21:51.083040+00:00",
+            "last_started_at": "2026-03-22T00:00:00+00:00"
         },
         "EXP-601": {
             "id": "EXP-601",
             "name": "IBIT ML Signal Filter",
             "created_by": "charles",
             "created_date": "2026-03-22",
-            "status": "in_development",
+            "status": "registered",
             "ticker": "IBIT",
             "account_id": null,
             "live_since": null,
             "paper_config": null,
             "backtest_config": null,
-            "notes": "XGBoost binary classifier (win/loss) trained on EXP-600 champion config trade features. Time-series CV only. max_depth=3, min_child_weight=5. Backtest comparison: EXP-600 with vs without ML filter."
+            "notes": "XGBoost binary classifier (win/loss) trained on EXP-600 champion config trade features. Time-series CV only. max_depth=3, min_child_weight=5. Backtest comparison: EXP-600 with vs without ML filter.",
+            "config_path": null,
+            "alpaca_account_id": null,
+            "env_file": null,
+            "db_path": null,
+            "strategy_type": "ml_credit_spread",
+            "created_at": "2026-03-22T00:00:00+00:00",
+            "updated_at": "2026-04-18T21:21:51.083040+00:00"
         },
         "EXP-700": {
             "id": "EXP-700",
@@ -112,35 +163,58 @@
             "paper_config": "configs/paper_exp700.yaml",
             "backtest_config": null,
             "description": "EXP-400 champion params (DTE=15, OTM=2%, Width=$12, SL=1.25x, PT=55%, Risk=8.5%) gated by EXP-305 ensemble ML filter (AUC=0.793, threshold=0.65). Ensemble: XGBoost 34.1%, RandomForest 33.1%, ExtraTrees 32.8%. Holdout 2025: +13.8pp return, +5pp win rate vs no filter.",
-            "notes": "ML-Filtered Champion on EXP-400 params. API keys dead. Short-lived (2 trading days, 10 trades). Superseded by EXP-800."
+            "notes": "ML-Filtered Champion on EXP-400 params. API keys dead. Short-lived (2 trading days, 10 trades). Superseded by EXP-800.",
+            "config_path": "configs/paper_exp700.yaml",
+            "alpaca_account_id": null,
+            "env_file": ".env.exp700",
+            "db_path": "data/exp700/pilotai_exp700.db",
+            "strategy_type": "ml_credit_spread",
+            "created_at": "2026-04-09T00:00:00+00:00",
+            "updated_at": "2026-04-18T21:21:51.083040+00:00"
         },
         "EXP-800": {
             "id": "EXP-800",
             "name": "Safe Kelly 4/7/9",
             "created_by": "charles",
             "created_date": "2026-03-28",
-            "status": "paper_trading",
+            "status": "active",
             "ticker": "SPY",
             "account_id": "PA3QWQIZO09S",
             "live_since": "2026-03-28",
             "paper_config": "configs/paper_exp800.yaml",
             "backtest_config": null,
             "description": "EXP-400 champion signal generation (DTE=15, OTM=2%, Width=$12, SL=1.25x, PT=55%) with Safe Kelly criterion position sizing and 3-tier portfolio drawdown circuit breakers. Kelly fractions by regime: bull=9%, neutral=7%, bear=4%. Circuit breakers: Tier 1 DD\u2264-8% halves sizing, Tier 2 DD\u2264-10% floors to 2%, Tier 3 DD\u2264-12% halts new entries for 30 trades. Regime: ComboRegimeDetector (MA80+RSI+VIX structure). VIX gate: block above 40.",
-            "notes": "Safe Kelly 4/7/9. Dynamic regime-based sizing with drawdown circuit breakers. Live PA3QWQIZO09S. Equity $114,897 (2026-04-11). 6 open positions. Deployed 2026-03-28."
+            "notes": "Safe Kelly 4/7/9. Dynamic regime-based sizing with drawdown circuit breakers. Live PA3QWQIZO09S. Equity $114,897 (2026-04-11). 6 open positions. Deployed 2026-03-28.",
+            "config_path": "configs/paper_exp800.yaml",
+            "alpaca_account_id": "PA3QWQIZO09S",
+            "env_file": ".env.exp800",
+            "db_path": "data/exp800/pilotai_exp800.db",
+            "strategy_type": "iron_condor",
+            "created_at": "2026-03-28T00:00:00+00:00",
+            "updated_at": "2026-04-18T21:21:51.083040+00:00",
+            "last_started_at": "2026-03-28T00:00:00+00:00"
         },
         "EXP-1220": {
             "id": "EXP-1220",
             "name": "Leverage 3x",
             "created_by": "maximus",
             "created_date": "2026-04-05",
-            "status": "paper_trading",
+            "status": "active",
             "ticker": "SPY",
             "account_id": "PA3YFVQCXTD6",
             "live_since": "2026-04-06",
             "paper_config": "configs/paper_exp1220.yaml",
             "backtest_config": null,
             "description": "EXP-1220 with 1.5x static leverage. Tail risk protection via VIX signals. Validated: CAGR 99.2%, Sharpe 3.83, Max DD 11.2%. Walk-forward: all 4 OOS years profitable.",
-            "notes": "1.5x static leverage, VIX tail risk protection. Deployed 2026-04-06."
+            "notes": "1.5x static leverage, VIX tail risk protection. Deployed 2026-04-06.",
+            "config_path": "configs/paper_exp1220.yaml",
+            "alpaca_account_id": "PA3YFVQCXTD6",
+            "env_file": ".env.exp1220",
+            "db_path": "data/pilotai_exp1220.db",
+            "strategy_type": "leverage",
+            "created_at": "2026-04-05T00:00:00+00:00",
+            "updated_at": "2026-04-18T21:21:51.083040+00:00",
+            "last_started_at": "2026-04-06T00:00:00+00:00"
         },
         "EXP-031": {
             "id": "EXP-031",
@@ -155,7 +229,13 @@
             "retired_reason": "Overfit score 0.590 (hard gate failed). DTE cliff. Compound sizing artifacts.",
             "paper_config": null,
             "backtest_config": null,
-            "notes": "REJECTED \u2014 overfit score 0.590 (hard gate failed), DTE cliff, compound sizing artifacts"
+            "notes": "REJECTED \u2014 overfit score 0.590 (hard gate failed), DTE cliff, compound sizing artifacts",
+            "config_path": null,
+            "env_file": null,
+            "db_path": null,
+            "strategy_type": null,
+            "created_at": "2026-02-01T00:00:00+00:00",
+            "updated_at": "2026-04-18T21:21:51.083040+00:00"
         },
         "EXP-036": {
             "id": "EXP-036",
@@ -170,7 +250,13 @@
             "retired_reason": "Baseline experiment, superseded by EXP-400.",
             "paper_config": "configs/paper_exp036.yaml",
             "backtest_config": null,
-            "notes": "Baseline experiment, superseded by EXP-400"
+            "notes": "Baseline experiment, superseded by EXP-400",
+            "config_path": "configs/paper_exp036.yaml",
+            "env_file": ".env.exp036",
+            "db_path": "data/pilotai_exp036.db",
+            "strategy_type": null,
+            "created_at": "2026-02-01T00:00:00+00:00",
+            "updated_at": "2026-04-18T21:21:51.083040+00:00"
         },
         "EXP-059": {
             "id": "EXP-059",
@@ -185,7 +271,13 @@
             "retired_reason": "Superseded by EXP-400/401.",
             "paper_config": "configs/paper_exp059.yaml",
             "backtest_config": null,
-            "notes": "Superseded"
+            "notes": "Superseded",
+            "config_path": "configs/paper_exp059.yaml",
+            "env_file": ".env.exp059",
+            "db_path": "data/pilotai_exp059.db",
+            "strategy_type": null,
+            "created_at": "2026-02-01T00:00:00+00:00",
+            "updated_at": "2026-04-18T21:21:51.083040+00:00"
         },
         "EXP-154": {
             "id": "EXP-154",
@@ -200,7 +292,13 @@
             "retired_reason": "Superseded by EXP-400/401.",
             "paper_config": "configs/paper_exp154.yaml",
             "backtest_config": null,
-            "notes": "Superseded"
+            "notes": "Superseded",
+            "config_path": "configs/paper_exp154.yaml",
+            "env_file": ".env.exp154",
+            "db_path": "data/pilotai_exp154.db",
+            "strategy_type": null,
+            "created_at": "2026-02-01T00:00:00+00:00",
+            "updated_at": "2026-04-18T21:21:51.083040+00:00"
         },
         "EXP-305": {
             "id": "EXP-305",
@@ -215,7 +313,13 @@
             "retired_reason": "Multi-ticker approach superseded by focused EXP-400/401.",
             "paper_config": "configs/paper_exp305.yaml",
             "backtest_config": null,
-            "notes": "Multi-ticker experiment, superseded by EXP-400/401"
+            "notes": "Multi-ticker experiment, superseded by EXP-400/401",
+            "config_path": "configs/paper_exp305.yaml",
+            "env_file": ".env.exp305",
+            "db_path": "data/pilotai_exp305.db",
+            "strategy_type": null,
+            "created_at": "2026-03-01T00:00:00+00:00",
+            "updated_at": "2026-04-18T21:21:51.083040+00:00"
         },
         "EXP-810-max": {
             "id": "EXP-810-max",
@@ -230,7 +334,9 @@
                 "max_dd": 0.036,
                 "oos_degradation": 0.041
             },
-            "verdict": "PASS \u2014 ensemble beats single model"
+            "verdict": "PASS \u2014 ensemble beats single model",
+            "created_at": "2026-03-31T00:00:00+00:00",
+            "updated_at": "2026-04-18T21:21:51.083040+00:00"
         },
         "EXP-820-max": {
             "id": "EXP-820-max",
@@ -243,7 +349,9 @@
             "metrics": {
                 "tests": 57
             },
-            "verdict": "PASS \u2014 infrastructure delivered"
+            "verdict": "PASS \u2014 infrastructure delivered",
+            "created_at": "2026-03-31T00:00:00+00:00",
+            "updated_at": "2026-04-18T21:21:51.083040+00:00"
         },
         "EXP-840-max": {
             "id": "EXP-840-max",
@@ -258,7 +366,9 @@
                 "sharpe": 4.84,
                 "max_dd": 0.046
             },
-            "verdict": "PASS \u2014 all criteria met, 14/16 variants pass"
+            "verdict": "PASS \u2014 all criteria met, 14/16 variants pass",
+            "created_at": "2026-03-31T00:00:00+00:00",
+            "updated_at": "2026-04-18T21:21:51.083040+00:00"
         },
         "EXP-850-max": {
             "id": "EXP-850-max",
@@ -273,7 +383,9 @@
                 "slippage_5w": 0.036,
                 "max_aum_M": 150
             },
-            "verdict": "CRITICAL \u2014 $1 spreads lose 28.6%, use $5+"
+            "verdict": "CRITICAL \u2014 $1 spreads lose 28.6%, use $5+",
+            "created_at": "2026-03-31T00:00:00+00:00",
+            "updated_at": "2026-04-18T21:21:51.083040+00:00"
         },
         "EXP-860-max": {
             "id": "EXP-860-max",
@@ -288,7 +400,9 @@
                 "max_dd": 0.019,
                 "win_rate": 0.896
             },
-            "verdict": "PASS \u2014 best standalone Sharpe"
+            "verdict": "PASS \u2014 best standalone Sharpe",
+            "created_at": "2026-03-31T00:00:00+00:00",
+            "updated_at": "2026-04-18T21:21:51.083040+00:00"
         },
         "EXP-870-max": {
             "id": "EXP-870-max",
@@ -302,14 +416,16 @@
                 "sharpe": 1.26,
                 "capacity_M": 3100
             },
-            "verdict": "PASS \u2014 $3.1B capacity achieved"
+            "verdict": "PASS \u2014 $3.1B capacity achieved",
+            "created_at": "2026-03-31T00:00:00+00:00",
+            "updated_at": "2026-04-18T21:21:51.083040+00:00"
         },
         "EXP-880-max": {
             "id": "EXP-880-max",
             "name": "Crisis Hedge V2 (PRODUCTION)",
             "created_by": "maximus",
             "created_date": "2026-03-31",
-            "status": "paper_trading_prep",
+            "status": "configuring",
             "ticker": "SPY",
             "description": "Crisis hedge improves returns +1.5pp while cutting DD. PRODUCTION CONFIG.",
             "metrics": {
@@ -318,7 +434,9 @@
                 "max_dd": 0.102,
                 "hedge_drag": 0.0033
             },
-            "verdict": "PASS \u2014 ALL CRITERIA MET. Recommended for paper trading."
+            "verdict": "PASS \u2014 ALL CRITERIA MET. Recommended for paper trading.",
+            "created_at": "2026-03-31T00:00:00+00:00",
+            "updated_at": "2026-04-18T21:21:51.083040+00:00"
         },
         "EXP-890-max": {
             "id": "EXP-890-max",
@@ -332,7 +450,9 @@
                 "tests": 35,
                 "risk_gates": 6
             },
-            "verdict": "PASS \u2014 deployment-ready infrastructure"
+            "verdict": "PASS \u2014 deployment-ready infrastructure",
+            "created_at": "2026-03-31T00:00:00+00:00",
+            "updated_at": "2026-04-18T21:21:51.083040+00:00"
         },
         "EXP-900-max": {
             "id": "EXP-900-max",
@@ -345,7 +465,9 @@
             "metrics": {
                 "whipsaw_reduction": 0.41
             },
-            "verdict": "PASS \u2014 ensemble rule + HMM for production"
+            "verdict": "PASS \u2014 ensemble rule + HMM for production",
+            "created_at": "2026-03-31T00:00:00+00:00",
+            "updated_at": "2026-04-18T21:21:51.083040+00:00"
         },
         "EXP-910-max": {
             "id": "EXP-910-max",
@@ -361,7 +483,9 @@
                 "max_dd": 0.028,
                 "capacity_M": 2003
             },
-            "verdict": "PASS \u2014 5/6 North Star targets met"
+            "verdict": "PASS \u2014 5/6 North Star targets met",
+            "created_at": "2026-03-31T00:00:00+00:00",
+            "updated_at": "2026-04-18T21:21:51.083040+00:00"
         },
         "EXP-920-max": {
             "id": "EXP-920-max",
@@ -376,7 +500,9 @@
                 "sharpe_ci_high": 4.3,
                 "p_cagr_50": 0.899
             },
-            "verdict": "PASS \u2014 strategy is statistically robust"
+            "verdict": "PASS \u2014 strategy is statistically robust",
+            "created_at": "2026-03-31T00:00:00+00:00",
+            "updated_at": "2026-04-18T21:21:51.083040+00:00"
         },
         "EXP-940-max": {
             "id": "EXP-940-max",
@@ -385,7 +511,9 @@
             "created_date": "2026-03-31",
             "status": "completed",
             "description": "Investor-grade HTML report consolidating all experiments.",
-            "verdict": "DELIVERED"
+            "verdict": "DELIVERED",
+            "created_at": "2026-03-31T00:00:00+00:00",
+            "updated_at": "2026-04-18T21:21:51.083040+00:00"
         },
         "EXP-950-max": {
             "id": "EXP-950-max",
@@ -399,7 +527,9 @@
                 "cagr_at_3_5x": 0.452,
                 "max_dd": 0.102
             },
-            "verdict": "100% CAGR not achievable at DD<12%. 3.5x optimal."
+            "verdict": "100% CAGR not achievable at DD<12%. 3.5x optimal.",
+            "created_at": "2026-03-31T00:00:00+00:00",
+            "updated_at": "2026-04-18T21:21:51.083040+00:00"
         },
         "EXP-960-max": {
             "id": "EXP-960-max",
@@ -414,7 +544,9 @@
                 "max_dd": 0.098,
                 "p_100_cagr": 0.708
             },
-            "verdict": "PASS \u2014 100% CAGR achievable with combined portfolio + leverage"
+            "verdict": "PASS \u2014 100% CAGR achievable with combined portfolio + leverage",
+            "created_at": "2026-03-31T00:00:00+00:00",
+            "updated_at": "2026-04-18T21:21:51.083040+00:00"
         },
         "EXP-970-max": {
             "id": "EXP-970-max",
@@ -430,7 +562,9 @@
                 "cagr_3_5x": 0.458,
                 "dd_3_5x": 0.078
             },
-            "verdict": "PASS \u2014 leverage validated out-of-sample"
+            "verdict": "PASS \u2014 leverage validated out-of-sample",
+            "created_at": "2026-03-31T00:00:00+00:00",
+            "updated_at": "2026-04-18T21:21:51.083040+00:00"
         },
         "EXP-980-max": {
             "id": "EXP-980-max",
@@ -443,7 +577,9 @@
                 "max_leverage_alpaca": 2.0,
                 "max_leverage_ibkr": 3.0
             },
-            "verdict": "2.0x at Alpaca (live), 2.5-3.0x at IBKR (portfolio margin)"
+            "verdict": "2.0x at Alpaca (live), 2.5-3.0x at IBKR (portfolio margin)",
+            "created_at": "2026-03-31T00:00:00+00:00",
+            "updated_at": "2026-04-18T21:21:51.083040+00:00"
         },
         "EXP-990-max": {
             "id": "EXP-990-max",
@@ -452,7 +588,22 @@
             "created_date": "2026-03-31",
             "status": "completed",
             "description": "~180 test files consolidated. Coverage analysis.",
-            "verdict": "DELIVERED \u2014 test infrastructure validated"
+            "verdict": "DELIVERED \u2014 test infrastructure validated",
+            "created_at": "2026-03-31T00:00:00+00:00",
+            "updated_at": "2026-04-18T21:21:51.083040+00:00"
+        },
+        "EXP-307": {
+            "id": "EXP-307",
+            "name": "Sector ETF Diversification",
+            "created_by": "maximus",
+            "created_at": "2026-04-18T21:21:57.220801+00:00",
+            "updated_at": "2026-04-18T21:21:57.220801+00:00",
+            "status": "registered",
+            "ticker": "SPY,XLI,XLF",
+            "config_path": "configs/paper_exp307.yaml",
+            "db_path": "data/exp307/pilotai_exp307.db",
+            "strategy_type": "portfolio",
+            "description": "Multi-ticker scanner: SPY + XLI + XLF simultaneously."
         }
     }
 }
