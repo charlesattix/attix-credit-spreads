@@ -62,7 +62,7 @@ from .data import (
     PUSHED_DATA_PATH,
     load_pushed_data,
 )
-from .html import render_dashboard, render_login_page
+from .html import render_dashboard, render_login_page, render_registry_page
 
 # ---------------------------------------------------------------------------
 # Config
@@ -332,7 +332,7 @@ async def health():
         registry = load_registry()
         live_count = sum(
             1 for e in registry["experiments"].values()
-            if e.get("status") == "paper_trading"
+            if e.get("status") in ("active", "paper_trading")
         )
         return {
             "status":           "ok",
@@ -376,7 +376,7 @@ async def experiment_trades(
     if not exp:
         raise HTTPException(status_code=404, detail=f"{exp_id} not found in registry")
     # SECURITY AUDIT #8: restrict access to paper_trading experiments only to prevent IDOR.
-    if exp.get("status") != "paper_trading":
+    if exp.get("status") not in ("active", "paper_trading"):
         raise HTTPException(status_code=404, detail=f"{exp_id} not found in registry")
     trades = get_trades(exp, limit=limit)
     return {
@@ -398,7 +398,7 @@ async def experiment_positions(
     if not exp:
         raise HTTPException(status_code=404, detail=f"{exp_id} not found in registry")
     # SECURITY AUDIT #8: restrict access to paper_trading experiments only to prevent IDOR.
-    if exp.get("status") != "paper_trading":
+    if exp.get("status") not in ("active", "paper_trading"):
         raise HTTPException(status_code=404, detail=f"{exp_id} not found in registry")
     positions = get_positions(exp)
     return {
@@ -413,6 +413,105 @@ async def experiment_positions(
 async def summary(_key: str = Depends(require_api_key)):
     """Combined P&L summary across all live experiments."""
     return _cached("summary", 30.0, summary_all)
+
+
+# ---------------------------------------------------------------------------
+# Routes — Registry page
+# ---------------------------------------------------------------------------
+
+@app.get("/registry", response_class=HTMLResponse, include_in_schema=False)
+async def registry_page(request: Request, _: None = Depends(require_session)):
+    """Experiment registry management page — session required."""
+    try:
+        import sys
+        from pathlib import Path
+        _proj = Path(__file__).resolve().parent.parent
+        if str(_proj) not in sys.path:
+            sys.path.insert(0, str(_proj))
+        from experiments.registry import load_registry as load_exp_registry, validate
+        registry = load_exp_registry()
+        errors = validate(registry)
+        validation = {
+            "valid": len(errors) == 0,
+            "error_count": len(errors),
+            "errors": errors,
+        }
+        html = render_registry_page(registry, validation=validation)
+        return HTMLResponse(content=html, status_code=200)
+    except Exception as e:
+        logger.exception("Registry page render failed")
+        return HTMLResponse(
+            content=f"<pre>Registry error: {e}</pre>",
+            status_code=500,
+        )
+
+
+@app.post("/api/v1/registry/{exp_id}/transition")
+async def registry_transition(
+    exp_id: str,
+    request: Request,
+    _key: str = Depends(require_api_key),
+):
+    """Transition an experiment to a new status."""
+    import sys
+    from pathlib import Path
+    _proj = Path(__file__).resolve().parent.parent
+    if str(_proj) not in sys.path:
+        sys.path.insert(0, str(_proj))
+    from experiments.registry import load_registry as load_exp_registry, transition_status
+    body = await request.json()
+    new_status = body.get("status")
+    reason = body.get("reason")
+    if not new_status:
+        raise HTTPException(status_code=400, detail="Missing 'status' in request body")
+    try:
+        registry = load_exp_registry()
+        exp = transition_status(exp_id, new_status, reason=reason, registry=registry)
+        _cache.clear()
+        return {"status": "ok", "experiment": exp}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/api/v1/registry/validate")
+async def registry_validate(_key: str = Depends(require_api_key)):
+    """Run validation on the registry and return errors."""
+    import sys
+    from pathlib import Path
+    _proj = Path(__file__).resolve().parent.parent
+    if str(_proj) not in sys.path:
+        sys.path.insert(0, str(_proj))
+    from experiments.registry import load_registry as load_exp_registry, validate
+    registry = load_exp_registry()
+    errors = validate(registry)
+    return {
+        "status": "ok" if not errors else "errors",
+        "error_count": len(errors),
+        "errors": errors,
+    }
+
+
+@app.get("/api/v1/registry/sync")
+async def registry_sync(_key: str = Depends(require_api_key)):
+    """Find orphan env files, DBs, and active-but-not-running experiments."""
+    import sys
+    from pathlib import Path
+    _proj = Path(__file__).resolve().parent.parent
+    if str(_proj) not in sys.path:
+        sys.path.insert(0, str(_proj))
+    from experiments.registry import (
+        load_registry as load_exp_registry,
+        find_orphan_env_files,
+        find_orphan_dbs,
+        find_active_not_running,
+    )
+    registry = load_exp_registry()
+    return {
+        "status": "ok",
+        "orphan_env_files": find_orphan_env_files(registry),
+        "orphan_dbs": find_orphan_dbs(registry),
+        "active_not_running": find_active_not_running(registry),
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -784,7 +883,7 @@ async def _on_startup():
         try:
             registry = load_registry()
             live = [e for e in registry["experiments"].values()
-                    if e.get("status") == "paper_trading"]
+                    if e.get("status") in ("active", "paper_trading")]
             logger.info(f"  Live experiments: {[e['id'] for e in live]}")
         except Exception as e:
             logger.warning(f"  Could not load registry: {e}")

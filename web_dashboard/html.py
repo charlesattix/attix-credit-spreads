@@ -11,6 +11,128 @@ from .data import STARTING_EQUITY
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
+# Registry page CSS (appended to base CSS on the /registry page)
+# ---------------------------------------------------------------------------
+_REGISTRY_CSS = """
+/* Registry page additions */
+.nav-links a {
+    color: #64748b; font-size: 12px; text-decoration: none;
+    padding: 3px 10px; border-radius: 5px; transition: color 0.15s;
+}
+.nav-links a:hover { color: #94a3b8; }
+.nav-links a.active { color: #f8fafc; font-weight: 600; }
+
+.filter-bar {
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+.filter-btn {
+    padding: 5px 14px; font-size: 12px; font-weight: 600;
+    border: 1px solid #e2e8f0; border-radius: 8px;
+    background: #fff; color: #64748b; cursor: pointer;
+    transition: all 0.15s; font-family: inherit;
+}
+.filter-btn:hover { border-color: #94a3b8; color: #334155; }
+.filter-btn.active { background: #0f172a; color: #f8fafc; border-color: #0f172a; }
+.search-input {
+    padding: 6px 14px; font-size: 13px; border: 1px solid #e2e8f0;
+    border-radius: 8px; background: #fff; color: #1e293b; outline: none;
+    min-width: 200px; font-family: inherit; transition: border-color 0.15s;
+}
+.search-input:focus { border-color: #6366f1; }
+
+/* Status badges */
+.status-badge {
+    display: inline-block; padding: 2px 10px; border-radius: 12px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.3px;
+    text-transform: uppercase;
+}
+.status-active       { background: #dcfce7; color: #166534; }
+.status-paused       { background: #fef9c3; color: #854d0e; }
+.status-stopped      { background: #fee2e2; color: #991b1b; }
+.status-failed       { background: #fee2e2; color: #991b1b; }
+.status-retired      { background: #f1f5f9; color: #64748b; }
+.status-registered   { background: #dbeafe; color: #1e40af; }
+.status-configuring  { background: #e0e7ff; color: #3730a3; }
+.status-completed    { background: #f1f5f9; color: #64748b; }
+
+/* Registry table */
+.reg-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.reg-table th {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; color: #94a3b8; text-align: left;
+    padding: 8px 12px; border-bottom: 2px solid #e2e8f0;
+    position: sticky; top: 0; background: #f8fafc; z-index: 1;
+}
+.reg-table td {
+    padding: 10px 12px; border-bottom: 1px solid #f1f5f9;
+    vertical-align: top;
+}
+.reg-table tr { cursor: pointer; transition: background 0.1s; }
+.reg-table tr:hover { background: #f8fafc; }
+.reg-table tr.expanded { background: #f8fafc; }
+.reg-exp-id { font-weight: 700; color: #0f172a; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; }
+.reg-name { font-weight: 600; color: #334155; }
+.reg-desc-cell { max-width: 200px; color: #64748b; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.reg-meta { font-size: 11px; color: #94a3b8; }
+
+/* Detail panel (expandable) */
+.detail-panel {
+    display: none; background: #fff; border: 1px solid #e2e8f0;
+    border-radius: 10px; margin: 4px 0 12px; padding: 20px 24px;
+    animation: fadeIn 0.15s ease-in-out;
+}
+.detail-panel.open { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+.detail-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px 32px;
+    font-size: 13px;
+}
+.detail-field { display: flex; flex-direction: column; }
+.detail-label { font-size: 10px; font-weight: 700; text-transform: uppercase;
+                letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 2px; }
+.detail-value { color: #1e293b; word-break: break-all; }
+.detail-value.mono { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; }
+.detail-desc { grid-column: 1 / -1; }
+.detail-notes { grid-column: 1 / -1; background: #f8fafc; border-radius: 8px; padding: 12px 16px; font-size: 12px; color: #475569; line-height: 1.5; }
+
+/* Action buttons */
+.action-bar { margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+.action-btn {
+    padding: 6px 16px; font-size: 12px; font-weight: 600;
+    border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer;
+    transition: all 0.15s; font-family: inherit; background: #fff; color: #334155;
+}
+.action-btn:hover { border-color: #94a3b8; }
+.action-btn.activate { background: #059669; color: #fff; border-color: #059669; }
+.action-btn.activate:hover { background: #047857; }
+.action-btn.pause { background: #d97706; color: #fff; border-color: #d97706; }
+.action-btn.pause:hover { background: #b45309; }
+.action-btn.stop { background: #dc2626; color: #fff; border-color: #dc2626; }
+.action-btn.stop:hover { background: #b91c1c; }
+.action-btn.retire { background: #64748b; color: #fff; border-color: #64748b; }
+.action-btn.retire:hover { background: #475569; }
+.action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Validate/Sync result panel */
+.result-panel {
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
+    padding: 16px 20px; margin-top: 12px; font-size: 13px;
+    white-space: pre-wrap; font-family: 'SF Mono', 'Fira Code', monospace;
+    max-height: 300px; overflow-y: auto; display: none;
+}
+.result-panel.open { display: block; }
+.result-pass { color: #059669; }
+.result-fail { color: #dc2626; }
+
+@media (max-width: 800px) {
+    .reg-table { font-size: 12px; }
+    .detail-grid { grid-template-columns: 1fr; }
+    .reg-desc-cell { display: none; }
+}
+"""
+
+# ---------------------------------------------------------------------------
 _CSS = """
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
@@ -440,6 +562,7 @@ def render_dashboard(all_stats: list[dict]) -> str:
 <div class="top-bar">
   <div><span class="brand">Attix</span> &nbsp; <span class="live-dot"></span> Live Paper Trading</div>
   <div style="display:flex;align-items:center;gap:16px">
+    <a href="/registry" style="color:#94a3b8;text-decoration:none;font-size:0.85rem;font-weight:500;">Registry</a>
     <span>Updated {now_str} &nbsp;&bull;&nbsp; Refresh in <span id="cd">300s</span></span>
     <a href="/logout" class="logout-btn">Sign out</a>
   </div>
@@ -558,5 +681,409 @@ def render_login_page(error: str = "") -> str:
     </form>
     <div class="login-footer">Attix Credit Spreads &bull; Authorized access only</div>
   </div>
+</body>
+</html>"""
+
+
+# ---------------------------------------------------------------------------
+# Registry page
+# ---------------------------------------------------------------------------
+
+_STATUS_BADGE_CSS = {
+    "active": "status-active",
+    "paused": "status-paused",
+    "stopped": "status-stopped",
+    "failed": "status-failed",
+    "retired": "status-retired",
+    "registered": "status-registered",
+    "configuring": "status-configuring",
+    "completed": "status-completed",
+    # Legacy
+    "paper_trading": "status-active",
+    "in_development": "status-registered",
+}
+
+
+def _status_badge(status: str) -> str:
+    cls = _STATUS_BADGE_CSS.get(status, "status-registered")
+    label = _html.escape(status.upper())
+    return f'<span class="status-badge {cls}">{label}</span>'
+
+
+def _sort_experiments(experiments: dict) -> list[dict]:
+    """Sort experiments: active first, then by ID."""
+    status_order = {
+        "active": 0, "paused": 1, "stopped": 2, "failed": 3,
+        "registered": 4, "configuring": 5, "retired": 6, "completed": 7,
+        # Legacy
+        "paper_trading": 0, "in_development": 4,
+    }
+    exps = list(experiments.values())
+    # Exclude research entries (EXP-*-max, etc.)
+    exps = [e for e in exps if not any(e.get("id", "").endswith(s) for s in ("-max", "-real", "-paper", "-validation"))]
+    exps.sort(key=lambda e: (status_order.get(e.get("status", ""), 99), e.get("id", "")))
+    return exps
+
+
+def _render_registry_row(exp: dict, idx: int) -> str:
+    eid = _html.escape(str(exp.get("id", "")))
+    name = _html.escape(str(exp.get("name", "—")))
+    ticker = _html.escape(str(exp.get("ticker") or "—"))
+    status = exp.get("status", "registered")
+    strategy = _html.escape(str(exp.get("strategy_type") or "—"))
+    account = _html.escape(str(exp.get("alpaca_account_id") or exp.get("account_id") or "—"))
+    creator = _html.escape(str(exp.get("created_by", "—")))
+    created = _html.escape(str(exp.get("created_at") or exp.get("created_date") or "—"))[:10]
+    started = _html.escape(str(exp.get("last_started_at") or exp.get("live_since") or "—"))[:10]
+    desc_raw = exp.get("description") or ""
+    desc_trunc = _html.escape(desc_raw[:80] + ("..." if len(desc_raw) > 80 else ""))
+
+    tc = "ibit" if ticker.upper() == "IBIT" else ""
+
+    # Detail panel fields
+    config_path = _html.escape(str(exp.get("config_path") or exp.get("paper_config") or "—"))
+    env_file = _html.escape(str(exp.get("env_file") or "—"))
+    db_path = _html.escape(str(exp.get("db_path") or "—"))
+    git_branch = _html.escape(str(exp.get("git_branch") or "—"))
+    updated = _html.escape(str(exp.get("updated_at") or "—"))[:19]
+    stopped_at = _html.escape(str(exp.get("last_stopped_at") or "—"))[:19]
+    notes = _html.escape(str(exp.get("notes") or ""))
+    full_desc = _html.escape(str(desc_raw))
+    retired_date = _html.escape(str(exp.get("retired_date") or "—"))
+    superseded = _html.escape(str(exp.get("superseded_by") or "—"))
+    lessons = _html.escape(str(exp.get("lessons_learned") or ""))
+
+    # Action buttons based on current status
+    # Valid transitions from experiments/registry.py
+    transitions = {
+        "registered": [("configuring", "Configure", ""), ("retired", "Retire", "retire")],
+        "configuring": [("active", "Activate", "activate"), ("retired", "Retire", "retire")],
+        "active": [("paused", "Pause", "pause"), ("stopped", "Stop", "stop"), ("retired", "Retire", "retire")],
+        "paused": [("active", "Resume", "activate"), ("stopped", "Stop", "stop"), ("retired", "Retire", "retire")],
+        "stopped": [("active", "Restart", "activate"), ("retired", "Retire", "retire")],
+        "failed": [("configuring", "Reconfigure", ""), ("retired", "Retire", "retire")],
+    }
+    btns = transitions.get(status, [])
+    buttons_html = ""
+    for target, label, css_cls in btns:
+        btn_cls = f"action-btn {css_cls}" if css_cls else "action-btn"
+        buttons_html += (
+            f'<button class="{btn_cls}" '
+            f'onclick="doTransition(\'{eid}\', \'{target}\', this)">{label}</button> '
+        )
+
+    # Retired extras
+    retired_html = ""
+    if status == "retired":
+        retired_html = f"""
+      <div class="detail-field"><div class="detail-label">Retired Date</div><div class="detail-value">{retired_date}</div></div>
+      <div class="detail-field"><div class="detail-label">Superseded By</div><div class="detail-value">{superseded}</div></div>"""
+        if lessons:
+            retired_html += f"""
+      <div class="detail-desc"><div class="detail-label">Lessons Learned</div><div class="detail-notes">{lessons}</div></div>"""
+
+    return f"""
+<tr class="reg-row" data-status="{status}" data-search="{eid.lower()} {name.lower()}" onclick="toggleDetail({idx})">
+  <td>{_status_badge(status)}</td>
+  <td class="reg-exp-id">{eid}</td>
+  <td class="reg-name">{name}</td>
+  <td><span class="ticker {tc}">{ticker}</span></td>
+  <td class="reg-meta">{strategy}</td>
+  <td class="reg-meta" style="font-family:monospace;font-size:11px">{account}</td>
+  <td class="reg-meta">{created}</td>
+  <td class="reg-meta">{started}</td>
+  <td class="reg-meta">{creator}</td>
+  <td class="reg-desc-cell" title="{_html.escape(desc_raw)}">{desc_trunc}</td>
+</tr>
+<tr class="detail-row" id="detail-{idx}" style="display:none">
+  <td colspan="10" style="padding:0 12px 8px">
+    <div class="detail-panel open">
+      <div class="detail-grid">
+        <div class="detail-field"><div class="detail-label">Config Path</div><div class="detail-value mono">{config_path}</div></div>
+        <div class="detail-field"><div class="detail-label">Env File</div><div class="detail-value mono">{env_file}</div></div>
+        <div class="detail-field"><div class="detail-label">DB Path</div><div class="detail-value mono">{db_path}</div></div>
+        <div class="detail-field"><div class="detail-label">Git Branch</div><div class="detail-value mono">{git_branch}</div></div>
+        <div class="detail-field"><div class="detail-label">Updated At</div><div class="detail-value">{updated}</div></div>
+        <div class="detail-field"><div class="detail-label">Last Stopped</div><div class="detail-value">{stopped_at}</div></div>
+        {retired_html}
+        {"" if not full_desc else f'<div class="detail-desc"><div class="detail-label">Full Description</div><div class="detail-notes">{full_desc}</div></div>'}
+        {"" if not notes else f'<div class="detail-desc"><div class="detail-label">Notes</div><div class="detail-notes">{notes}</div></div>'}
+      </div>
+      {"" if not buttons_html else f'<div class="action-bar">{buttons_html}</div>'}
+    </div>
+  </td>
+</tr>"""
+
+
+def render_registry_page(registry: dict, validation: dict | None = None) -> str:
+    now = datetime.now(timezone.utc)
+    now_str = now.strftime("%Y-%m-%d %H:%M UTC")
+    experiments = registry.get("experiments", {})
+    sorted_exps = _sort_experiments(experiments)
+
+    # Summary counts
+    all_real = [e for e in experiments.values()
+                if not any(e.get("id", "").endswith(s) for s in ("-max", "-real", "-paper", "-validation"))]
+    active_count = sum(1 for e in all_real if e.get("status") in ("active", "paper_trading"))
+    paused_count = sum(1 for e in all_real if e.get("status") == "paused")
+    stopped_count = sum(1 for e in all_real if e.get("status") in ("stopped", "failed"))
+    retired_count = sum(1 for e in all_real if e.get("status") in ("retired", "completed"))
+    total_count = len(all_real)
+
+    val_status = "—"
+    val_cls = "neutral"
+    if validation:
+        if validation.get("valid"):
+            val_status = "PASS"
+            val_cls = "up"
+        else:
+            val_status = f"FAIL ({validation.get('error_count', 0)})"
+            val_cls = "down"
+
+    # Rows
+    rows = "".join(_render_registry_row(exp, i) for i, exp in enumerate(sorted_exps))
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Registry — Attix Dashboard</title>
+  <style>{_CSS}{_REGISTRY_CSS}</style>
+</head>
+<body>
+<div class="top-bar">
+  <div>
+    <span class="brand">Attix</span>
+    <span class="nav-links" style="margin-left:20px">
+      <a href="/">Dashboard</a>
+      <a href="/registry" class="active">Registry</a>
+    </span>
+  </div>
+  <div style="display:flex;align-items:center;gap:16px">
+    <span>Schema v{_html.escape(str(registry.get('schema_version', '?')))} &bull; {now_str}</span>
+    <a href="/logout" class="logout-btn">Sign out</a>
+  </div>
+</div>
+<div class="page" style="max-width:1200px">
+  <h1>Experiment Registry</h1>
+  <p class="subtitle">Single source of truth for all experiments &bull; {total_count} registered</p>
+
+  <!-- Summary cards -->
+  <div class="summary">
+    <div class="s-card highlight">
+      <div class="s-label">Total</div>
+      <div class="s-val">{total_count}</div>
+      <div class="s-sub">experiments registered</div>
+    </div>
+    <div class="s-card">
+      <div class="s-label">Active</div>
+      <div class="s-val up">{active_count}</div>
+      <div class="s-sub">running scanners</div>
+    </div>
+    <div class="s-card">
+      <div class="s-label">Paused</div>
+      <div class="s-val" style="color:#d97706">{paused_count}</div>
+      <div class="s-sub">dry-run mode</div>
+    </div>
+    <div class="s-card">
+      <div class="s-label">Stopped / Failed</div>
+      <div class="s-val down">{stopped_count}</div>
+      <div class="s-sub">not running</div>
+    </div>
+    <div class="s-card">
+      <div class="s-label">Retired</div>
+      <div class="s-val neutral">{retired_count}</div>
+      <div class="s-sub">historical</div>
+    </div>
+    <div class="s-card">
+      <div class="s-label">Validation</div>
+      <div class="s-val {val_cls}">{val_status}</div>
+      <div class="s-sub">registry integrity</div>
+    </div>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="filterStatus('all', this)">All</button>
+    <button class="filter-btn" onclick="filterStatus('active', this)">Active</button>
+    <button class="filter-btn" onclick="filterStatus('paused', this)">Paused</button>
+    <button class="filter-btn" onclick="filterStatus('stopped,failed', this)">Stopped</button>
+    <button class="filter-btn" onclick="filterStatus('registered,configuring', this)">Registered</button>
+    <button class="filter-btn" onclick="filterStatus('retired', this)">Retired</button>
+    <input type="text" class="search-input" placeholder="Search by ID or name..." oninput="searchFilter(this.value)">
+    <span style="flex:1"></span>
+    <button class="action-btn" onclick="runValidate()" id="validate-btn">Validate All</button>
+    <button class="action-btn" onclick="runSync()" id="sync-btn">Sync</button>
+  </div>
+
+  <!-- Results panel (for validate/sync) -->
+  <div class="result-panel" id="result-panel"></div>
+
+  <!-- Experiment table -->
+  <div style="overflow-x:auto">
+    <table class="reg-table">
+      <thead>
+        <tr>
+          <th>Status</th>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Ticker</th>
+          <th>Strategy</th>
+          <th>Account</th>
+          <th>Created</th>
+          <th>Started</th>
+          <th>Creator</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    <span>Attix Credit Spreads &bull; {total_count} experiments</span>
+    <span>{now_str}</span>
+  </div>
+</div>
+
+<script>
+// Toggle detail panel
+function toggleDetail(idx) {{
+  var row = document.getElementById('detail-' + idx);
+  if (!row) return;
+  var isOpen = row.style.display !== 'none';
+  // Close all open detail rows
+  document.querySelectorAll('.detail-row').forEach(function(r) {{ r.style.display = 'none'; }});
+  if (!isOpen) row.style.display = 'table-row';
+}}
+
+// Filter by status
+function filterStatus(statuses, btn) {{
+  document.querySelectorAll('.filter-btn').forEach(function(b) {{ b.classList.remove('active'); }});
+  btn.classList.add('active');
+  var list = statuses.split(',');
+  document.querySelectorAll('.reg-row').forEach(function(row) {{
+    var s = row.getAttribute('data-status');
+    var show = (statuses === 'all') || list.indexOf(s) >= 0;
+    row.style.display = show ? '' : 'none';
+    // Also hide detail row
+    var idx = Array.from(row.parentNode.children).indexOf(row);
+    var detail = row.nextElementSibling;
+    if (detail && detail.classList.contains('detail-row')) {{
+      detail.style.display = 'none';
+    }}
+  }});
+}}
+
+// Search filter
+function searchFilter(q) {{
+  q = q.toLowerCase().trim();
+  document.querySelectorAll('.reg-row').forEach(function(row) {{
+    var searchText = row.getAttribute('data-search') || '';
+    row.style.display = (!q || searchText.indexOf(q) >= 0) ? '' : 'none';
+    var detail = row.nextElementSibling;
+    if (detail && detail.classList.contains('detail-row')) {{
+      detail.style.display = 'none';
+    }}
+  }});
+}}
+
+// Transition action
+function doTransition(expId, target, btn) {{
+  event.stopPropagation();
+  var reason = '';
+  if (target === 'paused' || target === 'retired') {{
+    reason = prompt('Reason for ' + target + ':');
+    if (reason === null) return;
+  }}
+  btn.disabled = true;
+  btn.textContent = '...';
+  fetch('/api/v1/registry/' + expId + '/transition', {{
+    method: 'POST',
+    headers: {{ 'Content-Type': 'application/json' }},
+    body: JSON.stringify({{ target_status: target, reason: reason || '' }})
+  }})
+  .then(function(r) {{ return r.json(); }})
+  .then(function(data) {{
+    if (data.status === 'ok') {{
+      location.reload();
+    }} else {{
+      alert('Error: ' + (data.detail || data.message || 'unknown'));
+      btn.disabled = false;
+      btn.textContent = target;
+    }}
+  }})
+  .catch(function(e) {{
+    alert('Error: ' + e.message);
+    btn.disabled = false;
+  }});
+}}
+
+// Validate
+function runValidate() {{
+  var btn = document.getElementById('validate-btn');
+  var panel = document.getElementById('result-panel');
+  btn.disabled = true;
+  btn.textContent = 'Validating...';
+  fetch('/api/v1/registry/validate')
+  .then(function(r) {{ return r.json(); }})
+  .then(function(data) {{
+    panel.className = 'result-panel open';
+    if (data.valid) {{
+      panel.innerHTML = '<span class="result-pass">PASS</span> — ' + data.message;
+    }} else {{
+      panel.innerHTML = '<span class="result-fail">FAIL</span> — ' +
+        data.error_count + ' error(s):\\n' + (data.errors || []).join('\\n');
+    }}
+    btn.disabled = false;
+    btn.textContent = 'Validate All';
+  }})
+  .catch(function(e) {{
+    panel.className = 'result-panel open';
+    panel.innerHTML = '<span class="result-fail">ERROR</span>: ' + e.message;
+    btn.disabled = false;
+    btn.textContent = 'Validate All';
+  }});
+}}
+
+// Sync
+function runSync() {{
+  var btn = document.getElementById('sync-btn');
+  var panel = document.getElementById('result-panel');
+  btn.disabled = true;
+  btn.textContent = 'Scanning...';
+  fetch('/api/v1/registry/sync')
+  .then(function(r) {{ return r.json(); }})
+  .then(function(data) {{
+    panel.className = 'result-panel open';
+    var lines = [];
+    if (data.orphan_envs && data.orphan_envs.length > 0) {{
+      lines.push('Orphan .env files: ' + data.orphan_envs.join(', '));
+    }}
+    if (data.orphan_dbs && data.orphan_dbs.length > 0) {{
+      lines.push('Orphan databases: ' + data.orphan_dbs.join(', '));
+    }}
+    if (data.active_not_running && data.active_not_running.length > 0) {{
+      lines.push('Active but not running: ' + data.active_not_running.join(', '));
+    }}
+    if (lines.length === 0) {{
+      panel.innerHTML = '<span class="result-pass">ALL CLEAN</span> — no orphans or issues detected';
+    }} else {{
+      panel.innerHTML = '<span class="result-fail">' + data.issue_count + ' issue(s)</span>:\\n' + lines.join('\\n');
+    }}
+    btn.disabled = false;
+    btn.textContent = 'Sync';
+  }})
+  .catch(function(e) {{
+    panel.className = 'result-panel open';
+    panel.innerHTML = '<span class="result-fail">ERROR</span>: ' + e.message;
+    btn.disabled = false;
+    btn.textContent = 'Sync';
+  }});
+}}
+</script>
 </body>
 </html>"""
