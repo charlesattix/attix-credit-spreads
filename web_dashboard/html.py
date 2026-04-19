@@ -10,18 +10,43 @@ from .data import STARTING_EQUITY
 
 logger = logging.getLogger(__name__)
 
+
+# ---------------------------------------------------------------------------
+# Shared navigation
+# ---------------------------------------------------------------------------
+
+_NAV_ITEMS = [
+    ("/", "Overview"),
+    ("/positions", "Positions"),
+    ("/trades", "Trades"),
+    ("/registry", "Registry"),
+]
+
+
+def _render_nav(active_path: str, right_html: str = "") -> str:
+    """Render the shared top bar with navigation links."""
+    links = []
+    for href, label in _NAV_ITEMS:
+        cls = ' class="active"' if href == active_path else ""
+        links.append(f'<a href="{href}"{cls}>{label}</a>')
+    nav_html = " ".join(links)
+    return f"""<div class="top-bar">
+  <div style="display:flex;align-items:center;gap:4px">
+    <span class="brand">Attix</span>
+    <span class="nav-links">{nav_html}</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:16px">
+    {right_html}
+    <a href="/logout" class="logout-btn">Sign out</a>
+  </div>
+</div>"""
+
+
 # ---------------------------------------------------------------------------
 # Registry page CSS (appended to base CSS on the /registry page)
 # ---------------------------------------------------------------------------
 _REGISTRY_CSS = """
 /* Registry page additions */
-.nav-links a {
-    color: #64748b; font-size: 12px; text-decoration: none;
-    padding: 3px 10px; border-radius: 5px; transition: color 0.15s;
-}
-.nav-links a:hover { color: #94a3b8; }
-.nav-links a.active { color: #f8fafc; font-weight: 600; }
-
 .filter-bar {
     display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
     margin-bottom: 20px;
@@ -150,7 +175,14 @@ body {
     transition: color 0.15s, border-color 0.15s;
 }
 .logout-btn:hover { color: #94a3b8; border-color: #334155; }
-.top-bar .brand { color: #f8fafc; font-weight: 700; font-size: 14px; }
+.top-bar .brand { color: #f8fafc; font-weight: 700; font-size: 14px; margin-right: 4px; }
+.nav-links { display: inline-flex; gap: 2px; margin-left: 12px; }
+.nav-links a {
+    color: #64748b; font-size: 12px; text-decoration: none;
+    padding: 4px 10px; border-radius: 5px; transition: color 0.15s, background 0.15s;
+}
+.nav-links a:hover { color: #cbd5e1; background: rgba(255,255,255,0.06); }
+.nav-links a.active { color: #f8fafc; font-weight: 600; background: rgba(255,255,255,0.1); }
 .live-dot {
     display: inline-block; width: 7px; height: 7px;
     background: #22c55e; border-radius: 50%; margin-right: 4px;
@@ -550,6 +582,8 @@ def render_dashboard(all_stats: list[dict]) -> str:
 
     exp_rows = "".join(_render_exp_card(s) for s in all_stats)
 
+    nav = _render_nav("/", f'<span class="live-dot"></span> <span>Updated {now_str} &bull; Refresh in <span id="cd">300s</span></span>')
+
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -559,14 +593,7 @@ def render_dashboard(all_stats: list[dict]) -> str:
   <style>{_CSS}</style>
 </head>
 <body>
-<div class="top-bar">
-  <div><span class="brand">Attix</span> &nbsp; <span class="live-dot"></span> Live Paper Trading</div>
-  <div style="display:flex;align-items:center;gap:16px">
-    <a href="/registry" style="color:#94a3b8;text-decoration:none;font-size:0.85rem;font-weight:500;">Registry</a>
-    <span>Updated {now_str} &nbsp;&bull;&nbsp; Refresh in <span id="cd">300s</span></span>
-    <a href="/logout" class="logout-btn">Sign out</a>
-  </div>
-</div>
+{nav}
 <div class="page">
   <h1>Attix Dashboard</h1>
   <p class="subtitle">Credit Spreads &bull; 8-week gate: Mar 16 → May 11, 2026</p>
@@ -681,6 +708,212 @@ def render_login_page(error: str = "") -> str:
     </form>
     <div class="login-footer">Attix Credit Spreads &bull; Authorized access only</div>
   </div>
+</body>
+</html>"""
+
+
+# ---------------------------------------------------------------------------
+# Positions page (aggregated across all live experiments)
+# ---------------------------------------------------------------------------
+
+def render_positions_page(all_stats: list[dict]) -> str:
+    now = datetime.now(timezone.utc)
+    now_str = now.strftime("%Y-%m-%d %H:%M UTC")
+    nav = _render_nav("/positions", f'<span>{now_str}</span>')
+
+    total_positions = sum(len(s.get("open_trades", [])) for s in all_stats)
+
+    # Build position rows from all experiments
+    pos_rows = ""
+    for s in all_stats:
+        exp_id = _html.escape(s.get("id", ""))
+        exp_name = _html.escape(s.get("name", ""))
+        alp = s.get("alpaca") or {}
+        alp_positions = alp.get("positions") or []
+        open_trades = s.get("open_trades", [])
+
+        # Prefer Alpaca live positions if available
+        if alp_positions:
+            for p in alp_positions:
+                sym = _html.escape(str(p.get("symbol", "—")))
+                side = p.get("side", "—")
+                side_cls = "pos-side-short" if side == "short" else "pos-side-long"
+                qty = p.get("qty", "—")
+                price = p.get("current_price") or p.get("avg_entry_price") or "—"
+                mkt_val = p.get("market_value", "—")
+                unreal = p.get("unrealized_pl")
+                unreal_str = _fmt_pnl(float(unreal)) if unreal is not None else "—"
+                unreal_cls = _pnl_cls(float(unreal)) if unreal is not None else "neutral"
+                pos_rows += f"""<tr>
+  <td class="reg-exp-id">{exp_id}</td>
+  <td>{exp_name}</td>
+  <td class="pos-sym">{sym}</td>
+  <td class="{side_cls}">{side}</td>
+  <td>{qty}</td>
+  <td>{f"${float(price):,.2f}" if isinstance(price, (int, float)) else price}</td>
+  <td>{f"${float(mkt_val):,.0f}" if isinstance(mkt_val, (int, float)) else mkt_val}</td>
+  <td class="{unreal_cls}">{unreal_str}</td>
+</tr>"""
+        elif open_trades:
+            for t in open_trades:
+                sym = _html.escape(str(t.get("ticker", "—")))
+                strategy = _html.escape(str(t.get("strategy_type", "—")).replace("_", " ").title())
+                short_s = t.get("short_strike", "—")
+                long_s = t.get("long_strike", "—")
+                contracts = t.get("contracts", "—")
+                credit = t.get("credit")
+                credit_str = f"${float(credit):,.0f}" if credit is not None else "—"
+                exp_date = _html.escape(str(t.get("expiration", "—"))[:10])
+                pos_rows += f"""<tr>
+  <td class="reg-exp-id">{exp_id}</td>
+  <td>{exp_name}</td>
+  <td class="pos-sym">{sym}</td>
+  <td>{strategy}</td>
+  <td>{contracts}</td>
+  <td>{short_s}/{long_s}</td>
+  <td>{credit_str}</td>
+  <td class="reg-meta">{exp_date}</td>
+</tr>"""
+
+    if not pos_rows:
+        pos_rows = '<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:40px">No open positions</td></tr>'
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Positions — Attix Dashboard</title>
+  <style>{_CSS}{_REGISTRY_CSS}</style>
+</head>
+<body>
+{nav}
+<div class="page" style="max-width:1200px">
+  <h1>Open Positions</h1>
+  <p class="subtitle">All open positions across {len(all_stats)} live experiments &bull; {total_positions} total</p>
+
+  <div style="overflow-x:auto">
+    <table class="reg-table">
+      <thead>
+        <tr>
+          <th>Experiment</th>
+          <th>Name</th>
+          <th>Symbol</th>
+          <th>Side / Strategy</th>
+          <th>Qty / Contracts</th>
+          <th>Price / Strikes</th>
+          <th>Market Val / Credit</th>
+          <th>Unrealized / Expiry</th>
+        </tr>
+      </thead>
+      <tbody>
+        {pos_rows}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    <span>Attix Credit Spreads &bull; {total_positions} positions</span>
+    <span>{now_str}</span>
+  </div>
+</div>
+</body>
+</html>"""
+
+
+# ---------------------------------------------------------------------------
+# Trades page (recent trades across all live experiments)
+# ---------------------------------------------------------------------------
+
+def render_trades_page(all_stats: list[dict]) -> str:
+    now = datetime.now(timezone.utc)
+    now_str = now.strftime("%Y-%m-%d %H:%M UTC")
+    nav = _render_nav("/trades", f'<span>{now_str}</span>')
+
+    total_closed = sum(s.get("total_closed", 0) for s in all_stats)
+
+    # Collect recent trades from all experiments, sorted by exit date
+    all_trades = []
+    for s in all_stats:
+        exp_id = s.get("id", "")
+        exp_name = s.get("name", "")
+        for t in s.get("recent_trades", []):
+            t["_exp_id"] = exp_id
+            t["_exp_name"] = exp_name
+            all_trades.append(t)
+    all_trades.sort(key=lambda t: str(t.get("exit_date", "")), reverse=True)
+
+    trade_rows = ""
+    for t in all_trades[:50]:  # show last 50
+        eid = _html.escape(str(t.get("_exp_id", "")))
+        pnl = float(t.get("pnl", 0))
+        strategy = _html.escape(str(t.get("strategy_type", "—")).replace("_", " ").title())
+        ticker = _html.escape(str(t.get("ticker", "—")))
+        entry = _html.escape(str(t.get("entry_date", "—"))[:10])
+        exit_d = _html.escape(str(t.get("exit_date", "—"))[:10])
+        short_s = t.get("short_strike", "—")
+        long_s = t.get("long_strike", "—")
+        contracts = t.get("contracts", "—")
+        credit = t.get("credit")
+        credit_str = f"${float(credit):,.0f}" if credit is not None else "—"
+        reason = _html.escape(str(t.get("exit_reason", "—")))
+        trade_rows += f"""<tr>
+  <td class="reg-exp-id">{eid}</td>
+  <td class="pos-sym">{ticker}</td>
+  <td>{strategy}</td>
+  <td>{short_s}/{long_s}</td>
+  <td>{contracts}</td>
+  <td>{credit_str}</td>
+  <td class="reg-meta">{entry}</td>
+  <td class="reg-meta">{exit_d}</td>
+  <td class="{_pnl_cls(pnl)}" style="font-weight:700">{_fmt_pnl(pnl)}</td>
+  <td class="reg-meta">{reason}</td>
+</tr>"""
+
+    if not trade_rows:
+        trade_rows = '<tr><td colspan="10" style="text-align:center;color:#94a3b8;padding:40px">No closed trades yet</td></tr>'
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Trades — Attix Dashboard</title>
+  <style>{_CSS}{_REGISTRY_CSS}</style>
+</head>
+<body>
+{nav}
+<div class="page" style="max-width:1200px">
+  <h1>Recent Trades</h1>
+  <p class="subtitle">{total_closed} closed trades across {len(all_stats)} live experiments &bull; showing last 50</p>
+
+  <div style="overflow-x:auto">
+    <table class="reg-table">
+      <thead>
+        <tr>
+          <th>Experiment</th>
+          <th>Ticker</th>
+          <th>Strategy</th>
+          <th>Strikes</th>
+          <th>Contracts</th>
+          <th>Credit</th>
+          <th>Entry</th>
+          <th>Exit</th>
+          <th>P&amp;L</th>
+          <th>Reason</th>
+        </tr>
+      </thead>
+      <tbody>
+        {trade_rows}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    <span>Attix Credit Spreads &bull; {total_closed} total trades</span>
+    <span>{now_str}</span>
+  </div>
+</div>
 </body>
 </html>"""
 
@@ -843,6 +1076,9 @@ def render_registry_page(registry: dict, validation: dict | None = None) -> str:
     # Rows
     rows = "".join(_render_registry_row(exp, i) for i, exp in enumerate(sorted_exps))
 
+    schema_ver = _html.escape(str(registry.get('schema_version', '?')))
+    nav = _render_nav("/registry", f'<span>Schema v{schema_ver} &bull; {now_str}</span>')
+
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -852,19 +1088,7 @@ def render_registry_page(registry: dict, validation: dict | None = None) -> str:
   <style>{_CSS}{_REGISTRY_CSS}</style>
 </head>
 <body>
-<div class="top-bar">
-  <div>
-    <span class="brand">Attix</span>
-    <span class="nav-links" style="margin-left:20px">
-      <a href="/">Dashboard</a>
-      <a href="/registry" class="active">Registry</a>
-    </span>
-  </div>
-  <div style="display:flex;align-items:center;gap:16px">
-    <span>Schema v{_html.escape(str(registry.get('schema_version', '?')))} &bull; {now_str}</span>
-    <a href="/logout" class="logout-btn">Sign out</a>
-  </div>
-</div>
+{nav}
 <div class="page" style="max-width:1200px">
   <h1>Experiment Registry</h1>
   <p class="subtitle">Single source of truth for all experiments &bull; {total_count} registered</p>
@@ -1004,7 +1228,7 @@ function doTransition(expId, target, btn) {{
   fetch('/api/v1/registry/' + expId + '/transition', {{
     method: 'POST',
     headers: {{ 'Content-Type': 'application/json' }},
-    body: JSON.stringify({{ target_status: target, reason: reason || '' }})
+    body: JSON.stringify({{ status: target, reason: reason || '' }})
   }})
   .then(function(r) {{ return r.json(); }})
   .then(function(data) {{

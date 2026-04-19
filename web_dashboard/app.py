@@ -62,7 +62,13 @@ from .data import (
     PUSHED_DATA_PATH,
     load_pushed_data,
 )
-from .html import render_dashboard, render_login_page, render_registry_page
+from .html import (
+    render_dashboard,
+    render_login_page,
+    render_positions_page,
+    render_registry_page,
+    render_trades_page,
+)
 
 # ---------------------------------------------------------------------------
 # Config
@@ -323,6 +329,30 @@ async def dashboard(request: Request, _: None = Depends(require_session)):
             content=f"<pre>Dashboard error: {e}</pre>",
             status_code=500,
         )
+
+
+@app.get("/positions", response_class=HTMLResponse, include_in_schema=False)
+async def positions_page(request: Request, _: None = Depends(require_session)):
+    """Open positions across all live experiments — session required."""
+    try:
+        all_stats = _cached("dashboard_stats", 60.0, query_all_live)
+        html = render_positions_page(all_stats)
+        return HTMLResponse(content=html, status_code=200)
+    except Exception as e:
+        logger.exception("Positions page render failed")
+        return HTMLResponse(content=f"<pre>Positions error: {e}</pre>", status_code=500)
+
+
+@app.get("/trades", response_class=HTMLResponse, include_in_schema=False)
+async def trades_page(request: Request, _: None = Depends(require_session)):
+    """Recent trades across all live experiments — session required."""
+    try:
+        all_stats = _cached("dashboard_stats", 60.0, query_all_live)
+        html = render_trades_page(all_stats)
+        return HTMLResponse(content=html, status_code=200)
+    except Exception as e:
+        logger.exception("Trades page render failed")
+        return HTMLResponse(content=f"<pre>Trades error: {e}</pre>", status_code=500)
 
 
 @app.get("/api/v1/health")
