@@ -204,9 +204,15 @@ def _detect_regime(spy_df: pd.DataFrame, vix_feats: Dict, regime_config: Dict) -
     rsi = float(calculate_rsi(closes, int(regime_config.get("rsi_period", 14))).iloc[-1]) if len(closes) >= 14 else 50.0
     rsi_signal = "bull" if rsi > float(regime_config.get("rsi_bull_threshold", 50.0)) else "bear" if rsi < float(regime_config.get("rsi_bear_threshold", 45.0)) else "neutral"
 
-    vix_p50  = vix_feats.get("vix_percentile_50d", 50.0)
-    vix_ratio_proxy = 0.9 + (vix_p50 / 100.0) * 0.2
-    vix_struct_signal = "bull" if vix_ratio_proxy < float(regime_config.get("vix_structure_bull", 0.95)) else "bear" if vix_ratio_proxy > float(regime_config.get("vix_structure_bear", 1.05)) else "neutral"
+    # VIX term structure: use real VIX3M from macro_cache if available,
+    # fall back to percentile proxy
+    vix3m = vix_feats.get("vix3m")
+    if vix3m is not None and vix > 0:
+        vix_ratio = vix / vix3m
+    else:
+        vix_p50 = vix_feats.get("vix_percentile_50d", 50.0)
+        vix_ratio = 0.9 + (vix_p50 / 100.0) * 0.2
+    vix_struct_signal = "bull" if vix_ratio < float(regime_config.get("vix_structure_bull", 0.95)) else "bear" if vix_ratio > float(regime_config.get("vix_structure_bear", 1.05)) else "neutral"
 
     signals = [ma200_signal, rsi_signal, vix_struct_signal]
     if regime_config.get("bear_requires_unanimous", True):
@@ -534,6 +540,22 @@ class EXP700Scanner:
 
         spy_feats  = _compute_technicals(spy_df)
         vix_feats  = _compute_vix_features(vix_df)
+
+        # Enrich with real VIX3M from macro_cache if available
+        try:
+            from scripts.fetch_vix_data import load_vix3m_from_cache
+            vix3m_cache = load_vix3m_from_cache()
+            if vix3m_cache:
+                today = pd.Timestamp(datetime.now().strftime("%Y-%m-%d"))
+                # Find most recent VIX3M value (today or last trading day)
+                candidates = [d for d in sorted(vix3m_cache.keys()) if d <= today]
+                if candidates:
+                    latest_vix3m = vix3m_cache[candidates[-1]]
+                    vix_feats["vix3m"] = latest_vix3m
+                    logger.info("VIX3M from cache: %.2f (as of %s)", latest_vix3m, candidates[-1].date())
+        except Exception as e:
+            logger.debug("VIX3M cache unavailable: %s", e)
+
         current_px = spy_feats["spy_price"]
         vix_level  = vix_feats["vix"]
         d["vix"] = round(vix_level, 2)
