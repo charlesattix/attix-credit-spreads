@@ -1246,6 +1246,13 @@ function doTransition(expId, target, btn) {{
   }});
 }}
 
+// HTML-escape dynamic data to prevent XSS
+function esc(s) {{
+  var d = document.createElement('div');
+  d.textContent = String(s);
+  return d.innerHTML;
+}}
+
 // Validate
 function runValidate() {{
   var btn = document.getElementById('validate-btn');
@@ -1256,18 +1263,18 @@ function runValidate() {{
   .then(function(r) {{ return r.json(); }})
   .then(function(data) {{
     panel.className = 'result-panel open';
-    if (data.valid) {{
-      panel.innerHTML = '<span class="result-pass">PASS</span> — ' + data.message;
+    if (data.status === 'ok') {{
+      panel.innerHTML = '<span class="result-pass">PASS</span> — registry is valid';
     }} else {{
       panel.innerHTML = '<span class="result-fail">FAIL</span> — ' +
-        data.error_count + ' error(s):\\n' + (data.errors || []).join('\\n');
+        esc(data.error_count) + ' error(s):\\n' + (data.errors || []).map(esc).join('\\n');
     }}
     btn.disabled = false;
     btn.textContent = 'Validate All';
   }})
   .catch(function(e) {{
     panel.className = 'result-panel open';
-    panel.innerHTML = '<span class="result-fail">ERROR</span>: ' + e.message;
+    panel.innerHTML = '<span class="result-fail">ERROR</span>: ' + esc(e.message);
     btn.disabled = false;
     btn.textContent = 'Validate All';
   }});
@@ -1284,26 +1291,27 @@ function runSync() {{
   .then(function(data) {{
     panel.className = 'result-panel open';
     var lines = [];
-    if (data.orphan_envs && data.orphan_envs.length > 0) {{
-      lines.push('Orphan .env files: ' + data.orphan_envs.join(', '));
+    if (data.orphan_env_files && data.orphan_env_files.length > 0) {{
+      lines.push('Orphan .env files: ' + data.orphan_env_files.map(esc).join(', '));
     }}
     if (data.orphan_dbs && data.orphan_dbs.length > 0) {{
-      lines.push('Orphan databases: ' + data.orphan_dbs.join(', '));
+      lines.push('Orphan databases: ' + data.orphan_dbs.map(esc).join(', '));
     }}
     if (data.active_not_running && data.active_not_running.length > 0) {{
-      lines.push('Active but not running: ' + data.active_not_running.join(', '));
+      lines.push('Active but not running: ' + data.active_not_running.map(esc).join(', '));
     }}
     if (lines.length === 0) {{
       panel.innerHTML = '<span class="result-pass">ALL CLEAN</span> — no orphans or issues detected';
     }} else {{
-      panel.innerHTML = '<span class="result-fail">' + data.issue_count + ' issue(s)</span>:\\n' + lines.join('\\n');
+      var count = (data.orphan_env_files||[]).length + (data.orphan_dbs||[]).length + (data.active_not_running||[]).length;
+      panel.innerHTML = '<span class="result-fail">' + esc(count) + ' issue(s)</span>:\\n' + lines.join('\\n');
     }}
     btn.disabled = false;
     btn.textContent = 'Sync';
   }})
   .catch(function(e) {{
     panel.className = 'result-panel open';
-    panel.innerHTML = '<span class="result-fail">ERROR</span>: ' + e.message;
+    panel.innerHTML = '<span class="result-fail">ERROR</span>: ' + esc(e.message);
     btn.disabled = false;
     btn.textContent = 'Sync';
   }});

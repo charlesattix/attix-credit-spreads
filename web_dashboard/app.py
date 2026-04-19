@@ -30,6 +30,7 @@ Run locally:
 
 from __future__ import annotations
 
+import html as _html
 import logging
 import os
 import time
@@ -326,7 +327,7 @@ async def dashboard(request: Request, _: None = Depends(require_session)):
     except Exception as e:
         logger.exception("Dashboard render failed")
         return HTMLResponse(
-            content=f"<pre>Dashboard error: {e}</pre>",
+            content=f"<pre>Dashboard error: {_html.escape(str(e))}</pre>",
             status_code=500,
         )
 
@@ -340,7 +341,7 @@ async def positions_page(request: Request, _: None = Depends(require_session)):
         return HTMLResponse(content=html, status_code=200)
     except Exception as e:
         logger.exception("Positions page render failed")
-        return HTMLResponse(content=f"<pre>Positions error: {e}</pre>", status_code=500)
+        return HTMLResponse(content=f"<pre>Positions error: {_html.escape(str(e))}</pre>", status_code=500)
 
 
 @app.get("/trades", response_class=HTMLResponse, include_in_schema=False)
@@ -352,7 +353,7 @@ async def trades_page(request: Request, _: None = Depends(require_session)):
         return HTMLResponse(content=html, status_code=200)
     except Exception as e:
         logger.exception("Trades page render failed")
-        return HTMLResponse(content=f"<pre>Trades error: {e}</pre>", status_code=500)
+        return HTMLResponse(content=f"<pre>Trades error: {_html.escape(str(e))}</pre>", status_code=500)
 
 
 @app.get("/api/v1/health")
@@ -471,7 +472,7 @@ async def registry_page(request: Request, _: None = Depends(require_session)):
     except Exception as e:
         logger.exception("Registry page render failed")
         return HTMLResponse(
-            content=f"<pre>Registry error: {e}</pre>",
+            content=f"<pre>Registry error: {_html.escape(str(e))}</pre>",
             status_code=500,
         )
 

@@ -75,8 +75,7 @@ class TestGate0RegistryStatus:
         """If experiments.registry can't be imported, gate passes."""
         with patch.dict("sys.modules", {"experiments.registry": None}):
             # Should not raise — import failure is handled gracefully
-            # (the actual function catches ImportError)
-            pass  # Gate 0 catches ImportError internally
+            _check_registry_status("EXP-800")
 
     def test_registry_read_error_passes(self):
         """If registry.json can't be read, gate passes with warning."""
