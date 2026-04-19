@@ -1428,10 +1428,13 @@ def render_sentinel_page(
     experiments = sentinel_state.get("experiments", {})
 
     if not experiments:
+        nav = _render_nav("/sentinel")
         return f"""<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><title>Sentinel</title>
 <style>{_CSS}\n{_SENTINEL_CSS}</style></head>
-<body><div class="page">{_render_nav("/sentinel")}
+<body>
+{nav}
+<div class="page">
 <h2 style="margin-top:24px">No experiments enrolled</h2>
 <p class="muted">Enroll experiments in sentinel_state.json to see health data.</p>
 </div></body></html>"""
@@ -1556,13 +1559,16 @@ def render_sentinel_page(
     if not alert_rows:
         alert_rows = '<tr><td colspan="5" class="muted" style="text-align:center">No alerts</td></tr>'
 
+    nav = _render_nav("/sentinel")
+
     return f"""<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sentinel Dashboard</title>
 <style>{_CSS}\n{_SENTINEL_CSS}</style></head>
-<body><div class="page">
-{_render_nav("/sentinel")}
+<body>
+{nav}
+<div class="page">
 
 <h2 style="margin:20px 0 16px">Sentinel Health</h2>
 

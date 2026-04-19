@@ -615,11 +615,11 @@ async def get_sentinel(_key: str = Depends(require_api_key)):
 
 
 # ---------------------------------------------------------------------------
-# Sentinel Dashboard — server-rendered HTML
+# Sentinel Dashboard — server-rendered HTML (uses render_sentinel_page from html.py)
 # ---------------------------------------------------------------------------
 
-@app.get("/sentinel", response_class=HTMLResponse)
-@app.get("/sentinel/", response_class=HTMLResponse)
+@app.get("/sentinel", response_class=HTMLResponse, include_in_schema=False)
+@app.get("/sentinel/", response_class=HTMLResponse, include_in_schema=False)
 async def sentinel_dashboard(request: Request, _: None = Depends(require_session)):
     """Serve the Sentinel dashboard with health scores, gates, and alerts."""
     import json as _json
@@ -646,7 +646,7 @@ async def sentinel_dashboard(request: Request, _: None = Depends(require_session
             except Exception:
                 pass
 
-        # Load alerts and snapshots from sentinel.db
+        # Load alerts from sentinel.db
         alerts = []
         snapshots = {}
         db_path = _proj / "sentinel" / "db" / "sentinel.db"
