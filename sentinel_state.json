@@ -40,15 +40,15 @@
             }
         },
         "EXP-503": {
-            "status": "active",
+            "status": "halted",
             "paper_config": "configs/paper_exp503.yaml",
             "config_fingerprint": "b52e7f75f6267955d35502ca4bf2e36da463296f3d42adf1f78adc7fc84b2d2f",
             "account_id": "PA3Z9PLVYUL5",
             "live_since": "2026-03-22",
             "enrolled_at": "2026-04-12",
             "sentinel_certified_at": null,
-            "last_health_check": null,
-            "halt_reason": null,
+            "last_health_check": "2026-04-19",
+            "halt_reason": "-56% drawdown from peak — halted pending review",
             "backtest_baseline": {
                 "win_rate": 68.0,
                 "avg_pnl": 750.0,
@@ -74,15 +74,15 @@
             }
         },
         "EXP-800": {
-            "status": "active",
+            "status": "halted",
             "paper_config": "configs/paper_exp800.yaml",
             "config_fingerprint": "c9053f39b9a547e075ff9fe128ef80b18c18448304befe2e4a4257b559498b19",
             "account_id": "PA3QWQIZO09S",
             "live_since": "2026-03-28",
             "enrolled_at": "2026-04-12",
             "sentinel_certified_at": null,
-            "last_health_check": null,
-            "halt_reason": null,
+            "last_health_check": "2026-04-19",
+            "halt_reason": "Non-functional — 0 completed trades since launch",
             "backtest_baseline": {
                 "win_rate": 78.0,
                 "avg_pnl": 525.0,

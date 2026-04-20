@@ -30,6 +30,14 @@ from enum import IntEnum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+from sentinel.gates_data_quality import (
+    check_data_freshness,
+    audit_signal_votes,
+    check_regime_parity,
+)
+from sentinel.gates_account import check_account_gates
+from sentinel.gates_execution import check_execution_gates
+
 logger = logging.getLogger(__name__)
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -612,6 +620,194 @@ def _run_gate_drift(
 
 
 # ---------------------------------------------------------------------------
+# G10-G12: Data quality gate runners
+# ---------------------------------------------------------------------------
+
+
+def _run_gate10_data_freshness(exp_id: str) -> GateOutcome:
+    """Gate 10: Data freshness — BLOCK if critical data sources are stale."""
+    try:
+        result = check_data_freshness(exp_id)
+        if result.blocked:
+            return GateOutcome(
+                "G10", "Data Freshness", GateResult.BLOCK,
+                "; ".join(result.errors) or "Data freshness check failed",
+                details={"warnings": result.warnings,
+                         "vix_age_hours": result.vix_age_hours,
+                         "vix3m_present": result.vix3m_present},
+            )
+        if result.warnings:
+            return GateOutcome(
+                "G10", "Data Freshness", GateResult.WARNING,
+                "; ".join(result.warnings),
+                details={"vix_age_hours": result.vix_age_hours,
+                         "vix3m_present": result.vix3m_present},
+            )
+        return GateOutcome("G10", "Data Freshness", GateResult.PASS,
+                           "All data sources fresh")
+    except Exception as e:
+        return GateOutcome("G10", "Data Freshness", GateResult.BLOCK,
+                           f"Data freshness check error: {e}")
+
+
+def _run_gate11_signal_votes(exp_id: str) -> GateOutcome:
+    """Gate 11: Signal voting audit — requires runtime context, deferred."""
+    return GateOutcome(
+        "G11", "Signal Voting Audit", GateResult.PASS,
+        "Deferred — fires in live scanner path with runtime vote context",
+    )
+
+
+def _run_gate12_regime_parity(exp_id: str) -> GateOutcome:
+    """Gate 12: Regime parity — requires runtime context, deferred."""
+    return GateOutcome(
+        "G12", "Regime Parity", GateResult.PASS,
+        "Deferred — fires in live scanner path with runtime regime context",
+    )
+
+
+# ---------------------------------------------------------------------------
+# G13-G16: Account gate runners
+# ---------------------------------------------------------------------------
+
+
+def _run_gates_account(exp_id: str) -> List[GateOutcome]:
+    """Gates 13-16: Account health, expired positions, concentration, orphans."""
+    outcomes: List[GateOutcome] = []
+    try:
+        results = check_account_gates(exp_id)
+
+        g13 = results.get("gate13")
+        if g13 is not None and hasattr(g13, "severity"):
+            if g13.severity in ("halt", "flatten"):
+                outcomes.append(GateOutcome("G13", "Account Health",
+                                            GateResult.HALT,
+                                            getattr(g13, "message", "DD exceeded")))
+            elif g13.severity == "warning":
+                outcomes.append(GateOutcome("G13", "Account Health",
+                                            GateResult.WARNING,
+                                            getattr(g13, "message", "Warning")))
+            else:
+                outcomes.append(GateOutcome("G13", "Account Health",
+                                            GateResult.PASS, "OK"))
+        else:
+            outcomes.append(GateOutcome("G13", "Account Health",
+                                        GateResult.WARNING,
+                                        "Skipped — no Alpaca account data"))
+
+        g14 = results.get("gate14")
+        if g14 is not None and hasattr(g14, "has_expired"):
+            if g14.has_expired:
+                outcomes.append(GateOutcome("G14", "Expired Positions",
+                                            GateResult.WARNING,
+                                            f"{len(g14.expired)} expired"))
+            else:
+                outcomes.append(GateOutcome("G14", "Expired Positions",
+                                            GateResult.PASS, "OK"))
+
+        g15 = results.get("gate15")
+        if g15 is not None and hasattr(g15, "block_new_entries"):
+            if g15.block_new_entries:
+                outcomes.append(GateOutcome("G15", "Concentration",
+                                            GateResult.BLOCK,
+                                            "Concentration limit exceeded"))
+            else:
+                outcomes.append(GateOutcome("G15", "Concentration",
+                                            GateResult.PASS, "OK"))
+
+        g16 = results.get("gate16")
+        if g16 is not None and hasattr(g16, "severity"):
+            if g16.severity == "halt":
+                outcomes.append(GateOutcome("G16", "Orphan Detection",
+                                            GateResult.HALT,
+                                            f"{len(g16.true_orphans)} orphans"))
+            elif g16.severity == "warning":
+                outcomes.append(GateOutcome("G16", "Orphan Detection",
+                                            GateResult.WARNING,
+                                            getattr(g16, "message", "Warning")))
+            else:
+                outcomes.append(GateOutcome("G16", "Orphan Detection",
+                                            GateResult.PASS, "OK"))
+
+        if results.get("halted") and not any(
+            o.result >= GateResult.HALT for o in outcomes
+        ):
+            outcomes.append(GateOutcome("G13", "Account Health",
+                                        GateResult.HALT,
+                                        "Account gates triggered halt"))
+    except Exception as e:
+        outcomes.append(GateOutcome("G13", "Account Gates",
+                                    GateResult.WARNING,
+                                    f"Account gates error: {e}"))
+
+    return outcomes or [GateOutcome("G13", "Account Gates",
+                                    GateResult.PASS, "No account data")]
+
+
+# ---------------------------------------------------------------------------
+# G17-G20: Execution gate runners
+# ---------------------------------------------------------------------------
+
+
+def _run_gates_execution(exp_id: str) -> List[GateOutcome]:
+    """Gates 17-20: Stop-loss quality, failures, calendar, P&L recon."""
+    outcomes: List[GateOutcome] = []
+    try:
+        db_path = str(
+            _PROJECT_ROOT / "data"
+            / exp_id.lower().replace("-", "")
+            / f"pilotai_{exp_id.lower().replace('-', '')}.db"
+        )
+        result = check_execution_gates(exp_id, db_path)
+
+        if result.gate17 is not None:
+            if not result.gate17.passed:
+                sev = result.gate17.worst_severity or "warning"
+                lvl = GateResult.HALT if sev == "halt" else GateResult.WARNING
+                outcomes.append(GateOutcome("G17", "Stop-Loss Quality", lvl,
+                                            f"{len(result.gate17.events)} slippage events"))
+            else:
+                outcomes.append(GateOutcome("G17", "Stop-Loss Quality",
+                                            GateResult.PASS, "OK"))
+
+        if result.gate18 is not None:
+            if not result.gate18.passed:
+                sev = result.gate18.worst_severity or "warning"
+                lvl = GateResult.HALT if sev == "halt" else GateResult.WARNING
+                outcomes.append(GateOutcome("G18", "Repeated Failures", lvl,
+                                            f"Loss streak: {result.gate18.current_loss_streak}"))
+            else:
+                outcomes.append(GateOutcome("G18", "Repeated Failures",
+                                            GateResult.PASS, "OK"))
+
+        if result.gate19 is not None:
+            if not result.gate19.passed:
+                outcomes.append(GateOutcome("G19", "Market Calendar",
+                                            GateResult.WARNING,
+                                            f"{len(result.gate19.events)} off-hours events"))
+            else:
+                outcomes.append(GateOutcome("G19", "Market Calendar",
+                                            GateResult.PASS, "OK"))
+
+        if result.gate20 is not None:
+            if not result.gate20.passed:
+                sev = result.gate20.worst_severity or "warning"
+                lvl = GateResult.HALT if sev == "halt" else GateResult.WARNING
+                outcomes.append(GateOutcome("G20", "P&L Reconciliation", lvl,
+                                            f"{len(result.gate20.discrepancies)} discrepancies"))
+            else:
+                outcomes.append(GateOutcome("G20", "P&L Reconciliation",
+                                            GateResult.PASS, "OK"))
+    except Exception as e:
+        outcomes.append(GateOutcome("G17", "Execution Gates",
+                                    GateResult.WARNING,
+                                    f"Execution gates error: {e}"))
+
+    return outcomes or [GateOutcome("G17", "Execution Gates",
+                                    GateResult.PASS, "No execution data")]
+
+
+# ---------------------------------------------------------------------------
 # Health score calculation
 # ---------------------------------------------------------------------------
 
@@ -619,6 +815,9 @@ def _run_gate_drift(
 _GATE_WEIGHTS = {
     "G0": 10, "G1": 10, "G2": 15, "G3": 15,
     "G5": 5, "G8": 15, "G9": 15, "G21": 15,
+    "G10": 10, "G11": 5, "G12": 10,
+    "G13": 10, "G14": 5, "G15": 5, "G16": 5,
+    "G17": 5, "G18": 5, "G19": 3, "G20": 5,
 }
 
 _RESULT_SCORE = {
@@ -702,49 +901,99 @@ def audit_experiment(
     """
     Run ALL gates for a single experiment and return the audit result.
 
-    Gate execution order: G0 → G1 → G2 → G3 → G5 → G8 → G9 → G21
+    Gate execution order (data quality first, then pre-scan, then account,
+    then execution, then advisory gates):
+        G10 → G11 → G12 → G0 → G1 → G2 → G3 → G13-16 → G17-20 → G5 → G8 → G9 → G21
+
     Any BLOCK stops further gate execution for this experiment.
     """
     skip = set(skip_gates or [])
     audit = ExperimentAudit(experiment_id=exp_id)
-    gate_runners = [
-        ("G0", lambda: _run_gate_registry(exp_id, registry)),
-        ("G1", lambda: _run_gate_sentinel_state(exp_id, state)),
-        ("G2", lambda: _run_gate_fingerprint(exp_id, state)),
-        ("G3", lambda: _run_gate_monitor(exp_id, registry)),
-        ("G5", lambda: _run_gate_certification(exp_id, state)),
-        ("G8", lambda: _run_gate_drift(exp_id)),
-        ("G9", lambda: _run_gate_lifecycle(exp_id)),
-        ("G21", lambda: _run_gate21_config_parity(exp_id, registry)),
-    ]
 
-    for gate_id, runner in gate_runners:
-        if gate_id in skip:
-            continue
+    # --- Helper to process a single outcome ---
+    blocked = False
 
-        try:
-            outcome = runner()
-        except Exception as e:
-            # Fail-closed: unknown exception → BLOCK (G5 is advisory, override below)
-            error_result = GateResult.WARNING if gate_id == "G5" else GateResult.BLOCK
-            outcome = GateOutcome(
-                gate_id=gate_id,
-                gate_name="Error",
-                result=error_result,
-                message=f"Gate {gate_id} raised exception: {e}",
-            )
-
+    def _process(outcome: GateOutcome) -> bool:
+        """Append outcome; return True if BLOCK (stop chain)."""
         audit.gate_outcomes.append(outcome)
-
-        # BLOCK stops further gates
         if outcome.result == GateResult.BLOCK:
-            audit.halted = False  # blocked, not halted
-            break
-
-        # HALT/CRITICAL: mark experiment for halt
+            audit.halted = False
+            return True
         if outcome.result >= GateResult.HALT:
             audit.halted = True
             audit.halt_reason = f"[{outcome.gate_id}] {outcome.message}"
+        return False
+
+    def _run_single(gate_id: str, runner) -> bool:
+        """Run a single-outcome gate. Returns True if chain should stop."""
+        if gate_id in skip:
+            return False
+        try:
+            outcome = runner()
+        except Exception as e:
+            lvl = GateResult.WARNING if gate_id == "G5" else GateResult.BLOCK
+            outcome = GateOutcome(gate_id, "Error", lvl,
+                                  f"Gate {gate_id} raised exception: {e}")
+        return _process(outcome)
+
+    # Phase 1: Data quality gates (fail-closed, run first)
+    for gid, runner in [
+        ("G10", lambda: _run_gate10_data_freshness(exp_id)),
+        ("G11", lambda: _run_gate11_signal_votes(exp_id)),
+        ("G12", lambda: _run_gate12_regime_parity(exp_id)),
+    ]:
+        if _run_single(gid, runner):
+            blocked = True
+            break
+
+    # Phase 2: Pre-scan gates
+    if not blocked:
+        for gid, runner in [
+            ("G0", lambda: _run_gate_registry(exp_id, registry)),
+            ("G1", lambda: _run_gate_sentinel_state(exp_id, state)),
+            ("G2", lambda: _run_gate_fingerprint(exp_id, state)),
+            ("G3", lambda: _run_gate_monitor(exp_id, registry)),
+        ]:
+            if _run_single(gid, runner):
+                blocked = True
+                break
+
+    # Phase 3: Account gates (G13-G16, multi-outcome)
+    if not blocked:
+        try:
+            for outcome in _run_gates_account(exp_id):
+                if outcome.gate_id in skip:
+                    continue
+                if _process(outcome):
+                    blocked = True
+                    break
+        except Exception as e:
+            _process(GateOutcome("G13", "Account Gates", GateResult.WARNING,
+                                 f"Account gates error: {e}"))
+
+    # Phase 4: Execution gates (G17-G20, multi-outcome)
+    if not blocked:
+        try:
+            for outcome in _run_gates_execution(exp_id):
+                if outcome.gate_id in skip:
+                    continue
+                if _process(outcome):
+                    blocked = True
+                    break
+        except Exception as e:
+            _process(GateOutcome("G17", "Execution Gates", GateResult.WARNING,
+                                 f"Execution gates error: {e}"))
+
+    # Phase 5: Advisory and drift gates
+    if not blocked:
+        for gid, runner in [
+            ("G5", lambda: _run_gate_certification(exp_id, state)),
+            ("G8", lambda: _run_gate_drift(exp_id)),
+            ("G9", lambda: _run_gate_lifecycle(exp_id)),
+            ("G21", lambda: _run_gate21_config_parity(exp_id, registry)),
+        ]:
+            if _run_single(gid, runner):
+                break
 
     # Compute health score
     audit.health_score = _compute_health_score(audit.gate_outcomes)

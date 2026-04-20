@@ -184,37 +184,68 @@ def _compute_vix_features(vix_df: pd.DataFrame) -> Dict:
 # Regime detection
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _load_vix3m_from_cache() -> Dict[pd.Timestamp, float]:
+    """Load VIX3M data from macro_cache.db if available."""
+    db_path = Path(__file__).resolve().parent.parent / "data" / "macro_cache" / "macro_cache.db"
+    if not db_path.exists():
+        logger.warning("macro_cache.db not found — VIX3M unavailable")
+        return {}
+    try:
+        import sqlite3
+        conn = sqlite3.connect(str(db_path))
+        rows = conn.execute(
+            "SELECT date, vix3m_close FROM vix_daily WHERE vix3m_close IS NOT NULL"
+        ).fetchall()
+        conn.close()
+        result = {pd.Timestamp(d): float(v) for d, v in rows}
+        if result:
+            logger.info("Loaded %d VIX3M dates from macro_cache.db", len(result))
+        else:
+            logger.warning("VIX3M table empty — vix_structure signal will abstain")
+        return result
+    except Exception as e:
+        logger.warning("Failed to load VIX3M from cache: %s", e)
+        return {}
+
+
 def _detect_regime(spy_df: pd.DataFrame, vix_feats: Dict, regime_config: Dict) -> str:
+    """Detect regime using the canonical ComboRegimeDetector (backtest parity).
+
+    Replaces the hand-rolled regime logic that had 3 critical bugs:
+    1. VIX>40 defaulted to 'neutral' instead of 'bear'
+    2. No hysteresis/cooldown (recalculated from scratch every scan)
+    3. RSI bull threshold defaulted to 50 instead of 55
+    """
     if spy_df.empty or len(spy_df) < 50:
         return "neutral"
-    closes = spy_df["Close"]
-    current = float(closes.iloc[-1])
-    vix = vix_feats.get("vix", 20.0)
+    try:
+        from compass.regime import ComboRegimeDetector
 
-    vix_extreme = float(regime_config.get("vix_extreme", 40.0))
-    if vix >= vix_extreme:
-        return regime_config.get("vix_extreme_regime", "neutral").lower()
+        # Build vix_by_date from VIX price history
+        vix_df = _fetch_price_history("^VIX", days=250)
+        vix_by_date: Dict[pd.Timestamp, float] = {}
+        if not vix_df.empty and "Close" in vix_df.columns:
+            for ts in vix_df.index:
+                key = pd.Timestamp(ts.date()) if hasattr(ts, 'date') else pd.Timestamp(ts)
+                vix_by_date[key] = float(vix_df.loc[ts, "Close"])
 
-    band_pct  = float(regime_config.get("ma200_neutral_band_pct", 0.5)) / 100.0
-    ma_period = int(regime_config.get("ma_slow_period", 80))
-    ma200 = float(closes.rolling(200).mean().iloc[-1]) if len(closes) >= 200 else float(closes.rolling(ma_period).mean().iloc[-1]) if len(closes) >= ma_period else current
-    ma200_signal = "bull" if current > ma200 * (1 + band_pct) else "bear" if current < ma200 * (1 - band_pct) else "neutral"
+        vix3m_by_date = _load_vix3m_from_cache()
 
-    from shared.indicators import calculate_rsi
-    rsi = float(calculate_rsi(closes, int(regime_config.get("rsi_period", 14))).iloc[-1]) if len(closes) >= 14 else 50.0
-    rsi_signal = "bull" if rsi > float(regime_config.get("rsi_bull_threshold", 50.0)) else "bear" if rsi < float(regime_config.get("rsi_bear_threshold", 45.0)) else "neutral"
+        detector = ComboRegimeDetector(regime_config)
+        regime_series = detector.compute_regime_series(
+            spy_df, vix_by_date, vix3m_by_date
+        )
+        if not regime_series:
+            logger.warning("ComboRegimeDetector returned empty — defaulting to neutral")
+            return "neutral"
 
-    vix_p50  = vix_feats.get("vix_percentile_50d", 50.0)
-    vix_ratio_proxy = 0.9 + (vix_p50 / 100.0) * 0.2
-    vix_struct_signal = "bull" if vix_ratio_proxy < float(regime_config.get("vix_structure_bull", 0.95)) else "bear" if vix_ratio_proxy > float(regime_config.get("vix_structure_bear", 1.05)) else "neutral"
-
-    signals = [ma200_signal, rsi_signal, vix_struct_signal]
-    if regime_config.get("bear_requires_unanimous", True):
-        if all(s == "bear" for s in signals):
-            return "bear"
-        return "bull" if sum(s == "bull" for s in signals) >= 2 else "neutral"
-    from collections import Counter
-    return Counter(signals).most_common(1)[0][0]
+        latest_date = max(regime_series.keys())
+        regime = regime_series[latest_date]
+        logger.info("ComboRegimeDetector: %s (as of %s)", regime, latest_date.date())
+        return regime
+    except Exception as e:
+        logger.error("ComboRegimeDetector failed: %s — defaulting to neutral", e)
+        return "neutral"
 
 
 # ─────────────────────────────────────────────────────────────────────────────
