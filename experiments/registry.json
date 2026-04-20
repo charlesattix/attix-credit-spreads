@@ -89,7 +89,7 @@
             "name": "ML V2 Aggressive",
             "created_by": "maximus",
             "created_date": "2026-03-22",
-            "status": "active",
+            "status": "paused",
             "ticker": "SPY",
             "account_id": "PA3Z9PLVYUL5",
             "live_since": "2026-03-22",
