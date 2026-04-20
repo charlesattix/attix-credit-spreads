@@ -1,6 +1,6 @@
 {
     "schema_version": "3.0",
-    "last_updated": "2026-04-18",
+    "last_updated": "2026-04-20",
     "experiments": {
         "EXP-400": {
             "id": "EXP-400",
@@ -89,7 +89,7 @@
             "name": "ML V2 Aggressive",
             "created_by": "maximus",
             "created_date": "2026-03-22",
-            "status": "paused",
+            "status": "active",
             "ticker": "SPY",
             "account_id": "PA3Z9PLVYUL5",
             "live_since": "2026-03-22",
@@ -177,7 +177,7 @@
             "name": "Safe Kelly 4/7/9",
             "created_by": "charles",
             "created_date": "2026-03-28",
-            "status": "paused",
+            "status": "active",
             "ticker": "SPY",
             "account_id": "PA3QWQIZO09S",
             "live_since": "2026-03-28",
