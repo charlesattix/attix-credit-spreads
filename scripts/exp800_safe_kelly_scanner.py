@@ -143,7 +143,7 @@ def _compute_technicals(df: pd.DataFrame) -> Dict:
     feats: Dict = {}
 
     from shared.indicators import calculate_rsi
-    feats["rsi_14"] = float(calculate_rsi(closes, 14).iloc[-1]) if n >= 14 else 50.0
+    feats["rsi_14"] = float(calculate_rsi(closes, 14).iloc[-1]) if n >= 14 else None
     feats["momentum_5d_pct"]  = float((closes.iloc[-1] / closes.iloc[-6]  - 1) * 100) if n >= 6  else 0.0
     feats["momentum_10d_pct"] = float((closes.iloc[-1] / closes.iloc[-11] - 1) * 100) if n >= 11 else 0.0
 
@@ -163,7 +163,8 @@ def _compute_technicals(df: pd.DataFrame) -> Dict:
 def _compute_vix_features(vix_df: pd.DataFrame) -> Dict:
     feats: Dict = {}
     if vix_df.empty or "Close" not in vix_df.columns:
-        return {"vix": 20.0, "vix_percentile_20d": 50.0, "vix_percentile_50d": 50.0, "vix_percentile_100d": 50.0}
+        logger.warning("VIX data unavailable — returning None")
+        return {"vix": None, "vix_percentile_20d": None, "vix_percentile_50d": None, "vix_percentile_100d": None}
     vix = vix_df["Close"]
     feats["vix"] = float(vix.iloc[-1])
     for w, label in [(20, "20d"), (50, "50d"), (100, "100d")]:
@@ -176,12 +177,15 @@ def _compute_vix_features(vix_df: pd.DataFrame) -> Dict:
 # Regime detection
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _detect_regime(spy_df: pd.DataFrame, vix_feats: Dict, regime_config: Dict) -> str:
+def _detect_regime(spy_df: pd.DataFrame, vix_feats: Dict, regime_config: Dict) -> Optional[str]:
+    """Return 'bull', 'bear', 'neutral', or None if data insufficient."""
     if spy_df.empty or len(spy_df) < 50:
-        return "neutral"
+        return None
     closes  = spy_df["Close"]
     current = float(closes.iloc[-1])
-    vix     = vix_feats.get("vix", 20.0)
+    vix     = vix_feats.get("vix")
+    if vix is None:
+        return None
 
     vix_extreme = float(regime_config.get("vix_extreme", 40.0))
     if vix >= vix_extreme:
@@ -195,12 +199,18 @@ def _detect_regime(spy_df: pd.DataFrame, vix_feats: Dict, regime_config: Dict) -
     ma200_signal = "bull" if current > ma200 * (1 + band_pct) else "bear" if current < ma200 * (1 - band_pct) else "neutral"
 
     from shared.indicators import calculate_rsi
-    rsi = float(calculate_rsi(closes, int(regime_config.get("rsi_period", 14))).iloc[-1]) if len(closes) >= 14 else 50.0
-    rsi_signal = "bull" if rsi > float(regime_config.get("rsi_bull_threshold", 50.0)) else "bear" if rsi < float(regime_config.get("rsi_bear_threshold", 45.0)) else "neutral"
+    rsi_raw = float(calculate_rsi(closes, int(regime_config.get("rsi_period", 14))).iloc[-1]) if len(closes) >= 14 else None
+    if rsi_raw is None:
+        rsi_signal = "neutral"  # abstain when RSI unavailable
+    else:
+        rsi_signal = "bull" if rsi_raw > float(regime_config.get("rsi_bull_threshold", 50.0)) else "bear" if rsi_raw < float(regime_config.get("rsi_bear_threshold", 45.0)) else "neutral"
 
-    vix_p50 = vix_feats.get("vix_percentile_50d", 50.0)
-    vix_ratio_proxy = 0.9 + (vix_p50 / 100.0) * 0.2
-    vix_struct_signal = "bull" if vix_ratio_proxy < float(regime_config.get("vix_structure_bull", 0.95)) else "bear" if vix_ratio_proxy > float(regime_config.get("vix_structure_bear", 1.05)) else "neutral"
+    vix_p50 = vix_feats.get("vix_percentile_50d")
+    if vix_p50 is None:
+        vix_struct_signal = "neutral"  # abstain when VIX percentile unavailable
+    else:
+        vix_ratio_proxy = 0.9 + (vix_p50 / 100.0) * 0.2
+        vix_struct_signal = "bull" if vix_ratio_proxy < float(regime_config.get("vix_structure_bull", 0.95)) else "bear" if vix_ratio_proxy > float(regime_config.get("vix_structure_bear", 1.05)) else "neutral"
 
     signals = [ma200_signal, rsi_signal, vix_struct_signal]
     if regime_config.get("bear_requires_unanimous", True):
@@ -214,6 +224,90 @@ def _detect_regime(spy_df: pd.DataFrame, vix_feats: Dict, regime_config: Dict) -
 # ─────────────────────────────────────────────────────────────────────────────
 # Option helpers
 # ─────────────────────────────────────────────────────────────────────────────
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Market hours guard
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _is_market_hours() -> Tuple[bool, str]:
+    """Return (ok, reason). Block if before 10:00 ET or after 15:45 ET, or weekend/holiday."""
+    try:
+        import zoneinfo
+        et = zoneinfo.ZoneInfo("America/New_York")
+    except Exception:
+        from datetime import timezone as _tz
+        et = _tz(timedelta(hours=-4))  # EDT fallback
+    now_et = datetime.now(et)
+    weekday = now_et.weekday()
+    if weekday >= 5:
+        return False, f"weekend: {now_et.strftime('%A')}"
+    hour_min = now_et.hour * 100 + now_et.minute
+    if hour_min < 1000:
+        return False, f"pre_market: {now_et.strftime('%H:%M')} ET < 10:00 ET"
+    if hour_min > 1545:
+        return False, f"after_hours: {now_et.strftime('%H:%M')} ET > 15:45 ET"
+    return True, "ok"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Expired position cleanup
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _cleanup_expired_positions(db_path: Path) -> int:
+    """Mark trades with expiration < today as 'expired'. Returns count fixed."""
+    from datetime import date
+    today = date.today().isoformat()
+    conn = sqlite3.connect(str(db_path))
+    cursor = conn.execute(
+        "SELECT id, expiration, status FROM trades "
+        "WHERE status IN ('open', 'pending_open', 'pending_close') "
+        "AND expiration < ?",
+        (today,),
+    )
+    expired = cursor.fetchall()
+    if not expired:
+        conn.close()
+        return 0
+    for trade_id, expiration, old_status in expired:
+        conn.execute(
+            "UPDATE trades SET status='expired', exit_date=?, exit_reason='expired_cleanup' "
+            "WHERE id=?",
+            (expiration, trade_id),
+        )
+        logger.warning("Expired position cleaned: %s (exp=%s, was=%s)", trade_id, expiration, old_status)
+    conn.commit()
+    conn.close()
+    return len(expired)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Open position / buying power helpers
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _get_open_position_count(db_path: Path) -> int:
+    """Count open positions in the DB (excludes expired, closed, failed)."""
+    conn = sqlite3.connect(str(db_path))
+    row = conn.execute(
+        "SELECT COUNT(*) FROM trades WHERE status IN ('open', 'pending_open')"
+    ).fetchone()
+    conn.close()
+    return row[0] if row else 0
+
+
+def _get_consumed_margin(db_path: Path, spread_width: float) -> float:
+    """Estimate margin consumed by open positions: sum(contracts × spread_width × 100)."""
+    conn = sqlite3.connect(str(db_path))
+    rows = conn.execute(
+        "SELECT contracts, short_strike, long_strike FROM trades "
+        "WHERE status IN ('open', 'pending_open')"
+    ).fetchall()
+    conn.close()
+    total = 0.0
+    for contracts, short, long in rows:
+        width = abs(short - long) if short and long else spread_width
+        total += (contracts or 1) * width * 100.0
+    return total
+
 
 def _find_target_expiration(target_dte: int) -> str:
     from datetime import date
@@ -531,6 +625,18 @@ class EXP800Scanner:
         logger.info("=" * 70)
         logger.info("EXP-800 scan  %s  dry_run=%s", datetime.now(timezone.utc).isoformat(), self.dry_run)
 
+        # Gate: market hours check (blocks pre-market, after-hours, weekends)
+        mkt_ok, mkt_reason = _is_market_hours()
+        if not mkt_ok and not self.dry_run:
+            logger.warning("EXP-800 scan blocked: %s", mkt_reason)
+            print(f"[EXP-800] BLOCKED: {mkt_reason}")
+            return [{"ticker": "SPY", "action": "blocked", "reason": mkt_reason}]
+
+        # Clean up expired positions before scanning
+        n_expired = _cleanup_expired_positions(self.db_path)
+        if n_expired > 0:
+            logger.warning("EXP-800: cleaned %d expired positions", n_expired)
+
         # Update Kelly state with live equity before scanning any ticker
         live_equity  = self._get_live_equity()
         kelly_state  = self.kelly_db.update_equity(live_equity, self.cb_cfg)
@@ -566,13 +672,18 @@ class EXP800Scanner:
         vix_feats  = _compute_vix_features(vix_df)
         current_px = spy_feats["spy_price"]
         vix_level  = vix_feats["vix"]
-        d["vix"]   = round(vix_level, 2)
+
+        if vix_level is None:
+            d["reason"] = "vix_data_unavailable"; return d
+        d["vix"] = round(vix_level, 2)
 
         if self.vix_max_entry > 0 and vix_level > self.vix_max_entry:
             _decrement_halt(kelly_state, self.kelly_db)
             d["reason"] = f"vix_gate: {vix_level:.1f} > {self.vix_max_entry}"; return d
 
         regime = _detect_regime(spy_df, vix_feats, self.regime_config)
+        if regime is None:
+            d["reason"] = "regime_undetermined"; return d
         d["regime"] = regime
 
         # ── Kelly fraction + circuit-breaker check ────────────────────────────
@@ -607,6 +718,28 @@ class EXP800Scanner:
         min_credit = self.spread_width * self.min_credit_pct / 100.0
         if credit_per_share < min_credit:
             d["reason"] = f"credit_too_low: {credit_per_share:.2f} < {min_credit:.2f}"; return d
+
+        # ── Pre-sizing checks: position limits + buying power ──────────────
+        max_positions = int(self.cfg.get("risk", {}).get("max_positions", _EXP400_DEFAULTS["max_positions"]))
+        open_count = _get_open_position_count(self.db_path)
+        if open_count >= max_positions:
+            d["reason"] = f"max_positions: {open_count} >= {max_positions}"; return d
+
+        # Check buying power: consumed margin by open positions vs available
+        consumed_margin = _get_consumed_margin(self.db_path, self.spread_width)
+        one_trade_cost = self.spread_width * 100.0  # minimum 1 contract
+        if self._alpaca is not None:
+            try:
+                acct = self._alpaca.get_account()
+                buying_power = float(acct.get("buying_power", 0))
+                if buying_power < one_trade_cost:
+                    d["reason"] = (f"buying_power_exhausted: ${buying_power:.0f} "
+                                   f"< ${one_trade_cost:.0f} (1 contract)")
+                    return d
+                logger.info("Buying power: $%.0f  consumed margin: $%.0f  open: %d/%d",
+                            buying_power, consumed_margin, open_count, max_positions)
+            except Exception as exc:
+                logger.warning("Could not fetch buying power: %s — continuing with Kelly sizing", exc)
 
         # ── Size via Kelly (use current_equity if sizing_base=current_equity) ─
         sizing_equity = kelly_state["current_equity"] if self.sizing_base == "current_equity" else self.account_size
