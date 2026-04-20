@@ -556,12 +556,16 @@ class PairsDeepValidator:
 
     def _regime_breakdown(self, trades: List[Dict]) -> Dict[str, Dict]:
         """Break down performance by VIX regime."""
+        trades_with_vix = [t for t in trades if t.get("vix") is not None]
+        n_missing = len(trades) - len(trades_with_vix)
+        if n_missing:
+            logger.warning("_regime_breakdown: %d/%d trades missing 'vix', excluded from regime breakdown", n_missing, len(trades))
         regimes = {
-            "bull": [t for t in trades if t.get("vix", 20) < 20],
-            "bear": [t for t in trades if t.get("vix", 20) >= 25],
-            "high_vol": [t for t in trades if t.get("vix", 20) >= 30],
-            "low_vol": [t for t in trades if t.get("vix", 20) < 15],
-            "moderate": [t for t in trades if 15 <= t.get("vix", 20) < 25],
+            "bull": [t for t in trades_with_vix if t["vix"] < 20],
+            "bear": [t for t in trades_with_vix if t["vix"] >= 25],
+            "high_vol": [t for t in trades_with_vix if t["vix"] >= 30],
+            "low_vol": [t for t in trades_with_vix if t["vix"] < 15],
+            "moderate": [t for t in trades_with_vix if 15 <= t["vix"] < 25],
         }
         return {name: _stats(ts) for name, ts in regimes.items()}
 

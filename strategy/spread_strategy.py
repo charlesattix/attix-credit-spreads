@@ -245,7 +245,10 @@ class CreditSpreadStrategy:
 
         if tech_params['use_rsi_filter']:
             # RSI not overbought
-            rsi = technical_signals.get('rsi', 50)
+            rsi = technical_signals.get('rsi')
+            if rsi is None:
+                logger.warning("RSI missing from technical_signals — blocking bull entry")
+                return False
             bullish = bullish and rsi < tech_params['rsi_overbought']
 
         return bullish
@@ -276,7 +279,10 @@ class CreditSpreadStrategy:
             bearish = bearish and technical_signals.get('trend', '') in ['bearish', 'neutral']
 
         if tech_params['use_rsi_filter']:
-            rsi = technical_signals.get('rsi', 50)
+            rsi = technical_signals.get('rsi')
+            if rsi is None:
+                logger.warning("RSI missing from technical_signals — blocking bear entry")
+                return False
             bearish = bearish and rsi > tech_params['rsi_oversold']
 
         return bearish
@@ -364,7 +370,10 @@ class CreditSpreadStrategy:
         # The RSI filter below is the real guard against directional markets.
 
         # RSI must be in range-bound zone
-        rsi = technical_signals.get('rsi', 50)
+        rsi = technical_signals.get('rsi')
+        if rsi is None:
+            logger.warning("RSI missing from technical_signals — blocking iron condor entry")
+            return []
         if not (rsi_min <= rsi <= rsi_max):
             return []
 
@@ -653,8 +662,8 @@ class CreditSpreadStrategy:
                     tech_score += w["condor_tech_neutral"]
                 if technical_signals.get('regime') == 'mean_reverting':
                     tech_score += w["condor_tech_regime"]
-                rsi = technical_signals.get('rsi', 50)
-                if 40 <= rsi <= 60:
+                rsi = technical_signals.get('rsi')
+                if rsi is not None and 40 <= rsi <= 60:
                     tech_score += w["condor_tech_rsi_range"]
             elif opp['type'] == 'bull_put_spread':
                 if technical_signals.get('trend') == 'bullish':

@@ -53,8 +53,8 @@ def build_live_market_snapshot(
         price_data = price_data.copy()
         price_data.columns = price_data.columns.get_level_values(0)
 
-    # VIX
-    vix_val = 20.0
+    # VIX — None means unavailable, strategies must handle it
+    vix_val = None
     vix_history = None
     if vix_data is not None and not vix_data.empty:
         vix_df = vix_data
@@ -65,6 +65,8 @@ def build_live_market_snapshot(
         if not vix_close.empty:
             vix_val = float(vix_close.iloc[-1])
             vix_history = vix_close
+    if vix_val is None:
+        logger.warning("VIX data unavailable for %s snapshot — vix=None", ticker)
 
     # Realized vol: ATR(20) / Close * sqrt(252)
     realized_vol_val = 0.25

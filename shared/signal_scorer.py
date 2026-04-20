@@ -92,8 +92,8 @@ def score_signal(
     if is_condor:
         if tech.get("trend") == "neutral":
             tech_score += w["condor_tech_neutral"]
-        rsi = tech.get("rsi", signal.metadata.get("rsi", 50))
-        if 40 <= rsi <= 60:
+        rsi = tech.get("rsi", signal.metadata.get("rsi"))
+        if rsi is not None and 40 <= rsi <= 60:
             tech_score += w["condor_tech_rsi_range"]
     elif is_straddle:
         # Straddles benefit from high uncertainty (neutral trend)

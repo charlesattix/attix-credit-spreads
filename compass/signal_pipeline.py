@@ -320,8 +320,11 @@ class EnsemblePredictor:
 
     def _fallback_predict(self, features: Dict[str, float]) -> Tuple[float, float, float]:
         """Heuristic prediction when model unavailable."""
-        vix = features.get("vix", 20)
-        rsi = features.get("rsi_14", 50)
+        vix = features.get("vix")
+        rsi = features.get("rsi_14")
+        if vix is None or rsi is None:
+            logger.warning("VIX or RSI missing in fallback predict (vix=%s, rsi=%s) — returning neutral scores", vix, rsi)
+            return 0.50, 0.50, 0.50
         iv_rank = features.get("iv_rank", 30)
         ma_dist = features.get("dist_from_ma200_pct", 0)
 

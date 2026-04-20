@@ -257,14 +257,21 @@ class TradeHistoryDB:
                 "SELECT * FROM hedge_events ORDER BY timestamp DESC LIMIT ?", (limit,)
             ).fetchall()
             conn.close()
-            return [HedgeEvent(
-                timestamp=str(r.get("timestamp", "")),
-                vix=float(r.get("vix", 0)),
-                scale_factor=float(r.get("scale_factor", 1.0)),
-                reason=str(r.get("reason", "")),
-                regime=str(r.get("regime", "")),
-                dd_at_trigger=float(r.get("dd_at_trigger", 0)),
-            ) for r in rows]
+            events = []
+            for r in rows:
+                vix = r.get("vix")
+                if vix is None:
+                    logger.warning("get_hedge_events: missing vix for row, skipping")
+                    continue
+                events.append(HedgeEvent(
+                    timestamp=str(r.get("timestamp", "")),
+                    vix=float(vix),
+                    scale_factor=float(r.get("scale_factor", 1.0)),
+                    reason=str(r.get("reason", "")),
+                    regime=str(r.get("regime", "")),
+                    dd_at_trigger=float(r.get("dd_at_trigger", 0)),
+                ))
+            return events
         except Exception as e:
             logger.error("Error reading hedge events: %s", e)
             return []

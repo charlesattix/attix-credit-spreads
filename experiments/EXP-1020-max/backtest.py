@@ -9,12 +9,15 @@ Uses daily OHLCV + VIX to model intraday reversion probability.
 from __future__ import annotations
 
 import json
+import logging
 import math
 from pathlib import Path
 from typing import Any, Dict, List
 
 import numpy as np
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 ROOT = Path(__file__).parent
 DATA_CANDIDATES = [
@@ -63,7 +66,11 @@ def detect_regime(row: pd.Series) -> str:
     regime = str(row.get("regime", "")).lower().strip()
     if regime in REVERSION_PROB:
         return regime
-    vix = float(row.get("vix", 20))
+    vix = row.get("vix")
+    if vix is None:
+        logger.warning("detect_regime: missing vix for row, defaulting to 'sideways'")
+        return "sideways"
+    vix = float(vix)
     if vix > 30:
         return "high_vol"
     mom = float(row.get("momentum_5d_pct", 0))
@@ -78,7 +85,11 @@ def simulate_intraday_move(row: pd.Series, rng: np.random.RandomState) -> float:
     Uses VIX as a proxy for expected intraday range.
     Historical: avg SPY intraday range ≈ VIX / sqrt(252) * 100 as %
     """
-    vix = float(row.get("vix", 20))
+    vix = row.get("vix")
+    if vix is None:
+        logger.warning("simulate_intraday_move: missing vix for row, returning 0")
+        return 0.0
+    vix = float(vix)
     expected_range_pct = vix / math.sqrt(252)
 
     # Simulate actual move with some noise
@@ -102,7 +113,11 @@ def run_backtest() -> Dict[str, Any]:
     for _, row in df_daily.iterrows():
         year = int(row.get("year", 2020))
         regime = detect_regime(row)
-        vix = float(row.get("vix", 20))
+        vix = row.get("vix")
+        if vix is None:
+            logger.warning("run_backtest: missing vix for row on %s, skipping", row.get("entry_date", "?"))
+            continue
+        vix = float(vix)
 
         # Simulate intraday move
         move_pct = simulate_intraday_move(row, rng)

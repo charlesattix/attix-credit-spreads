@@ -408,10 +408,10 @@ class CreditSpreadSystem:
                         technical_signals['combo_regime'] = current_regime
                         logger.info("%s: ComboRegime = %s", ticker, current_regime)
                 except Exception as e:
-                    logger.warning("ComboRegimeDetector failed for %s: %s", ticker, e)
-                    # Safe default: 'neutral' allows bull puts but blocks aggressive
-                    # bear calls.  Previous 'bull' was optimistic and could misfire.
-                    technical_signals['combo_regime'] = 'neutral'
+                    logger.error("ComboRegimeDetector failed for %s: %s — blocking trading", ticker, e)
+                    # Do NOT default to 'neutral' — missing regime must block all entries.
+                    # Previous default silently allowed bull puts and ICs.
+                    technical_signals['combo_regime'] = None
 
             # IV analysis
             current_iv = self.options_analyzer.get_current_iv(options_chain)
@@ -421,6 +421,11 @@ class CreditSpreadSystem:
 
             # --- Unified entry path (same strategy classes as backtester) ---
             regime = technical_signals.get('combo_regime', None)
+
+            # Block trading when regime detection failed (combo mode)
+            if regime is None and hasattr(self.strategy, '_combo_regime_detector') and self.strategy._combo_regime_detector:
+                logger.error("%s: regime=None with combo mode active — skipping all entries", ticker)
+                return []
 
             # VIX data for snapshot (already fetched for regime detector)
             vix_data = None

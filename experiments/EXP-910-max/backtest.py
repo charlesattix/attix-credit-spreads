@@ -14,6 +14,7 @@ Walk-forward 2020-2025 with realistic execution costs.
 from __future__ import annotations
 
 import json
+import logging
 import math
 from datetime import datetime
 from pathlib import Path
@@ -21,6 +22,8 @@ from typing import Any, Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import roc_auc_score
 from sklearn.preprocessing import StandardScaler
@@ -163,7 +166,10 @@ def train_ml_walk_forward(df: pd.DataFrame) -> pd.DataFrame:
 # ── Regime detector (simplified HMM from EXP-900) ──────────────────────
 
 def classify_regime(row: pd.Series) -> str:
-    vix = row.get("vix", 20)
+    vix = row.get("vix")
+    if vix is None:
+        logger.warning("classify_regime: missing vix for row, defaulting to 'neutral'")
+        return "neutral"
     mom = row.get("momentum_10d_pct", 0)
     dist_ma200 = row.get("dist_from_ma200_pct", 0)
     rsi = row.get("rsi_14", 50)
@@ -201,7 +207,10 @@ def run_north_star(df: pd.DataFrame) -> Dict[str, Any]:
     for idx, row in filtered.iterrows():
         regime = row["detected_regime"]
         base_leverage = REGIME_LEVERAGE.get(regime, 1.0)
-        vix = row.get("vix", 20)
+        vix = row.get("vix")
+        if vix is None:
+            logger.warning("run_north_star: missing vix for row on %s, skipping", row.get("entry_date", "?"))
+            continue
 
         # Crisis hedge overlay
         if vix >= CRISIS_HEDGE["vix_severe"]:

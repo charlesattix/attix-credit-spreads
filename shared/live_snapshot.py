@@ -45,9 +45,10 @@ def build_live_snapshot(
     realized_vol: Dict[str, float] = {}
     rsi_map: Dict[str, float] = {}
 
-    # Fetch VIX for IV rank calculation
-    vix_val = 20.0
+    # Fetch VIX for IV rank calculation — None means unavailable
+    vix_val = None
     vix_history: Optional[pd.Series] = None
+    global_iv_rank = None
     try:
         vix_df = data_cache.get_history("^VIX", period="1y")
         if not vix_df.empty:
@@ -67,7 +68,8 @@ def build_live_snapshot(
                     global_iv_rank = 25.0
     except Exception as e:
         logger.warning("Failed to fetch VIX data: %s", e)
-        global_iv_rank = 25.0
+    if vix_val is None:
+        logger.warning("VIX data unavailable — vix=None, iv_rank=None; trading should be blocked")
 
     for ticker in tickers:
         if ticker == "^VIX":

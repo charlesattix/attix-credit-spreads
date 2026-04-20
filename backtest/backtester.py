@@ -795,7 +795,10 @@ class Backtester:
 
             # Phase 6: Combo regime override — replaces single-MA gate in opportunity finders
             if self._regime_mode == 'combo':
-                _regime_today = self._regime_by_date.get(pd.Timestamp(current_date.date()), 'neutral')
+                _regime_today = self._regime_by_date.get(pd.Timestamp(current_date.date()))
+                if _regime_today is None:
+                    logger.warning("Regime missing for %s — skipping trading day", current_date.date())
+                    continue
                 _ic_neutral_only = self.strategy_params.get('iron_condor', {}).get('neutral_regime_only', False)
                 if _ic_neutral_only:
                     # IC-in-NEUTRAL mode: BULL→puts only, NEUTRAL→IC only, BEAR→calls only

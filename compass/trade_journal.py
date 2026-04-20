@@ -73,7 +73,11 @@ def attribute_pnl(trade: pd.Series) -> Dict[str, float]:
     hold = trade.get("hold_days", 1) or 1
     contracts = trade.get("contracts", 1) or 1
     spread_w = abs(trade.get("spread_width", 5) or 5)
-    vix = trade.get("vix", 20) or 20
+    vix = trade.get("vix")
+    if vix is None:
+        logger.warning("decompose_pnl: missing 'vix' in trade, skipping decomposition")
+        return {"theta": 0, "delta": 0, "vega": 0, "residual": 0, "total": 0}
+    vix = float(vix)
     rv_20d = trade.get("realized_vol_20d", 20) or 20
     momentum = trade.get("momentum_10d_pct", 0) or 0
 

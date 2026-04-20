@@ -14,9 +14,12 @@ Usage::
 
 from __future__ import annotations
 
+import logging
 import math
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
+
+logger = logging.getLogger(__name__)
 
 import numpy as np
 import pandas as pd
@@ -178,7 +181,10 @@ def _train_ml(X_train, y_train, X_test, seed=42):
 
 
 def _classify_regime(row):
-    vix = row.get("vix", 20)
+    vix = row.get("vix")
+    if vix is None:
+        logger.warning("_classify_regime: missing 'vix' in row, skipping → neutral")
+        return "neutral"
     mom = row.get("momentum_10d_pct", 0)
     dist = row.get("dist_from_ma200_pct", 0)
     if vix > 35:

@@ -113,7 +113,7 @@ class TestBuildLiveMarketSnapshot:
             technical_signals=_tech_signals(),
             vix_data=None,
         )
-        assert snap.vix == pytest.approx(20.0)
+        assert snap.vix is None  # VIX should be None when data unavailable, not 20.0
 
     def test_realized_vol_in_valid_range(self):
         snap = build_live_market_snapshot(

@@ -10,12 +10,15 @@ applies regime + VIX gating, models intraday theta capture.
 from __future__ import annotations
 
 import json
+import logging
 import math
 from pathlib import Path
 from typing import Any, Dict, List
 
 import numpy as np
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 ROOT = Path(__file__).parent
 DATA_CANDIDATES = [
@@ -61,7 +64,11 @@ def detect_regime(row: pd.Series) -> str:
     regime = str(row.get("regime", "")).lower().strip()
     if regime in ALLOWED_REGIMES | {"bear", "crash", "high_vol", "crisis"}:
         return regime
-    vix = float(row.get("vix", 20))
+    vix = row.get("vix")
+    if vix is None:
+        logger.warning("detect_regime: missing vix for row, defaulting to 'sideways'")
+        return "sideways"
+    vix = float(vix)
     if vix > 30:
         return "high_vol"
     mom = float(row.get("momentum_5d_pct", 0))
@@ -117,7 +124,11 @@ def run_backtest() -> Dict[str, Any]:
 
     for _, row in df_short.iterrows():
         regime = detect_regime(row)
-        vix = float(row.get("vix", 20))
+        vix = row.get("vix")
+        if vix is None:
+            logger.warning("run_backtest: missing vix for row, skipping")
+            continue
+        vix = float(vix)
         ml = float(row["ml_score"])
         year = int(row.get("year", 2020))
 

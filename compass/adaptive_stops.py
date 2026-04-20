@@ -102,7 +102,11 @@ def atr_stop(trade: pd.Series, base_mult: float = 2.5, atr_scale: float = 0.1) -
 
 def vix_stop(trade: pd.Series, base_mult: float = 2.5, vix_scale: float = 0.05) -> float:
     """VIX-scaled stop: wider in high-vol environments."""
-    vix = trade.get("vix", 20) or 20
+    vix = trade.get("vix")
+    if vix is None:
+        logger.warning("vix_stop: missing 'vix' in trade, returning base_mult=%.2f", base_mult)
+        return base_mult
+    vix = float(vix)
     adj = base_mult * (1.0 + vix_scale * (vix - 20.0))
     return max(1.5, min(6.0, adj))
 

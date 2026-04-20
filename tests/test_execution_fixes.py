@@ -824,14 +824,14 @@ class TestVixFallbackNeutral:
 
         return technical_signals
 
-    def test_neutral_set_when_detector_raises(self):
-        """VIX fetch / detector exception → combo_regime = 'neutral' (safe default)."""
+    def test_none_set_when_detector_raises(self):
+        """VIX fetch / detector exception → combo_regime = None (blocks trading)."""
         system = self._make_system()
         signals = self._wire_analyze_deps(
             system, regime_side_effect=Exception("VIX fetch failed")
         )
         system._analyze_ticker("SPY")
-        assert signals.get("combo_regime") == "neutral"
+        assert signals.get("combo_regime") is None
 
     def test_actual_regime_set_when_detector_succeeds(self):
         """When detector works, combo_regime reflects the detected value."""

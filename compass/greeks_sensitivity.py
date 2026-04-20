@@ -262,7 +262,11 @@ class GreeksSensitivityAnalyzer:
         S = float(med.get("spy_price", 450))
         K_short = float(med.get("short_strike", 440))
         K_long = K_short - float(med.get("spread_width", 5))
-        sigma = float(med.get("vix", 20)) / 100.0 * 1.2  # rough VIX→IV conversion
+        vix_val = med.get("vix")
+        if vix_val is None:
+            logger.warning("analyze: missing 'vix' in median trade data, using fillna value")
+            vix_val = 20.0
+        sigma = float(vix_val) / 100.0 * 1.2  # rough VIX→IV conversion
         T = float(med.get("dte_at_entry", 21)) / 252.0
         credit = float(med.get("net_credit", 0.65))
 
@@ -349,7 +353,11 @@ class GreeksSensitivityAnalyzer:
                 S = float(row.get("spy_price", 450))
                 K_short = float(row.get("short_strike", 440))
                 K_long = K_short - float(row.get("spread_width", 5))
-                sigma = max(float(row.get("vix", 20)) / 100 * 1.2, 0.05)
+                row_vix = row.get("vix")
+                if row_vix is None:
+                    logger.warning("_compute_regime_profiles: missing 'vix' in row, skipping")
+                    continue
+                sigma = max(float(row_vix) / 100 * 1.2, 0.05)
                 T = max(int(row.get("dte_at_entry", 21)), 1) / 252.0
                 sp = str(row.get("spread_type", "bull_put"))
                 g = compute_greeks(S, K_short, K_long, T, sigma, spread_type=sp)

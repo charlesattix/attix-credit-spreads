@@ -12,6 +12,7 @@ margin feasibility.
 from __future__ import annotations
 
 import json
+import logging
 import math
 from dataclasses import dataclass
 from pathlib import Path
@@ -19,6 +20,8 @@ from typing import Any, Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 ROOT = Path(__file__).parent
 DATA_CANDIDATES = [
@@ -139,7 +142,11 @@ def run_year(
 
     for _, row in cs_trades_year.iterrows():
         raw_pnl = float(row.get("pnl", 0))
-        vix = float(row.get("vix", 20))
+        vix = row.get("vix")
+        if vix is None:
+            logger.warning("run_year: missing vix for row, skipping")
+            continue
+        vix = float(vix)
         contracts = max(int(row.get("contracts", 5)), 1)
         entry_p = abs(float(row.get("net_credit", 1.0)))
 

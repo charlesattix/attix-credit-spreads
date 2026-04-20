@@ -45,7 +45,7 @@ class MarketTick:
     symbol: str
     price: float
     volume: int = 0
-    vix: float = 0.0
+    vix: Optional[float] = None
     bid: float = 0.0
     ask: float = 0.0
 
@@ -149,7 +149,7 @@ class DataFeed:
                 symbol=str(row.get("symbol", "SPY")),
                 price=float(row.get("spy_price", row.get("close", row.get("price", 0)))),
                 volume=int(row.get("volume", 0)),
-                vix=float(row.get("vix", 0)),
+                vix=float(row["vix"]) if row.get("vix") is not None else None,
             )
             self.inject_tick(tick)
             ticks.append(tick)
@@ -399,10 +399,13 @@ class ModelInference:
     @staticmethod
     def _default_model(features: Dict[str, float]) -> Tuple[str, float, float]:
         """Rule-based stub matching production ensemble logic."""
-        vix = features.get("vix", 20)
-        rsi = features.get("rsi_14", 50)
-        iv_rank = features.get("iv_rank", 50)
+        vix = features.get("vix")
+        rsi = features.get("rsi_14")
+        iv_rank = features.get("iv_rank")
         mom5 = features.get("momentum_5d_pct", 0)
+
+        if vix is None or rsi is None or iv_rank is None:
+            return "no_trade", 0.0, 0.0
 
         # Bull put conditions
         if rsi > 40 and iv_rank > 30 and mom5 > -2 and vix < 30:

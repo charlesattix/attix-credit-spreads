@@ -196,7 +196,11 @@ def detect_regime(row: pd.Series) -> str:
     if regime in ("bull", "bear", "sideways", "crisis"):
         return regime
     # Fallback: infer from features
-    vix = float(row.get("vix", 20))
+    vix = row.get("vix")
+    if vix is None:
+        logger.warning("detect_regime: missing 'vix' in row, defaulting to 'sideways'")
+        return "sideways"
+    vix = float(vix)
     mom = float(row.get("momentum_10d_pct", 0))
     if vix > 30:
         return "bear"

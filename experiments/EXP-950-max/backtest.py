@@ -10,12 +10,15 @@ Runs Monte Carlo stress at each level.
 from __future__ import annotations
 
 import json
+import logging
 import math
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 ROOT = Path(__file__).parent
 DATA_CANDIDATES = [
@@ -150,7 +153,11 @@ def run_at_leverage(
 
     for _, row in df.iterrows():
         regime = str(row.get("regime", "bull")).lower()
-        vix = float(row.get("vix", 20))
+        vix = row.get("vix")
+        if vix is None:
+            logger.warning("run_at_leverage: missing vix for row, skipping")
+            continue
+        vix = float(vix)
         year = int(row.get("year", 2020))
 
         # Effective leverage
