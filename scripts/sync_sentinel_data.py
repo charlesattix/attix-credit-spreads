@@ -403,7 +403,7 @@ def _collect_config_integrity(
     # Gate 2: Registry Integrity — verify registry matches sentinel_state
     reg_exps = set(registry.get("experiments", {}).keys())
     state_exps = set(experiments_state.keys())
-    active_reg = {k for k, v in registry.get("experiments", {}).items() if v.get("status") == "paper_trading"}
+    active_reg = {k for k, v in registry.get("experiments", {}).items() if v.get("status") in ("active", "paper_trading")}
     missing_from_state = active_reg - state_exps
     registry_ok = len(missing_from_state) == 0
     checks.append({
@@ -485,7 +485,7 @@ def collect_sentinel_data() -> dict:
     # Active experiment IDs from registry
     active_ids = [
         k for k, v in registry.get("experiments", {}).items()
-        if v.get("status") == "paper_trading"
+        if v.get("status") in ("active", "paper_trading")
     ]
 
     experiments: Dict[str, Any] = {}

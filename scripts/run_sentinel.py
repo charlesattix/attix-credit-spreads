@@ -207,7 +207,7 @@ def cmd_daily(args: argparse.Namespace) -> int:
     active_exps = {
         k: v
         for k, v in registry.get("experiments", {}).items()
-        if v.get("status") == "paper_trading"
+        if v.get("status") in ("active", "paper_trading")
     }
     exp_ids = list(active_exps.keys())
     print(f"🛡️  SENTINEL DAILY — {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}")
@@ -220,7 +220,7 @@ def cmd_daily(args: argparse.Namespace) -> int:
         health_results = check_all_experiments(registry, _PROJECT_ROOT)
 
         for h in health_results:
-            if not h.api_ok and h.registry_status == "paper_trading":
+            if not h.api_ok and h.registry_status in ("active", "paper_trading"):
                 db.record_alert(
                     "critical",
                     f"API health check failed: {h.api_error or 'unknown error'}",
@@ -367,6 +367,19 @@ def cmd_daily(args: argparse.Namespace) -> int:
         _tg_send(msg)
         print("   📲 Telegram report sent")
 
+    # Sync sentinel data to dashboard
+    try:
+        from scripts.sync_sentinel_data import collect_sentinel_data
+        import json as _json
+        _sync_output = _PROJECT_ROOT / "data" / "sentinel_dashboard.json"
+        _sync_output.parent.mkdir(parents=True, exist_ok=True)
+        _sync_payload = collect_sentinel_data()
+        _sync_output.write_text(_json.dumps(_sync_payload, indent=2))
+        print(f"   📊 Sentinel dashboard data synced ({_sync_payload['experiment_count']} experiments)")
+    except Exception as e:
+        logger.warning("Sentinel dashboard sync failed: %s", e)
+        print(f"   ⚠️  Dashboard sync skipped: {e}")
+
     return 1 if crits else 0
 
 
@@ -384,7 +397,7 @@ def cmd_audit(args: argparse.Namespace) -> int:
     active = {
         k: v
         for k, v in registry.get("experiments", {}).items()
-        if v.get("status") == "paper_trading"
+        if v.get("status") in ("active", "paper_trading")
     }
 
     print(f"🛡️  SENTINEL AUDIT — {datetime.now(timezone.utc).strftime('%Y-%m-%d')}")
@@ -696,7 +709,7 @@ def cmd_report(args: argparse.Namespace) -> int:
 
     active_ids = [
         k for k, v in registry.get("experiments", {}).items()
-        if v.get("status") == "paper_trading"
+        if v.get("status") in ("active", "paper_trading")
     ]
 
     out_dir = Path(getattr(args, "output_dir", None) or "output/sentinel_reports")
@@ -1027,7 +1040,7 @@ def cmd_retroactive(args: argparse.Namespace) -> int:
     active = {
         k: v
         for k, v in registry.get("experiments", {}).items()
-        if v.get("status") == "paper_trading"
+        if v.get("status") in ("active", "paper_trading")
     }
 
     print(f"\n🛡️  SENTINEL RETROACTIVE ONBOARDING")
