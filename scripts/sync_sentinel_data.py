@@ -118,20 +118,36 @@ def _resolve_db_path(exp_id: str, state: dict, registry: dict) -> Optional[Path]
     return None
 
 
-def _collect_trade_metrics(db_path: Path, window: int = 30) -> dict:
-    """Compute rolling-window trade metrics from an experiment DB."""
+def _collect_trade_metrics(db_path: Path, window: int = 30, exp_id: Optional[str] = None) -> dict:
+    """Compute rolling-window trade metrics from an experiment DB.
+
+    If exp_id is provided and the experiment has been reset to a new Alpaca
+    account, only post-reset trades are included in PnL calculations.
+    """
+    from shared.reset_filter import get_reset_date
+
+    reset_date = get_reset_date(exp_id) if exp_id else None
+    # Build reset filter clause: prefer pre_reset column, fall back to entry_date
+    reset_sql = ""
+    reset_params: list = []
+    if reset_date:
+        reset_sql = " AND entry_date > ?"
+        reset_params = [reset_date]
+
     conn = sqlite3.connect(str(db_path))
     conn.row_factory = sqlite3.Row
     try:
-        # Total trades
+        # Total trades (post-reset only)
         total_row = conn.execute(
-            "SELECT COUNT(*) AS cnt FROM trades WHERE status LIKE 'closed%'"
+            "SELECT COUNT(*) AS cnt FROM trades WHERE status LIKE 'closed%'" + reset_sql,
+            reset_params,
         ).fetchone()
         total_closed = total_row["cnt"] if total_row else 0
 
-        # Open trades
+        # Open trades (post-reset only)
         open_row = conn.execute(
-            "SELECT COUNT(*) AS cnt FROM trades WHERE status = 'open'"
+            "SELECT COUNT(*) AS cnt FROM trades WHERE status = 'open'" + reset_sql,
+            reset_params,
         ).fetchone()
         total_open = open_row["cnt"] if open_row else 0
 
@@ -141,20 +157,21 @@ def _collect_trade_metrics(db_path: Path, window: int = 30) -> dict:
                 "win_rate": None, "avg_pnl": None, "total_pnl": 0,
             }
 
-        # Rolling window
+        # Rolling window (post-reset only)
         rows = conn.execute(
-            "SELECT pnl FROM trades WHERE status LIKE 'closed%' AND pnl IS NOT NULL "
-            "ORDER BY exit_date DESC LIMIT ?",
-            (window,),
+            "SELECT pnl FROM trades WHERE status LIKE 'closed%' AND pnl IS NOT NULL"
+            + reset_sql + " ORDER BY exit_date DESC LIMIT ?",
+            reset_params + [window],
         ).fetchall()
 
         pnls = [float(r["pnl"]) for r in rows]
         wins = [p for p in pnls if p > 0]
         losses = [p for p in pnls if p < 0]
 
-        # Total PnL (all trades, not just window)
+        # Total PnL (all post-reset closed trades)
         total_pnl_row = conn.execute(
-            "SELECT SUM(pnl) AS total FROM trades WHERE status LIKE 'closed%' AND pnl IS NOT NULL"
+            "SELECT SUM(pnl) AS total FROM trades WHERE status LIKE 'closed%' AND pnl IS NOT NULL" + reset_sql,
+            reset_params,
         ).fetchone()
         total_pnl = float(total_pnl_row["total"]) if total_pnl_row and total_pnl_row["total"] else 0.0
 
@@ -519,7 +536,7 @@ def collect_sentinel_data() -> dict:
 
         # Trade metrics
         if db_path:
-            exp_data["metrics"] = _collect_trade_metrics(db_path)
+            exp_data["metrics"] = _collect_trade_metrics(db_path, exp_id=exp_id)
 
             # Override P&L with dashboard_export financial data
             if alpaca:

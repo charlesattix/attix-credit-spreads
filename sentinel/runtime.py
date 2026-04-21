@@ -212,11 +212,19 @@ def compute_metrics(exp_id: str, window: int = WINDOW_SIZE) -> Optional[RuntimeM
     Compute rolling-window trade metrics from the experiment's trades DB.
 
     Returns None if the DB is unavailable or has no closed trades.
+    Only considers post-reset trades for experiments that have been reset.
     """
     db_path = _resolve_db_path(exp_id)
     if not db_path:
         logger.warning("runtime: no DB found for %s — skipping", exp_id)
         return None
+
+    # Get reset date filter for experiments reset to new accounts
+    try:
+        from shared.reset_filter import get_post_reset_filter_sql
+        reset_sql, reset_params = get_post_reset_filter_sql(exp_id)
+    except ImportError:
+        reset_sql, reset_params = "", []
 
     import sqlite3
     conn = sqlite3.connect(str(db_path))
@@ -224,24 +232,24 @@ def compute_metrics(exp_id: str, window: int = WINDOW_SIZE) -> Optional[RuntimeM
     conn.execute("PRAGMA busy_timeout=5000")
 
     try:
-        # Total closed trades
+        # Total closed trades (post-reset only)
         total_row = conn.execute(
-            "SELECT COUNT(*) AS cnt FROM trades WHERE status LIKE 'closed%'"
+            "SELECT COUNT(*) AS cnt FROM trades WHERE status LIKE 'closed%'" + reset_sql,
+            reset_params,
         ).fetchone()
         total_closed = total_row["cnt"] if total_row else 0
 
         if total_closed == 0:
             return RuntimeMetrics(exp_id=exp_id, window_size=0, total_closed=0)
 
-        # Rolling window: last N closed trades by exit_date
+        # Rolling window: last N closed trades by exit_date (post-reset only)
         rows = conn.execute(
-            """
-            SELECT pnl, exit_date FROM trades
-            WHERE status LIKE 'closed%' AND pnl IS NOT NULL
-            ORDER BY exit_date DESC
-            LIMIT ?
-            """,
-            (window,),
+            "SELECT pnl, exit_date FROM trades"
+            " WHERE status LIKE 'closed%' AND pnl IS NOT NULL"
+            + reset_sql +
+            " ORDER BY exit_date DESC"
+            " LIMIT ?",
+            reset_params + [window],
         ).fetchall()
 
         if not rows:
@@ -273,9 +281,10 @@ def compute_metrics(exp_id: str, window: int = WINDOW_SIZE) -> Optional[RuntimeM
             if peak_row:
                 metrics.peak_equity = float(peak_row["value"])
 
-            # Get current equity from config account_size + total PnL
+            # Get current equity from config account_size + total PnL (post-reset only)
             total_pnl_row = conn.execute(
-                "SELECT SUM(pnl) AS total FROM trades WHERE status LIKE 'closed%' AND pnl IS NOT NULL"
+                "SELECT SUM(pnl) AS total FROM trades WHERE status LIKE 'closed%' AND pnl IS NOT NULL" + reset_sql,
+                reset_params,
             ).fetchone()
             total_pnl = float(total_pnl_row["total"]) if total_pnl_row and total_pnl_row["total"] else 0.0
 
