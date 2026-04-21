@@ -260,6 +260,9 @@ def _resolve_db_path(exp: dict) -> Optional[Path]:
 # DB querying
 # ---------------------------------------------------------------------------
 
+# Statuses that represent real closed trades with valid PnL.
+# Explicitly EXCLUDES: closed_pre_reset, closed_reset, closed_orphan,
+# closed_error — these have zeroed or invalid PnL from account resets.
 _CLOSED_STATUSES = (
     "closed_profit", "closed_loss", "closed_manual",
     "closed_expiry", "closed_external",
@@ -488,6 +491,24 @@ def _query_experiment(exp: dict, report_date: str) -> dict:
             "fetched_at": datetime.now(timezone.utc).isoformat(),
         }
 
+    # ── Alpaca equity is source of truth for PnL ─────────────────────────
+    # DB trade PnL values can be stale, estimated, or from a previous
+    # account era. When Alpaca equity is available, override total_pnl
+    # with (equity - starting_equity) which is the real account performance.
+    alpaca = result.get("alpaca") or {}
+    alpaca_equity = alpaca.get("equity")
+    if alpaca_equity is not None and alpaca.get("error") is None:
+        equity_pnl = float(alpaca_equity) - STARTING_EQUITY
+        unrealized = float(alpaca.get("unrealized_pl") or 0)
+        realized_from_equity = equity_pnl - unrealized
+        result["stats"]["total_pnl"] = round(equity_pnl, 2)
+        result["stats"]["realized_pnl"] = round(realized_from_equity, 2)
+        result["stats"]["unrealized_pnl"] = round(unrealized, 2)
+        result["stats"]["total_return_pct"] = round(equity_pnl / STARTING_EQUITY * 100, 4)
+        result["stats"]["pnl_source"] = "alpaca_equity"
+    else:
+        result["stats"]["pnl_source"] = "db_trades"
+
     return result
 
 
@@ -535,6 +556,10 @@ def build_export(report_date: str) -> dict:
                 e["alpaca"]["unrealized_pl"] or 0
                 for e in experiments
                 if e.get("alpaca") and e["alpaca"].get("unrealized_pl") is not None
+            ), 2),
+            "combined_realized_pl": round(sum(
+                e["stats"].get("realized_pnl", 0)
+                for e in experiments
             ), 2),
         },
     }

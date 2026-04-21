@@ -150,7 +150,15 @@
             "strategy_type": "ml_credit_spread",
             "created_at": "2026-03-22T00:00:00+00:00",
             "updated_at": "2026-04-18T21:21:51.083040+00:00",
-            "last_started_at": "2026-03-22T00:00:00+00:00"
+            "last_started_at": "2026-03-22T00:00:00+00:00",
+            "reset_history": [
+                {
+                    "date": "2026-04-21",
+                    "old_account_id": "PA3O14JAJHJ0",
+                    "new_account_id": "PA3O14JAJHJ0",
+                    "reason": "pnl_data_corrupt_previous_account_era"
+                }
+            ]
         },
         "EXP-601": {
             "id": "EXP-601",
