@@ -3,7 +3,7 @@
   "sentinel_version": "1.1",
   "runtime_gates_enabled": true,
   "created_at": "2026-04-12",
-  "last_updated": "2026-04-20T15:05",
+  "last_updated": "2026-04-20T17:30",
   "experiments": {
     "EXP-400": {
       "status": "active",
@@ -44,26 +44,28 @@
       "halted": false
     },
     "EXP-503": {
-      "status": "halted",
+      "status": "active",
       "paper_config": "configs/paper_exp503.yaml",
-      "config_fingerprint": "b52e7f75f6267955d35502ca4bf2e36da463296f3d42adf1f78adc7fc84b2d2f",
+      "config_fingerprint": "cdafd1b50572d8a12590407a015b436762dafd6b870f39dbe623d00610a596a3",
       "account_id": "PA3Z9PLVYUL5",
       "live_since": "2026-03-22",
       "enrolled_at": "2026-04-12",
       "sentinel_certified_at": null,
       "last_health_check": "2026-04-19",
-      "halt_reason": "config drift detected (scan startup fingerprint check)",
       "backtest_baseline": {
         "win_rate": 68.0,
         "avg_pnl": 750.0,
         "avg_loss": 2200.0,
         "mc_worst_dd_pct": 21.3
       },
-      "resumed_at": "2026-04-20T14:31:21.266641+00:00",
-      "resumed_by": "Carlos/Charles",
-      "resume_reason": "Config realigned to backtest params, orphans cleaned, peak equity reset. Carlos approved reactivation.",
+      "resumed_at": "2026-04-20T17:30:58.540711+00:00",
+      "resumed_by": "Charles",
+      "resume_reason": "Config approved after reset 2026-04-20",
       "peak_equity": 100000,
-      "halted": false
+      "halted": false,
+      "last_approved_at": "2026-04-20T17:30:58.877316+00:00",
+      "last_approved_by": "Charles",
+      "last_approval_reason": "Config approved after reset 2026-04-20"
     },
     "EXP-600": {
       "status": "active",
