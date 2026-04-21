@@ -31,6 +31,7 @@ from typing import Optional
 from sentinel.state import (
     compute_fingerprint as _state_compute_fingerprint,
     set_halt as _state_set_halt,
+    update_fingerprint as _state_update_fingerprint,
 )
 
 logger = logging.getLogger(__name__)
@@ -119,29 +120,65 @@ def pre_scan_check(experiment_id: str, config_path: Optional[str] = None) -> Non
             except Exception:
                 current_fp = None
             if current_fp and current_fp != stored_fp:
-                msg = (
-                    f"🛡️ SENTINEL — SCANNER BLOCKED\n"
-                    f"🛑 <b>{experiment_id}</b> config drift detected at scan startup.\n"
-                    f"<b>Stored:</b>  <code>{stored_fp[:24]}…</code>\n"
-                    f"<b>Current:</b> <code>{current_fp[:24]}…</code>\n"
-                    f"The config file has changed since certification.\n"
-                    f"<code>scripts/run_sentinel.py --approve {experiment_id} "
-                    f'--reason "..."</code>'
-                )
-                logger.critical(
-                    "SENTINEL HALT: %s config fingerprint mismatch — "
-                    "stored=%s current=%s. Aborting scan.",
-                    experiment_id, stored_fp[:24], current_fp[:24],
-                )
+                # Auto-remediation: validate config before deciding
                 try:
-                    _state_set_halt(
-                        experiment_id,
-                        "config drift detected (scan startup fingerprint check)",
+                    from sentinel.remediation import validate_config
+                    validation_errors = validate_config(cfg_path)
+                except Exception:
+                    validation_errors = None  # can't validate → fall back to halt
+
+                if validation_errors is None or len(validation_errors) > 0:
+                    # Config is INVALID or unvalidatable — halt
+                    error_detail = (
+                        "; ".join(validation_errors[:3])
+                        if validation_errors
+                        else "validation unavailable"
                     )
-                except Exception as exc:
-                    logger.error("SENTINEL: failed to persist halt for %s: %s", experiment_id, exc)
-                _send_alert(msg)
-                sys.exit(1)
+                    msg = (
+                        f"🛡️ SENTINEL — SCANNER BLOCKED\n"
+                        f"🛑 <b>{experiment_id}</b> config drift with INVALID config.\n"
+                        f"<b>Errors:</b> {error_detail}\n"
+                        f"<b>Stored:</b>  <code>{stored_fp[:24]}…</code>\n"
+                        f"<b>Current:</b> <code>{current_fp[:24]}…</code>\n"
+                        f"<code>scripts/run_sentinel.py --approve {experiment_id} "
+                        f'--reason "..."</code>'
+                    )
+                    logger.critical(
+                        "SENTINEL HALT: %s config drift with invalid config — "
+                        "stored=%s current=%s errors=%s. Aborting scan.",
+                        experiment_id, stored_fp[:24], current_fp[:24], error_detail,
+                    )
+                    try:
+                        _state_set_halt(
+                            experiment_id,
+                            f"config drift with invalid config: {error_detail}",
+                        )
+                    except Exception as exc:
+                        logger.error("SENTINEL: failed to persist halt for %s: %s", experiment_id, exc)
+                    _send_alert(msg)
+                    sys.exit(1)
+                else:
+                    # Config is VALID — auto-re-fingerprint and continue
+                    logger.warning(
+                        "SENTINEL: %s config drift detected but config is valid — "
+                        "auto-re-fingerprinting. stored=%s current=%s",
+                        experiment_id, stored_fp[:24], current_fp[:24],
+                    )
+                    try:
+                        _state_update_fingerprint(experiment_id, cfg_path)
+                    except Exception as exc:
+                        logger.error(
+                            "SENTINEL: %s auto-re-fingerprint failed: %s — "
+                            "continuing with stale fingerprint",
+                            experiment_id, exc,
+                        )
+                    _send_alert(
+                        f"🛡️ SENTINEL — config drift auto-fixed\n"
+                        f"✅ <b>{experiment_id}</b> config changed but validated OK.\n"
+                        f"<b>Old:</b> <code>{stored_fp[:24]}…</code>\n"
+                        f"<b>New:</b> <code>{current_fp[:24]}…</code>\n"
+                        f"Auto-re-fingerprinted. Scanner continues."
+                    )
             elif not current_fp:
                 logger.warning(
                     "SENTINEL: %s fingerprint check skipped — "

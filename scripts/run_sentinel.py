@@ -124,6 +124,13 @@ try:
 except ImportError:
     _HAS_TELEGRAM = False
 
+try:
+    from sentinel.remediation import run_remediation
+    _HAS_REMEDIATION = True
+except ImportError:
+    _HAS_REMEDIATION = False
+    logger.debug("sentinel.remediation not available — auto-remediation skipped")
+
 # ─────────────────────────────────────────────────────────────────────────────
 # sentinel_state.json helpers
 # ─────────────────────────────────────────────────────────────────────────────
@@ -292,6 +299,29 @@ def cmd_daily(args: argparse.Namespace) -> int:
                     print(f"   ⚠️  {exp_id}: {warns_lc} stuck position(s)")
             else:
                 print(f"   ✅ {exp_id}: positions healthy ({lc.total_open} open)")
+
+    # ── Auto-remediation ──────────────────────────────────────────────
+    remediation_result = None
+    if _HAS_REMEDIATION:
+        print("\n   Running auto-remediation…")
+        try:
+            remediation_result = run_remediation(
+                registry=registry,
+                health_results=health_results,
+                sentinel_state=state,
+            )
+            if remediation_result.actions:
+                for act in remediation_result.actions:
+                    icon = "✅" if act.success else "❌"
+                    print(f"   {icon} {act.experiment_id} [{act.category}]: {act.action_taken}")
+            else:
+                print("   ✅ No remediation needed")
+            if remediation_result.errors:
+                for err in remediation_result.errors[:5]:
+                    print(f"   ⚠️  {err}")
+        except Exception as e:
+            logger.error("Auto-remediation failed: %s", e, exc_info=True)
+            print(f"   ❌ Auto-remediation error: {e}")
 
     # Build summary
     summary = db.get_daily_summary(exp_ids)
