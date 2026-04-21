@@ -485,7 +485,7 @@ def collect_sentinel_data() -> dict:
     # Active experiment IDs from registry
     active_ids = [
         k for k, v in registry.get("experiments", {}).items()
-        if v.get("status") == "paper_trading"
+        if v.get("status") in ("active", "paper_trading")
     ]
 
     experiments: Dict[str, Any] = {}

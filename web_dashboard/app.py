@@ -621,23 +621,20 @@ async def get_sentinel(_key: str = Depends(require_api_key)):
 @app.get("/sentinel", response_class=HTMLResponse, include_in_schema=False)
 @app.get("/sentinel/", response_class=HTMLResponse, include_in_schema=False)
 async def sentinel_dashboard(request: Request, _: None = Depends(require_session)):
-    """Serve the Sentinel dashboard with health scores, gates, and alerts."""
+    """Serve the Sentinel dashboard with health scores, gates, and alerts.
+
+    Data sources (checked in order):
+      1. sentinel_dashboard.json — pushed from Mac via sync_sentinel_data.py
+         (primary source on Railway where local files don't exist)
+      2. sentinel_state.json + sentinel.db — local fallback for dev
+    """
     import json as _json
     from pathlib import Path as _Path
 
     try:
         _proj = _Path(__file__).resolve().parent.parent
 
-        # Load sentinel_state.json
-        state_path = _proj / "sentinel_state.json"
-        sentinel_state = {}
-        if state_path.exists():
-            try:
-                sentinel_state = _json.loads(state_path.read_text())
-            except Exception:
-                pass
-
-        # Load registry
+        # Load registry (always available — committed to git)
         reg_path = _proj / "experiments" / "registry.json"
         registry = {"experiments": {}}
         if reg_path.exists():
@@ -646,20 +643,41 @@ async def sentinel_dashboard(request: Request, _: None = Depends(require_session
             except Exception:
                 pass
 
-        # Load alerts from sentinel.db
+        # Primary: pushed sentinel data (sentinel_dashboard.json)
+        # This is the only source on Railway since local files are ephemeral.
+        sentinel_state = {}
         alerts = []
         snapshots = {}
-        db_path = _proj / "sentinel" / "db" / "sentinel.db"
-        if db_path.exists():
+
+        if SENTINEL_DATA_PATH.exists():
             try:
-                import sys
-                if str(_proj) not in sys.path:
-                    sys.path.insert(0, str(_proj))
-                from sentinel.history import SentinelDB
-                db = SentinelDB(str(db_path))
-                alerts = db.get_all_alerts(limit=50)
-            except Exception as e:
-                logger.warning(f"Could not load sentinel DB: {e}")
+                pushed = _json.loads(SENTINEL_DATA_PATH.read_text())
+                sentinel_state = pushed  # has .experiments, .alerts, .config_integrity
+                alerts = pushed.get("alerts", [])
+            except Exception:
+                pass
+
+        # Fallback: local sentinel_state.json (dev only)
+        if not sentinel_state.get("experiments"):
+            state_path = _proj / "sentinel_state.json"
+            if state_path.exists():
+                try:
+                    sentinel_state = _json.loads(state_path.read_text())
+                except Exception:
+                    pass
+
+            # Local sentinel.db alerts (dev only)
+            db_path = _proj / "sentinel" / "db" / "sentinel.db"
+            if db_path.exists():
+                try:
+                    import sys
+                    if str(_proj) not in sys.path:
+                        sys.path.insert(0, str(_proj))
+                    from sentinel.history import SentinelDB
+                    db = SentinelDB(str(db_path))
+                    alerts = db.get_all_alerts(limit=50)
+                except Exception as e:
+                    logger.warning(f"Could not load sentinel DB: {e}")
 
         return HTMLResponse(
             content=render_sentinel_page(sentinel_state, alerts, snapshots, registry)
