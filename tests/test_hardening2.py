@@ -291,7 +291,7 @@ class TestOrphanDetection:
         with caplog.at_level(logging.WARNING):
             monitor._detect_orphans([self._make_open_pos()], alpaca_positions)
 
-        assert any("ORPHAN" in r.message for r in caplog.records)
+        assert any("UNTRACKED" in r.message or "ORPHAN" in r.message for r in caplog.records)
         assert any(orphan_sym in r.message for r in caplog.records)
 
     def test_all_managed_symbols_present_no_warning(self, tmp_path, caplog):

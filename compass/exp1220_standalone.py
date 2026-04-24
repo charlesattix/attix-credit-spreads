@@ -122,7 +122,7 @@ def run_exp1220_trades(hd, spy_df, vix) -> List[Dict]:
         if last and (entry_dt - last).days < 10: continue
         try:
             price = float(spy_close.loc[es]); v = float(vix.loc[es])
-        except: continue
+        except (KeyError, ValueError, TypeError): continue
         if np.isnan(price) or np.isnan(v): continue
         if v > 40: continue  # only skip extreme crisis
 
@@ -187,7 +187,7 @@ def method_buggy(trades: List[Dict], spy_dates: pd.DatetimeIndex,
             dt = pd.Timestamp(d)
             if dt in daily_ret.index:
                 daily_ret.loc[dt] = pnl / 100_000
-        except: pass
+        except (ValueError, TypeError, KeyError): pass
 
     daily_ret *= leverage
     daily_ret -= 0.0436 / TRADING_DAYS  # hedge cost on ALL days (the bug)

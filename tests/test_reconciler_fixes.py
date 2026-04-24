@@ -112,8 +112,11 @@ class TestFix1ICWingIDsStoredInDB:
         trade = get_trade_by_id(result["client_order_id"], path=db_path)
         assert trade is not None
         cid = result["client_order_id"]
-        assert trade.get("alpaca_put_order_id") == cid + "-put"
-        assert trade.get("alpaca_call_order_id") == cid + "-call"
+        # Wing IDs include a timestamp suffix for Alpaca uniqueness: cid-NNNNNNN-put/call
+        put_oid = trade.get("alpaca_put_order_id", "")
+        call_oid = trade.get("alpaca_call_order_id", "")
+        assert put_oid.startswith(cid) and put_oid.endswith("-put"), f"Unexpected put_order_id: {put_oid}"
+        assert call_oid.startswith(cid) and call_oid.endswith("-call"), f"Unexpected call_order_id: {call_oid}"
 
     def test_wing_ids_not_stored_for_non_ic(self, tmp_path):
         """Wing IDs should NOT be added for regular bull_put spreads."""
@@ -523,16 +526,18 @@ class TestICLifecycleIntegration:
         cid = result["client_order_id"]
         assert result["status"] == "submitted"
 
-        # Step 2: Verify wing IDs stored in DB
+        # Step 2: Verify wing IDs stored in DB (include timestamp suffix)
         from shared.database import get_trade_by_id
         trade = get_trade_by_id(cid, path=db_path)
-        assert trade["alpaca_put_order_id"] == cid + "-put"
-        assert trade["alpaca_call_order_id"] == cid + "-call"
+        put_oid = trade["alpaca_put_order_id"]
+        call_oid = trade["alpaca_call_order_id"]
+        assert put_oid.startswith(cid) and put_oid.endswith("-put")
+        assert call_oid.startswith(cid) and call_oid.endswith("-call")
 
-        # Step 3: Reconcile — both wings filled
-        put_order = {"client_order_id": cid + "-put", "status": "filled",
+        # Step 3: Reconcile — both wings filled (use actual wing IDs with timestamp)
+        put_order = {"client_order_id": put_oid, "status": "filled",
                      "filled_avg_price": "1.50", "id": "po-1"}
-        call_order = {"client_order_id": cid + "-call", "status": "filled",
+        call_order = {"client_order_id": call_oid, "status": "filled",
                       "filled_avg_price": "1.50", "id": "co-1"}
         alpaca_rec = _mock_alpaca(batch_orders=[put_order, call_order])
         reconciler = PositionReconciler(alpaca=alpaca_rec, db_path=db_path)

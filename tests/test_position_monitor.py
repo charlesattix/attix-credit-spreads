@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 from typing import Dict, List, Optional
 from unittest.mock import MagicMock, patch
 
-from execution.position_monitor import PositionMonitor
+from execution.position_monitor import PositionMonitor, _EXTERNAL_CLOSE_GRACE_CYCLES
 from shared.database import get_trades, init_db, upsert_trade
 
 # ---------------------------------------------------------------------------
@@ -469,8 +469,12 @@ class TestExternalCloseDetection:
         )
         upsert_trade(pos, source="execution", path=db)
 
-        open_positions = get_trades(status="open", path=db)
-        mon._reconcile_external_closes(open_positions, {})
+        # Grace period requires _EXTERNAL_CLOSE_GRACE_CYCLES consecutive missing cycles
+        for _ in range(_EXTERNAL_CLOSE_GRACE_CYCLES):
+            open_positions = get_trades(status="open", path=db)
+            if not open_positions:
+                break
+            mon._reconcile_external_closes(open_positions, {})
 
         trades = get_trades(path=db)
         assert trades[0]["status"] == "closed_external"
@@ -488,7 +492,9 @@ class TestExternalCloseDetection:
             expiration="2025-06-20",
         )
         open_positions = [pos]
-        mon._reconcile_external_closes(open_positions, {})
+        # Grace period requires multiple cycles
+        for _ in range(_EXTERNAL_CLOSE_GRACE_CYCLES):
+            mon._reconcile_external_closes(open_positions, {})
 
         assert pos["status"] == "closed_external"
 
@@ -527,8 +533,9 @@ class TestExternalCloseDetection:
         upsert_trade(pos, source="execution", path=db)
         open_positions = [pos]
 
-        # Empty alpaca positions → all 4 legs missing
-        mon._reconcile_external_closes(open_positions, {})
+        # Empty alpaca positions → all 4 legs missing; grace period requires multiple cycles
+        for _ in range(_EXTERNAL_CLOSE_GRACE_CYCLES):
+            mon._reconcile_external_closes(open_positions, {})
 
         assert pos["status"] == "closed_external"
 

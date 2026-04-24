@@ -97,7 +97,7 @@ STREAMS = [
      "underlier": "GLD-GC=F", "direction": "calendar spread"},
     {"name": "slv_cal", "module": "compass.exp1770_commodity_calendars",
      "underlier": "SLV-SI=F", "direction": "calendar spread"},
-    {"name": "vol_arb", "module": "compass.exp2020_cross_vol_arb",
+    {"name": "cross_vol", "module": "compass.exp2020_cross_vol_arb",
      "underlier": "SPY/ETFs", "direction": "IV-RV long/short"},
     {"name": "v5_hedge", "module": "compass.crisis_alpha_v5",
      "underlier": "SPY+VIX", "direction": "put + VIX call hedge"},
@@ -289,7 +289,7 @@ STREAM_MODULES = [
     ("xli_cs",        "compass.exp2200_north_star_v6"),
     ("gld_cal",       "compass.exp1770_commodity_calendars"),
     ("slv_cal",       "compass.exp1770_commodity_calendars"),
-    ("vol_arb",       "compass.exp2020_cross_vol_arb"),
+    ("cross_vol",     "compass.exp2020_cross_vol_arb"),
     ("v5_hedge",      "compass.crisis_alpha_v5"),
     ("spy_weekly_cs", "compass.exp2580_spy_weekly_cs"),
 ]

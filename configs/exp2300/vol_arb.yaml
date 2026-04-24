@@ -13,7 +13,7 @@
 # capture the settlement forward RV.
 # ═══════════════════════════════════════════════════════════════════════════
 
-sleeve_id: vol_arb
+sleeve_id: cross_vol
 portfolio_weight: 0.1868
 mode: signal_only                 # Phase 2: promote to 'live' once a
                                    # run_live_cycle wrapper is written for
@@ -60,5 +60,5 @@ data:
 
 logging:
   level: INFO
-  file: logs/exp2300/sleeve_vol_arb.log
-  journal: logs/exp2300/journal_vol_arb.csv
+  file: logs/exp2300/sleeve_cross_vol.log
+  journal: logs/exp2300/journal_cross_vol.csv

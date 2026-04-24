@@ -217,7 +217,10 @@ def upsert_trade(trade: Dict[str, Any], source: str = "scanner", path: Optional[
                 exit_date=excluded.exit_date,
                 exit_reason=excluded.exit_reason,
                 pnl=excluded.pnl,
-                metadata=excluded.metadata,
+                metadata=CASE
+                    WHEN excluded.metadata = '{}' THEN COALESCE(trades.metadata, '{}')
+                    ELSE excluded.metadata
+                END,
                 updated_at=datetime('now')
         """, (
             str(trade.get("id", "")),
@@ -263,7 +266,10 @@ def batch_upsert_trades(trades: List[Dict[str, Any]], source: str = "scanner", p
                     exit_date=excluded.exit_date,
                     exit_reason=excluded.exit_reason,
                     pnl=excluded.pnl,
-                    metadata=excluded.metadata,
+                    metadata=CASE
+                        WHEN excluded.metadata = '{}' THEN COALESCE(trades.metadata, '{}')
+                        ELSE excluded.metadata
+                    END,
                     updated_at=datetime('now')
             """, (
                 str(trade.get("id", "")),

@@ -562,15 +562,21 @@ class PositionMonitor:
                     "PositionMonitor: cannot parse expiration '%s': %s", expiration_str, e
                 )
 
-        # RC4: Guard against synthetic single-leg records (no hedge) before pricing
+        # RC4: Guard against synthetic single-leg records (no hedge) before pricing.
+        # When both strikes are None but credit is present, fall through to
+        # formula-only SL/PT (no spread_width cap).  Only skip when there's
+        # truly no data to work with.
         _spread_type_guard = str(pos.get("strategy_type", pos.get("type", ""))).lower()
+        _has_credit = pos.get("credit") is not None and float(pos.get("credit", 0)) > 0
         if (
             pos.get("long_strike") is None
+            and pos.get("short_strike") is None
+            and not _has_credit
             and "straddle" not in _spread_type_guard
             and "strangle" not in _spread_type_guard
         ):
             logger.error(
-                "PositionMonitor: %s has no long_strike — skipping SL/PT "
+                "PositionMonitor: %s has no strikes and no credit — skipping SL/PT "
                 "(likely a synthetic orphan record). Manual review required.",
                 pos.get("id"),
             )

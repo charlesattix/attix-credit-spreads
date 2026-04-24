@@ -201,44 +201,21 @@ def regime_breakdown(trades_with_vix: List[Dict]) -> Dict[str, Dict]:
 # ═══════════════════════════════════════════════════════════════════════════
 
 def build_exp1220_daily(spy_rets: pd.Series) -> pd.Series:
-    """Synthesize EXP-1220 daily returns from real yearly targets.
+    """QUARANTINED — Rule Zero violation.
 
-    EXP-1220 real yearly returns (2020-2025, protected):
-      2020: +52.97%, 2021: +49.13%, 2022: +14.82%
-      2023: +40.10%, 2024: +31.51%, 2025: +37.24%
+    This function previously used np.random.normal() to synthesize daily
+    returns from hardcoded annual targets.  This is banned under Rule Zero:
+    NO SYNTHETIC DATA.  EVER.  PERIOD.
+
+    To combine EXP-1220 with other strategies, use the real EXP-1220 trade
+    tape from IronVault and convert to daily P&L via trades_to_daily_pnl().
+
+    Quarantined: 2026-04-23 (Code Quality Audit)
     """
-    yearly = {
-        2020: 0.5297, 2021: 0.4913, 2022: 0.1482,
-        2023: 0.4010, 2024: 0.3151, 2025: 0.3724,
-    }
-    yearly_dd = {
-        2020: 0.0388, 2021: 0.0152, 2022: 0.0657,
-        2023: 0.0337, 2024: 0.0125, 2025: 0.0167,
-    }
-
-    rng = np.random.RandomState(42)  # Deterministic noise only
-    out = pd.Series(0.0, index=spy_rets.index, dtype=float)
-    for yr, ann in yearly.items():
-        mask = out.index.year == yr
-        n = int(mask.sum())
-        if n == 0:
-            continue
-        dd = yearly_dd.get(yr, 0.03)
-        vol = max(dd * 2.0, 0.005)
-        daily_vol = vol / math.sqrt(252)
-        daily_mean = ann / n
-        # Use REAL SPY returns to inject market-timing structure
-        spy_yr = spy_rets[mask].values
-        noise = -spy_yr * 0.15  # mild inverse (hedge-like)
-        days = rng.normal(daily_mean, daily_vol, n) + noise - np.mean(noise)
-        # Scale to hit target
-        actual = np.prod(1 + days) - 1
-        if abs(actual) > 0:
-            adj = (1 + ann) / (1 + actual)
-            days = (1 + days) * adj ** (1/n) - 1
-        out.loc[mask] = days
-
-    return out
+    raise NotImplementedError(
+        "build_exp1220_daily is QUARANTINED (Rule Zero violation). "
+        "Use real EXP-1220 trade data from IronVault instead of synthetic returns."
+    )
 
 
 def trades_to_daily_pnl(trades: List[ICTrade], date_index: pd.DatetimeIndex) -> pd.Series:

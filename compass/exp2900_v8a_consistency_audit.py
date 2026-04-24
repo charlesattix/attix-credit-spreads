@@ -85,7 +85,7 @@ STREAM_MODULES = {
     "qqq_cs":   "compass.exp2240_qqq_iwm_credit_spreads",
     "gld_cal":  "compass.exp1770_commodity_calendars",
     "slv_cal":  "compass.exp1770_commodity_calendars",
-    "vol_arb":  "compass.exp2020_cross_vol_arb",
+    "cross_vol":  "compass.exp2020_cross_vol_arb",
     "v5_hedge": "compass.crisis_alpha_v5",
 }
 
@@ -116,7 +116,7 @@ def section_b_signal_generators() -> None:
         return
 
     expected = {"exp1220", "xlf_cs", "xli_cs", "qqq_cs",
-                 "gld_cal", "slv_cal", "vol_arb", "v5_hedge"}
+                 "gld_cal", "slv_cal", "cross_vol", "v5_hedge"}
     missing = expected - set(GENERATOR_REGISTRY.keys())
     extra = set(GENERATOR_REGISTRY.keys()) - expected
     if missing:

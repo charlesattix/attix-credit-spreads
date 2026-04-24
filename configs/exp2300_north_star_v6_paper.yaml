@@ -74,7 +74,7 @@ portfolio:
     exp1220_spy:   0.3164
     xlf_cs:        0.2452
     xli_cs:        0.1924
-    vol_arb:       0.1868
+    cross_vol:     0.1868
     gld_calendar:  0.0244
     slv_calendar:  0.0120
     v5_hedge:      0.0228
@@ -93,7 +93,7 @@ sleeves:
     config: configs/exp2300/xli_cs.yaml
     mode: live
     reference_experiment: EXP-2160
-  - id: vol_arb
+  - id: cross_vol
     config: configs/exp2300/vol_arb.yaml
     mode: signal_only          # no live-cycle wrapper yet; phase-2 upgrade
     reference_experiment: EXP-2020

@@ -12,7 +12,7 @@ Generators (one per stream):
     qqq_cs_signals    — QQQ put-credit-spread (EXP-2240)
     gld_cal_signals   — GLD − GC=F calendar spread (EXP-1770)
     slv_cal_signals   — SLV − SI=F calendar spread (EXP-1770)
-    vol_arb_signals   — SPY/QQQ/IWM/EEM IV−RV pairs (EXP-2020)
+    cross_vol_signals  — SPY/QQQ/IWM/EEM IV−RV pairs (EXP-2020)
     v5_hedge_signals  — Crisis Alpha v5 13-ETF CTA (EXP-1780 v5)
 
 Unified signal schema (each generator returns list[dict]):
@@ -75,7 +75,7 @@ PORTFOLIO_WEIGHTS = {
     "xli_cs":   0.192,
     "gld_cal":  0.024,
     "slv_cal":  0.012,
-    "vol_arb":  0.187,
+    "cross_vol":  0.187,
     "v5_hedge": 0.023,
     "qqq_cs":   0.100,   # EXP-2600 v8a addition
 }
@@ -382,9 +382,9 @@ def slv_cal_signals(date) -> List[Dict[str, Any]]:
 # 6. Cross-vol arb (EXP-2020 weekly IV−RV pairs)
 # ═══════════════════════════════════════════════════════════════════════════
 
-def vol_arb_signals(date) -> List[Dict[str, Any]]:
+def cross_vol_signals(date) -> List[Dict[str, Any]]:
     date = _as_datetime(date)
-    sig = _base_signal("vol_arb", "SPY/QQQ/IWM/EEM", date)
+    sig = _base_signal("cross_vol", "SPY/QQQ/IWM/EEM", date)
     sig["direction"] = "iv_rv_pair"
 
     # Weekly cadence — Mondays only
@@ -446,6 +446,9 @@ def vol_arb_signals(date) -> List[Dict[str, Any]]:
                     f"short {short_t} ({short_spread*100:+.2f}pp), "
                     f"gap {gap*100:.2f}pp")
     return [sig]
+
+# Backward-compatible alias (was vol_arb before EXP-2900 naming cleanup)
+vol_arb_signals = cross_vol_signals
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -546,7 +549,7 @@ GENERATOR_REGISTRY = {
     "qqq_cs":   qqq_cs_signals,
     "gld_cal":  gld_cal_signals,
     "slv_cal":  slv_cal_signals,
-    "vol_arb":  vol_arb_signals,
+    "cross_vol":  cross_vol_signals,
     "v5_hedge": v5_hedge_signals,
 }
 

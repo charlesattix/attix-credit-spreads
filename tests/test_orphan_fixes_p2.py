@@ -388,8 +388,12 @@ class TestOrphanRecovery:
         assert len(promoted) == 1, "closed_external record should be promoted to open"
         assert promoted[0]["id"] == "orphan-t3b"
 
-    def test_3c_synthetic_record_created_for_unknown_position(self, tmp_path):
-        """If no DB record exists, a synthetic-monitor-* record is created with status=open."""
+    def test_3c_orphan_alerts_for_unknown_position(self, tmp_path, caplog):
+        """RC4: If no DB record exists, CRITICAL alert is logged (no synthetic record created).
+
+        Synthetic-monitor records were removed in RC4 because they have long_strike=None
+        which causes mispriced SL/PT checks and accumulates zombie positions.
+        """
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
         alpaca = _make_alpaca()
@@ -407,15 +411,13 @@ class TestOrphanRecovery:
         }
 
         # No DB records at all
-        mon._detect_orphans([], alpaca_positions)
+        with caplog.at_level(logging.CRITICAL):
+            mon._detect_orphans([], alpaca_positions)
 
+        # RC4: no synthetic record — alert only
         synthetic = get_trades(status="open", path=db_path)
-        assert len(synthetic) == 1, "synthetic monitoring record should be created"
-        rec = synthetic[0]
-        assert rec["id"].startswith("synthetic-monitor-")
-        assert rec["short_strike"] == 649.0
-        # Credit should be set from avg_entry_price
-        assert rec["credit"] is not None and rec["credit"] > 0
+        assert len(synthetic) == 0, "RC4: no synthetic records should be created"
+        assert any("UNTRACKED" in r.message for r in caplog.records)
 
     def test_3d_no_synthetic_for_long_leg(self, tmp_path):
         """Long legs (positive qty) do NOT get synthetic records — they are hedges."""

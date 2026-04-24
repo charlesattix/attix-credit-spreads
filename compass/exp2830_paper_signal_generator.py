@@ -75,6 +75,55 @@ TARGET_VOL   = 0.12      # portfolio target ann vol
 MAX_LEVERAGE = 3.0       # hard cap
 
 
+def compute_notional_contracts(
+    capital: float,
+    weight: float,
+    leverage: float,
+    risk_pct: float,
+    max_loss_per_contract: float,
+    *,
+    floor: int = 1,
+    cap: int = 10,
+) -> int:
+    """Dollar-notional position sizing.
+
+    Computes the number of contracts such that the worst-case loss on
+    this position equals ``capital * weight * leverage * risk_pct``.
+
+    Parameters
+    ----------
+    capital : float
+        Total portfolio equity (e.g. $100K at paper start, grows over time).
+    weight : float
+        Fraction of portfolio allocated to this stream (0-1).
+    leverage : float
+        Portfolio-level leverage multiplier (1-3×).
+    risk_pct : float
+        Max-loss budget as a fraction of the stream allocation (e.g. 0.03
+        means risk 3% of the stream capital on this trade).
+    max_loss_per_contract : float
+        Worst-case dollar loss per contract.  For a put credit spread this
+        is ``(spread_width - net_credit) * 100``; for calendars, a
+        stress-estimated loss per contract.
+    floor : int
+        Minimum contracts (default 1).  Set to 0 to allow flat.
+    cap : int
+        Hard safety cap per signal.
+
+    Returns
+    -------
+    int
+        Number of contracts, ``floor <= result <= cap``.
+    """
+    if max_loss_per_contract <= 0:
+        return floor
+    stream_budget = capital * weight * leverage * risk_pct
+    raw = stream_budget / max_loss_per_contract
+    # Round DOWN (conservative — never risk more than budget)
+    n = int(raw)
+    return max(floor, min(n, cap))
+
+
 # ───────────────────────────────────────────────────────────────────────────
 # Logging
 # ───────────────────────────────────────────────────────────────────────────
@@ -297,6 +346,10 @@ class StreamSignal:
     order_type: str               # limit_at_mid / combo_multi_leg
     reason: str
     stream_weight: float
+    # Dollar-notional sizing context (added for Phase 9 prerequisite #5)
+    sizing_capital: float = 0.0            # portfolio equity used for sizing
+    sizing_max_loss_per_contract: float = 0.0  # worst-case $ loss per contract
+    sizing_risk_budget: float = 0.0        # $ amount risked on this trade
 
 
 # Stream weights from EXP-2600 v8a equal_risk_15%
@@ -386,13 +439,19 @@ def _put_credit_spread_signal(
     long_strike  = short_strike - width
 
     # Sizing: 3% of stream-allocated capital as max loss
-    stream_cap = CAPITAL_BASE * weight * MAX_LEVERAGE
-    max_loss_per_contract = (width - 0.5) * 100   # conservative credit estimate
-    contracts = max(1, int(stream_cap * 0.03 / max_loss_per_contract))
-    contracts = min(contracts, 10)  # safety cap
-
-    # Placeholder limit price — Alpaca integration must re-quote at fill time
+    # Conservative max-loss estimate: (spread_width − estimated_credit) × 100
     est_credit = round(width * 0.15, 2)    # ~15% of width is a reasonable target
+    max_loss_per_contract = (width - est_credit) * 100
+    contracts = compute_notional_contracts(
+        capital=CAPITAL_BASE,
+        weight=weight,
+        leverage=MAX_LEVERAGE,
+        risk_pct=0.03,
+        max_loss_per_contract=max_loss_per_contract,
+        floor=1,
+        cap=10,
+    )
+    risk_budget = contracts * max_loss_per_contract
 
     return StreamSignal(
         stream=stream,
@@ -411,6 +470,9 @@ def _put_credit_spread_signal(
         order_type="limit_at_mid_combo",
         reason=f"regime={ctx.regime} overlays passed",
         stream_weight=weight,
+        sizing_capital=CAPITAL_BASE,
+        sizing_max_loss_per_contract=max_loss_per_contract,
+        sizing_risk_budget=risk_budget,
     )
 
 
@@ -442,8 +504,18 @@ def _calendar_spread_signal(stream: str, etf: str, snap: MarketSnapshot,
     back_exp  = _friday_n_days_out(today, 60)
     strike = _round_strike(price, 1.0)
 
-    stream_cap = CAPITAL_BASE * weight * MAX_LEVERAGE
-    contracts = max(1, min(15, int(stream_cap * 0.02 / 50)))
+    # Calendar max-loss estimate: $50 stress loss per contract
+    calendar_stress_loss = 50.0
+    contracts = compute_notional_contracts(
+        capital=CAPITAL_BASE,
+        weight=weight,
+        leverage=MAX_LEVERAGE,
+        risk_pct=0.02,
+        max_loss_per_contract=calendar_stress_loss,
+        floor=1,
+        cap=15,
+    )
+    risk_budget = contracts * calendar_stress_loss
 
     return StreamSignal(
         stream=stream,
@@ -462,10 +534,13 @@ def _calendar_spread_signal(stream: str, etf: str, snap: MarketSnapshot,
         order_type="combo_multi_leg",
         reason=f"regime={ctx.regime} calendar constructive",
         stream_weight=weight,
+        sizing_capital=CAPITAL_BASE,
+        sizing_max_loss_per_contract=calendar_stress_loss,
+        sizing_risk_budget=risk_budget,
     )
 
 
-def _vol_arb_signal(snap: MarketSnapshot, ctx: OverlayContext) -> StreamSignal:
+def _cross_vol_signal(snap: MarketSnapshot, ctx: OverlayContext) -> StreamSignal:
     weight = STREAM_WEIGHTS["cross_vol"]
     iv = snap.vix_value
     rv = snap.spy_20d_realized_vol
@@ -487,8 +562,18 @@ def _vol_arb_signal(snap: MarketSnapshot, ctx: OverlayContext) -> StreamSignal:
     today = datetime.strptime(snap.as_of, "%Y-%m-%d").date()
     expiry = _friday_n_days_out(today, 30)
 
-    stream_cap = CAPITAL_BASE * weight * MAX_LEVERAGE
-    contracts = max(1, min(8, int(stream_cap * 0.02 / 100)))
+    # Cross-vol stress loss: $100 per contract
+    cross_vol_stress_loss = 100.0
+    contracts = compute_notional_contracts(
+        capital=CAPITAL_BASE,
+        weight=weight,
+        leverage=MAX_LEVERAGE,
+        risk_pct=0.02,
+        max_loss_per_contract=cross_vol_stress_loss,
+        floor=1,
+        cap=8,
+    )
+    risk_budget = contracts * cross_vol_stress_loss
 
     return StreamSignal(
         stream="cross_vol",
@@ -507,6 +592,9 @@ def _vol_arb_signal(snap: MarketSnapshot, ctx: OverlayContext) -> StreamSignal:
         order_type="combo_multi_leg",
         reason=reason,
         stream_weight=weight,
+        sizing_capital=CAPITAL_BASE,
+        sizing_max_loss_per_contract=cross_vol_stress_loss,
+        sizing_risk_budget=risk_budget if action == "OPEN" else 0.0,
     )
 
 
@@ -531,8 +619,21 @@ def _v5_hedge_signal(snap: MarketSnapshot, ctx: OverlayContext) -> StreamSignal:
     expiry = _friday_n_days_out(today, 45)
     hedge_strike = _round_strike(spy_price * 0.90)  # 10% OTM put
 
-    stream_cap = CAPITAL_BASE * weight * MAX_LEVERAGE
-    contracts = max(1, min(5, int(stream_cap * 0.05 / 50))) if engage else 1
+    # Hedge stress loss: $50 per contract (premium at risk)
+    hedge_stress_loss = 50.0
+    if engage:
+        contracts = compute_notional_contracts(
+            capital=CAPITAL_BASE,
+            weight=weight,
+            leverage=MAX_LEVERAGE,
+            risk_pct=0.05,
+            max_loss_per_contract=hedge_stress_loss,
+            floor=1,
+            cap=5,
+        )
+    else:
+        contracts = 1  # maintain minimum hedge floor
+    risk_budget = contracts * hedge_stress_loss
 
     return StreamSignal(
         stream="v5_hedge",
@@ -552,6 +653,9 @@ def _v5_hedge_signal(snap: MarketSnapshot, ctx: OverlayContext) -> StreamSignal:
         reason=(f"engage: VIX={vix:.1f}, ts_ok={ctx.term_structure_gate_pass}"
                 if engage else f"maintain 1-contract floor, VIX={vix:.1f}"),
         stream_weight=weight,
+        sizing_capital=CAPITAL_BASE,
+        sizing_max_loss_per_contract=hedge_stress_loss,
+        sizing_risk_budget=risk_budget,
     )
 
 
@@ -586,7 +690,7 @@ def generate_all_signals(as_of: date, logger: logging.Logger) -> Dict:
                                    otm_pct=0.05, width=5.0,  dte=28),
         _calendar_spread_signal("gld_cal",   "GLD", snap, ctx),
         _calendar_spread_signal("slv_cal",   "SLV", snap, ctx),
-        _vol_arb_signal(snap, ctx),
+        _cross_vol_signal(snap, ctx),
         _v5_hedge_signal(snap, ctx),
     ]
 

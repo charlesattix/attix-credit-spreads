@@ -580,7 +580,8 @@ class TestConsecutiveAPIFailureAlerting:
         for i in range(1, 4):
             with patch.object(monitor, "_is_market_hours", return_value=True), \
                  patch.object(monitor, "_reconcile_pending_opens"), \
-                 patch.object(monitor, "_reconcile_pending_closes"):
+                 patch.object(monitor, "_reconcile_pending_closes"), \
+                 patch.object(monitor, "_should_run_tier2", return_value=True):
                 monitor._check_positions()
             assert monitor._consecutive_api_failures == i
 

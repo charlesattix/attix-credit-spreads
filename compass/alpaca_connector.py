@@ -722,7 +722,7 @@ _STREAM_TICKER_MAP = {
     "XLI": "xli_cs",
     "GLD": "gld_cal",
     "SLV": "slv_cal",
-    "IWM": "vol_arb",
+    "IWM": "cross_vol",
     "UVXY": "v5_hedge",
     "VXX": "v5_hedge",
 }

@@ -361,7 +361,11 @@ class TestExecutionEngineMarketGuard:
         assert result["status"] == "dry_run"
 
     def test_market_closed_still_writes_db_record(self, tmp_path):
-        """Even on market_closed, DB record is written (write-before-submit pattern)."""
+        """Even on market_closed, DB record is written (write-before-submit pattern).
+
+        The record starts as pending_open, then transitions to failed_open
+        when the market-hours check fails — so the final status is failed_open.
+        """
         from shared.database import get_trades
         db_path = str(tmp_path / "db.db")
         engine = self._make_engine(is_open=False, db_path=db_path)
@@ -371,9 +375,9 @@ class TestExecutionEngineMarketGuard:
         }
         engine.submit_opportunity(opp)
         trades = get_trades(path=db_path)
-        # DB record is written in pending_open state before market-hours check
+        # DB record is written before market-hours check, then marked failed_open
         assert len(trades) == 1
-        assert trades[0]["status"] == "pending_open"
+        assert trades[0]["status"] == "failed_open"
 
 
 # ---------------------------------------------------------------------------
@@ -749,8 +753,13 @@ class TestIntraDayOrderLifecycle:
         # We mock _get_spread_value to return 4.60 (> 4.50) to trigger SL.
         with patch.object(PositionMonitor, "_is_market_hours", return_value=True), \
              patch.object(monitor, "_get_spread_value", return_value=4.60), \
+             patch.object(monitor, "_should_run_eod", return_value=False), \
+             patch.object(monitor, "_should_run_morning", return_value=False), \
+             patch.object(monitor, "_reconcile_pending_opens"), \
+             patch.object(monitor, "_reconcile_pending_closes"), \
              patch.object(monitor, "_reconcile_external_closes"), \
              patch.object(monitor, "_detect_assignment"), \
+             patch.object(monitor, "_detect_orphans"), \
              patch.object(monitor.alpaca, "get_positions", return_value=[]):
             monitor._check_positions()
 

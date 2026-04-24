@@ -172,7 +172,7 @@ def _hedge_legs(signal: Dict) -> List[Dict]:
     ]
 
 
-def _vol_arb_legs(signal: Dict) -> List[Dict]:
+def _cross_vol_legs(signal: Dict) -> List[Dict]:
     """Cross-vol arb is a model sleeve, not a concrete order. Emit a
     sentinel placeholder so the dry-run still round-trips cleanly
     but the mock response includes a NEEDS_MODEL_EXEC flag."""
@@ -204,7 +204,7 @@ def build_alpaca_order(signal: Dict) -> Optional[Dict]:
     elif structure == "hedge_sleeve":
         legs = _hedge_legs(signal)
     elif structure == "iv_rv_relative_value":
-        legs = _vol_arb_legs(signal)
+        legs = _cross_vol_legs(signal)
     else:
         return None
     if not legs:

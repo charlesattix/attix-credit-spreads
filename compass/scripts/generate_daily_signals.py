@@ -50,7 +50,7 @@ STREAM_MODULES = [
     ("qqq_cs",   "compass.exp2690_signal_generators", "qqq_cs_signals"),
     ("gld_cal",  "compass.exp2690_signal_generators", "gld_cal_signals"),
     ("slv_cal",  "compass.exp2690_signal_generators", "slv_cal_signals"),
-    ("vol_arb",  "compass.exp2690_signal_generators", "vol_arb_signals"),
+    ("cross_vol",  "compass.exp2690_signal_generators", "cross_vol_signals"),
     ("v5_hedge", "compass.exp2690_signal_generators", "v5_hedge_signals"),
 ]
 

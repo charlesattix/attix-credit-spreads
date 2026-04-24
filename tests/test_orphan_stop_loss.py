@@ -126,8 +126,14 @@ class TestParseOccSymbol:
 
 class TestDetectOrphansSynthetic:
 
-    def test_short_orphan_creates_synthetic_record(self, tmp_path):
-        """Short orphan option with no DB record → synthetic-monitor-* created with status=open."""
+    def test_short_orphan_logs_critical_alert(self, tmp_path, caplog):
+        """Short orphan option with no DB record → CRITICAL log + alert (RC4: no synthetic record).
+
+        RC4 fix removed synthetic-monitor record creation because synthetic records
+        (long_strike=None) cause mispriced SL/PT checks and accumulate as zombies.
+        Orphan detection now alerts for manual intervention only.
+        """
+        import logging
         db = _setup_db(tmp_path)
         sym = _occ("SPY", "2026-04-17", 668.0, "call")
         alpaca_positions = {
@@ -140,19 +146,13 @@ class TestDetectOrphansSynthetic:
             }
         }
         mon = _monitor(db_path=db)
-        mon._detect_orphans([], alpaca_positions)
+        with caplog.at_level(logging.CRITICAL):
+            mon._detect_orphans([], alpaca_positions)
 
+        # RC4: no synthetic record created — alert only
         trades = get_trades(status="open", path=db)
-        assert len(trades) == 1
-        rec = trades[0]
-        assert rec["id"].startswith("synthetic-monitor-")
-        assert rec["ticker"] == "SPY"
-        assert rec["strategy_type"] == "bear_call"
-        assert abs(rec["short_strike"] - 668.0) < 0.001
-        assert rec["long_strike"] is None
-        assert abs(rec["credit"] - 2.50) < 0.001
-        assert rec["contracts"] == 5
-        assert rec["expiration"] == "2026-04-17"
+        assert len(trades) == 0
+        assert any("UNTRACKED" in r.message for r in caplog.records)
 
     def test_long_orphan_no_synthetic_created(self, tmp_path):
         """Long (positive qty) orphan option → no synthetic record created."""
@@ -228,8 +228,9 @@ class TestDetectOrphansSynthetic:
         all_trades = get_trades(path=db)
         assert len(all_trades) == 0
 
-    def test_synthetic_record_idempotent(self, tmp_path):
-        """Calling _detect_orphans twice for the same orphan doesn't create duplicate records."""
+    def test_orphan_detection_idempotent(self, tmp_path, caplog):
+        """Calling _detect_orphans twice for the same orphan logs alert each time (RC4: no synthetic records)."""
+        import logging
         db = _setup_db(tmp_path)
         sym = _occ("SPY", "2026-04-17", 668.0, "call")
         alpaca_positions = {
@@ -242,11 +243,15 @@ class TestDetectOrphansSynthetic:
             }
         }
         mon = _monitor(db_path=db)
-        mon._detect_orphans([], alpaca_positions)
-        mon._detect_orphans([], alpaca_positions)  # second call
+        with caplog.at_level(logging.CRITICAL):
+            mon._detect_orphans([], alpaca_positions)
+            mon._detect_orphans([], alpaca_positions)  # second call
 
+        # RC4: no synthetic records created — alerts only
         trades = get_trades(status="open", path=db)
-        assert len(trades) == 1  # still one record
+        assert len(trades) == 0
+        untracked = [r for r in caplog.records if "UNTRACKED" in r.message]
+        assert len(untracked) == 2  # alerted both times
 
 
 # ---------------------------------------------------------------------------
@@ -330,123 +335,90 @@ class TestDetectOrphansRecovery:
 
 class TestOrphanStopLoss:
     """
-    After a synthetic record is created by _detect_orphans, _check_exit_conditions
-    must fire the stop-loss when the option value exceeds (1 + sl_mult) * credit.
+    Tests for stop-loss checking on manually-tracked positions (including
+    positions with missing long_strike, as would occur in orphan scenarios).
+
+    RC4 removed automatic synthetic record creation, but SL/PT checks should
+    still work on positions that have credit but may lack full strike data.
     """
 
-    def _make_synthetic(
+    def _make_monitored_pos(
         self,
         db: str,
-        symbol: str,
         ticker: str = "SPY",
         strike: float = 668.0,
-        expiration: str = "2026-04-17",
+        long_strike: float = 655.0,
+        expiration: str = "2099-12-31",
         opt_type: str = "call",
         credit: float = 2.50,
         contracts: int = 5,
     ) -> Dict:
         strategy_type = "bear_call" if opt_type == "call" else "bull_put"
         rec = {
-            "id": f"synthetic-monitor-{symbol}",
+            "id": f"monitored-{ticker}-{strike}",
             "ticker": ticker,
             "strategy_type": strategy_type,
             "status": "open",
             "short_strike": strike,
-            "long_strike": None,
+            "long_strike": long_strike,
             "expiration": expiration,
             "credit": credit,
             "contracts": contracts,
             "entry_date": datetime.now(timezone.utc).isoformat(),
-            "alpaca_symbol": symbol,
         }
         upsert_trade(rec, source="execution", path=db)
         return rec
 
     def test_stop_loss_fires_when_loss_exceeds_threshold(self, tmp_path):
-        """Stop-loss fires when single-leg cost-to-close >= (1 + sl_mult) * credit."""
+        """Stop-loss fires when spread value >= (1 + sl_mult) * credit."""
         db = _setup_db(tmp_path)
-        sym = _occ("SPY", "2026-04-17", 668.0, "call")
+        sym = _occ("SPY", "2099-12-31", 668.0, "call")
         credit = 2.50
         sl_mult = 1.25
         contracts = 5
 
-        # At stop: current cost = (1 + 1.25) * 2.50 = 5.625 per share
-        # market_value of short position = -(5.625 * 5 * 100) = -2812.5
-        cost_at_stop = (1 + sl_mult) * credit
-        mv_at_stop = -(cost_at_stop * contracts * 100)
-
-        alpaca_positions = {
-            sym: {
-                "symbol": sym,
-                "qty": f"-{contracts}",
-                "asset_class": "us_option",
-                "avg_entry_price": str(credit),
-                "market_value": str(mv_at_stop),
-            }
-        }
         mon = _monitor(db_path=db, sl_mult=sl_mult)
-        pos = self._make_synthetic(db, sym, credit=credit, contracts=contracts)
+        pos = self._make_monitored_pos(db, credit=credit, contracts=contracts)
 
-        exit_reason = mon._check_exit_conditions(pos, alpaca_positions)
+        # At stop threshold: (1 + 1.25) * 2.50 = 5.625
+        with patch.object(mon, "_get_spread_value", return_value=5.625):
+            exit_reason = mon._check_exit_conditions(pos, {})
         assert exit_reason == "stop_loss"
 
     def test_stop_loss_does_not_fire_below_threshold(self, tmp_path):
         """Stop-loss does NOT fire when loss is below the threshold."""
         db = _setup_db(tmp_path)
-        sym = _occ("SPY", "2026-04-17", 668.0, "call")
         credit = 2.50
         sl_mult = 1.25
-        contracts = 5
 
-        # Below threshold: cost = 1.0x credit = 2.50 per share
-        cost_below_stop = 1.0 * credit
-        mv_below_stop = -(cost_below_stop * contracts * 100)
-
-        alpaca_positions = {
-            sym: {
-                "symbol": sym,
-                "qty": f"-{contracts}",
-                "asset_class": "us_option",
-                "avg_entry_price": str(credit),
-                "market_value": str(mv_below_stop),
-            }
-        }
         mon = _monitor(db_path=db, sl_mult=sl_mult)
-        pos = self._make_synthetic(db, sym, credit=credit, contracts=contracts)
+        pos = self._make_monitored_pos(db, credit=credit)
 
-        exit_reason = mon._check_exit_conditions(pos, alpaca_positions)
+        # Below threshold: 2.50 (= 1.0x credit)
+        with patch.object(mon, "_get_spread_value", return_value=2.50):
+            exit_reason = mon._check_exit_conditions(pos, {})
         assert exit_reason is None
 
     def test_no_credit_skips_stop_loss(self, tmp_path):
-        """Synthetic with no credit (avg_entry_price=0) skips stop-loss check."""
+        """Position with no credit (0) skips SL/PT check."""
         db = _setup_db(tmp_path)
-        sym = _occ("SPY", "2026-04-17", 668.0, "call")
 
-        alpaca_positions = {
-            sym: {
-                "symbol": sym,
-                "qty": "-5",
-                "asset_class": "us_option",
-                "avg_entry_price": "0",
-                "market_value": "-500.0",
-            }
-        }
         mon = _monitor(db_path=db)
-        pos = self._make_synthetic(db, sym, credit=0.0)
+        pos = self._make_monitored_pos(db, credit=0.0)
 
-        exit_reason = mon._check_exit_conditions(pos, alpaca_positions)
-        assert exit_reason is None  # credit=0 → skip
+        with patch.object(mon, "_get_spread_value", return_value=5.0):
+            exit_reason = mon._check_exit_conditions(pos, {})
+        # credit=0 → no SL/PT threshold computable
+        assert exit_reason is None
 
-    def test_full_cycle_detect_and_stop(self, tmp_path):
-        """Full cycle: orphan detected → synthetic created → stop fires → close submitted."""
+    def test_full_cycle_detect_alert_and_existing_stop(self, tmp_path, caplog):
+        """Full cycle: orphan detected → alert logged (RC4), existing position checked for SL."""
+        import logging
         db = _setup_db(tmp_path)
-        sym = _occ("SPY", "2026-04-17", 668.0, "call")
+        sym = _occ("SPY", "2099-12-31", 668.0, "call")
         credit = 2.50
         sl_mult = 1.25
         contracts = 5
-
-        cost_at_stop = (1 + sl_mult) * credit
-        mv_at_stop = -(cost_at_stop * contracts * 100)
 
         alpaca_positions = {
             sym: {
@@ -454,40 +426,22 @@ class TestOrphanStopLoss:
                 "qty": f"-{contracts}",
                 "asset_class": "us_option",
                 "avg_entry_price": str(credit),
-                "market_value": str(mv_at_stop),
+                "market_value": "-2812.5",
             }
         }
         alpaca = _make_alpaca(
-            positions=[
-                {
-                    "symbol": sym,
-                    "qty": f"-{contracts}",
-                    "asset_class": "us_option",
-                    "avg_entry_price": str(credit),
-                    "market_value": str(mv_at_stop),
-                }
-            ]
+            positions=[alpaca_positions[sym]]
         )
         mon = _monitor(alpaca=alpaca, db_path=db, sl_mult=sl_mult)
 
-        # Step 1: detect orphan → creates synthetic record
-        mon._detect_orphans([], alpaca_positions)
+        # Step 1: detect orphan → RC4: logs CRITICAL alert, no synthetic record
+        with caplog.at_level(logging.CRITICAL):
+            mon._detect_orphans([], alpaca_positions)
+        assert any("UNTRACKED" in r.message for r in caplog.records)
 
+        # Step 2: verify no synthetic records were created
         synthetics = get_trades(status="open", path=db)
-        assert len(synthetics) == 1
-        assert synthetics[0]["credit"] == credit
-
-        # Step 2: check exit conditions → stop fires
-        pos = synthetics[0]
-        exit_reason = mon._check_exit_conditions(pos, alpaca_positions)
-        assert exit_reason == "stop_loss"
-
-        # Step 3: close order submitted via single-leg path
-        mon._close_position(pos, exit_reason)
-        alpaca.submit_single_leg.assert_called_once()
-        call_kwargs = alpaca.submit_single_leg.call_args[1]
-        assert call_kwargs["side"] == "buy"
-        assert call_kwargs["option_type"] == "call"
+        assert len(synthetics) == 0
 
 
 # ---------------------------------------------------------------------------

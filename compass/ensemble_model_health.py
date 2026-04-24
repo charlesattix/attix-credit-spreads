@@ -285,11 +285,13 @@ class ModelHealthMonitor:
                 train_arr = self._train_features[name]
                 ks_stat, p_val = sp_stats.ks_2samp(live_arr, train_arr)
             elif name in self._train_feature_stats:
-                # Synthetic: compare to normal with training mean/std
+                # Compare live distribution against the theoretical normal CDF
+                # derived from training mean/std.  No synthetic samples needed.
                 mean, std = self._train_feature_stats[name]
                 if std > 0:
-                    train_synthetic = np.random.RandomState(42).normal(mean, std, len(live_arr))
-                    ks_stat, p_val = sp_stats.ks_2samp(live_arr, train_synthetic)
+                    ks_stat, p_val = sp_stats.kstest(
+                        live_arr, 'norm', args=(mean, std)
+                    )
                 else:
                     ks_stat, p_val = 0.0, 1.0
             else:
