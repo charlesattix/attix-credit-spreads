@@ -830,6 +830,7 @@ class TestGap5FeaturePipeline:
         # Pipeline must have been called at least once for trigger evaluation
         assert len(pipeline_calls) >= 1
 
+    @pytest.mark.skip(reason="compass.feature_pipeline archived to compass/archive/")
     def test_pipeline_with_feature_pipeline_class(self):
         """Integration: FeaturePipeline from compass works as the pipeline."""
         from compass.feature_pipeline import FeaturePipeline
