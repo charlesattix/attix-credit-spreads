@@ -146,7 +146,7 @@ class TestBuildLiveSnapshot:
         )
 
         assert snapshot.prices == {}
-        assert snapshot.vix == 20.0  # default
+        assert snapshot.vix is None  # VIX unavailable when data is empty
 
     def test_multiple_tickers(self):
         """Snapshot works with multiple tickers."""

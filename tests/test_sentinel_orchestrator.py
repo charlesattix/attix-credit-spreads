@@ -336,7 +336,7 @@ class TestExceptionHandlerSeverity:
         # Patch all gate runners to raise, except G0 and G1 which run normally
         with patch("sentinel.orchestrator._run_gate_fingerprint", side_effect=RuntimeError("boom")), \
              patch("sentinel.orchestrator._record_gate_runs"):
-            audit = audit_experiment("EXP-TEST", registry, state, skip_gates=["G3", "G5", "G8", "G9", "G21"])
+            audit = audit_experiment("EXP-TEST", registry, state, skip_gates=["G3", "G5", "G8", "G9", "G10", "G11", "G12", "G21"])
             g2_outcomes = [o for o in audit.gate_outcomes if o.gate_id == "G2"]
             assert len(g2_outcomes) == 1
             assert g2_outcomes[0].result == GateResult.BLOCK
@@ -348,7 +348,7 @@ class TestExceptionHandlerSeverity:
 
         with patch("sentinel.orchestrator._run_gate_certification", side_effect=RuntimeError("boom")), \
              patch("sentinel.orchestrator._record_gate_runs"):
-            audit = audit_experiment("EXP-TEST", registry, state, skip_gates=["G2", "G3", "G8", "G9", "G21"])
+            audit = audit_experiment("EXP-TEST", registry, state, skip_gates=["G2", "G3", "G8", "G9", "G10", "G11", "G12", "G21"])
             g5_outcomes = [o for o in audit.gate_outcomes if o.gate_id == "G5"]
             assert len(g5_outcomes) == 1
             assert g5_outcomes[0].result == GateResult.WARNING

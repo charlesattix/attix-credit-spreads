@@ -379,7 +379,7 @@ class TestGate12Parity:
     def _make_spy_df(self, n_days=250, base=500.0, trend=0.0):
         import pandas as pd
         dates = pd.bdate_range(end="2024-06-01", periods=n_days)
-        prices = [base + trend * i for i in range(n_days)]
+        prices = [base + trend * i for i in range(len(dates))]
         return pd.DataFrame({"Close": prices}, index=dates)
 
     def test_matching_regimes_pass(self, tmp_path):
