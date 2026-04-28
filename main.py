@@ -58,8 +58,19 @@ from shared.signal_scorer import score_signal
 from shared.strategy_adapter import signal_to_opportunity
 from tracker import PnLDashboard, TradeTracker
 from utils import load_config, setup_logging, validate_config
+from sentinel.heartbeat import emit_heartbeat
 
 logger = logging.getLogger(__name__)
+
+
+def _g22_exp_id() -> str:
+    """Resolve the experiment id for SENTINEL Gate 22 heartbeats.
+
+    Each live experiment runs main.py under its own .env.exp{NNN}, which
+    sets EXPERIMENT_ID=EXP-NNN. Falls back to "EXP-MAIN" when the env
+    var is unset (e.g. ad-hoc invocations).
+    """
+    return os.environ.get("EXPERIMENT_ID", "EXP-MAIN")
 
 # Defaults for ML/rules blending and event risk — overridable via config.yaml
 _DEFAULT_ML_SCORE_WEIGHT = 0.6
@@ -557,6 +568,8 @@ class CreditSpreadSystem:
 
         try:
             account = self.alpaca_provider.get_account()
+            # SENTINEL G22: confirmed-alive Alpaca call → emit heartbeat.
+            emit_heartbeat(_g22_exp_id(), notes="account ok")
             account_value = float(account['portfolio_value'])
 
             alpaca_positions = self.alpaca_provider.get_positions()
@@ -1118,14 +1131,21 @@ Examples:
                     logger.exception("SLOT_RETRAIN failed")
 
             def scan_and_sync(slot_type=SLOT_SCAN):
+                # SENTINEL G22 producer wiring — every scheduler tick emits
+                # a heartbeat for the active EXPERIMENT_ID, so the consumer
+                # in sentinel/runtime.py never sees a silent slot.
+                _exp_id = _g22_exp_id()
                 if slot_type == SLOT_MACRO_WEEKLY:
                     _run_macro_weekly_with_retry()
+                    emit_heartbeat(_exp_id, notes="macro weekly snapshot")
                 elif slot_type == SLOT_RETRAIN:
                     _run_retrain_check()
                     _write_heartbeat()
+                    emit_heartbeat(_exp_id, notes="retrain check complete")
                 else:
                     system.scan_opportunities()
                     _write_heartbeat()
+                    emit_heartbeat(_exp_id, notes="scan complete")
 
             scheduler = ScanScheduler(scan_fn=scan_and_sync)
 
