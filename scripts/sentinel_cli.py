@@ -446,6 +446,140 @@ def cmd_resume(args):
     return 0
 
 
+def cmd_why_halted(args):
+    """Explain WHY an experiment is halted, with evidence vs current state (FU#6).
+
+    Reads halted_at, halted_by, halt_reason, halt_evidence from
+    sentinel_state.json and prints:
+      - Halt reason
+      - Halted at (with age in days)
+      - Halted by
+      - Reason class (drawdown / config_drift / non_functional / api_failed / manual)
+      - Markdown table of contributing gate(s) — for G2 fingerprint we
+        recompute current_value from disk so an operator can see whether
+        the drift still applies.
+
+    Legacy halts without halted_at print
+    ``halted_at: unknown (pre-2026-04-28)`` (display-only synthetic
+    backfill — no file mutation).
+    """
+    exp_id = args.experiment_id
+    state = _load_sentinel_state()
+    experiments = state.get("experiments", {})
+
+    exp = experiments.get(exp_id)
+    if exp is None:
+        print(f"ERROR: {exp_id} not enrolled in sentinel_state.json", file=sys.stderr)
+        return 2
+
+    if exp.get("status") != "halted":
+        print(
+            f"WARNING: {exp_id} is not halted (status={exp.get('status')!r}). "
+            "Nothing to explain."
+        )
+        return 1
+
+    halt_reason = exp.get("halt_reason") or "(no reason recorded)"
+    halted_at = exp.get("halted_at")
+    halted_by = exp.get("halted_by") or "(unknown)"
+    halt_evidence = exp.get("halt_evidence") or {}
+
+    # Header block
+    print(f"Why halted: {exp_id}")
+    print(f"  Halt reason   : {halt_reason}")
+
+    if halted_at:
+        age_str = _format_halt_age(halted_at)
+        print(f"  Halted at     : {halted_at}{age_str}")
+    else:
+        # Display-only synthetic backfill (no on-disk mutation).
+        print("  Halted at     : unknown (pre-2026-04-28)")
+
+    print(f"  Halted by     : {halted_by}")
+    print(f"  Reason class  : {_classify_halt(halt_reason, halt_evidence)}")
+
+    # Evidence table
+    if halt_evidence:
+        print()
+        print("  | Gate | Metric             | Stored value     | Threshold     | Current value    | Stale?            |")
+        print("  |------|--------------------|------------------|---------------|------------------|-------------------|")
+
+        gate_id = halt_evidence.get("gate_id", "?")
+        metric = halt_evidence.get("metric_name", "?")
+        stored = halt_evidence.get("stored_value", "?")
+        threshold = halt_evidence.get("threshold", "?")
+        current = halt_evidence.get("current_value", "?")
+        stale_label = "n/a"
+
+        # G2 fingerprint: recompute current from disk.
+        if gate_id == "G2" and metric == "config_fingerprint":
+            paper_config = exp.get("paper_config")
+            if paper_config:
+                cfg_path = _PROJECT_ROOT / paper_config
+                if cfg_path.exists():
+                    try:
+                        from sentinel.state import compute_fingerprint
+                        current = compute_fingerprint(str(cfg_path))
+                    except Exception:  # noqa: BLE001
+                        current = "(read failed)"
+                else:
+                    current = "(config missing)"
+            # Stale flag: if recomputed current still differs from stored,
+            # drift is still present. If they now match, the halt is stale.
+            if isinstance(stored, str) and isinstance(current, str):
+                stale_label = (
+                    "stale (drift cleared)"
+                    if current == stored
+                    else "drift confirmed"
+                )
+
+        print(
+            f"  | {gate_id:<4} | {_clip(metric, 18):<18} | "
+            f"{_clip(stored, 16):<16} | {_clip(threshold, 13):<13} | "
+            f"{_clip(current, 16):<16} | {stale_label:<17} |"
+        )
+    else:
+        print()
+        print("  (no halt_evidence recorded — likely a legacy or manual halt)")
+
+    return 0
+
+
+def _clip(value: object, n: int) -> str:
+    s = str(value) if value is not None else ""
+    return s if len(s) <= n else s[: n - 1] + "…"
+
+
+def _format_halt_age(halted_at: str) -> str:
+    try:
+        dt = datetime.fromisoformat(halted_at.replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        age_d = (datetime.now(timezone.utc) - dt).total_seconds() / 86400
+        if age_d < 1:
+            return f" ({age_d * 24:.1f} hours ago)"
+        return f" ({age_d:.0f} days ago)"
+    except (ValueError, TypeError):
+        return ""
+
+
+def _classify_halt(reason: str, evidence: dict) -> str:
+    """Heuristic mapping of halt_reason / evidence → reason class."""
+    gate_id = (evidence or {}).get("gate_id", "")
+    metric = ((evidence or {}).get("metric_name") or "").lower()
+    text = (reason or "").lower()
+
+    if gate_id == "G2" or "fingerprint" in metric or "drift" in text and "config" in text:
+        return "config_drift"
+    if "drawdown" in text or "drawdown" in metric:
+        return "drawdown"
+    if "non-functional" in text or "non_functional" in text or "no completed trades" in text:
+        return "non_functional"
+    if "api" in text or "401" in text or "403" in text or "auth" in text:
+        return "api_failed"
+    return "manual"
+
+
 def cmd_report(args):
     """Generate daily health report."""
     state = _load_sentinel_state()
@@ -539,6 +673,10 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Also unload+load the experiment's launchd plist",
     )
 
+    # why-halted
+    why_p = sub.add_parser("why-halted", help="Explain why an experiment is halted")
+    why_p.add_argument("experiment_id", help="Experiment ID (e.g., EXP-503)")
+
     # report
     report_p = sub.add_parser("report", help="Generate daily health report")
     report_p.add_argument("--html", action="store_true", help="Also generate HTML report")
@@ -558,6 +696,7 @@ def main() -> int:
         "alerts": cmd_alerts,
         "resolve": cmd_resolve,
         "resume": cmd_resume,
+        "why-halted": cmd_why_halted,
         "report": cmd_report,
     }
     return dispatch[args.command](args)

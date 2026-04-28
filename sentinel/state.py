@@ -103,12 +103,31 @@ def list_active(state: dict[str, Any]) -> list[str]:
 # Halt / clear-halt
 # ---------------------------------------------------------------------------
 
-def set_halt(exp_id: str, reason: str) -> None:
-    """Halt *exp_id*. Writes sentinel_state.json atomically."""
+def set_halt(
+    exp_id: str,
+    reason: str,
+    *,
+    halted_by: str | None = None,
+    halt_evidence: dict[str, Any] | None = None,
+) -> None:
+    """Halt *exp_id*. Writes sentinel_state.json atomically.
+
+    Always stamps ``halted_at`` (UTC ISO 8601). When supplied,
+    ``halted_by`` (e.g. ``"guards.py:G2"`` or ``"sentinel_daily"``) and
+    ``halt_evidence`` (dict with ``gate_id``, ``metric_name``,
+    ``stored_value``, ``current_value``, ``threshold``) are persisted
+    so ``sentinel_cli why-halted`` can reconstruct the cause later.
+    Both kwargs are optional for backwards-compat with old call sites.
+    """
     state = load_state()
     exp = get_experiment(state, exp_id)
     exp["status"] = "halted"
     exp["halt_reason"] = reason
+    exp["halted_at"] = _now_iso()
+    if halted_by is not None:
+        exp["halted_by"] = halted_by
+    if halt_evidence is not None:
+        exp["halt_evidence"] = halt_evidence
     save_state(state)
 
 
