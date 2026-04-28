@@ -612,6 +612,9 @@ class EXP800Scanner:
         if self._alpaca is not None:
             try:
                 account = self._alpaca.get_account()
+                # Sentinel G22 — confirmed-alive heartbeat after Alpaca call.
+                from sentinel.heartbeat import emit_heartbeat
+                emit_heartbeat("EXP-800", notes="account ok")
                 equity  = float(account.get("portfolio_value", account.get("equity", 0)))
                 if equity > 0:
                     return equity
@@ -843,6 +846,10 @@ def main() -> int:
                "dry_run": args.dry_run, "results": results}
     print("\n--- SUMMARY ---")
     print(json.dumps(summary, indent=2, default=str))
+
+    # Sentinel G22 — heartbeat at end of scan iteration.
+    from sentinel.heartbeat import emit_heartbeat
+    emit_heartbeat("EXP-800", notes="scan complete")
     return 0
 
 

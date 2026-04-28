@@ -51,9 +51,15 @@ def _parse_ts(s: Optional[str]) -> Optional[datetime]:
 
 # Default DB path — lives beside this file in sentinel/db/sentinel.db
 _SENTINEL_DIR = Path(__file__).parent
-_DEFAULT_DB_PATH = Path(
-    os.environ.get("SENTINEL_DB_PATH", str(_SENTINEL_DIR / "db" / "sentinel.db"))
-)
+
+
+def _default_db_path() -> Path:
+    """Resolve the default sentinel.db path at call time so SENTINEL_DB_PATH
+    set after this module loads still takes effect (used by tests).
+    """
+    return Path(
+        os.environ.get("SENTINEL_DB_PATH", str(_SENTINEL_DIR / "db" / "sentinel.db"))
+    )
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Schema SQL
@@ -219,7 +225,7 @@ class SentinelDB:
     """
 
     def __init__(self, path: Optional[str] = None):
-        self.path = Path(path) if path else _DEFAULT_DB_PATH
+        self.path = Path(path) if path else _default_db_path()
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self._init_schema()
 
