@@ -14,6 +14,7 @@ import argparse
 import json
 import logging
 import os
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -296,6 +297,155 @@ def cmd_resolve(args):
         return 1
 
 
+def cmd_resume(args):
+    """Atomically resume a halted experiment (FU#5).
+
+    All-or-nothing:
+      1. Load sentinel_state.json
+      2. Look up experiment; bail if missing or already active+!halted
+      3. Compute fresh config_fingerprint from paper_config
+      4. Pull current account_id from experiments/registry.json
+      5. Apply: status='active', halted=False, halt_reason=None,
+         halted_at=None, halted_by=None, resumed_at/by/reason set
+      6. save_state() — atomic tmp+rename; if it raises, on-disk file is
+         untouched and we return rc=3
+      7. (--restart) launchctl unload+load the experiment plist
+      8. Print before/after diff
+    """
+    from sentinel.state import compute_fingerprint, load_state, save_state
+
+    exp_id = args.experiment_id
+    reason = args.reason
+    by = args.by
+    restart = bool(getattr(args, "restart", False))
+
+    try:
+        state = load_state()
+    except FileNotFoundError as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        return 2
+
+    experiments = state.get("experiments", {})
+    if exp_id not in experiments:
+        print(
+            f"ERROR: {exp_id} not enrolled in sentinel_state.json",
+            file=sys.stderr,
+        )
+        return 2
+
+    exp = experiments[exp_id]
+
+    is_halted = exp.get("status") == "halted" or exp.get("halted") is True
+    if not is_halted:
+        print(
+            f"WARNING: {exp_id} is not halted "
+            f"(status={exp.get('status')!r}, halted={exp.get('halted')!r}). No-op."
+        )
+        return 0
+
+    # Snapshot before-state for diff + in-memory rollback.
+    before = {
+        "status": exp.get("status"),
+        "halted": exp.get("halted"),
+        "halt_reason": exp.get("halt_reason"),
+        "halted_at": exp.get("halted_at"),
+        "halted_by": exp.get("halted_by"),
+        "config_fingerprint": exp.get("config_fingerprint"),
+        "account_id": exp.get("account_id"),
+        "resumed_at": exp.get("resumed_at"),
+        "resumed_by": exp.get("resumed_by"),
+        "resume_reason": exp.get("resume_reason"),
+    }
+
+    # Pull current account from registry.
+    registry = _load_registry()
+    reg_exp = registry.get("experiments", {}).get(exp_id, {})
+    new_account_id = (
+        reg_exp.get("account_id")
+        or reg_exp.get("alpaca_account_id")
+        or before["account_id"]
+    )
+
+    # Compute fresh fingerprint from paper_config.
+    paper_config = exp.get("paper_config")
+    new_fingerprint = before["config_fingerprint"]
+    if paper_config:
+        cfg_path = _PROJECT_ROOT / paper_config
+        if not cfg_path.exists():
+            print(
+                f"ERROR: paper_config not found: {paper_config}",
+                file=sys.stderr,
+            )
+            return 3
+        try:
+            new_fingerprint = compute_fingerprint(str(cfg_path))
+        except OSError as e:
+            print(f"ERROR: cannot read paper_config: {e}", file=sys.stderr)
+            return 3
+
+    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+    # Apply changes in memory.
+    exp["status"] = "active"
+    exp["halted"] = False
+    exp["halt_reason"] = None
+    exp["halted_at"] = None
+    exp["halted_by"] = None
+    exp["config_fingerprint"] = new_fingerprint
+    exp["account_id"] = new_account_id
+    exp["resumed_at"] = now
+    exp["resumed_by"] = by
+    exp["resume_reason"] = reason
+
+    # Atomic save — if it raises, restore in-memory state so callers/tests
+    # see no partial mutation. (save_state itself writes via tmp+rename, so
+    # the on-disk file is unchanged when an exception escapes.)
+    try:
+        save_state(state)
+    except Exception as e:  # noqa: BLE001
+        for k, v in before.items():
+            exp[k] = v
+        print(f"ERROR: save_state failed: {e}", file=sys.stderr)
+        return 3
+
+    # Print before/after diff.
+    def _short(v):
+        if isinstance(v, str) and len(v) > 16:
+            return v[:12] + "..."
+        return repr(v)
+
+    print(f"Resumed {exp_id}:")
+    print(f"  status:             {before['status']!r} -> {exp['status']!r}")
+    print(f"  halted:             {before['halted']!r} -> {exp['halted']!r}")
+    print(f"  halt_reason:        {before['halt_reason']!r} -> {exp['halt_reason']!r}")
+    print(f"  config_fingerprint: {_short(before['config_fingerprint'])} -> {_short(exp['config_fingerprint'])}")
+    print(f"  account_id:         {before['account_id']!r} -> {exp['account_id']!r}")
+    print(f"  resumed_at:         {now}")
+    print(f"  resumed_by:         {by}")
+    print(f"  resume_reason:      {reason}")
+
+    # Optional --restart via launchctl. Plist convention:
+    # com.pilotai.exp{NNN}.plist in ~/Library/LaunchAgents/.
+    if restart:
+        suffix = exp_id.lower().replace("exp-", "exp").replace("-", "")
+        plist_name = f"com.pilotai.{suffix}.plist"
+        plist_path = str(Path.home() / "Library" / "LaunchAgents" / plist_name)
+        print(f"\nRestarting via launchctl: {plist_path}")
+        subprocess.run(
+            ["launchctl", "unload", plist_path],
+            capture_output=True,
+            check=False,
+        )
+        subprocess.run(
+            ["launchctl", "load", plist_path],
+            capture_output=True,
+            check=False,
+        )
+        print("launchctl unload+load complete.")
+
+    return 0
+
+
 def cmd_report(args):
     """Generate daily health report."""
     state = _load_sentinel_state()
@@ -378,6 +528,17 @@ def _build_parser() -> argparse.ArgumentParser:
     resolve_p.add_argument("--operator", help="Operator name")
     resolve_p.add_argument("--note", help="Resolution note")
 
+    # resume
+    resume_p = sub.add_parser("resume", help="Atomically resume a halted experiment")
+    resume_p.add_argument("experiment_id", help="Experiment ID (e.g., EXP-503)")
+    resume_p.add_argument("--reason", required=True, help="Reason for resuming")
+    resume_p.add_argument("--by", required=True, help="Operator name")
+    resume_p.add_argument(
+        "--restart",
+        action="store_true",
+        help="Also unload+load the experiment's launchd plist",
+    )
+
     # report
     report_p = sub.add_parser("report", help="Generate daily health report")
     report_p.add_argument("--html", action="store_true", help="Also generate HTML report")
@@ -396,6 +557,7 @@ def main() -> int:
         "check": cmd_check,
         "alerts": cmd_alerts,
         "resolve": cmd_resolve,
+        "resume": cmd_resume,
         "report": cmd_report,
     }
     return dispatch[args.command](args)
