@@ -64,6 +64,7 @@ from sentinel.state import (
     save_state as _save_state,
     compute_fingerprint as state_fingerprint,
     record_health_check as _record_health_check,
+    record_health_checks as _record_health_checks,
 )
 
 # For backwards compat, use the history fingerprint for audit trail and
@@ -268,14 +269,14 @@ def cmd_daily(args: argparse.Namespace) -> int:
                     h.exp_id,
                     api_status="401" if "401" in (h.api_error or "") else "error",
                 )
-            # Stamp last_health_check unconditionally so the dashboard reflects
-            # that sentinel attempted a health check on this experiment, even
-            # when the API failed (otherwise dead-keyed experiments stay
-            # "last check: never" forever — the exact bug this code path fixes).
-            try:
-                _record_health_check(h.exp_id)
-            except Exception:  # noqa: BLE001
-                logging.exception("record_health_check failed for %s", h.exp_id)
+
+        # Stamp last_health_check for every experiment we attempted to check
+        # (success or failure) in a single load/save cycle — otherwise
+        # dead-keyed experiments stay "last check: never" forever.
+        try:
+            _record_health_checks([h.exp_id for h in health_results])
+        except Exception:  # noqa: BLE001
+            logging.exception("record_health_checks batch write failed")
     else:
         # No monitor: we did NOT actually perform a health check, so do not
         # stamp last_health_check here — the name implies an outcome.

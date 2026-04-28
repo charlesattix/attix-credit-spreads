@@ -165,6 +165,27 @@ def record_health_check(exp_id: str) -> None:
     save_state(state)
 
 
+def record_health_checks(exp_ids: list[str]) -> None:
+    """Stamp last_health_check for many experiments in a single load/save cycle.
+
+    Cheaper than calling :func:`record_health_check` in a loop because the
+    JSON file is read and written exactly once. Missing experiment IDs are
+    skipped with a no-op (no KeyError) so callers can pass a wider list
+    safely.
+    """
+    if not exp_ids:
+        return
+    state = load_state()
+    experiments = state.get("experiments", {})
+    now = _now_iso()
+    for exp_id in exp_ids:
+        exp = experiments.get(exp_id)
+        if exp is None:
+            continue
+        exp["last_health_check"] = now
+    save_state(state)
+
+
 # ---------------------------------------------------------------------------
 # SENTINEL certification
 # ---------------------------------------------------------------------------
