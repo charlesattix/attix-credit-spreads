@@ -164,6 +164,16 @@ def _set_experiment_state(
 
 _REGISTRY_PATH = _PROJECT_ROOT / "experiments" / "registry.json"
 
+# Registry statuses that mean "currently live in paper trading". Historical
+# data (some experiments use "active", others "paper_trading"); both must
+# match. Mirrors sentinel/monitor.py:136.
+_LIVE_REGISTRY_STATUSES = ("active", "paper_trading")
+
+
+def _is_live(exp: Dict[str, Any]) -> bool:
+    """Return True if the registry entry represents a live (paper-trading) experiment."""
+    return exp.get("status") in _LIVE_REGISTRY_STATUSES
+
 
 def _load_registry() -> Dict[str, Any]:
     if not _REGISTRY_PATH.exists():
@@ -201,7 +211,7 @@ def cmd_daily(args: argparse.Namespace) -> int:
     active_exps = {
         k: v
         for k, v in registry.get("experiments", {}).items()
-        if v.get("status") == "paper_trading"
+        if _is_live(v)
     }
     exp_ids = list(active_exps.keys())
     print(f"🛡️  SENTINEL DAILY — {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}")
@@ -214,7 +224,7 @@ def cmd_daily(args: argparse.Namespace) -> int:
         health_results = check_all_experiments(registry, _PROJECT_ROOT)
 
         for h in health_results:
-            if not h.api_ok and h.registry_status == "paper_trading":
+            if not h.api_ok and h.registry_status in _LIVE_REGISTRY_STATUSES:
                 db.record_alert(
                     "critical",
                     f"API health check failed: {h.api_error or 'unknown error'}",
@@ -364,7 +374,7 @@ def cmd_audit(args: argparse.Namespace) -> int:
     active = {
         k: v
         for k, v in registry.get("experiments", {}).items()
-        if v.get("status") == "paper_trading"
+        if _is_live(v)
     }
 
     print(f"🛡️  SENTINEL AUDIT — {datetime.now(timezone.utc).strftime('%Y-%m-%d')}")
@@ -676,7 +686,7 @@ def cmd_report(args: argparse.Namespace) -> int:
 
     active_ids = [
         k for k, v in registry.get("experiments", {}).items()
-        if v.get("status") == "paper_trading"
+        if _is_live(v)
     ]
 
     out_dir = Path(getattr(args, "output_dir", None) or "output/sentinel_reports")
@@ -1007,7 +1017,7 @@ def cmd_retroactive(args: argparse.Namespace) -> int:
     active = {
         k: v
         for k, v in registry.get("experiments", {}).items()
-        if v.get("status") == "paper_trading"
+        if _is_live(v)
     }
 
     print(f"\n🛡️  SENTINEL RETROACTIVE ONBOARDING")
