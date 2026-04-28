@@ -63,6 +63,7 @@ from sentinel.state import (
     load_state as _load_state,
     save_state as _save_state,
     compute_fingerprint as state_fingerprint,
+    record_health_check as _record_health_check,
 )
 
 # For backwards compat, use the history fingerprint for audit trail and
@@ -252,6 +253,11 @@ def cmd_daily(args: argparse.Namespace) -> int:
                     open_positions=h.open_positions,
                     api_status="ok",
                 )
+                # Stamp last_health_check so the dashboard reflects this run.
+                try:
+                    _record_health_check(h.exp_id)
+                except Exception as _e:  # noqa: BLE001
+                    logging.warning("record_health_check failed for %s: %s", h.exp_id, _e)
             else:
                 db.record_snapshot(
                     h.exp_id,
@@ -262,6 +268,10 @@ def cmd_daily(args: argparse.Namespace) -> int:
         print("   (monitor module unavailable — recording minimal snapshots)")
         for exp_id in exp_ids:
             db.record_snapshot(exp_id, api_status="unknown")
+            try:
+                _record_health_check(exp_id)
+            except Exception as _e:  # noqa: BLE001
+                logging.warning("record_health_check failed for %s: %s", exp_id, _e)
 
     # Portfolio risk
     portfolio_risk = None
