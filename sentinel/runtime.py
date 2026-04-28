@@ -58,7 +58,7 @@ import math
 import os
 import sys
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
@@ -1576,3 +1576,92 @@ def _try_halt(exp_id: str, gate_result: Any, gate_name: str) -> None:
         logger.critical("SENTINEL HALT via %s: %s — %s", gate_name, exp_id, reason[:200])
     except Exception as e:
         logger.error("Failed to halt %s via %s: %s", exp_id, gate_name, e)
+
+
+# ---------------------------------------------------------------------------
+# Gate 22 — Scanner heartbeat
+# ---------------------------------------------------------------------------
+
+# Default freshness window for a scanner heartbeat during market hours.
+_HEARTBEAT_THRESHOLD_MIN = 30
+
+
+def _is_market_hours_et(now_utc: datetime) -> bool:
+    """
+    Return True if *now_utc* lands inside US equity regular trading hours
+    (Mon-Fri 09:30-16:00 America/New_York).  Holidays are NOT modelled here
+    — false positives on holidays are tolerable for a heartbeat gate, and
+    avoiding a holiday calendar dependency keeps this gate self-contained.
+
+    DST is handled correctly via zoneinfo when available; falls back to a
+    fixed UTC-5 offset on systems without tz data.
+    """
+    try:
+        from zoneinfo import ZoneInfo
+        et = now_utc.astimezone(ZoneInfo("America/New_York"))
+    except Exception:
+        # Fallback: assume EDT (UTC-4) March-November, EST (UTC-5) otherwise.
+        # Good enough for a sentinel gate that only gates *alerting*.
+        offset_h = -4 if 3 <= now_utc.month <= 11 else -5
+        et = now_utc + timedelta(hours=offset_h)
+
+    if et.weekday() >= 5:  # 5=Sat, 6=Sun
+        return False
+    open_min = 9 * 60 + 30
+    close_min = 16 * 60
+    minutes_of_day = et.hour * 60 + et.minute
+    return open_min <= minutes_of_day < close_min
+
+
+def check_scanner_heartbeats(
+    db: Any,
+    *,
+    now: Optional[datetime] = None,
+    threshold_minutes: int = _HEARTBEAT_THRESHOLD_MIN,
+) -> List[Dict[str, Any]]:
+    """
+    Gate 22 — flag scanners whose last heartbeat is older than
+    *threshold_minutes* during market hours.
+
+    Returns a list of alert dicts:
+      {gate, severity, scanner_id, message, last_seen, age_minutes}
+
+    Outside market hours this returns [] regardless of staleness; nightly
+    silence is expected.
+    """
+    now = now or datetime.now(timezone.utc)
+    if not _is_market_hours_et(now):
+        return []
+
+    cutoff = now - timedelta(minutes=threshold_minutes)
+    alerts: List[Dict[str, Any]] = []
+
+    for hb in db.get_heartbeats():
+        last_seen_str = hb.get("last_seen")
+        if not last_seen_str:
+            continue
+        try:
+            from sentinel.history import _parse_ts
+            last_seen = _parse_ts(last_seen_str)
+        except Exception:
+            last_seen = None
+        if last_seen is None:
+            continue
+        if last_seen >= cutoff:
+            continue
+
+        age_minutes = int((now - last_seen).total_seconds() // 60)
+        scanner_id = hb["scanner_id"]
+        alerts.append({
+            "gate": "G22",
+            "severity": "warning",
+            "scanner_id": scanner_id,
+            "last_seen": last_seen_str,
+            "age_minutes": age_minutes,
+            "message": (
+                f"G22 scanner heartbeat stale: {scanner_id} last seen "
+                f"{age_minutes}m ago (threshold {threshold_minutes}m)"
+            ),
+        })
+
+    return alerts

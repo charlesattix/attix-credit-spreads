@@ -314,6 +314,19 @@ def cmd_daily(args: argparse.Namespace) -> int:
             else:
                 print(f"   ✅ {exp_id}: positions healthy ({lc.total_open} open)")
 
+    # Gate 22 — Scanner heartbeats (alert-only, market-hours)
+    try:
+        from sentinel.runtime import check_scanner_heartbeats
+        hb_alerts = check_scanner_heartbeats(db)
+        if hb_alerts:
+            print(f"   ⚠️  Gate22 heartbeats: {len(hb_alerts)} stale scanner(s)")
+            for a in hb_alerts:
+                db.record_alert(a["severity"], a["message"])
+        else:
+            print("   ✅ Gate22 heartbeats: all scanners fresh (or after-hours)")
+    except Exception:  # noqa: BLE001
+        logging.exception("Gate22 heartbeat check failed")
+
     # Build summary
     summary = db.get_daily_summary(exp_ids)
 

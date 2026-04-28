@@ -121,6 +121,15 @@ CREATE TABLE IF NOT EXISTS alerts_log (
     resolution_note TEXT
 );
 
+-- Per-scanner heartbeat (G22).  scanner_id is opaque (e.g. 'scan-EXP-503').
+-- record_heartbeat() is an UPSERT — there is exactly one row per scanner.
+CREATE TABLE IF NOT EXISTS scanner_heartbeats (
+    scanner_id   TEXT PRIMARY KEY,
+    last_seen    TEXT NOT NULL,
+    last_status  TEXT DEFAULT 'ok',
+    notes        TEXT
+);
+
 -- Indexes for common query patterns
 CREATE INDEX IF NOT EXISTS idx_snapshots_exp_time
     ON experiment_snapshots (experiment_id, snapshot_time DESC);
@@ -586,6 +595,52 @@ class SentinelDB:
             q += " ORDER BY alert_time DESC LIMIT ?"
             params.append(limit)
             rows = conn.execute(q, params).fetchall()
+            return [dict(r) for r in rows]
+        finally:
+            conn.close()
+
+    # ── Scanner heartbeats (G22) ──────────────────────────────────────────────
+
+    def record_heartbeat(
+        self,
+        scanner_id: str,
+        *,
+        status: str = "ok",
+        notes: Optional[str] = None,
+        last_seen: Optional[str] = None,
+    ) -> None:
+        """
+        UPSERT a scanner heartbeat.  Called once per scanner tick.
+
+        Exactly one row per scanner_id; subsequent calls update last_seen,
+        last_status, and notes in place.  *last_seen* defaults to now (UTC,
+        ISO8601, seconds resolution) but can be supplied for tests.
+        """
+        ts = last_seen or datetime.now(timezone.utc).isoformat(timespec="seconds")
+        conn = self._connect()
+        try:
+            conn.execute(
+                """
+                INSERT INTO scanner_heartbeats (scanner_id, last_seen, last_status, notes)
+                VALUES (?,?,?,?)
+                ON CONFLICT(scanner_id) DO UPDATE SET
+                    last_seen   = excluded.last_seen,
+                    last_status = excluded.last_status,
+                    notes       = excluded.notes
+                """,
+                (scanner_id, ts, status, notes),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+    def get_heartbeats(self) -> List[Dict[str, Any]]:
+        """Return all known scanner heartbeats, most-recent first."""
+        conn = self._connect()
+        try:
+            rows = conn.execute(
+                "SELECT * FROM scanner_heartbeats ORDER BY last_seen DESC"
+            ).fetchall()
             return [dict(r) for r in rows]
         finally:
             conn.close()
