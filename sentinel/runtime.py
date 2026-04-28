@@ -558,7 +558,18 @@ def check_all_runtime_drift(
             if halt_alerts:
                 reason = "; ".join(a.message for a in halt_alerts)
                 try:
-                    set_halt(exp_id, f"Gate8 runtime drift halt: {reason[:200]}")
+                    set_halt(
+                        exp_id,
+                        f"Gate8 runtime drift halt: {reason[:200]}",
+                        halted_by="runtime.py:G8",
+                        halt_evidence={
+                            "gate_id": "G8",
+                            "metric_name": "runtime_drift",
+                            "stored_value": "baseline",
+                            "current_value": reason[:200],
+                            "threshold": "halt_severity",
+                        },
+                    )
                     logger.critical(
                         "GATE8: HALTED %s — %d metric(s) breached halt threshold",
                         exp_id, len(halt_alerts),
@@ -856,7 +867,18 @@ def check_all_position_lifecycles(
             stuck_msgs = [s.message for s in lc_result.stuck if s.severity == "critical"]
             reason = f"Gate9 stuck positions: {'; '.join(stuck_msgs)}"
             try:
-                set_halt(exp_id, reason[:200])
+                set_halt(
+                    exp_id,
+                    reason[:200],
+                    halted_by="runtime.py:G9",
+                    halt_evidence={
+                        "gate_id": "G9",
+                        "metric_name": "stuck_positions",
+                        "stored_value": "0_critical",
+                        "current_value": f"{len(stuck_msgs)}_critical",
+                        "threshold": "0_critical",
+                    },
+                )
                 logger.critical(
                     "GATE9: HALTED %s — %d critical stuck position(s)",
                     exp_id, len(stuck_msgs),
@@ -1319,6 +1341,14 @@ def orphan_gate(
             set_halt(
                 experiment_id,
                 f"Gate7: {len(result.orphans)} simultaneous orphan positions",
+                halted_by="runtime.py:G7",
+                halt_evidence={
+                    "gate_id": "G7",
+                    "metric_name": "orphan_positions",
+                    "stored_value": "0",
+                    "current_value": str(len(result.orphans)),
+                    "threshold": "0",
+                },
             )
         except Exception as exc:
             logger.error("GATE7: failed to halt %s: %s", experiment_id, exc)
@@ -1531,7 +1561,18 @@ def post_scan_check(
                 reason = "; ".join(a.message for a in halt_alerts)
                 try:
                     from sentinel.state import set_halt
-                    set_halt(exp_id, f"Gate 8: {reason}"[:200])
+                    set_halt(
+                        exp_id,
+                        f"Gate 8: {reason}"[:200],
+                        halted_by="runtime.py:G8",
+                        halt_evidence={
+                            "gate_id": "G8",
+                            "metric_name": "runtime_drift",
+                            "stored_value": "baseline",
+                            "current_value": reason[:200],
+                            "threshold": "halt_severity",
+                        },
+                    )
                     logger.critical("SENTINEL HALT via Gate 8: %s", exp_id)
                 except Exception as e:
                     logger.error("Failed to halt %s via Gate 8: %s", exp_id, e)
@@ -1549,7 +1590,18 @@ def post_scan_check(
                 reason = f"Gate 9: {'; '.join(stuck_msgs)}"
                 try:
                     from sentinel.state import set_halt
-                    set_halt(exp_id, reason[:200])
+                    set_halt(
+                        exp_id,
+                        reason[:200],
+                        halted_by="runtime.py:G9",
+                        halt_evidence={
+                            "gate_id": "G9",
+                            "metric_name": "stuck_positions",
+                            "stored_value": "0_critical",
+                            "current_value": f"{len(stuck_msgs)}_critical",
+                            "threshold": "0_critical",
+                        },
+                    )
                     logger.critical("SENTINEL HALT via Gate 9: %s", exp_id)
                 except Exception as e:
                     logger.error("Failed to halt %s via Gate 9: %s", exp_id, e)
@@ -1565,14 +1617,34 @@ def _try_halt(exp_id: str, gate_result: Any, gate_name: str) -> None:
     """Attempt to halt an experiment based on gate result."""
     try:
         from sentinel.state import set_halt
+        # Per-gate-shape evidence: capture the actual breach metric so
+        # `sentinel_cli why-halted` can reconstruct it post-hoc.
         if isinstance(gate_result, SizingResult):
             halt_msgs = [d.message for d in gate_result.deviations if d.severity == "halt"]
             reason = f"{gate_name}: {'; '.join(halt_msgs)}"
+            metric = "trade_sizing"
+            current = "; ".join(halt_msgs)[:200] or "halt-severity deviation"
         elif isinstance(gate_result, OrphanResult):
             reason = f"{gate_name}: {len(gate_result.orphans)} orphan positions"
+            metric = "orphan_positions"
+            current = str(len(gate_result.orphans))
         else:
             reason = f"{gate_name}: threshold breached"
-        set_halt(exp_id, reason[:200])
+            metric = "gate_check"
+            current = "threshold_breached"
+        gate_id = gate_name.replace(" ", "")  # "Gate 6" → "Gate6"
+        set_halt(
+            exp_id,
+            reason[:200],
+            halted_by=f"runtime.py:_try_halt:{gate_id}",
+            halt_evidence={
+                "gate_id": gate_id,
+                "metric_name": metric,
+                "stored_value": "pass",
+                "current_value": current,
+                "threshold": "pass_required",
+            },
+        )
         logger.critical("SENTINEL HALT via %s: %s — %s", gate_name, exp_id, reason[:200])
     except Exception as e:
         logger.error("Failed to halt %s via %s: %s", exp_id, gate_name, e)

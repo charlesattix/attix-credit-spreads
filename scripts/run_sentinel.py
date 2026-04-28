@@ -236,6 +236,13 @@ def cmd_daily(args: argparse.Namespace) -> int:
                     halt_reason=f"API health check failed: {h.api_error or 'dead keys'}",
                     halted_at=datetime.now(timezone.utc).isoformat(),
                     halted_by="sentinel_daily",
+                    halt_evidence={
+                        "gate_id": "api_health",
+                        "metric_name": "alpaca_api",
+                        "stored_value": "ok",
+                        "current_value": (h.api_error or "dead keys")[:200],
+                        "threshold": "api_ok",
+                    },
                 )
                 print(f"   ❌ {h.exp_id}: API FAILED — halted")
             elif h.is_stale:

@@ -1051,7 +1051,30 @@ def audit_all_experiments(
         if audit.halted and halt_on_critical:
             try:
                 from sentinel.state import set_halt
-                set_halt(exp_id, audit.halt_reason or "orchestrator gate failure")
+                # Identify the first HALT-level gate outcome to attribute
+                # the halt evidence; fall back to a generic orchestrator
+                # tag when no per-gate breakdown is available.
+                halt_gate_id = "orchestrator"
+                halt_metric = "gate_audit"
+                halt_current = audit.halt_reason or "orchestrator gate failure"
+                for o in getattr(audit, "gate_outcomes", []) or []:
+                    if getattr(o, "result", None) == GateResult.HALT:
+                        halt_gate_id = getattr(o, "gate_id", None) or getattr(o, "name", None) or halt_gate_id
+                        halt_metric = getattr(o, "name", None) or halt_metric
+                        halt_current = getattr(o, "message", None) or halt_current
+                        break
+                set_halt(
+                    exp_id,
+                    audit.halt_reason or "orchestrator gate failure",
+                    halted_by="sentinel/orchestrator.py:run_audit",
+                    halt_evidence={
+                        "gate_id": str(halt_gate_id),
+                        "metric_name": str(halt_metric),
+                        "stored_value": "pass",
+                        "current_value": str(halt_current)[:200],
+                        "threshold": "pass_required",
+                    },
+                )
                 logger.critical("HALTED %s: %s", exp_id, audit.halt_reason)
             except Exception as e:
                 logger.error("Failed to halt %s: %s", exp_id, e)
