@@ -513,10 +513,14 @@ def collect_sentinel_data() -> dict:
             "enrolled_at": exp_state.get("enrolled_at"),
         }
 
-        # Backtest baseline
+        # Backtest baseline. Ship under BOTH keys: web_dashboard/html.py reads
+        # 'backtest_baseline' for its G8 gate-pill check, while older dashboard
+        # code paths and the sync payload itself use 'baseline'. Keep both in
+        # sync to avoid the silent G8:Drift=warn deduction (-10).
         baseline = exp_state.get("backtest_baseline")
         if baseline:
             exp_data["baseline"] = baseline
+            exp_data["backtest_baseline"] = baseline
 
         # Financial data from dashboard_export.json (Alpaca source of truth)
         dash_exp = dashboard_financial.get(exp_id, {})
