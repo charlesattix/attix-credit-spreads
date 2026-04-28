@@ -180,7 +180,7 @@ export default function SentinelPage() {
               {expIds.map(id => {
                 const exp = experiments[id]
                 const m = exp.metrics
-                const bl = exp.baseline
+                const bl = exp.backtest_baseline
                 const status = getOverallStatus(exp)
                 const wr = m?.win_rate
                 const blWr = bl?.win_rate
@@ -390,7 +390,7 @@ export default function SentinelPage() {
               {expIds.map(id => {
                 const exp = experiments[id]
                 const m = exp.metrics
-                const bl = exp.baseline
+                const bl = exp.backtest_baseline
                 const g8 = exp.gates.gate8_drift
                 const liveWr = m?.win_rate
                 const blWr = bl?.win_rate

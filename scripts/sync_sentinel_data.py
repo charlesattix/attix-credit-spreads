@@ -513,13 +513,13 @@ def collect_sentinel_data() -> dict:
             "enrolled_at": exp_state.get("enrolled_at"),
         }
 
-        # Backtest baseline. Ship under BOTH keys: web_dashboard/html.py reads
-        # 'backtest_baseline' for its G8 gate-pill check, while older dashboard
-        # code paths and the sync payload itself use 'baseline'. Keep both in
-        # sync to avoid the silent G8:Drift=warn deduction (-10).
+        # Backtest baseline. Canonical key is 'backtest_baseline' across the
+        # source (sentinel_state.json), the local Python dashboard
+        # (web_dashboard/html.py), and the Next.js Railway dashboard
+        # (web/app/sentinel/page.tsx). The dual-write to 'baseline' was a
+        # transitional shim and has been removed.
         baseline = exp_state.get("backtest_baseline")
         if baseline:
-            exp_data["baseline"] = baseline
             exp_data["backtest_baseline"] = baseline
 
         # Financial data from dashboard_export.json (Alpaca source of truth)

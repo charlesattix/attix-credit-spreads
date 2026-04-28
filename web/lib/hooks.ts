@@ -180,7 +180,7 @@ export interface SentinelExperiment {
   config_fingerprint: string | null
   fingerprint_ok: boolean
   paper_config: string | null
-  baseline?: {
+  backtest_baseline?: {
     win_rate: number
     avg_loss: number
     mc_worst_dd_pct: number
