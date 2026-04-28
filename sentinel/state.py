@@ -48,14 +48,21 @@ VALID_SENTINEL_STATUSES = {"active", "halted", "paused", "retired"}
 # ---------------------------------------------------------------------------
 
 def load_state() -> dict[str, Any]:
-    """Load sentinel_state.json from disk. Raises FileNotFoundError if missing."""
+    """Load sentinel_state.json from disk. Raises FileNotFoundError if missing.
+
+    Normalizes legacy timestamp strings (naive ``YYYY-MM-DDTHH:MM`` produced
+    by older ``_now_iso``) into full ISO 8601 with UTC offset on the way in,
+    so callers always see tz-aware values.
+    """
     if not STATE_PATH.exists():
         raise FileNotFoundError(
             f"sentinel_state.json not found at {STATE_PATH}. "
             "Run `python scripts/init_sentinel.py` to initialise."
         )
     with open(STATE_PATH) as f:
-        return json.load(f)
+        state = json.load(f)
+    _normalize_state_timestamps(state)
+    return state
 
 
 def save_state(state: dict[str, Any]) -> None:
@@ -203,4 +210,52 @@ def certify(exp_id: str) -> None:
 # ---------------------------------------------------------------------------
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M")
+    """Current UTC time as ISO 8601 with seconds and offset.
+
+    Example: ``2026-04-28T12:18:51+00:00``
+    """
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+# Fields whose values should be tz-aware ISO 8601 strings. Legacy entries
+# may have been written as naive ``YYYY-MM-DDTHH:MM`` — the loader pads
+# those to full ISO with ``+00:00`` so consumers don't need branchy parse
+# logic.
+_TIMESTAMP_FIELDS = (
+    "last_health_check",
+    "sentinel_certified_at",
+    "halted_at",
+    "resumed_at",
+    "last_approved_at",
+)
+
+
+def _coerce_iso_utc(value: Any) -> Any:
+    """Return *value* as a tz-aware ISO 8601 string, or pass through unchanged.
+
+    Handles legacy ``YYYY-MM-DDTHH:MM`` (naive, minute precision) by padding
+    seconds and a ``+00:00`` offset. Anything that isn't a non-empty string,
+    or already contains tz info, is returned untouched.
+    """
+    if not isinstance(value, str) or not value:
+        return value
+    # Already tz-aware (ends with Z or ±HH:MM).
+    if value.endswith("Z") or value[-6:-3] == ":" and value[-6] in "+-":
+        return value
+    # Naive ``YYYY-MM-DDTHH:MM`` or ``YYYY-MM-DDTHH:MM:SS``.
+    if len(value) == 16:           # YYYY-MM-DDTHH:MM
+        return f"{value}:00+00:00"
+    if len(value) == 19:           # YYYY-MM-DDTHH:MM:SS
+        return f"{value}+00:00"
+    return value
+
+
+def _normalize_state_timestamps(state: dict[str, Any]) -> None:
+    """In-place: coerce known timestamp fields to tz-aware ISO 8601."""
+    state["last_updated"] = _coerce_iso_utc(state.get("last_updated"))
+    for exp in state.get("experiments", {}).values():
+        if not isinstance(exp, dict):
+            continue
+        for field in _TIMESTAMP_FIELDS:
+            if field in exp:
+                exp[field] = _coerce_iso_utc(exp[field])
