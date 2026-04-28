@@ -503,6 +503,14 @@ def collect_sentinel_data() -> dict:
             "config_fingerprint": exp_state.get("config_fingerprint"),
             "fingerprint_ok": True,  # Default; set to False if drift detected
             "paper_config": exp_state.get("paper_config"),
+            # Carry over freshness + lifecycle fields the dashboard reads.
+            "last_health_check": exp_state.get("last_health_check"),
+            "sentinel_certified_at": exp_state.get("sentinel_certified_at"),
+            "halt_reason": exp_state.get("halt_reason"),
+            "halted": exp_state.get("halted", False),
+            "account_id": exp_state.get("account_id"),
+            "live_since": exp_state.get("live_since"),
+            "enrolled_at": exp_state.get("enrolled_at"),
         }
 
         # Backtest baseline
