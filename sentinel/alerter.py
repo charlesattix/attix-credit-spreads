@@ -12,7 +12,12 @@ The daily report is a single Telegram HTML message summarising all
 active experiments, orphan accounts, portfolio exposure, and any issues.
 """
 
+import atexit
 import logging
+import logging.handlers
+import os
+import queue as _queue
+import threading
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
@@ -225,3 +230,165 @@ def send_daily_report(text: str) -> bool:
     except Exception as e:
         logger.error("SENTINEL: Telegram send failed: %s", e)
         return False
+
+
+# ---------------------------------------------------------------------------
+# Alert promotion: route ERROR/CRITICAL log records into sentinel.alerts_log
+# ---------------------------------------------------------------------------
+
+# Logger-name allowlist. A record is only promoted to alerts_log if its
+# logger name starts with one of these prefixes.
+_ALLOWLIST_PREFIXES = (
+    "execution.",
+    "shared.",
+    "strategy.",
+    "strategies.",
+    "sentinel.",
+    "ml.",
+    "compass.",
+)
+
+# Exact-match exclusions inside the allowlist.  We MUST NOT promote logs
+# from sentinel.history (would recurse via record_alert) or from this
+# module itself (recursion via send_daily_report failure paths).
+_EXCLUDE_EXACT = frozenset({"sentinel.history", "sentinel.alerter"})
+
+# Max DB-stored message length (matches dedup key window in record_alert).
+_MAX_MSG_LEN = 280
+
+
+class SentinelAlertLogHandler(logging.Handler):
+    """
+    Logging handler that promotes ERROR+ records into sentinel alerts_log.
+
+    Severity mapping:
+      logging.ERROR    → 'warning'
+      logging.CRITICAL → 'critical'
+
+    Records below ERROR, records from disallowed modules, and records from
+    the recursion-prone modules (sentinel.history, sentinel.alerter) are
+    silently dropped.
+
+    The DB writer (SentinelDB.record_alert) is invoked synchronously here,
+    but install_log_handler() wraps this handler in a QueueListener so the
+    actual emit() happens on a background thread.
+    """
+
+    def __init__(
+        self,
+        db: Optional["object"] = None,
+        level: int = logging.ERROR,
+    ) -> None:
+        super().__init__(level=level)
+        self._db = db
+
+    def _resolve_db(self):
+        if self._db is None:
+            from sentinel.history import SentinelDB
+            self._db = SentinelDB()
+        return self._db
+
+    def emit(self, record: logging.LogRecord) -> None:
+        try:
+            if record.levelno < logging.ERROR:
+                return
+            name = record.name or ""
+            if name in _EXCLUDE_EXACT:
+                return
+            if not any(name.startswith(p) for p in _ALLOWLIST_PREFIXES):
+                return
+
+            severity = "critical" if record.levelno >= logging.CRITICAL else "warning"
+            try:
+                text = record.getMessage()
+            except Exception:
+                text = str(record.msg)
+
+            message = f"{name}: {text}"
+            if len(message) > _MAX_MSG_LEN:
+                message = message[:_MAX_MSG_LEN]
+
+            experiment_id = os.environ.get("EXPERIMENT_ID") or None
+
+            self._resolve_db().record_alert(
+                severity, message, experiment_id=experiment_id,
+            )
+        except Exception:
+            # Logging must never raise.
+            self.handleError(record)
+
+
+# Module-level state for install_log_handler / _uninstall_log_handler.
+_install_lock = threading.Lock()
+_listener: Optional[logging.handlers.QueueListener] = None
+_queue_handler: Optional[logging.handlers.QueueHandler] = None
+_atexit_registered = False
+
+
+def install_log_handler(experiment_id: Optional[str] = None) -> None:
+    """
+    Install a QueueHandler on the root logger that asynchronously promotes
+    ERROR+ records into the sentinel alerts_log via SentinelAlertLogHandler.
+
+    Safe to call multiple times in the same process — second and subsequent
+    calls are no-ops.  Each scanner process should call this once at start.
+
+    If *experiment_id* is provided AND EXPERIMENT_ID is not already set in
+    the environment, it is published so the handler can attribute alerts.
+    """
+    global _listener, _queue_handler, _atexit_registered
+
+    with _install_lock:
+        if _queue_handler is not None:
+            return
+
+        if experiment_id:
+            os.environ.setdefault("EXPERIMENT_ID", experiment_id)
+
+        q: _queue.Queue = _queue.Queue(-1)
+        qh = logging.handlers.QueueHandler(q)
+        qh.setLevel(logging.ERROR)
+
+        target = SentinelAlertLogHandler()
+        target.setLevel(logging.ERROR)
+
+        listener = logging.handlers.QueueListener(
+            q, target, respect_handler_level=True
+        )
+        listener.start()
+
+        root = logging.getLogger()
+        root.addHandler(qh)
+
+        _queue_handler = qh
+        _listener = listener
+
+        if not _atexit_registered:
+            atexit.register(_uninstall_log_handler)
+            _atexit_registered = True
+
+
+def _uninstall_log_handler() -> None:
+    """Tear down the QueueHandler/QueueListener installed by install_log_handler.
+
+    Used by tests; also registered via atexit so the listener thread stops
+    cleanly on interpreter shutdown.
+    """
+    global _listener, _queue_handler
+
+    with _install_lock:
+        qh = _queue_handler
+        listener = _listener
+        _queue_handler = None
+        _listener = None
+
+    if qh is not None:
+        try:
+            logging.getLogger().removeHandler(qh)
+        except Exception:
+            pass
+    if listener is not None:
+        try:
+            listener.stop()
+        except Exception:
+            pass

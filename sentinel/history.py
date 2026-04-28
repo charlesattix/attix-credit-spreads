@@ -25,11 +25,29 @@ import json
 import logging
 import os
 import sqlite3
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
+
+# Dedup window for record_alert: repeat alerts within this many minutes
+# update an existing open row instead of creating a new one.
+_DEDUP_WINDOW_MIN = 5
+
+
+def _parse_ts(s: Optional[str]) -> Optional[datetime]:
+    """Parse either 'YYYY-MM-DD HH:MM:SS' (sqlite datetime('now')) or ISO 8601."""
+    if not s:
+        return None
+    try:
+        cleaned = s.replace(" ", "T", 1) if "T" not in s else s
+        dt = datetime.fromisoformat(cleaned)
+    except ValueError:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt
 
 # Default DB path — lives beside this file in sentinel/db/sentinel.db
 _SENTINEL_DIR = Path(__file__).parent
@@ -210,10 +228,27 @@ class SentinelDB:
         conn = self._connect()
         try:
             conn.executescript(_SCHEMA_SQL)
+            self._migrate_alerts_log_dedup(conn)
             conn.commit()
             logger.debug("SentinelDB: schema initialised at %s", self.path)
         finally:
             conn.close()
+
+    @staticmethod
+    def _migrate_alerts_log_dedup(conn: sqlite3.Connection) -> None:
+        """
+        Idempotently add (count, first_seen, last_seen) columns to alerts_log.
+
+        Keeps existing rows intact: legacy entries get count=1 default and
+        NULL timestamps until they are touched again.
+        """
+        cols = {row[1] for row in conn.execute("PRAGMA table_info(alerts_log)").fetchall()}
+        if "count" not in cols:
+            conn.execute("ALTER TABLE alerts_log ADD COLUMN count INTEGER DEFAULT 1")
+        if "first_seen" not in cols:
+            conn.execute("ALTER TABLE alerts_log ADD COLUMN first_seen TEXT")
+        if "last_seen" not in cols:
+            conn.execute("ALTER TABLE alerts_log ADD COLUMN last_seen TEXT")
 
     # ── Snapshots ─────────────────────────────────────────────────────────────
 
@@ -432,16 +467,59 @@ class SentinelDB:
         *,
         experiment_id: Optional[str] = None,
     ) -> int:
-        """Insert an alert; returns the new row id."""
+        """
+        Record an alert with dedup-on-repeat semantics.
+
+        If an *unresolved* alert with the same (severity, experiment_id,
+        first 280 chars of message) was last seen within the dedup window
+        (_DEDUP_WINDOW_MIN), this call updates that row's count and
+        last_seen, and returns its id.  Otherwise a new row is inserted.
+        """
+        now = datetime.now(timezone.utc)
+        now_iso = now.isoformat(timespec="seconds")
+        msg_key = message[:280]
+        cutoff = now - timedelta(minutes=_DEDUP_WINDOW_MIN)
+
         conn = self._connect()
         try:
+            row = conn.execute(
+                """
+                SELECT id, alert_time, first_seen, last_seen, count
+                FROM   alerts_log
+                WHERE  resolved = 0
+                  AND  severity = ?
+                  AND  substr(message, 1, 280) = ?
+                  AND  ((experiment_id IS NULL AND ? IS NULL)
+                        OR experiment_id = ?)
+                ORDER  BY id DESC
+                LIMIT  1
+                """,
+                (severity, msg_key, experiment_id, experiment_id),
+            ).fetchone()
+
+            if row is not None:
+                ref_ts = _parse_ts(row["last_seen"]) or _parse_ts(row["alert_time"])
+                if ref_ts is not None and ref_ts >= cutoff:
+                    conn.execute(
+                        """
+                        UPDATE alerts_log
+                        SET    count     = COALESCE(count, 1) + 1,
+                               last_seen = ?
+                        WHERE  id = ?
+                        """,
+                        (now_iso, row["id"]),
+                    )
+                    conn.commit()
+                    return int(row["id"])
+
             cur = conn.execute(
                 """
                 INSERT INTO alerts_log
-                    (severity, experiment_id, message)
-                VALUES (?,?,?)
+                    (alert_time, severity, experiment_id, message,
+                     count, first_seen, last_seen)
+                VALUES (?,?,?,?,?,?,?)
                 """,
-                (severity, experiment_id, message),
+                (now_iso, severity, experiment_id, message, 1, now_iso, now_iso),
             )
             conn.commit()
             return cur.lastrowid
