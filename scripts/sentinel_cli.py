@@ -350,6 +350,9 @@ def cmd_resume(args):
         "halt_reason": exp.get("halt_reason"),
         "halted_at": exp.get("halted_at"),
         "halted_by": exp.get("halted_by"),
+        "halt_acknowledged_stale": exp.get("halt_acknowledged_stale"),
+        "halt_acknowledged_by": exp.get("halt_acknowledged_by"),
+        "halt_acknowledged_at": exp.get("halt_acknowledged_at"),
         "config_fingerprint": exp.get("config_fingerprint"),
         "account_id": exp.get("account_id"),
         "resumed_at": exp.get("resumed_at"),
@@ -391,6 +394,10 @@ def cmd_resume(args):
     exp["halt_reason"] = None
     exp["halted_at"] = None
     exp["halted_by"] = None
+    # Clear any G24 stale-halt acknowledgement so a future re-halt starts fresh.
+    exp["halt_acknowledged_stale"] = None
+    exp["halt_acknowledged_by"] = None
+    exp["halt_acknowledged_at"] = None
     exp["config_fingerprint"] = new_fingerprint
     exp["account_id"] = new_account_id
     exp["resumed_at"] = now
@@ -443,6 +450,80 @@ def cmd_resume(args):
         )
         print("launchctl unload+load complete.")
 
+    return 0
+
+
+def cmd_ack_stale(args):
+    """Acknowledge a halt as 'known stale' so Gate 24 stops nagging (Branch 8 / G24).
+
+    Sets three fields on the experiment in sentinel_state.json:
+      - halt_acknowledged_stale = True
+      - halt_acknowledged_by    = <args.by>
+      - halt_acknowledged_at    = <UTC ISO 8601>
+
+    Optionally records ``halt_acknowledged_reason`` for forensic context.
+    Does NOT change status / halted / halt_reason — the experiment stays
+    halted; only the G24 nag is suppressed. ``sentinel_cli resume`` clears
+    these fields atomically as part of resume.
+    """
+    from sentinel.state import load_state, save_state
+
+    exp_id = args.experiment_id
+    by = args.by
+    reason = args.reason
+
+    try:
+        state = load_state()
+    except FileNotFoundError as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        return 2
+
+    experiments = state.get("experiments", {})
+    if exp_id not in experiments:
+        print(
+            f"ERROR: {exp_id} not enrolled in sentinel_state.json",
+            file=sys.stderr,
+        )
+        return 2
+
+    exp = experiments[exp_id]
+    if exp.get("status") != "halted":
+        print(
+            f"ERROR: {exp_id} is not halted (status={exp.get('status')!r}); "
+            "ack-stale only applies to halted experiments.",
+            file=sys.stderr,
+        )
+        return 1
+
+    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+    # Snapshot for in-memory rollback on save failure.
+    before = {
+        "halt_acknowledged_stale": exp.get("halt_acknowledged_stale"),
+        "halt_acknowledged_by": exp.get("halt_acknowledged_by"),
+        "halt_acknowledged_at": exp.get("halt_acknowledged_at"),
+        "halt_acknowledged_reason": exp.get("halt_acknowledged_reason"),
+    }
+
+    exp["halt_acknowledged_stale"] = True
+    exp["halt_acknowledged_by"] = by
+    exp["halt_acknowledged_at"] = now
+    exp["halt_acknowledged_reason"] = reason
+
+    try:
+        save_state(state)
+    except Exception as e:  # noqa: BLE001
+        for k, v in before.items():
+            exp[k] = v
+        print(f"ERROR: save_state failed: {e}", file=sys.stderr)
+        return 3
+
+    print(f"Acknowledged stale halt for {exp_id}:")
+    print(f"  halt_acknowledged_stale: True")
+    print(f"  halt_acknowledged_by   : {by}")
+    print(f"  halt_acknowledged_at   : {now}")
+    print(f"  halt_acknowledged_reason: {reason}")
+    print(f"  (status remains 'halted' — use `resume` to recover)")
     return 0
 
 
@@ -673,6 +754,15 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Also unload+load the experiment's launchd plist",
     )
 
+    # ack-stale (Branch 8 / G24)
+    ack_p = sub.add_parser(
+        "ack-stale",
+        help="Acknowledge a halt as known-stale (suppresses Gate 24 nag)",
+    )
+    ack_p.add_argument("experiment_id", help="Experiment ID (e.g., EXP-503)")
+    ack_p.add_argument("--by", required=True, help="Operator name")
+    ack_p.add_argument("--reason", required=True, help="Why the halt is being acknowledged as stale")
+
     # why-halted
     why_p = sub.add_parser("why-halted", help="Explain why an experiment is halted")
     why_p.add_argument("experiment_id", help="Experiment ID (e.g., EXP-503)")
@@ -696,6 +786,7 @@ def main() -> int:
         "alerts": cmd_alerts,
         "resolve": cmd_resolve,
         "resume": cmd_resume,
+        "ack-stale": cmd_ack_stale,
         "why-halted": cmd_why_halted,
         "report": cmd_report,
     }
