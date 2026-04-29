@@ -334,6 +334,46 @@ def cmd_daily(args: argparse.Namespace) -> int:
     except Exception:  # noqa: BLE001
         logging.exception("Gate22 heartbeat check failed")
 
+    # Gate 23 — Orchestrator-side G7 reconciliation (halt-bypass).
+    # Runs check_orphan_positions for every experiment with a working
+    # Alpaca API, regardless of sentinel halt status. The point: when an
+    # experiment is halted, its scanner does not run, so the per-scanner
+    # G7 (orphan_gate) goes silent. We must not let drift hide behind a
+    # halt for days the way it did with EXP-503/EXP-800.
+    try:
+        if health_results:
+            from sentinel.runtime import check_orphan_positions
+            g23_total = 0
+            for h in health_results:
+                if not h.api_ok:
+                    continue
+                try:
+                    result = check_orphan_positions(h.exp_id, h.positions)
+                except Exception:  # noqa: BLE001
+                    logging.exception("Gate23 reconciliation failed for %s", h.exp_id)
+                    continue
+                for a in result.alerts:
+                    db.record_alert(
+                        a["severity"], a["message"], experiment_id=h.exp_id,
+                    )
+                g23_total += len(result.alerts)
+                if result.qty_mismatches or result.stale_orphans:
+                    print(
+                        f"   🚨 Gate23 {h.exp_id}: "
+                        f"{len(result.qty_mismatches)} qty_mismatch, "
+                        f"{len(result.stale_orphans)} stale_orphan(s)"
+                    )
+                elif result.orphans or result.ghosts:
+                    print(
+                        f"   ⚠️  Gate23 {h.exp_id}: "
+                        f"{len(result.orphans)} orphan, "
+                        f"{len(result.ghosts)} ghost(s)"
+                    )
+            if g23_total == 0:
+                print("   ✅ Gate23 broker↔DB recon: clean across all live accounts")
+    except Exception:  # noqa: BLE001
+        logging.exception("Gate23 orchestrator reconciliation block failed")
+
     # Gate 24 — Stale-halt nag (market-day-aware, alert-only)
     try:
         from sentinel.runtime import check_stale_halts

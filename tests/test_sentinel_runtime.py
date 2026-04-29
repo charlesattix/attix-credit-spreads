@@ -528,19 +528,21 @@ class TestGate7OrphanDetector:
         )
         assert result.passed
 
-    def test_short_symbols_filtered_out(self, tmp_db):
-        """Alpaca equity positions (short symbols like 'SPY') are filtered out."""
+    def test_short_symbols_surface_as_orphans(self, tmp_db):
+        """G23 fix: equity tickers (e.g. SPY from a short-put assignment) must
+        surface as orphans. Pre-fix, the len>10 filter dropped these silently —
+        that filter was the bug behind today's EXP-800 partial-assignment story.
+        """
         from sentinel.runtime import check_orphan_positions
 
         db_path, _ = tmp_db
-        # Short symbol positions (equity, not options) should be ignored
         result = check_orphan_positions(
             "EXP-400",
-            [{"symbol": "SPY"}, {"symbol": "AAPL"}],  # len < 10
+            [{"symbol": "SPY"}, {"symbol": "AAPL"}],
             db_path=db_path,
         )
-        assert result.orphans == []
-        assert result.passed
+        assert sorted(result.orphans) == ["AAPL", "SPY"]
+        assert not result.passed
 
 
 # ===========================================================================

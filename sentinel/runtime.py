@@ -1114,13 +1114,20 @@ class OrphanResult:
     exp_id: str
     orphans: List[str] = field(default_factory=list)        # OCC symbols in Alpaca not in DB
     ghosts: List[Dict[str, Any]] = field(default_factory=list)  # DB records not in Alpaca
+    qty_mismatches: List[Dict[str, Any]] = field(default_factory=list)  # G23: per-leg qty drift
+    stale_orphans: List[Dict[str, Any]] = field(default_factory=list)   # G23: 24h+ unmanaged
     consecutive_scans: int = 0
     alerts: List[Dict[str, str]] = field(default_factory=list)
     errors: List[str] = field(default_factory=list)
 
     @property
     def passed(self) -> bool:
-        return not self.orphans and not self.ghosts
+        return (
+            not self.orphans
+            and not self.ghosts
+            and not self.qty_mismatches
+            and not self.stale_orphans
+        )
 
     @property
     def halt_required(self) -> bool:
@@ -1159,29 +1166,88 @@ def check_orphan_positions(
     conn.execute("PRAGMA busy_timeout=5000")
 
     try:
-        # --- Alpaca symbols: filter to options only (OCC symbols are long) ---
-        alpaca_symbols = {
-            pos.get("symbol", "").upper()
-            for pos in alpaca_positions
-            if pos.get("symbol") and len(pos.get("symbol", "")) > 10
-        }
+        # --- Alpaca: build a sym → signed-qty map.
+        #
+        # G23 fix: do NOT filter by `len > 10`. Pre-fix, that filter dropped
+        # 3-letter equity symbols (e.g. SPY +100 from a short-put assignment),
+        # silently hiding the most common partial-assignment artifact. We now
+        # consider every Alpaca symbol; for credit-spread experiments the
+        # account is options-only, so any non-OCC symbol is an orphan signal.
+        alpaca_qty_map: Dict[str, int] = {}
+        alpaca_qty_known: set = set()  # symbols where the broker actually reported qty
+        for pos in alpaca_positions:
+            sym = (pos.get("symbol") or "").upper()
+            if not sym:
+                continue
+            raw_qty = pos.get("qty") if isinstance(pos, dict) else None
+            if raw_qty is None:
+                # Real Alpaca always returns qty; tests/legacy callers may
+                # pass symbol-only dicts. Treat absence as "qty unknown" and
+                # skip qty_mismatch for this symbol.
+                alpaca_qty_map[sym] = 0
+            else:
+                try:
+                    alpaca_qty_map[sym] = int(float(raw_qty))
+                    alpaca_qty_known.add(sym)
+                except (TypeError, ValueError):
+                    alpaca_qty_map[sym] = 0
+        alpaca_symbols = set(alpaca_qty_map.keys())
 
-        # --- DB open symbols: trade_legs → metadata fallback ---
+        # --- DB open: per-symbol signed qty when trade_legs.qty is present;
+        # symbol-only set when it isn't (legacy DBs / metadata-only rows).
+        db_qty_map: Dict[str, int] = {}
         db_symbols: set = set()
+
+        # Probe trade_legs columns so we tolerate legacy schemas that lack `qty`.
+        leg_cols: set = set()
+        try:
+            leg_cols = {
+                row[1]
+                for row in conn.execute("PRAGMA table_info(trade_legs)").fetchall()
+            }
+        except Exception:
+            leg_cols = set()
+
+        has_qty_col = "qty" in leg_cols
+        select_cols = (
+            "tl.occ_symbol, tl.qty, tl.leg_type, t.contracts"
+            if has_qty_col else
+            "tl.occ_symbol, NULL AS qty, tl.leg_type, t.contracts"
+        )
         try:
             rows = conn.execute(
-                "SELECT DISTINCT tl.occ_symbol "
+                f"SELECT {select_cols} "
                 "FROM trade_legs tl "
                 "JOIN trades t ON tl.trade_id = t.id "
                 "WHERE t.status IN ('open', 'pending_open', 'pending_close') "
                 "AND tl.occ_symbol IS NOT NULL"
             ).fetchall()
-            db_symbols = {str(r[0]).upper() for r in rows if r[0]}
+            for r in rows:
+                sym = str(r[0]).upper()
+                db_symbols.add(sym)
+                # Prefer trade_legs.qty when populated; otherwise infer
+                # signed qty from leg_type (short_* → -contracts).
+                leg_qty = r[1]
+                if leg_qty is not None:
+                    db_qty_map[sym] = int(leg_qty)
+                else:
+                    leg_type = (r[2] or "").lower()
+                    contracts = int(r[3] or 0)
+                    # Only infer signed qty when contracts > 0. Legacy fixtures
+                    # often leave contracts NULL/0; in that case we know the
+                    # symbol is open but cannot reliably compare to broker_qty.
+                    if contracts > 0:
+                        if leg_type.startswith("short"):
+                            db_qty_map[sym] = -contracts
+                        elif leg_type.startswith("long"):
+                            db_qty_map[sym] = contracts
         except Exception:
-            pass  # trade_legs table may not exist
+            pass  # trade_legs table may not exist at all
 
         # Always merge metadata symbols (covers DBs without trade_legs table
-        # and catches any legs stored only in metadata JSON)
+        # and catches any legs stored only in metadata JSON). Metadata-only
+        # rows lack qty info, so they participate in orphan/ghost detection
+        # but are excluded from qty_mismatch checks.
         try:
             meta_rows = conn.execute(
                 "SELECT metadata FROM trades "
@@ -1201,9 +1267,29 @@ def check_orphan_positions(
         except Exception:
             pass  # metadata query is best-effort
 
-        # --- Detect orphans and ghosts ---
-        result.orphans = sorted(alpaca_symbols - db_symbols)
-        ghost_symbols = db_symbols - alpaca_symbols
+        # --- G23: qty-mismatch detection.
+        # For symbols on both sides with a known DB qty, compare values.
+        # A qty mismatch is NOT an orphan and NOT a ghost — distinct alert.
+        intersect = alpaca_symbols & db_symbols
+        for sym in sorted(intersect):
+            if sym not in db_qty_map:
+                continue  # legacy/metadata-only row — no qty to compare
+            if sym not in alpaca_qty_known:
+                continue  # broker didn't report qty — cannot compare
+            broker_qty = alpaca_qty_map.get(sym, 0)
+            db_qty = db_qty_map[sym]
+            if broker_qty != db_qty:
+                result.qty_mismatches.append({
+                    "occ_symbol": sym,
+                    "broker_qty": broker_qty,
+                    "db_qty": db_qty,
+                })
+
+        # --- Detect orphans and ghosts.
+        # qty_mismatch symbols are excluded from both lists.
+        mismatch_syms = {qm["occ_symbol"] for qm in result.qty_mismatches}
+        result.orphans = sorted((alpaca_symbols - db_symbols) - mismatch_syms)
+        ghost_symbols = (db_symbols - alpaca_symbols) - mismatch_syms
 
         # Build ghost details from trade_legs
         if ghost_symbols:
@@ -1229,6 +1315,36 @@ def check_orphan_positions(
                         "id": "unknown", "ticker": _ticker_from_occ(sym),
                         "status": "open", "occ_symbol": sym,
                     })
+
+        # --- G23: stale-orphan re-alert.
+        # Any unmanaged DB row older than 24h whose OCC symbol is still
+        # live in the broker is critical: G7 detected it ≥1 day ago and
+        # nobody resolved it. Emit a new critical alert each daily run
+        # until the row is closed or superseded.
+        try:
+            stale_rows = conn.execute(
+                "SELECT id, ticker, metadata, created_at "
+                "FROM trades "
+                "WHERE status = 'unmanaged' "
+                "AND created_at IS NOT NULL "
+                "AND created_at < datetime('now', '-24 hours')"
+            ).fetchall()
+            for sr in stale_rows:
+                sym = ""
+                try:
+                    meta = json.loads(sr["metadata"]) if sr["metadata"] else {}
+                    sym = str(meta.get("occ_symbol", "")).upper()
+                except (json.JSONDecodeError, TypeError):
+                    sym = ""
+                if sym and sym in alpaca_symbols:
+                    result.stale_orphans.append({
+                        "id": sr["id"],
+                        "occ_symbol": sym,
+                        "ticker": sr["ticker"],
+                        "created_at": sr["created_at"],
+                    })
+        except Exception:
+            pass  # best-effort; legacy DBs without metadata are skipped
 
         # --- Consecutive scan tracking ---
         prev_count = _read_orphan_scan_count(conn, exp_id)
@@ -1285,6 +1401,29 @@ def check_orphan_positions(
                     f"Gate 7: {len(result.ghosts)} ghost position(s) — "
                     f"DB shows open but Alpaca has no position. "
                     f"IDs: {ids_str}."
+                ),
+            })
+
+        # G23: one critical alert per qty_mismatch leg (keyed on OCC).
+        # Aggregating by ticker would lose per-leg detail (cc1 review).
+        for qm in result.qty_mismatches:
+            result.alerts.append({
+                "severity": "critical",
+                "message": (
+                    f"Gate 23 qty_mismatch: {qm['occ_symbol']} "
+                    f"broker_qty={qm['broker_qty']} db_qty={qm['db_qty']} "
+                    f"(distinct from orphan/ghost; investigate immediately)."
+                ),
+            })
+
+        # G23: re-alert on stale unmanaged rows (>24h with live broker counterpart).
+        for so in result.stale_orphans:
+            result.alerts.append({
+                "severity": "critical",
+                "message": (
+                    f"Gate 23 stale orphan: {so['occ_symbol']} unmanaged in DB "
+                    f"since {so['created_at']} (>24h) and still live in broker. "
+                    f"Run reconcile_positions or close manually."
                 ),
             })
 
