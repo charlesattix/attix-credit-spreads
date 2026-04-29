@@ -63,6 +63,8 @@ from sentinel.state import (
     load_state as _load_state,
     save_state as _save_state,
     compute_fingerprint as state_fingerprint,
+    record_health_check as _record_health_check,
+    record_health_checks as _record_health_checks,
 )
 
 # For backwards compat, use the history fingerprint for audit trail and
@@ -163,6 +165,16 @@ def _set_experiment_state(
 
 _REGISTRY_PATH = _PROJECT_ROOT / "experiments" / "registry.json"
 
+# Registry statuses that mean "currently live in paper trading". Historical
+# data (some experiments use "active", others "paper_trading"); both must
+# match. Mirrors sentinel/monitor.py:136.
+_LIVE_REGISTRY_STATUSES = ("active", "paper_trading")
+
+
+def _is_live(exp: Dict[str, Any]) -> bool:
+    """Return True if the registry entry represents a live (paper-trading) experiment."""
+    return exp.get("status") in _LIVE_REGISTRY_STATUSES
+
 
 def _load_registry() -> Dict[str, Any]:
     if not _REGISTRY_PATH.exists():
@@ -179,6 +191,89 @@ def _load_paper_config(config_path: str) -> Optional[Dict]:
     except Exception as e:
         logger.warning("Failed to load %s: %s", config_path, e)
         return None
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Push-pipeline meta-monitor
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Path written by scripts/sync_sentinel_data.py on every push attempt.
+_LAST_PUSH_PATH = _PROJECT_ROOT / "data" / ".last_push.json"
+
+# Multiple of expected_cadence_seconds() before we consider the push pipeline
+# silent. Default is 3 — i.e. three missed cycles. With hourly cadence that's
+# 3 hours; with daily cadence that's 3 days.
+_PUSH_STALE_MULTIPLE = 3
+
+
+def check_push_pipeline_freshness(
+    db: "SentinelDB",
+    last_push_path: Optional[Path] = None,
+) -> Optional[Dict[str, Any]]:
+    """
+    Detect a silently-broken push pipeline.
+
+    Reads data/.last_push.json. Emits a CRITICAL alert if:
+      - the file is missing entirely (push has never succeeded), OR
+      - the most recent attempt FAILED, OR
+      - the most recent attempt is older than 3x the expected cadence.
+
+    Returns a dict describing the issue (for tests / introspection), or None
+    if the pipeline looks healthy. Never raises.
+    """
+    from sentinel.cadence import expected_cadence_seconds
+
+    path = last_push_path or _LAST_PUSH_PATH
+    cadence_s = expected_cadence_seconds()
+    stale_threshold_s = cadence_s * _PUSH_STALE_MULTIPLE
+
+    def _alert(message: str) -> Dict[str, Any]:
+        db.record_alert("critical", f"[meta-monitor] {message}")
+        print(f"   🚨 META-MONITOR: {message}")
+        return {"ok": False, "message": message}
+
+    if not path.exists():
+        return _alert(
+            "Sentinel push pipeline has never reported a successful push — "
+            "Railway dashboard is showing stale data. Check sentinel-cron.sh "
+            "and sync_sentinel_data.py."
+        )
+
+    try:
+        record = json.loads(path.read_text())
+    except (OSError, ValueError) as e:
+        return _alert(f"Could not read {path.name}: {e}")
+
+    attempted_at = record.get("attempted_at")
+    if not attempted_at:
+        return _alert(f"{path.name} has no attempted_at timestamp — file corrupt?")
+
+    try:
+        attempt_dt = datetime.fromisoformat(attempted_at.replace("Z", "+00:00"))
+        if attempt_dt.tzinfo is None:
+            attempt_dt = attempt_dt.replace(tzinfo=timezone.utc)
+    except (TypeError, ValueError) as e:
+        return _alert(f"Invalid attempted_at in {path.name}: {e}")
+
+    age_s = (datetime.now(timezone.utc) - attempt_dt).total_seconds()
+
+    if not record.get("ok"):
+        return _alert(
+            f"Last push attempt FAILED ({record.get('http_status', 'no http')}): "
+            f"{(record.get('error') or 'unknown error')[:120]} "
+            f"({age_s/3600:.1f}h ago)"
+        )
+
+    if age_s > stale_threshold_s:
+        return _alert(
+            f"Push pipeline silent for {age_s/3600:.1f}h "
+            f"(threshold: {stale_threshold_s/3600:.1f}h, "
+            f"cadence: {cadence_s/3600:.1f}h × {_PUSH_STALE_MULTIPLE}). "
+            f"Railway dashboard is stale."
+        )
+
+    print(f"   ✅ Push pipeline fresh ({age_s/3600:.1f}h since last push)")
+    return None
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -200,7 +295,7 @@ def cmd_daily(args: argparse.Namespace) -> int:
     active_exps = {
         k: v
         for k, v in registry.get("experiments", {}).items()
-        if v.get("status") == "paper_trading"
+        if _is_live(v)
     }
     exp_ids = list(active_exps.keys())
     print(f"🛡️  SENTINEL DAILY — {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}")
@@ -213,7 +308,7 @@ def cmd_daily(args: argparse.Namespace) -> int:
         health_results = check_all_experiments(registry, _PROJECT_ROOT)
 
         for h in health_results:
-            if not h.api_ok and h.registry_status == "paper_trading":
+            if not h.api_ok and h.registry_status in _LIVE_REGISTRY_STATUSES:
                 db.record_alert(
                     "critical",
                     f"API health check failed: {h.api_error or 'unknown error'}",
@@ -224,6 +319,13 @@ def cmd_daily(args: argparse.Namespace) -> int:
                     halt_reason=f"API health check failed: {h.api_error or 'dead keys'}",
                     halted_at=datetime.now(timezone.utc).isoformat(),
                     halted_by="sentinel_daily",
+                    halt_evidence={
+                        "gate_id": "api_health",
+                        "metric_name": "alpaca_api",
+                        "stored_value": "ok",
+                        "current_value": (h.api_error or "dead keys")[:200],
+                        "threshold": "api_ok",
+                    },
                 )
                 print(f"   ❌ {h.exp_id}: API FAILED — halted")
             elif h.is_stale:
@@ -257,8 +359,17 @@ def cmd_daily(args: argparse.Namespace) -> int:
                     h.exp_id,
                     api_status="401" if "401" in (h.api_error or "") else "error",
                 )
+
+        # Stamp last_health_check for every experiment we attempted to check
+        # (success or failure) in a single load/save cycle — otherwise
+        # dead-keyed experiments stay "last check: never" forever.
+        try:
+            _record_health_checks([h.exp_id for h in health_results])
+        except Exception:  # noqa: BLE001
+            logging.exception("record_health_checks batch write failed")
     else:
-        # No monitor: record bare snapshots for each active exp
+        # No monitor: we did NOT actually perform a health check, so do not
+        # stamp last_health_check here — the name implies an outcome.
         print("   (monitor module unavailable — recording minimal snapshots)")
         for exp_id in exp_ids:
             db.record_snapshot(exp_id, api_status="unknown")
@@ -292,6 +403,100 @@ def cmd_daily(args: argparse.Namespace) -> int:
                     print(f"   ⚠️  {exp_id}: {warns_lc} stuck position(s)")
             else:
                 print(f"   ✅ {exp_id}: positions healthy ({lc.total_open} open)")
+
+    # Gate 22 — Scanner heartbeats (alert-only, market-hours)
+    try:
+        from sentinel.runtime import check_scanner_heartbeats
+        hb_alerts = check_scanner_heartbeats(db)
+        if hb_alerts:
+            print(f"   ⚠️  Gate22 heartbeats: {len(hb_alerts)} stale scanner(s)")
+            for a in hb_alerts:
+                db.record_alert(a["severity"], a["message"])
+        else:
+            print("   ✅ Gate22 heartbeats: all scanners fresh (or after-hours)")
+    except Exception:  # noqa: BLE001
+        logging.exception("Gate22 heartbeat check failed")
+
+    # Gate 23 — Orchestrator-side G7 reconciliation (halt-bypass).
+    # Runs check_orphan_positions for every experiment with a working
+    # Alpaca API, regardless of sentinel halt status. The point: when an
+    # experiment is halted, its scanner does not run, so the per-scanner
+    # G7 (orphan_gate) goes silent. We must not let drift hide behind a
+    # halt for days the way it did with EXP-503/EXP-800.
+    try:
+        if health_results:
+            from sentinel.runtime import check_orphan_positions
+            g23_total = 0
+            for h in health_results:
+                if not h.api_ok:
+                    continue
+                try:
+                    result = check_orphan_positions(h.exp_id, h.positions)
+                except Exception:  # noqa: BLE001
+                    logging.exception("Gate23 reconciliation failed for %s", h.exp_id)
+                    continue
+                for a in result.alerts:
+                    db.record_alert(
+                        a["severity"], a["message"], experiment_id=h.exp_id,
+                    )
+                g23_total += len(result.alerts)
+                if result.qty_mismatches or result.stale_orphans:
+                    print(
+                        f"   🚨 Gate23 {h.exp_id}: "
+                        f"{len(result.qty_mismatches)} qty_mismatch, "
+                        f"{len(result.stale_orphans)} stale_orphan(s)"
+                    )
+                elif result.orphans or result.ghosts:
+                    print(
+                        f"   ⚠️  Gate23 {h.exp_id}: "
+                        f"{len(result.orphans)} orphan, "
+                        f"{len(result.ghosts)} ghost(s)"
+                    )
+            if g23_total == 0:
+                print("   ✅ Gate23 broker↔DB recon: clean across all live accounts")
+    except Exception:  # noqa: BLE001
+        logging.exception("Gate23 orchestrator reconciliation block failed")
+
+    # Gate 24 — Stale-halt nag (market-day-aware, alert-only)
+    try:
+        from sentinel.runtime import check_stale_halts
+        stale_result = check_stale_halts(state)
+        if stale_result.alerts:
+            crit_n = sum(1 for a in stale_result.alerts if a["severity"] == "critical")
+            warn_n = sum(1 for a in stale_result.alerts if a["severity"] == "warning")
+            print(
+                f"   🚨 Gate24 stale halts: {crit_n} critical, {warn_n} warning"
+            )
+            for a in stale_result.alerts:
+                db.record_alert(
+                    a["severity"], a["message"], experiment_id=a.get("experiment_id"),
+                )
+        else:
+            print("   ✅ Gate24 stale halts: none aged past 1 market day")
+        if stale_result.acknowledged:
+            print(
+                f"   (Gate24: {len(stale_result.acknowledged)} acknowledged-stale "
+                f"halt(s) suppressed: {', '.join(stale_result.acknowledged)})"
+            )
+        if stale_result.legacy_halts:
+            print(
+                f"   (Gate24: {len(stale_result.legacy_halts)} legacy halt(s) "
+                f"with no halted_at: {', '.join(stale_result.legacy_halts)} — "
+                f"{stale_result.legacy_recommendation})"
+            )
+    except Exception:  # noqa: BLE001
+        logging.exception("Gate24 stale-halt check failed")
+
+    # Meta-monitor — Sentinel detects its OWN staleness.
+    # If the push-to-Railway pipeline has gone silent (cron broken, auth
+    # mismatch, endpoint 404), the dashboard freezes on stale data and
+    # nobody knows. Read data/.last_push.json (written by sync_sentinel_data.py
+    # on every push attempt). Alert critical if it's missing OR older than
+    # 3x the expected cadence.
+    try:
+        check_push_pipeline_freshness(db)
+    except Exception:  # noqa: BLE001
+        logging.exception("Meta-monitor (push freshness) check failed")
 
     # Build summary
     summary = db.get_daily_summary(exp_ids)
@@ -354,7 +559,7 @@ def cmd_audit(args: argparse.Namespace) -> int:
     active = {
         k: v
         for k, v in registry.get("experiments", {}).items()
-        if v.get("status") == "paper_trading"
+        if _is_live(v)
     }
 
     print(f"🛡️  SENTINEL AUDIT — {datetime.now(timezone.utc).strftime('%Y-%m-%d')}")
@@ -666,7 +871,7 @@ def cmd_report(args: argparse.Namespace) -> int:
 
     active_ids = [
         k for k, v in registry.get("experiments", {}).items()
-        if v.get("status") == "paper_trading"
+        if _is_live(v)
     ]
 
     out_dir = Path(getattr(args, "output_dir", None) or "output/sentinel_reports")
@@ -997,7 +1202,7 @@ def cmd_retroactive(args: argparse.Namespace) -> int:
     active = {
         k: v
         for k, v in registry.get("experiments", {}).items()
-        if v.get("status") == "paper_trading"
+        if _is_live(v)
     }
 
     print(f"\n🛡️  SENTINEL RETROACTIVE ONBOARDING")

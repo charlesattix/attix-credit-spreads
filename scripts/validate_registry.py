@@ -49,7 +49,11 @@ CREATOR_RANGE_EXCEPTIONS: set[str] = {"EXP-1220"}
 SENTINEL_OPTIONAL_FIELDS = ("retired_date", "superseded_by", "lessons_learned", "sentinel_certified_at")
 
 _DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-_DATETIME_RE = re.compile(r"^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?)?$")
+# Accept date-only, naive datetime (legacy), or tz-aware ISO 8601 with
+# either ``Z`` or ``±HH:MM`` offset (matches sentinel.state._now_iso).
+_DATETIME_RE = re.compile(
+    r"^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})?)?$"
+)
 
 
 def _exp_number(exp_id: str) -> Optional[int]:
@@ -130,7 +134,8 @@ def validate(registry: dict, strict: bool = False) -> "list[str]":
         sentinel_certified_at = exp.get("sentinel_certified_at")
         if sentinel_certified_at and not _DATETIME_RE.match(str(sentinel_certified_at)):
             errors.append(
-                f"{prefix} 'sentinel_certified_at' must be YYYY-MM-DD or YYYY-MM-DDTHH:MM, "
+                f"{prefix} 'sentinel_certified_at' must be ISO 8601 "
+                f"(YYYY-MM-DD or YYYY-MM-DDTHH:MM[:SS][±HH:MM|Z]), "
                 f"got '{sentinel_certified_at}'."
             )
 

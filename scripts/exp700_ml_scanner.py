@@ -705,6 +705,10 @@ def main() -> int:
                "dry_run": args.dry_run, "results": results}
     print("\n--- SUMMARY ---")
     print(json.dumps(summary, indent=2, default=str))
+
+    # Sentinel G22 — heartbeat at end of scan iteration.
+    from sentinel.heartbeat import emit_heartbeat
+    emit_heartbeat("EXP-700", notes="scan complete")
     return 0
 
 

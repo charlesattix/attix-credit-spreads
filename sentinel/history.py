@@ -25,17 +25,41 @@ import json
 import logging
 import os
 import sqlite3
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
+# Dedup window for record_alert: repeat alerts within this many minutes
+# update an existing open row instead of creating a new one.
+_DEDUP_WINDOW_MIN = 5
+
+
+def _parse_ts(s: Optional[str]) -> Optional[datetime]:
+    """Parse either 'YYYY-MM-DD HH:MM:SS' (sqlite datetime('now')) or ISO 8601."""
+    if not s:
+        return None
+    try:
+        cleaned = s.replace(" ", "T", 1) if "T" not in s else s
+        dt = datetime.fromisoformat(cleaned)
+    except ValueError:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt
+
 # Default DB path — lives beside this file in sentinel/db/sentinel.db
 _SENTINEL_DIR = Path(__file__).parent
-_DEFAULT_DB_PATH = Path(
-    os.environ.get("SENTINEL_DB_PATH", str(_SENTINEL_DIR / "db" / "sentinel.db"))
-)
+
+
+def _default_db_path() -> Path:
+    """Resolve the default sentinel.db path at call time so SENTINEL_DB_PATH
+    set after this module loads still takes effect (used by tests).
+    """
+    return Path(
+        os.environ.get("SENTINEL_DB_PATH", str(_SENTINEL_DIR / "db" / "sentinel.db"))
+    )
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Schema SQL
@@ -101,6 +125,15 @@ CREATE TABLE IF NOT EXISTS alerts_log (
     resolved_at     TEXT,
     resolved_by     TEXT,
     resolution_note TEXT
+);
+
+-- Per-scanner heartbeat (G22).  scanner_id is opaque (e.g. 'scan-EXP-503').
+-- record_heartbeat() is an UPSERT — there is exactly one row per scanner.
+CREATE TABLE IF NOT EXISTS scanner_heartbeats (
+    scanner_id   TEXT PRIMARY KEY,
+    last_seen    TEXT NOT NULL,
+    last_status  TEXT DEFAULT 'ok',
+    notes        TEXT
 );
 
 -- Indexes for common query patterns
@@ -192,7 +225,7 @@ class SentinelDB:
     """
 
     def __init__(self, path: Optional[str] = None):
-        self.path = Path(path) if path else _DEFAULT_DB_PATH
+        self.path = Path(path) if path else _default_db_path()
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self._init_schema()
 
@@ -210,10 +243,27 @@ class SentinelDB:
         conn = self._connect()
         try:
             conn.executescript(_SCHEMA_SQL)
+            self._migrate_alerts_log_dedup(conn)
             conn.commit()
             logger.debug("SentinelDB: schema initialised at %s", self.path)
         finally:
             conn.close()
+
+    @staticmethod
+    def _migrate_alerts_log_dedup(conn: sqlite3.Connection) -> None:
+        """
+        Idempotently add (count, first_seen, last_seen) columns to alerts_log.
+
+        Keeps existing rows intact: legacy entries get count=1 default and
+        NULL timestamps until they are touched again.
+        """
+        cols = {row[1] for row in conn.execute("PRAGMA table_info(alerts_log)").fetchall()}
+        if "count" not in cols:
+            conn.execute("ALTER TABLE alerts_log ADD COLUMN count INTEGER DEFAULT 1")
+        if "first_seen" not in cols:
+            conn.execute("ALTER TABLE alerts_log ADD COLUMN first_seen TEXT")
+        if "last_seen" not in cols:
+            conn.execute("ALTER TABLE alerts_log ADD COLUMN last_seen TEXT")
 
     # ── Snapshots ─────────────────────────────────────────────────────────────
 
@@ -432,16 +482,59 @@ class SentinelDB:
         *,
         experiment_id: Optional[str] = None,
     ) -> int:
-        """Insert an alert; returns the new row id."""
+        """
+        Record an alert with dedup-on-repeat semantics.
+
+        If an *unresolved* alert with the same (severity, experiment_id,
+        first 280 chars of message) was last seen within the dedup window
+        (_DEDUP_WINDOW_MIN), this call updates that row's count and
+        last_seen, and returns its id.  Otherwise a new row is inserted.
+        """
+        now = datetime.now(timezone.utc)
+        now_iso = now.isoformat(timespec="seconds")
+        msg_key = message[:280]
+        cutoff = now - timedelta(minutes=_DEDUP_WINDOW_MIN)
+
         conn = self._connect()
         try:
+            row = conn.execute(
+                """
+                SELECT id, alert_time, first_seen, last_seen, count
+                FROM   alerts_log
+                WHERE  resolved = 0
+                  AND  severity = ?
+                  AND  substr(message, 1, 280) = ?
+                  AND  ((experiment_id IS NULL AND ? IS NULL)
+                        OR experiment_id = ?)
+                ORDER  BY id DESC
+                LIMIT  1
+                """,
+                (severity, msg_key, experiment_id, experiment_id),
+            ).fetchone()
+
+            if row is not None:
+                ref_ts = _parse_ts(row["last_seen"]) or _parse_ts(row["alert_time"])
+                if ref_ts is not None and ref_ts >= cutoff:
+                    conn.execute(
+                        """
+                        UPDATE alerts_log
+                        SET    count     = COALESCE(count, 1) + 1,
+                               last_seen = ?
+                        WHERE  id = ?
+                        """,
+                        (now_iso, row["id"]),
+                    )
+                    conn.commit()
+                    return int(row["id"])
+
             cur = conn.execute(
                 """
                 INSERT INTO alerts_log
-                    (severity, experiment_id, message)
-                VALUES (?,?,?)
+                    (alert_time, severity, experiment_id, message,
+                     count, first_seen, last_seen)
+                VALUES (?,?,?,?,?,?,?)
                 """,
-                (severity, experiment_id, message),
+                (now_iso, severity, experiment_id, message, 1, now_iso, now_iso),
             )
             conn.commit()
             return cur.lastrowid
@@ -508,6 +601,52 @@ class SentinelDB:
             q += " ORDER BY alert_time DESC LIMIT ?"
             params.append(limit)
             rows = conn.execute(q, params).fetchall()
+            return [dict(r) for r in rows]
+        finally:
+            conn.close()
+
+    # ── Scanner heartbeats (G22) ──────────────────────────────────────────────
+
+    def record_heartbeat(
+        self,
+        scanner_id: str,
+        *,
+        status: str = "ok",
+        notes: Optional[str] = None,
+        last_seen: Optional[str] = None,
+    ) -> None:
+        """
+        UPSERT a scanner heartbeat.  Called once per scanner tick.
+
+        Exactly one row per scanner_id; subsequent calls update last_seen,
+        last_status, and notes in place.  *last_seen* defaults to now (UTC,
+        ISO8601, seconds resolution) but can be supplied for tests.
+        """
+        ts = last_seen or datetime.now(timezone.utc).isoformat(timespec="seconds")
+        conn = self._connect()
+        try:
+            conn.execute(
+                """
+                INSERT INTO scanner_heartbeats (scanner_id, last_seen, last_status, notes)
+                VALUES (?,?,?,?)
+                ON CONFLICT(scanner_id) DO UPDATE SET
+                    last_seen   = excluded.last_seen,
+                    last_status = excluded.last_status,
+                    notes       = excluded.notes
+                """,
+                (scanner_id, ts, status, notes),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+    def get_heartbeats(self) -> List[Dict[str, Any]]:
+        """Return all known scanner heartbeats, most-recent first."""
+        conn = self._connect()
+        try:
+            rows = conn.execute(
+                "SELECT * FROM scanner_heartbeats ORDER BY last_seen DESC"
+            ).fetchall()
             return [dict(r) for r in rows]
         finally:
             conn.close()

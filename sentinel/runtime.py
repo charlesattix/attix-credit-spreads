@@ -58,7 +58,7 @@ import math
 import os
 import sys
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
@@ -558,7 +558,18 @@ def check_all_runtime_drift(
             if halt_alerts:
                 reason = "; ".join(a.message for a in halt_alerts)
                 try:
-                    set_halt(exp_id, f"Gate8 runtime drift halt: {reason[:200]}")
+                    set_halt(
+                        exp_id,
+                        f"Gate8 runtime drift halt: {reason[:200]}",
+                        halted_by="runtime.py:G8",
+                        halt_evidence={
+                            "gate_id": "G8",
+                            "metric_name": "runtime_drift",
+                            "stored_value": "baseline",
+                            "current_value": reason[:200],
+                            "threshold": "halt_severity",
+                        },
+                    )
                     logger.critical(
                         "GATE8: HALTED %s — %d metric(s) breached halt threshold",
                         exp_id, len(halt_alerts),
@@ -856,7 +867,18 @@ def check_all_position_lifecycles(
             stuck_msgs = [s.message for s in lc_result.stuck if s.severity == "critical"]
             reason = f"Gate9 stuck positions: {'; '.join(stuck_msgs)}"
             try:
-                set_halt(exp_id, reason[:200])
+                set_halt(
+                    exp_id,
+                    reason[:200],
+                    halted_by="runtime.py:G9",
+                    halt_evidence={
+                        "gate_id": "G9",
+                        "metric_name": "stuck_positions",
+                        "stored_value": "0_critical",
+                        "current_value": f"{len(stuck_msgs)}_critical",
+                        "threshold": "0_critical",
+                    },
+                )
                 logger.critical(
                     "GATE9: HALTED %s — %d critical stuck position(s)",
                     exp_id, len(stuck_msgs),
@@ -1092,13 +1114,20 @@ class OrphanResult:
     exp_id: str
     orphans: List[str] = field(default_factory=list)        # OCC symbols in Alpaca not in DB
     ghosts: List[Dict[str, Any]] = field(default_factory=list)  # DB records not in Alpaca
+    qty_mismatches: List[Dict[str, Any]] = field(default_factory=list)  # G23: per-leg qty drift
+    stale_orphans: List[Dict[str, Any]] = field(default_factory=list)   # G23: 24h+ unmanaged
     consecutive_scans: int = 0
     alerts: List[Dict[str, str]] = field(default_factory=list)
     errors: List[str] = field(default_factory=list)
 
     @property
     def passed(self) -> bool:
-        return not self.orphans and not self.ghosts
+        return (
+            not self.orphans
+            and not self.ghosts
+            and not self.qty_mismatches
+            and not self.stale_orphans
+        )
 
     @property
     def halt_required(self) -> bool:
@@ -1137,29 +1166,88 @@ def check_orphan_positions(
     conn.execute("PRAGMA busy_timeout=5000")
 
     try:
-        # --- Alpaca symbols: filter to options only (OCC symbols are long) ---
-        alpaca_symbols = {
-            pos.get("symbol", "").upper()
-            for pos in alpaca_positions
-            if pos.get("symbol") and len(pos.get("symbol", "")) > 10
-        }
+        # --- Alpaca: build a sym → signed-qty map.
+        #
+        # G23 fix: do NOT filter by `len > 10`. Pre-fix, that filter dropped
+        # 3-letter equity symbols (e.g. SPY +100 from a short-put assignment),
+        # silently hiding the most common partial-assignment artifact. We now
+        # consider every Alpaca symbol; for credit-spread experiments the
+        # account is options-only, so any non-OCC symbol is an orphan signal.
+        alpaca_qty_map: Dict[str, int] = {}
+        alpaca_qty_known: set = set()  # symbols where the broker actually reported qty
+        for pos in alpaca_positions:
+            sym = (pos.get("symbol") or "").upper()
+            if not sym:
+                continue
+            raw_qty = pos.get("qty") if isinstance(pos, dict) else None
+            if raw_qty is None:
+                # Real Alpaca always returns qty; tests/legacy callers may
+                # pass symbol-only dicts. Treat absence as "qty unknown" and
+                # skip qty_mismatch for this symbol.
+                alpaca_qty_map[sym] = 0
+            else:
+                try:
+                    alpaca_qty_map[sym] = int(float(raw_qty))
+                    alpaca_qty_known.add(sym)
+                except (TypeError, ValueError):
+                    alpaca_qty_map[sym] = 0
+        alpaca_symbols = set(alpaca_qty_map.keys())
 
-        # --- DB open symbols: trade_legs → metadata fallback ---
+        # --- DB open: per-symbol signed qty when trade_legs.qty is present;
+        # symbol-only set when it isn't (legacy DBs / metadata-only rows).
+        db_qty_map: Dict[str, int] = {}
         db_symbols: set = set()
+
+        # Probe trade_legs columns so we tolerate legacy schemas that lack `qty`.
+        leg_cols: set = set()
+        try:
+            leg_cols = {
+                row[1]
+                for row in conn.execute("PRAGMA table_info(trade_legs)").fetchall()
+            }
+        except Exception:
+            leg_cols = set()
+
+        has_qty_col = "qty" in leg_cols
+        select_cols = (
+            "tl.occ_symbol, tl.qty, tl.leg_type, t.contracts"
+            if has_qty_col else
+            "tl.occ_symbol, NULL AS qty, tl.leg_type, t.contracts"
+        )
         try:
             rows = conn.execute(
-                "SELECT DISTINCT tl.occ_symbol "
+                f"SELECT {select_cols} "
                 "FROM trade_legs tl "
                 "JOIN trades t ON tl.trade_id = t.id "
                 "WHERE t.status IN ('open', 'pending_open', 'pending_close') "
                 "AND tl.occ_symbol IS NOT NULL"
             ).fetchall()
-            db_symbols = {str(r[0]).upper() for r in rows if r[0]}
+            for r in rows:
+                sym = str(r[0]).upper()
+                db_symbols.add(sym)
+                # Prefer trade_legs.qty when populated; otherwise infer
+                # signed qty from leg_type (short_* → -contracts).
+                leg_qty = r[1]
+                if leg_qty is not None:
+                    db_qty_map[sym] = int(leg_qty)
+                else:
+                    leg_type = (r[2] or "").lower()
+                    contracts = int(r[3] or 0)
+                    # Only infer signed qty when contracts > 0. Legacy fixtures
+                    # often leave contracts NULL/0; in that case we know the
+                    # symbol is open but cannot reliably compare to broker_qty.
+                    if contracts > 0:
+                        if leg_type.startswith("short"):
+                            db_qty_map[sym] = -contracts
+                        elif leg_type.startswith("long"):
+                            db_qty_map[sym] = contracts
         except Exception:
-            pass  # trade_legs table may not exist
+            pass  # trade_legs table may not exist at all
 
         # Always merge metadata symbols (covers DBs without trade_legs table
-        # and catches any legs stored only in metadata JSON)
+        # and catches any legs stored only in metadata JSON). Metadata-only
+        # rows lack qty info, so they participate in orphan/ghost detection
+        # but are excluded from qty_mismatch checks.
         try:
             meta_rows = conn.execute(
                 "SELECT metadata FROM trades "
@@ -1179,9 +1267,29 @@ def check_orphan_positions(
         except Exception:
             pass  # metadata query is best-effort
 
-        # --- Detect orphans and ghosts ---
-        result.orphans = sorted(alpaca_symbols - db_symbols)
-        ghost_symbols = db_symbols - alpaca_symbols
+        # --- G23: qty-mismatch detection.
+        # For symbols on both sides with a known DB qty, compare values.
+        # A qty mismatch is NOT an orphan and NOT a ghost — distinct alert.
+        intersect = alpaca_symbols & db_symbols
+        for sym in sorted(intersect):
+            if sym not in db_qty_map:
+                continue  # legacy/metadata-only row — no qty to compare
+            if sym not in alpaca_qty_known:
+                continue  # broker didn't report qty — cannot compare
+            broker_qty = alpaca_qty_map.get(sym, 0)
+            db_qty = db_qty_map[sym]
+            if broker_qty != db_qty:
+                result.qty_mismatches.append({
+                    "occ_symbol": sym,
+                    "broker_qty": broker_qty,
+                    "db_qty": db_qty,
+                })
+
+        # --- Detect orphans and ghosts.
+        # qty_mismatch symbols are excluded from both lists.
+        mismatch_syms = {qm["occ_symbol"] for qm in result.qty_mismatches}
+        result.orphans = sorted((alpaca_symbols - db_symbols) - mismatch_syms)
+        ghost_symbols = (db_symbols - alpaca_symbols) - mismatch_syms
 
         # Build ghost details from trade_legs
         if ghost_symbols:
@@ -1207,6 +1315,36 @@ def check_orphan_positions(
                         "id": "unknown", "ticker": _ticker_from_occ(sym),
                         "status": "open", "occ_symbol": sym,
                     })
+
+        # --- G23: stale-orphan re-alert.
+        # Any unmanaged DB row older than 24h whose OCC symbol is still
+        # live in the broker is critical: G7 detected it ≥1 day ago and
+        # nobody resolved it. Emit a new critical alert each daily run
+        # until the row is closed or superseded.
+        try:
+            stale_rows = conn.execute(
+                "SELECT id, ticker, metadata, created_at "
+                "FROM trades "
+                "WHERE status = 'unmanaged' "
+                "AND created_at IS NOT NULL "
+                "AND created_at < datetime('now', '-24 hours')"
+            ).fetchall()
+            for sr in stale_rows:
+                sym = ""
+                try:
+                    meta = json.loads(sr["metadata"]) if sr["metadata"] else {}
+                    sym = str(meta.get("occ_symbol", "")).upper()
+                except (json.JSONDecodeError, TypeError):
+                    sym = ""
+                if sym and sym in alpaca_symbols:
+                    result.stale_orphans.append({
+                        "id": sr["id"],
+                        "occ_symbol": sym,
+                        "ticker": sr["ticker"],
+                        "created_at": sr["created_at"],
+                    })
+        except Exception:
+            pass  # best-effort; legacy DBs without metadata are skipped
 
         # --- Consecutive scan tracking ---
         prev_count = _read_orphan_scan_count(conn, exp_id)
@@ -1266,6 +1404,29 @@ def check_orphan_positions(
                 ),
             })
 
+        # G23: one critical alert per qty_mismatch leg (keyed on OCC).
+        # Aggregating by ticker would lose per-leg detail (cc1 review).
+        for qm in result.qty_mismatches:
+            result.alerts.append({
+                "severity": "critical",
+                "message": (
+                    f"Gate 23 qty_mismatch: {qm['occ_symbol']} "
+                    f"broker_qty={qm['broker_qty']} db_qty={qm['db_qty']} "
+                    f"(distinct from orphan/ghost; investigate immediately)."
+                ),
+            })
+
+        # G23: re-alert on stale unmanaged rows (>24h with live broker counterpart).
+        for so in result.stale_orphans:
+            result.alerts.append({
+                "severity": "critical",
+                "message": (
+                    f"Gate 23 stale orphan: {so['occ_symbol']} unmanaged in DB "
+                    f"since {so['created_at']} (>24h) and still live in broker. "
+                    f"Run reconcile_positions or close manually."
+                ),
+            })
+
     finally:
         conn.close()
 
@@ -1319,6 +1480,14 @@ def orphan_gate(
             set_halt(
                 experiment_id,
                 f"Gate7: {len(result.orphans)} simultaneous orphan positions",
+                halted_by="runtime.py:G7",
+                halt_evidence={
+                    "gate_id": "G7",
+                    "metric_name": "orphan_positions",
+                    "stored_value": "0",
+                    "current_value": str(len(result.orphans)),
+                    "threshold": "0",
+                },
             )
         except Exception as exc:
             logger.error("GATE7: failed to halt %s: %s", experiment_id, exc)
@@ -1531,7 +1700,18 @@ def post_scan_check(
                 reason = "; ".join(a.message for a in halt_alerts)
                 try:
                     from sentinel.state import set_halt
-                    set_halt(exp_id, f"Gate 8: {reason}"[:200])
+                    set_halt(
+                        exp_id,
+                        f"Gate 8: {reason}"[:200],
+                        halted_by="runtime.py:G8",
+                        halt_evidence={
+                            "gate_id": "G8",
+                            "metric_name": "runtime_drift",
+                            "stored_value": "baseline",
+                            "current_value": reason[:200],
+                            "threshold": "halt_severity",
+                        },
+                    )
                     logger.critical("SENTINEL HALT via Gate 8: %s", exp_id)
                 except Exception as e:
                     logger.error("Failed to halt %s via Gate 8: %s", exp_id, e)
@@ -1549,7 +1729,18 @@ def post_scan_check(
                 reason = f"Gate 9: {'; '.join(stuck_msgs)}"
                 try:
                     from sentinel.state import set_halt
-                    set_halt(exp_id, reason[:200])
+                    set_halt(
+                        exp_id,
+                        reason[:200],
+                        halted_by="runtime.py:G9",
+                        halt_evidence={
+                            "gate_id": "G9",
+                            "metric_name": "stuck_positions",
+                            "stored_value": "0_critical",
+                            "current_value": f"{len(stuck_msgs)}_critical",
+                            "threshold": "0_critical",
+                        },
+                    )
                     logger.critical("SENTINEL HALT via Gate 9: %s", exp_id)
                 except Exception as e:
                     logger.error("Failed to halt %s via Gate 9: %s", exp_id, e)
@@ -1565,14 +1756,228 @@ def _try_halt(exp_id: str, gate_result: Any, gate_name: str) -> None:
     """Attempt to halt an experiment based on gate result."""
     try:
         from sentinel.state import set_halt
+        # Per-gate-shape evidence: capture the actual breach metric so
+        # `sentinel_cli why-halted` can reconstruct it post-hoc.
         if isinstance(gate_result, SizingResult):
             halt_msgs = [d.message for d in gate_result.deviations if d.severity == "halt"]
             reason = f"{gate_name}: {'; '.join(halt_msgs)}"
+            metric = "trade_sizing"
+            current = "; ".join(halt_msgs)[:200] or "halt-severity deviation"
         elif isinstance(gate_result, OrphanResult):
             reason = f"{gate_name}: {len(gate_result.orphans)} orphan positions"
+            metric = "orphan_positions"
+            current = str(len(gate_result.orphans))
         else:
             reason = f"{gate_name}: threshold breached"
-        set_halt(exp_id, reason[:200])
+            metric = "gate_check"
+            current = "threshold_breached"
+        gate_id = gate_name.replace(" ", "")  # "Gate 6" → "Gate6"
+        set_halt(
+            exp_id,
+            reason[:200],
+            halted_by=f"runtime.py:_try_halt:{gate_id}",
+            halt_evidence={
+                "gate_id": gate_id,
+                "metric_name": metric,
+                "stored_value": "pass",
+                "current_value": current,
+                "threshold": "pass_required",
+            },
+        )
         logger.critical("SENTINEL HALT via %s: %s — %s", gate_name, exp_id, reason[:200])
     except Exception as e:
         logger.error("Failed to halt %s via %s: %s", exp_id, gate_name, e)
+
+
+# ---------------------------------------------------------------------------
+# Gate 22 — Scanner heartbeat
+# ---------------------------------------------------------------------------
+
+# Default freshness window for a scanner heartbeat during market hours.
+_HEARTBEAT_THRESHOLD_MIN = 30
+
+
+def _is_market_hours_et(now_utc: datetime) -> bool:
+    """
+    Return True if *now_utc* lands inside US equity regular trading hours
+    (Mon-Fri 09:30-16:00 America/New_York).  Holidays are NOT modelled here
+    — false positives on holidays are tolerable for a heartbeat gate, and
+    avoiding a holiday calendar dependency keeps this gate self-contained.
+
+    DST is handled correctly via zoneinfo when available; falls back to a
+    fixed UTC-5 offset on systems without tz data.
+    """
+    try:
+        from zoneinfo import ZoneInfo
+        et = now_utc.astimezone(ZoneInfo("America/New_York"))
+    except Exception:
+        # Fallback: assume EDT (UTC-4) March-November, EST (UTC-5) otherwise.
+        # Good enough for a sentinel gate that only gates *alerting*.
+        offset_h = -4 if 3 <= now_utc.month <= 11 else -5
+        et = now_utc + timedelta(hours=offset_h)
+
+    if et.weekday() >= 5:  # 5=Sat, 6=Sun
+        return False
+    open_min = 9 * 60 + 30
+    close_min = 16 * 60
+    minutes_of_day = et.hour * 60 + et.minute
+    return open_min <= minutes_of_day < close_min
+
+
+def check_scanner_heartbeats(
+    db: Any,
+    *,
+    now: Optional[datetime] = None,
+    threshold_minutes: int = _HEARTBEAT_THRESHOLD_MIN,
+) -> List[Dict[str, Any]]:
+    """
+    Gate 22 — flag scanners whose last heartbeat is older than
+    *threshold_minutes* during market hours.
+
+    Returns a list of alert dicts:
+      {gate, severity, scanner_id, message, last_seen, age_minutes}
+
+    Outside market hours this returns [] regardless of staleness; nightly
+    silence is expected.
+    """
+    now = now or datetime.now(timezone.utc)
+    if not _is_market_hours_et(now):
+        return []
+
+    cutoff = now - timedelta(minutes=threshold_minutes)
+    alerts: List[Dict[str, Any]] = []
+
+    for hb in db.get_heartbeats():
+        last_seen_str = hb.get("last_seen")
+        if not last_seen_str:
+            continue
+        try:
+            from sentinel.history import _parse_ts
+            last_seen = _parse_ts(last_seen_str)
+        except Exception:
+            last_seen = None
+        if last_seen is None:
+            continue
+        if last_seen >= cutoff:
+            continue
+
+        age_minutes = int((now - last_seen).total_seconds() // 60)
+        scanner_id = hb["scanner_id"]
+        alerts.append({
+            "gate": "G22",
+            "severity": "warning",
+            "scanner_id": scanner_id,
+            "last_seen": last_seen_str,
+            "age_minutes": age_minutes,
+            "message": (
+                f"G22 scanner heartbeat stale: {scanner_id} last seen "
+                f"{age_minutes}m ago (threshold {threshold_minutes}m)"
+            ),
+        })
+
+    return alerts
+
+
+# ---------------------------------------------------------------------------
+# Gate 24 — Stale-halt nag (market-day-aware)
+# ---------------------------------------------------------------------------
+
+# Thresholds in trading hours (NYSE regular session, Mon-Fri 09:30-16:00 ET).
+# 1 market day ≈ 6.5 trading hours → warning
+# 1 trading week ≈ 32.5 trading hours (5 × 6.5) → critical
+_G24_WARNING_TRADING_HOURS = 6.5
+_G24_CRITICAL_TRADING_HOURS = 32.5
+
+_G24_LEGACY_RECOMMENDATION = (
+    "Halts predating halted_at coverage (pre-2026-04-28) cannot be aged. "
+    "Run `python scripts/sentinel_cli.py why-halted EXP-XXX` for forensic context."
+)
+
+
+@dataclass
+class StaleHaltResult:
+    """Gate 24 outcome."""
+    alerts: List[Dict[str, Any]] = field(default_factory=list)
+    acknowledged: List[str] = field(default_factory=list)
+    legacy_halts: List[str] = field(default_factory=list)
+    legacy_recommendation: str = ""
+
+
+def check_stale_halts(
+    state: Dict[str, Any],
+    *,
+    now: Optional[datetime] = None,
+) -> StaleHaltResult:
+    """Gate 24 — flag halts that have aged past one market day / one trading week.
+
+    Reads ``halted_at`` from each halted experiment in *state* and computes
+    its age in market-trading hours (Mon-Fri 09:30-16:00 ET). Emits a warning
+    at >= 6.5 trading hours and a critical at >= 32.5 trading hours.
+
+    Suppression:
+      - ``halt_acknowledged_stale=True`` → skipped (returned in ``acknowledged``)
+      - missing ``halted_at`` → skipped (returned in ``legacy_halts`` with a
+        recommendation to run ``sentinel_cli why-halted``)
+
+    Active / non-halted experiments are ignored. The function is pure-read:
+    no DB writes, no state.json mutation.
+    """
+    from shared.market_calendar import trading_hours_between
+
+    now = now or datetime.now(timezone.utc)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=timezone.utc)
+
+    result = StaleHaltResult(legacy_recommendation=_G24_LEGACY_RECOMMENDATION)
+
+    experiments = (state or {}).get("experiments", {}) or {}
+    for exp_id in sorted(experiments.keys()):
+        exp = experiments[exp_id]
+        if not isinstance(exp, dict):
+            continue
+        if exp.get("status") != "halted":
+            continue
+
+        if exp.get("halt_acknowledged_stale"):
+            result.acknowledged.append(exp_id)
+            continue
+
+        halted_at_iso = exp.get("halted_at")
+        if not halted_at_iso:
+            result.legacy_halts.append(exp_id)
+            continue
+
+        try:
+            halted_at = datetime.fromisoformat(str(halted_at_iso).replace("Z", "+00:00"))
+        except (ValueError, TypeError):
+            # Malformed timestamp — treat as legacy so an operator can fix it.
+            result.legacy_halts.append(exp_id)
+            continue
+        if halted_at.tzinfo is None:
+            halted_at = halted_at.replace(tzinfo=timezone.utc)
+
+        age_h = trading_hours_between(halted_at, now)
+
+        if age_h >= _G24_CRITICAL_TRADING_HOURS:
+            severity = "critical"
+        elif age_h >= _G24_WARNING_TRADING_HOURS:
+            severity = "warning"
+        else:
+            continue
+
+        result.alerts.append({
+            "gate": "G24",
+            "severity": severity,
+            "experiment_id": exp_id,
+            "halted_at": halted_at_iso,
+            "trading_hours_age": round(age_h, 2),
+            "message": (
+                f"G24 stale halt: {exp_id} halted {age_h:.1f} trading hours ago "
+                f"(reason: {(exp.get('halt_reason') or 'unknown')[:80]}). "
+                f"Run `sentinel_cli why-halted {exp_id}` to investigate, "
+                f"`sentinel_cli ack-stale {exp_id} --by ... --reason ...` to suppress, "
+                f"or `sentinel_cli resume {exp_id} ...` to recover."
+            ),
+        })
+
+    return result

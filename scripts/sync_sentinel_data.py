@@ -44,6 +44,9 @@ SENTINEL_DB_PATH = PROJECT_ROOT / "sentinel" / "db" / "sentinel.db"
 REGISTRY_PATH = PROJECT_ROOT / "experiments" / "registry.json"
 DASHBOARD_EXPORT_PATH = PROJECT_ROOT / "data" / "dashboard_export.json"
 OUTPUT_PATH = PROJECT_ROOT / "data" / "sentinel_dashboard.json"
+# Observability marker — written on every push attempt (success OR failure).
+# Read by the Sentinel meta-monitor to detect a silent push pipeline.
+LAST_PUSH_PATH = PROJECT_ROOT / "data" / ".last_push.json"
 
 # ---------------------------------------------------------------------------
 # Load .env.sync for Railway credentials
@@ -503,12 +506,24 @@ def collect_sentinel_data() -> dict:
             "config_fingerprint": exp_state.get("config_fingerprint"),
             "fingerprint_ok": True,  # Default; set to False if drift detected
             "paper_config": exp_state.get("paper_config"),
+            # Carry over freshness + lifecycle fields the dashboard reads.
+            "last_health_check": exp_state.get("last_health_check"),
+            "sentinel_certified_at": exp_state.get("sentinel_certified_at"),
+            "halt_reason": exp_state.get("halt_reason"),
+            "halted": exp_state.get("halted", False),
+            "account_id": exp_state.get("account_id"),
+            "live_since": exp_state.get("live_since"),
+            "enrolled_at": exp_state.get("enrolled_at"),
         }
 
-        # Backtest baseline
+        # Backtest baseline. Canonical key is 'backtest_baseline' across the
+        # source (sentinel_state.json), the local Python dashboard
+        # (web_dashboard/html.py), and the Next.js Railway dashboard
+        # (web/app/sentinel/page.tsx). The dual-write to 'baseline' was a
+        # transitional shim and has been removed.
         baseline = exp_state.get("backtest_baseline")
         if baseline:
-            exp_data["baseline"] = baseline
+            exp_data["backtest_baseline"] = baseline
 
         # Financial data from dashboard_export.json (Alpaca source of truth)
         dash_exp = dashboard_financial.get(exp_id, {})
@@ -620,8 +635,30 @@ def collect_sentinel_data() -> dict:
 # Railway push
 # ---------------------------------------------------------------------------
 
+def _write_last_push(record: dict) -> None:
+    """
+    Persist a push attempt record to data/.last_push.json.
+
+    Always writes — success OR failure — so the meta-monitor can detect
+    a silently-broken pipeline. Never raises.
+    """
+    record = {**record, "attempted_at": datetime.now(timezone.utc).isoformat()}
+    try:
+        LAST_PUSH_PATH.parent.mkdir(parents=True, exist_ok=True)
+        LAST_PUSH_PATH.write_text(json.dumps(record, indent=2))
+    except Exception as e:  # noqa: BLE001
+        print(f"[sentinel-sync] WARN: could not write {LAST_PUSH_PATH.name}: {e}",
+              file=sys.stderr)
+
+
 def push_to_railway(payload: dict, railway_url: str, token: str) -> bool:
-    """POST the sentinel JSON to Railway's /api/admin/push-sentinel endpoint."""
+    """
+    POST the sentinel JSON to Railway's /api/admin/push-sentinel endpoint.
+
+    Auth: matches the rest of the admin API — `Authorization: Bearer <token>`.
+    Writes data/.last_push.json on every attempt (observability).
+    Returns True on success, False on any failure.
+    """
     import urllib.request
     import urllib.error
 
@@ -633,25 +670,51 @@ def push_to_railway(payload: dict, railway_url: str, token: str) -> bool:
         data=body,
         headers={
             "Content-Type": "application/json",
-            "X-API-Key": token,
+            "Authorization": f"Bearer {token}",
         },
         method="POST",
     )
 
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
-            result = json.loads(resp.read().decode())
-            print(f"[sentinel-sync] Push OK: {result.get('pushed_at', 'unknown')}")
+            raw = resp.read().decode()
+            result = json.loads(raw) if raw else {}
+            railway_pushed_at = result.get("pushed_at", "unknown")
+            print(f"[sentinel-sync] Push OK: {railway_pushed_at}")
+            _write_last_push({
+                "ok": True,
+                "http_status": resp.status,
+                "url": url,
+                "bytes": len(body),
+                "railway_pushed_at": railway_pushed_at,
+            })
             return True
     except urllib.error.HTTPError as e:
-        print(f"[sentinel-sync] Push FAILED: HTTP {e.code}", file=sys.stderr)
+        body_text = ""
         try:
-            print(f"  Response: {e.read().decode()}", file=sys.stderr)
+            body_text = e.read().decode()
         except Exception:
             pass
+        print(f"[sentinel-sync] Push FAILED: HTTP {e.code}", file=sys.stderr)
+        if body_text:
+            print(f"  Response: {body_text}", file=sys.stderr)
+        _write_last_push({
+            "ok": False,
+            "http_status": e.code,
+            "url": url,
+            "bytes": len(body),
+            "error": body_text or f"HTTP {e.code}",
+        })
         return False
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"[sentinel-sync] Push FAILED: {e}", file=sys.stderr)
+        _write_last_push({
+            "ok": False,
+            "http_status": None,
+            "url": url,
+            "bytes": len(body),
+            "error": str(e),
+        })
         return False
 
 

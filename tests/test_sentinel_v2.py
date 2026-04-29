@@ -329,12 +329,18 @@ class TestHealthScore:
         assert score == 0
 
     def test_critical_gate_reduces_score(self):
+        """A non-G3 critical gate must deduct ~30 points from the score.
+
+        (G3 is intentionally excluded from the gate-severity loop — its
+        signal goes through the smooth staleness penalty instead, which
+        eliminated the old 24h-boundary cliff. See test_sentinel_health_score.)
+        """
         from web_dashboard.html import _compute_health_score
         exp = {
             "status": "active",
             "last_health_check": datetime.now(timezone.utc).isoformat(),
         }
-        gates = {"G3": {"severity": "critical"}}
+        gates = {"G2": {"severity": "critical"}}
         score = _compute_health_score(exp, gates)
         assert score <= 70
 
@@ -513,13 +519,18 @@ class TestGatePrecedence:
         assert score == 70  # 100 - 3*10
 
     def test_critical_plus_warning(self):
+        """Critical + warning on non-G3 gates: 100 - 30 - 10 = 60.
+
+        G3 is intentionally excluded from the gate-severity loop (see
+        _compute_health_score docstring), so we use G8 here instead of G3.
+        """
         from web_dashboard.html import _compute_health_score
         exp = {
             "status": "active",
             "last_health_check": datetime.now(timezone.utc).isoformat(),
         }
         gates = {
-            "G3": {"severity": "critical"},
+            "G8": {"severity": "critical"},
             "G2": {"severity": "warning"},
         }
         score = _compute_health_score(exp, gates)

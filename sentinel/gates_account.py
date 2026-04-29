@@ -1035,7 +1035,22 @@ def _do_halt(exp_id: str, reason: str) -> None:
     """Halt an experiment via sentinel state."""
     try:
         from sentinel.state import set_halt
-        set_halt(exp_id, reason[:200])
+        # Best-effort gate id extraction from the reason prefix
+        # ("Gate16: ..." → "Gate16"); otherwise tag as account-gate.
+        head = reason.split(":", 1)[0].strip().replace(" ", "")
+        gate_id = head if head.lower().startswith("gate") else "gates_account"
+        set_halt(
+            exp_id,
+            reason[:200],
+            halted_by=f"sentinel/gates_account.py:{gate_id}",
+            halt_evidence={
+                "gate_id": gate_id,
+                "metric_name": "account_gate",
+                "stored_value": "pass",
+                "current_value": reason[:200],
+                "threshold": "pass_required",
+            },
+        )
         logger.critical("SENTINEL HALT: %s — %s", exp_id, reason[:200])
     except Exception as e:
         logger.error("Failed to halt %s: %s", exp_id, e)

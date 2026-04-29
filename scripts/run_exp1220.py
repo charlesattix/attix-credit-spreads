@@ -671,6 +671,9 @@ def run_scan(config: dict, state: dict, client: AlpacaClient, dry_run: bool):
 
     # Size position
     acct = client.get_account()
+    # Sentinel G22 — confirmed-alive heartbeat after Alpaca call.
+    from sentinel.heartbeat import emit_heartbeat
+    emit_heartbeat("EXP-1220", notes="account ok")
     equity = float(acct["equity"])
     contracts = compute_contracts(equity, config, width, estimated_credit)
     if contracts < 1:
@@ -1035,6 +1038,10 @@ def main():
         # Run the scan
         run_scan(config, state, client, args.dry_run)
         log.info("Scan complete.")
+
+        # Sentinel G22 — heartbeat at end of scan iteration.
+        from sentinel.heartbeat import emit_heartbeat
+        emit_heartbeat("EXP-1220", notes="scan complete")
 
         # Write health: OK
         open_positions = sum(1 for p in state.get("positions", [])

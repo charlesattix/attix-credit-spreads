@@ -785,6 +785,10 @@ def main() -> int:
     }
     print("\n--- SUMMARY ---")
     print(json.dumps(summary, indent=2, default=str))
+
+    # Sentinel G22 — heartbeat at end of scan iteration.
+    from sentinel.heartbeat import emit_heartbeat
+    emit_heartbeat("EXP-307", notes="scan complete")
     return 0
 
 

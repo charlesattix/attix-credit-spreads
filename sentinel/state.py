@@ -48,14 +48,21 @@ VALID_SENTINEL_STATUSES = {"active", "halted", "paused", "retired"}
 # ---------------------------------------------------------------------------
 
 def load_state() -> dict[str, Any]:
-    """Load sentinel_state.json from disk. Raises FileNotFoundError if missing."""
+    """Load sentinel_state.json from disk. Raises FileNotFoundError if missing.
+
+    Normalizes legacy timestamp strings (naive ``YYYY-MM-DDTHH:MM`` produced
+    by older ``_now_iso``) into full ISO 8601 with UTC offset on the way in,
+    so callers always see tz-aware values.
+    """
     if not STATE_PATH.exists():
         raise FileNotFoundError(
             f"sentinel_state.json not found at {STATE_PATH}. "
             "Run `python scripts/init_sentinel.py` to initialise."
         )
     with open(STATE_PATH) as f:
-        return json.load(f)
+        state = json.load(f)
+    _normalize_state_timestamps(state)
+    return state
 
 
 def save_state(state: dict[str, Any]) -> None:
@@ -96,12 +103,31 @@ def list_active(state: dict[str, Any]) -> list[str]:
 # Halt / clear-halt
 # ---------------------------------------------------------------------------
 
-def set_halt(exp_id: str, reason: str) -> None:
-    """Halt *exp_id*. Writes sentinel_state.json atomically."""
+def set_halt(
+    exp_id: str,
+    reason: str,
+    *,
+    halted_by: str | None = None,
+    halt_evidence: dict[str, Any] | None = None,
+) -> None:
+    """Halt *exp_id*. Writes sentinel_state.json atomically.
+
+    Always stamps ``halted_at`` (UTC ISO 8601). When supplied,
+    ``halted_by`` (e.g. ``"guards.py:G2"`` or ``"sentinel_daily"``) and
+    ``halt_evidence`` (dict with ``gate_id``, ``metric_name``,
+    ``stored_value``, ``current_value``, ``threshold``) are persisted
+    so ``sentinel_cli why-halted`` can reconstruct the cause later.
+    Both kwargs are optional for backwards-compat with old call sites.
+    """
     state = load_state()
     exp = get_experiment(state, exp_id)
     exp["status"] = "halted"
     exp["halt_reason"] = reason
+    exp["halted_at"] = _now_iso()
+    if halted_by is not None:
+        exp["halted_by"] = halted_by
+    if halt_evidence is not None:
+        exp["halt_evidence"] = halt_evidence
     save_state(state)
 
 
@@ -165,6 +191,27 @@ def record_health_check(exp_id: str) -> None:
     save_state(state)
 
 
+def record_health_checks(exp_ids: list[str]) -> None:
+    """Stamp last_health_check for many experiments in a single load/save cycle.
+
+    Cheaper than calling :func:`record_health_check` in a loop because the
+    JSON file is read and written exactly once. Missing experiment IDs are
+    skipped with a no-op (no KeyError) so callers can pass a wider list
+    safely.
+    """
+    if not exp_ids:
+        return
+    state = load_state()
+    experiments = state.get("experiments", {})
+    now = _now_iso()
+    for exp_id in exp_ids:
+        exp = experiments.get(exp_id)
+        if exp is None:
+            continue
+        exp["last_health_check"] = now
+    save_state(state)
+
+
 # ---------------------------------------------------------------------------
 # SENTINEL certification
 # ---------------------------------------------------------------------------
@@ -182,4 +229,52 @@ def certify(exp_id: str) -> None:
 # ---------------------------------------------------------------------------
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M")
+    """Current UTC time as ISO 8601 with seconds and offset.
+
+    Example: ``2026-04-28T12:18:51+00:00``
+    """
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+# Fields whose values should be tz-aware ISO 8601 strings. Legacy entries
+# may have been written as naive ``YYYY-MM-DDTHH:MM`` — the loader pads
+# those to full ISO with ``+00:00`` so consumers don't need branchy parse
+# logic.
+_TIMESTAMP_FIELDS = (
+    "last_health_check",
+    "sentinel_certified_at",
+    "halted_at",
+    "resumed_at",
+    "last_approved_at",
+)
+
+
+def _coerce_iso_utc(value: Any) -> Any:
+    """Return *value* as a tz-aware ISO 8601 string, or pass through unchanged.
+
+    Handles legacy ``YYYY-MM-DDTHH:MM`` (naive, minute precision) by padding
+    seconds and a ``+00:00`` offset. Anything that isn't a non-empty string,
+    or already contains tz info, is returned untouched.
+    """
+    if not isinstance(value, str) or not value:
+        return value
+    # Already tz-aware (ends with Z or ±HH:MM).
+    if value.endswith("Z") or value[-6:-3] == ":" and value[-6] in "+-":
+        return value
+    # Naive ``YYYY-MM-DDTHH:MM`` or ``YYYY-MM-DDTHH:MM:SS``.
+    if len(value) == 16:           # YYYY-MM-DDTHH:MM
+        return f"{value}:00+00:00"
+    if len(value) == 19:           # YYYY-MM-DDTHH:MM:SS
+        return f"{value}+00:00"
+    return value
+
+
+def _normalize_state_timestamps(state: dict[str, Any]) -> None:
+    """In-place: coerce known timestamp fields to tz-aware ISO 8601."""
+    state["last_updated"] = _coerce_iso_utc(state.get("last_updated"))
+    for exp in state.get("experiments", {}).values():
+        if not isinstance(exp, dict):
+            continue
+        for field in _TIMESTAMP_FIELDS:
+            if field in exp:
+                exp[field] = _coerce_iso_utc(exp[field])

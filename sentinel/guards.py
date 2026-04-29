@@ -137,6 +137,14 @@ def pre_scan_check(experiment_id: str, config_path: Optional[str] = None) -> Non
                     _state_set_halt(
                         experiment_id,
                         "config drift detected (scan startup fingerprint check)",
+                        halted_by="guards.py:G2",
+                        halt_evidence={
+                            "gate_id": "G2",
+                            "metric_name": "config_fingerprint",
+                            "stored_value": stored_fp,
+                            "current_value": current_fp,
+                            "threshold": "exact_match",
+                        },
                     )
                 except Exception as exc:
                     logger.error("SENTINEL: failed to persist halt for %s: %s", experiment_id, exc)

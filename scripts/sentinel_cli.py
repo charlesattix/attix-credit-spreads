@@ -14,6 +14,7 @@ import argparse
 import json
 import logging
 import os
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -296,6 +297,370 @@ def cmd_resolve(args):
         return 1
 
 
+def cmd_resume(args):
+    """Atomically resume a halted experiment (FU#5).
+
+    All-or-nothing:
+      1. Load sentinel_state.json
+      2. Look up experiment; bail if missing or already active+!halted
+      3. Compute fresh config_fingerprint from paper_config
+      4. Pull current account_id from experiments/registry.json
+      5. Apply: status='active', halted=False, halt_reason=None,
+         halted_at=None, halted_by=None, resumed_at/by/reason set
+      6. save_state() — atomic tmp+rename; if it raises, on-disk file is
+         untouched and we return rc=3
+      7. (--restart) launchctl unload+load the experiment plist
+      8. Print before/after diff
+    """
+    from sentinel.state import compute_fingerprint, load_state, save_state
+
+    exp_id = args.experiment_id
+    reason = args.reason
+    by = args.by
+    restart = bool(getattr(args, "restart", False))
+
+    try:
+        state = load_state()
+    except FileNotFoundError as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        return 2
+
+    experiments = state.get("experiments", {})
+    if exp_id not in experiments:
+        print(
+            f"ERROR: {exp_id} not enrolled in sentinel_state.json",
+            file=sys.stderr,
+        )
+        return 2
+
+    exp = experiments[exp_id]
+
+    is_halted = exp.get("status") == "halted" or exp.get("halted") is True
+    if not is_halted:
+        print(
+            f"WARNING: {exp_id} is not halted "
+            f"(status={exp.get('status')!r}, halted={exp.get('halted')!r}). No-op."
+        )
+        return 0
+
+    # Snapshot before-state for diff + in-memory rollback.
+    before = {
+        "status": exp.get("status"),
+        "halted": exp.get("halted"),
+        "halt_reason": exp.get("halt_reason"),
+        "halted_at": exp.get("halted_at"),
+        "halted_by": exp.get("halted_by"),
+        "halt_acknowledged_stale": exp.get("halt_acknowledged_stale"),
+        "halt_acknowledged_by": exp.get("halt_acknowledged_by"),
+        "halt_acknowledged_at": exp.get("halt_acknowledged_at"),
+        "config_fingerprint": exp.get("config_fingerprint"),
+        "account_id": exp.get("account_id"),
+        "resumed_at": exp.get("resumed_at"),
+        "resumed_by": exp.get("resumed_by"),
+        "resume_reason": exp.get("resume_reason"),
+    }
+
+    # Pull current account from registry.
+    registry = _load_registry()
+    reg_exp = registry.get("experiments", {}).get(exp_id, {})
+    new_account_id = (
+        reg_exp.get("account_id")
+        or reg_exp.get("alpaca_account_id")
+        or before["account_id"]
+    )
+
+    # Compute fresh fingerprint from paper_config.
+    paper_config = exp.get("paper_config")
+    new_fingerprint = before["config_fingerprint"]
+    if paper_config:
+        cfg_path = _PROJECT_ROOT / paper_config
+        if not cfg_path.exists():
+            print(
+                f"ERROR: paper_config not found: {paper_config}",
+                file=sys.stderr,
+            )
+            return 3
+        try:
+            new_fingerprint = compute_fingerprint(str(cfg_path))
+        except OSError as e:
+            print(f"ERROR: cannot read paper_config: {e}", file=sys.stderr)
+            return 3
+
+    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+    # Apply changes in memory.
+    exp["status"] = "active"
+    exp["halted"] = False
+    exp["halt_reason"] = None
+    exp["halted_at"] = None
+    exp["halted_by"] = None
+    # Clear any G24 stale-halt acknowledgement so a future re-halt starts fresh.
+    exp["halt_acknowledged_stale"] = None
+    exp["halt_acknowledged_by"] = None
+    exp["halt_acknowledged_at"] = None
+    exp["config_fingerprint"] = new_fingerprint
+    exp["account_id"] = new_account_id
+    exp["resumed_at"] = now
+    exp["resumed_by"] = by
+    exp["resume_reason"] = reason
+
+    # Atomic save — if it raises, restore in-memory state so callers/tests
+    # see no partial mutation. (save_state itself writes via tmp+rename, so
+    # the on-disk file is unchanged when an exception escapes.)
+    try:
+        save_state(state)
+    except Exception as e:  # noqa: BLE001
+        for k, v in before.items():
+            exp[k] = v
+        print(f"ERROR: save_state failed: {e}", file=sys.stderr)
+        return 3
+
+    # Print before/after diff.
+    def _short(v):
+        if isinstance(v, str) and len(v) > 16:
+            return v[:12] + "..."
+        return repr(v)
+
+    print(f"Resumed {exp_id}:")
+    print(f"  status:             {before['status']!r} -> {exp['status']!r}")
+    print(f"  halted:             {before['halted']!r} -> {exp['halted']!r}")
+    print(f"  halt_reason:        {before['halt_reason']!r} -> {exp['halt_reason']!r}")
+    print(f"  config_fingerprint: {_short(before['config_fingerprint'])} -> {_short(exp['config_fingerprint'])}")
+    print(f"  account_id:         {before['account_id']!r} -> {exp['account_id']!r}")
+    print(f"  resumed_at:         {now}")
+    print(f"  resumed_by:         {by}")
+    print(f"  resume_reason:      {reason}")
+
+    # Optional --restart via launchctl. Plist convention:
+    # com.pilotai.exp{NNN}.plist in ~/Library/LaunchAgents/.
+    if restart:
+        suffix = exp_id.lower().replace("exp-", "exp").replace("-", "")
+        plist_name = f"com.pilotai.{suffix}.plist"
+        plist_path = str(Path.home() / "Library" / "LaunchAgents" / plist_name)
+        print(f"\nRestarting via launchctl: {plist_path}")
+        subprocess.run(
+            ["launchctl", "unload", plist_path],
+            capture_output=True,
+            check=False,
+        )
+        subprocess.run(
+            ["launchctl", "load", plist_path],
+            capture_output=True,
+            check=False,
+        )
+        print("launchctl unload+load complete.")
+
+    return 0
+
+
+def cmd_ack_stale(args):
+    """Acknowledge a halt as 'known stale' so Gate 24 stops nagging (Branch 8 / G24).
+
+    Sets three fields on the experiment in sentinel_state.json:
+      - halt_acknowledged_stale = True
+      - halt_acknowledged_by    = <args.by>
+      - halt_acknowledged_at    = <UTC ISO 8601>
+
+    Optionally records ``halt_acknowledged_reason`` for forensic context.
+    Does NOT change status / halted / halt_reason — the experiment stays
+    halted; only the G24 nag is suppressed. ``sentinel_cli resume`` clears
+    these fields atomically as part of resume.
+    """
+    from sentinel.state import load_state, save_state
+
+    exp_id = args.experiment_id
+    by = args.by
+    reason = args.reason
+
+    try:
+        state = load_state()
+    except FileNotFoundError as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        return 2
+
+    experiments = state.get("experiments", {})
+    if exp_id not in experiments:
+        print(
+            f"ERROR: {exp_id} not enrolled in sentinel_state.json",
+            file=sys.stderr,
+        )
+        return 2
+
+    exp = experiments[exp_id]
+    if exp.get("status") != "halted":
+        print(
+            f"ERROR: {exp_id} is not halted (status={exp.get('status')!r}); "
+            "ack-stale only applies to halted experiments.",
+            file=sys.stderr,
+        )
+        return 1
+
+    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+    # Snapshot for in-memory rollback on save failure.
+    before = {
+        "halt_acknowledged_stale": exp.get("halt_acknowledged_stale"),
+        "halt_acknowledged_by": exp.get("halt_acknowledged_by"),
+        "halt_acknowledged_at": exp.get("halt_acknowledged_at"),
+        "halt_acknowledged_reason": exp.get("halt_acknowledged_reason"),
+    }
+
+    exp["halt_acknowledged_stale"] = True
+    exp["halt_acknowledged_by"] = by
+    exp["halt_acknowledged_at"] = now
+    exp["halt_acknowledged_reason"] = reason
+
+    try:
+        save_state(state)
+    except Exception as e:  # noqa: BLE001
+        for k, v in before.items():
+            exp[k] = v
+        print(f"ERROR: save_state failed: {e}", file=sys.stderr)
+        return 3
+
+    print(f"Acknowledged stale halt for {exp_id}:")
+    print(f"  halt_acknowledged_stale: True")
+    print(f"  halt_acknowledged_by   : {by}")
+    print(f"  halt_acknowledged_at   : {now}")
+    print(f"  halt_acknowledged_reason: {reason}")
+    print(f"  (status remains 'halted' — use `resume` to recover)")
+    return 0
+
+
+def cmd_why_halted(args):
+    """Explain WHY an experiment is halted, with evidence vs current state (FU#6).
+
+    Reads halted_at, halted_by, halt_reason, halt_evidence from
+    sentinel_state.json and prints:
+      - Halt reason
+      - Halted at (with age in days)
+      - Halted by
+      - Reason class (drawdown / config_drift / non_functional / api_failed / manual)
+      - Markdown table of contributing gate(s) — for G2 fingerprint we
+        recompute current_value from disk so an operator can see whether
+        the drift still applies.
+
+    Legacy halts without halted_at print
+    ``halted_at: unknown (pre-2026-04-28)`` (display-only synthetic
+    backfill — no file mutation).
+    """
+    exp_id = args.experiment_id
+    state = _load_sentinel_state()
+    experiments = state.get("experiments", {})
+
+    exp = experiments.get(exp_id)
+    if exp is None:
+        print(f"ERROR: {exp_id} not enrolled in sentinel_state.json", file=sys.stderr)
+        return 2
+
+    if exp.get("status") != "halted":
+        print(
+            f"WARNING: {exp_id} is not halted (status={exp.get('status')!r}). "
+            "Nothing to explain."
+        )
+        return 1
+
+    halt_reason = exp.get("halt_reason") or "(no reason recorded)"
+    halted_at = exp.get("halted_at")
+    halted_by = exp.get("halted_by") or "(unknown)"
+    halt_evidence = exp.get("halt_evidence") or {}
+
+    # Header block
+    print(f"Why halted: {exp_id}")
+    print(f"  Halt reason   : {halt_reason}")
+
+    if halted_at:
+        age_str = _format_halt_age(halted_at)
+        print(f"  Halted at     : {halted_at}{age_str}")
+    else:
+        # Display-only synthetic backfill (no on-disk mutation).
+        print("  Halted at     : unknown (pre-2026-04-28)")
+
+    print(f"  Halted by     : {halted_by}")
+    print(f"  Reason class  : {_classify_halt(halt_reason, halt_evidence)}")
+
+    # Evidence table
+    if halt_evidence:
+        print()
+        print("  | Gate | Metric             | Stored value     | Threshold     | Current value    | Stale?            |")
+        print("  |------|--------------------|------------------|---------------|------------------|-------------------|")
+
+        gate_id = halt_evidence.get("gate_id", "?")
+        metric = halt_evidence.get("metric_name", "?")
+        stored = halt_evidence.get("stored_value", "?")
+        threshold = halt_evidence.get("threshold", "?")
+        current = halt_evidence.get("current_value", "?")
+        stale_label = "n/a"
+
+        # G2 fingerprint: recompute current from disk.
+        if gate_id == "G2" and metric == "config_fingerprint":
+            paper_config = exp.get("paper_config")
+            if paper_config:
+                cfg_path = _PROJECT_ROOT / paper_config
+                if cfg_path.exists():
+                    try:
+                        from sentinel.state import compute_fingerprint
+                        current = compute_fingerprint(str(cfg_path))
+                    except Exception:  # noqa: BLE001
+                        current = "(read failed)"
+                else:
+                    current = "(config missing)"
+            # Stale flag: if recomputed current still differs from stored,
+            # drift is still present. If they now match, the halt is stale.
+            if isinstance(stored, str) and isinstance(current, str):
+                stale_label = (
+                    "stale (drift cleared)"
+                    if current == stored
+                    else "drift confirmed"
+                )
+
+        print(
+            f"  | {gate_id:<4} | {_clip(metric, 18):<18} | "
+            f"{_clip(stored, 16):<16} | {_clip(threshold, 13):<13} | "
+            f"{_clip(current, 16):<16} | {stale_label:<17} |"
+        )
+    else:
+        print()
+        print("  (no halt_evidence recorded — likely a legacy or manual halt)")
+
+    return 0
+
+
+def _clip(value: object, n: int) -> str:
+    s = str(value) if value is not None else ""
+    return s if len(s) <= n else s[: n - 1] + "…"
+
+
+def _format_halt_age(halted_at: str) -> str:
+    try:
+        dt = datetime.fromisoformat(halted_at.replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        age_d = (datetime.now(timezone.utc) - dt).total_seconds() / 86400
+        if age_d < 1:
+            return f" ({age_d * 24:.1f} hours ago)"
+        return f" ({age_d:.0f} days ago)"
+    except (ValueError, TypeError):
+        return ""
+
+
+def _classify_halt(reason: str, evidence: dict) -> str:
+    """Heuristic mapping of halt_reason / evidence → reason class."""
+    gate_id = (evidence or {}).get("gate_id", "")
+    metric = ((evidence or {}).get("metric_name") or "").lower()
+    text = (reason or "").lower()
+
+    if gate_id == "G2" or "fingerprint" in metric or "drift" in text and "config" in text:
+        return "config_drift"
+    if "drawdown" in text or "drawdown" in metric:
+        return "drawdown"
+    if "non-functional" in text or "non_functional" in text or "no completed trades" in text:
+        return "non_functional"
+    if "api" in text or "401" in text or "403" in text or "auth" in text:
+        return "api_failed"
+    return "manual"
+
+
 def cmd_report(args):
     """Generate daily health report."""
     state = _load_sentinel_state()
@@ -378,6 +743,30 @@ def _build_parser() -> argparse.ArgumentParser:
     resolve_p.add_argument("--operator", help="Operator name")
     resolve_p.add_argument("--note", help="Resolution note")
 
+    # resume
+    resume_p = sub.add_parser("resume", help="Atomically resume a halted experiment")
+    resume_p.add_argument("experiment_id", help="Experiment ID (e.g., EXP-503)")
+    resume_p.add_argument("--reason", required=True, help="Reason for resuming")
+    resume_p.add_argument("--by", required=True, help="Operator name")
+    resume_p.add_argument(
+        "--restart",
+        action="store_true",
+        help="Also unload+load the experiment's launchd plist",
+    )
+
+    # ack-stale (Branch 8 / G24)
+    ack_p = sub.add_parser(
+        "ack-stale",
+        help="Acknowledge a halt as known-stale (suppresses Gate 24 nag)",
+    )
+    ack_p.add_argument("experiment_id", help="Experiment ID (e.g., EXP-503)")
+    ack_p.add_argument("--by", required=True, help="Operator name")
+    ack_p.add_argument("--reason", required=True, help="Why the halt is being acknowledged as stale")
+
+    # why-halted
+    why_p = sub.add_parser("why-halted", help="Explain why an experiment is halted")
+    why_p.add_argument("experiment_id", help="Experiment ID (e.g., EXP-503)")
+
     # report
     report_p = sub.add_parser("report", help="Generate daily health report")
     report_p.add_argument("--html", action="store_true", help="Also generate HTML report")
@@ -396,6 +785,9 @@ def main() -> int:
         "check": cmd_check,
         "alerts": cmd_alerts,
         "resolve": cmd_resolve,
+        "resume": cmd_resume,
+        "ack-stale": cmd_ack_stale,
+        "why-halted": cmd_why_halted,
         "report": cmd_report,
     }
     return dispatch[args.command](args)
