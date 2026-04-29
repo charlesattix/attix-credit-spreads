@@ -13,7 +13,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +43,11 @@ class ExperimentHealth:
     open_positions: int = 0
     last_order_at: Optional[str] = None
     last_order_age_days: Optional[int] = None
+
+    # Live position list (populated when api_ok). Each item: {symbol, qty}.
+    # Used by orchestrator-side Gate 23 reconciliation in cmd_daily so G7
+    # runs even for sentinel-halted experiments (halt-bypass).
+    positions: List[Dict[str, Any]] = field(default_factory=list)
 
     # Detection flags
     is_orphan: bool = False       # retired but has equity
@@ -172,6 +177,15 @@ def check_experiment(
 
         positions = client.get_all_positions()
         health.open_positions = len(positions)
+        # Surface positions for orchestrator-side Gate 23 reconciliation.
+        # Defensive: tolerate unexpected position shapes.
+        try:
+            health.positions = [
+                {"symbol": str(p.symbol), "qty": str(p.qty)}
+                for p in positions
+            ]
+        except Exception:  # noqa: BLE001
+            health.positions = []
 
         # Most recent order — tells us when trading was last active
         try:
