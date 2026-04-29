@@ -1361,15 +1361,46 @@ _SENTINEL_CSS = """
 """
 
 
+def _classify_experiment_severity(status: str, gates: dict) -> str:
+    """
+    Decide which summary bucket this experiment belongs to.
+
+    Returns one of: "halted" | "critical" | "warning" | "ok".
+    Aggregates per-gate severity (NOT score band) so the counters cannot lie.
+    A halted experiment counts as halted only — never double-counted as
+    critical even if gate severities also include "critical" or "halt".
+    """
+    severities = {g.get("severity", "ok") for g in gates.values()}
+    if status == "halted" or "halt" in severities:
+        return "halted"
+    if "critical" in severities:
+        return "critical"
+    if "warning" in severities:
+        return "warning"
+    return "ok"
+
+
 def _compute_health_score(exp_state: dict, gates: dict) -> int:
-    """Compute health score 0-100 for an experiment based on state and gate results."""
+    """
+    Compute health score 0-100 for an experiment based on state and gate results.
+
+    Staleness is applied EXACTLY ONCE — via sentinel.cadence.staleness_score_penalty
+    on `last_health_check` age. The G3 gate is shown to the user as a pill but
+    is intentionally excluded from the gate-severity loop here, so we don't
+    double-deduct the same staleness signal (which used to produce a -25 cliff
+    at the 24h boundary).
+    """
+    from sentinel.cadence import staleness_score_penalty
+
     if exp_state.get("status") == "halted":
         return 0
 
     score = 100
 
-    # Gate severities
+    # Gate severities (G3 handled separately via the smooth staleness penalty)
     for gate_id, gate_info in gates.items():
+        if gate_id == "G3":
+            continue
         sev = gate_info.get("severity", "ok")
         if sev == "halt":
             return 0
@@ -1378,7 +1409,7 @@ def _compute_health_score(exp_state: dict, gates: dict) -> int:
         elif sev == "warning":
             score -= 10
 
-    # Stale health check
+    # Single staleness penalty (smooth gradient — no cliffs)
     last_hc = exp_state.get("last_health_check")
     if last_hc:
         try:
@@ -1386,10 +1417,7 @@ def _compute_health_score(exp_state: dict, gates: dict) -> int:
             if hc_dt.tzinfo is None:
                 hc_dt = hc_dt.replace(tzinfo=timezone.utc)
             age_h = (datetime.now(timezone.utc) - hc_dt).total_seconds() / 3600
-            if age_h > 48:
-                score -= 20
-            elif age_h > 24:
-                score -= 5
+            score -= staleness_score_penalty(age_h)
         except (ValueError, TypeError):
             score -= 10
     else:
@@ -1481,12 +1509,12 @@ def render_sentinel_page(
                 if hc_dt.tzinfo is None:
                     hc_dt = hc_dt.replace(tzinfo=timezone.utc)
                 age_h = (datetime.now(timezone.utc) - hc_dt).total_seconds() / 3600
-                if age_h < 2:
-                    gates["G3"] = {"severity": "ok", "detail": f"{age_h:.1f}h ago"}
-                elif age_h < 24:
-                    gates["G3"] = {"severity": "warning", "detail": f"{age_h:.1f}h ago"}
-                else:
-                    gates["G3"] = {"severity": "critical", "detail": f"{age_h:.0f}h stale"}
+                # Cadence-aware severity: scales automatically with the cron
+                # interval so G3 doesn't cliff at hard-coded 24h literals.
+                from sentinel.cadence import StalenessThresholds
+                sev = StalenessThresholds.from_cadence().severity_for_age(age_h)
+                detail = f"{age_h:.1f}h ago" if sev in ("ok", "warning") else f"{age_h:.0f}h stale"
+                gates["G3"] = {"severity": sev, "detail": detail}
             except (ValueError, TypeError):
                 gates["G3"] = {"severity": "warning", "detail": "invalid timestamp"}
 
@@ -1499,11 +1527,14 @@ def render_sentinel_page(
         score = _compute_health_score(exp, gates)
         total_score += score
 
-        if status == "halted":
+        # Counters aggregate per-gate severity (NOT score band) so the summary
+        # never lies even if the score formula evolves.
+        bucket = _classify_experiment_severity(status, gates)
+        if bucket == "halted":
             halted_count += 1
-        if score < 50:
+        elif bucket == "critical":
             critical_count += 1
-        elif score < 80:
+        elif bucket == "warning":
             warning_count += 1
 
         # Score badge class

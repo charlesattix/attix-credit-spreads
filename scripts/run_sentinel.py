@@ -194,6 +194,89 @@ def _load_paper_config(config_path: str) -> Optional[Dict]:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Push-pipeline meta-monitor
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Path written by scripts/sync_sentinel_data.py on every push attempt.
+_LAST_PUSH_PATH = _PROJECT_ROOT / "data" / ".last_push.json"
+
+# Multiple of expected_cadence_seconds() before we consider the push pipeline
+# silent. Default is 3 — i.e. three missed cycles. With hourly cadence that's
+# 3 hours; with daily cadence that's 3 days.
+_PUSH_STALE_MULTIPLE = 3
+
+
+def check_push_pipeline_freshness(
+    db: "SentinelDB",
+    last_push_path: Optional[Path] = None,
+) -> Optional[Dict[str, Any]]:
+    """
+    Detect a silently-broken push pipeline.
+
+    Reads data/.last_push.json. Emits a CRITICAL alert if:
+      - the file is missing entirely (push has never succeeded), OR
+      - the most recent attempt FAILED, OR
+      - the most recent attempt is older than 3x the expected cadence.
+
+    Returns a dict describing the issue (for tests / introspection), or None
+    if the pipeline looks healthy. Never raises.
+    """
+    from sentinel.cadence import expected_cadence_seconds
+
+    path = last_push_path or _LAST_PUSH_PATH
+    cadence_s = expected_cadence_seconds()
+    stale_threshold_s = cadence_s * _PUSH_STALE_MULTIPLE
+
+    def _alert(message: str) -> Dict[str, Any]:
+        db.record_alert("critical", f"[meta-monitor] {message}")
+        print(f"   🚨 META-MONITOR: {message}")
+        return {"ok": False, "message": message}
+
+    if not path.exists():
+        return _alert(
+            "Sentinel push pipeline has never reported a successful push — "
+            "Railway dashboard is showing stale data. Check sentinel-cron.sh "
+            "and sync_sentinel_data.py."
+        )
+
+    try:
+        record = json.loads(path.read_text())
+    except (OSError, ValueError) as e:
+        return _alert(f"Could not read {path.name}: {e}")
+
+    attempted_at = record.get("attempted_at")
+    if not attempted_at:
+        return _alert(f"{path.name} has no attempted_at timestamp — file corrupt?")
+
+    try:
+        attempt_dt = datetime.fromisoformat(attempted_at.replace("Z", "+00:00"))
+        if attempt_dt.tzinfo is None:
+            attempt_dt = attempt_dt.replace(tzinfo=timezone.utc)
+    except (TypeError, ValueError) as e:
+        return _alert(f"Invalid attempted_at in {path.name}: {e}")
+
+    age_s = (datetime.now(timezone.utc) - attempt_dt).total_seconds()
+
+    if not record.get("ok"):
+        return _alert(
+            f"Last push attempt FAILED ({record.get('http_status', 'no http')}): "
+            f"{(record.get('error') or 'unknown error')[:120]} "
+            f"({age_s/3600:.1f}h ago)"
+        )
+
+    if age_s > stale_threshold_s:
+        return _alert(
+            f"Push pipeline silent for {age_s/3600:.1f}h "
+            f"(threshold: {stale_threshold_s/3600:.1f}h, "
+            f"cadence: {cadence_s/3600:.1f}h × {_PUSH_STALE_MULTIPLE}). "
+            f"Railway dashboard is stale."
+        )
+
+    print(f"   ✅ Push pipeline fresh ({age_s/3600:.1f}h since last push)")
+    return None
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # --daily
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -403,6 +486,17 @@ def cmd_daily(args: argparse.Namespace) -> int:
             )
     except Exception:  # noqa: BLE001
         logging.exception("Gate24 stale-halt check failed")
+
+    # Meta-monitor — Sentinel detects its OWN staleness.
+    # If the push-to-Railway pipeline has gone silent (cron broken, auth
+    # mismatch, endpoint 404), the dashboard freezes on stale data and
+    # nobody knows. Read data/.last_push.json (written by sync_sentinel_data.py
+    # on every push attempt). Alert critical if it's missing OR older than
+    # 3x the expected cadence.
+    try:
+        check_push_pipeline_freshness(db)
+    except Exception:  # noqa: BLE001
+        logging.exception("Meta-monitor (push freshness) check failed")
 
     # Build summary
     summary = db.get_daily_summary(exp_ids)
