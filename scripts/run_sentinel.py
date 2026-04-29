@@ -334,6 +334,36 @@ def cmd_daily(args: argparse.Namespace) -> int:
     except Exception:  # noqa: BLE001
         logging.exception("Gate22 heartbeat check failed")
 
+    # Gate 24 — Stale-halt nag (market-day-aware, alert-only)
+    try:
+        from sentinel.runtime import check_stale_halts
+        stale_result = check_stale_halts(state)
+        if stale_result.alerts:
+            crit_n = sum(1 for a in stale_result.alerts if a["severity"] == "critical")
+            warn_n = sum(1 for a in stale_result.alerts if a["severity"] == "warning")
+            print(
+                f"   🚨 Gate24 stale halts: {crit_n} critical, {warn_n} warning"
+            )
+            for a in stale_result.alerts:
+                db.record_alert(
+                    a["severity"], a["message"], experiment_id=a.get("experiment_id"),
+                )
+        else:
+            print("   ✅ Gate24 stale halts: none aged past 1 market day")
+        if stale_result.acknowledged:
+            print(
+                f"   (Gate24: {len(stale_result.acknowledged)} acknowledged-stale "
+                f"halt(s) suppressed: {', '.join(stale_result.acknowledged)})"
+            )
+        if stale_result.legacy_halts:
+            print(
+                f"   (Gate24: {len(stale_result.legacy_halts)} legacy halt(s) "
+                f"with no halted_at: {', '.join(stale_result.legacy_halts)} — "
+                f"{stale_result.legacy_recommendation})"
+            )
+    except Exception:  # noqa: BLE001
+        logging.exception("Gate24 stale-halt check failed")
+
     # Build summary
     summary = db.get_daily_summary(exp_ids)
 

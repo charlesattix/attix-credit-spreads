@@ -1737,3 +1737,108 @@ def check_scanner_heartbeats(
         })
 
     return alerts
+
+
+# ---------------------------------------------------------------------------
+# Gate 24 — Stale-halt nag (market-day-aware)
+# ---------------------------------------------------------------------------
+
+# Thresholds in trading hours (NYSE regular session, Mon-Fri 09:30-16:00 ET).
+# 1 market day ≈ 6.5 trading hours → warning
+# 1 trading week ≈ 32.5 trading hours (5 × 6.5) → critical
+_G24_WARNING_TRADING_HOURS = 6.5
+_G24_CRITICAL_TRADING_HOURS = 32.5
+
+_G24_LEGACY_RECOMMENDATION = (
+    "Halts predating halted_at coverage (pre-2026-04-28) cannot be aged. "
+    "Run `python scripts/sentinel_cli.py why-halted EXP-XXX` for forensic context."
+)
+
+
+@dataclass
+class StaleHaltResult:
+    """Gate 24 outcome."""
+    alerts: List[Dict[str, Any]] = field(default_factory=list)
+    acknowledged: List[str] = field(default_factory=list)
+    legacy_halts: List[str] = field(default_factory=list)
+    legacy_recommendation: str = ""
+
+
+def check_stale_halts(
+    state: Dict[str, Any],
+    *,
+    now: Optional[datetime] = None,
+) -> StaleHaltResult:
+    """Gate 24 — flag halts that have aged past one market day / one trading week.
+
+    Reads ``halted_at`` from each halted experiment in *state* and computes
+    its age in market-trading hours (Mon-Fri 09:30-16:00 ET). Emits a warning
+    at >= 6.5 trading hours and a critical at >= 32.5 trading hours.
+
+    Suppression:
+      - ``halt_acknowledged_stale=True`` → skipped (returned in ``acknowledged``)
+      - missing ``halted_at`` → skipped (returned in ``legacy_halts`` with a
+        recommendation to run ``sentinel_cli why-halted``)
+
+    Active / non-halted experiments are ignored. The function is pure-read:
+    no DB writes, no state.json mutation.
+    """
+    from shared.market_calendar import trading_hours_between
+
+    now = now or datetime.now(timezone.utc)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=timezone.utc)
+
+    result = StaleHaltResult(legacy_recommendation=_G24_LEGACY_RECOMMENDATION)
+
+    experiments = (state or {}).get("experiments", {}) or {}
+    for exp_id in sorted(experiments.keys()):
+        exp = experiments[exp_id]
+        if not isinstance(exp, dict):
+            continue
+        if exp.get("status") != "halted":
+            continue
+
+        if exp.get("halt_acknowledged_stale"):
+            result.acknowledged.append(exp_id)
+            continue
+
+        halted_at_iso = exp.get("halted_at")
+        if not halted_at_iso:
+            result.legacy_halts.append(exp_id)
+            continue
+
+        try:
+            halted_at = datetime.fromisoformat(str(halted_at_iso).replace("Z", "+00:00"))
+        except (ValueError, TypeError):
+            # Malformed timestamp — treat as legacy so an operator can fix it.
+            result.legacy_halts.append(exp_id)
+            continue
+        if halted_at.tzinfo is None:
+            halted_at = halted_at.replace(tzinfo=timezone.utc)
+
+        age_h = trading_hours_between(halted_at, now)
+
+        if age_h >= _G24_CRITICAL_TRADING_HOURS:
+            severity = "critical"
+        elif age_h >= _G24_WARNING_TRADING_HOURS:
+            severity = "warning"
+        else:
+            continue
+
+        result.alerts.append({
+            "gate": "G24",
+            "severity": severity,
+            "experiment_id": exp_id,
+            "halted_at": halted_at_iso,
+            "trading_hours_age": round(age_h, 2),
+            "message": (
+                f"G24 stale halt: {exp_id} halted {age_h:.1f} trading hours ago "
+                f"(reason: {(exp.get('halt_reason') or 'unknown')[:80]}). "
+                f"Run `sentinel_cli why-halted {exp_id}` to investigate, "
+                f"`sentinel_cli ack-stale {exp_id} --by ... --reason ...` to suppress, "
+                f"or `sentinel_cli resume {exp_id} ...` to recover."
+            ),
+        })
+
+    return result
