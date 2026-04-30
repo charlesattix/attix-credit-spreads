@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<title>EXP-3151 — Stream Sharpe attribution</title>
+<style>
+body{font-family:-apple-system,sans-serif;max-width:1240px;margin:0 auto;padding:28px;background:#fff;color:#1e293b;}
+h1{font-size:1.7em;color:#0f172a;}
+h2{margin-top:2em;border-bottom:2px solid #e2e8f0;padding-bottom:8px;color:#334155;}
+.muted{color:#64748b;font-size:0.85em;}
+.caveat{background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:14px;margin:16px 0;font-size:0.9rem;line-height:1.55;}
+.sources{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:14px;font-size:0.84rem;line-height:1.6;}
+.verdict{background:#fff;border:2px solid #16a34a;border-radius:8px;padding:18px;margin:18px 0;}
+.verdict .badge{display:inline-block;padding:5px 14px;border-radius:14px;color:#fff;background:#16a34a;font-weight:700;font-size:0.86rem;}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:0.84em;}
+th{background:#f1f5f9;padding:8px 9px;text-align:right;border-bottom:2px solid #cbd5e1;font-size:0.7em;text-transform:uppercase;}
+th:first-child{text-align:left;}
+td{padding:7px 9px;text-align:right;border-bottom:1px solid #e2e8f0;}
+td:first-child{text-align:left;font-weight:600;color:#475569;}
+tr.stream.spx{background:#fef2f2;}
+.kv{display:grid;grid-template-columns:repeat(2,1fr);gap:6px 18px;font-size:0.9em;margin:10px 0;}
+.kv b{color:#475569;}
+</style></head><body>
+
+<h1>EXP-3151 — Per-stream Sharpe attribution (v8a, post-2020)</h1>
+<p class="muted">Equal-vega-weighted decomposition of the v8a portfolio
+on 2020-01-01 .. 2024-12-31, rescaled to 18% target vol.
+Bootstrap CIs from 5,000 stationary-block resamples
+(mean block 5d). 2026-04-29 21:14</p>
+
+<div class="caveat">
+<strong>⚠ Data-range caveat (carried from EXP-3150).</strong> Cube spans
+2020-01-01..2025-12-31; this attribution slices to 2020-2024. We
+<strong>cannot directly test the Dew-Becker / Giglio 15-year VRP-decline
+thesis</strong> from this data. What we <em>can</em> answer: within the
+post-2020 sample, is the v8a edge dominated by SPX-VRP-sensitive streams
+(highlighted in red) or by sector / cross-vol / calendar streams that
+should not depend on dealer GEX flipping?
+</div>
+
+<div class="sources">
+<strong>Rule Zero.</strong> Same v8a cube as EXP-2600 / EXP-3150.
+Streams: exp1220, v5_hedge, gld_cal, slv_cal, cross_vol, xlf_cs, xli_cs, qqq_cs. Net SR uses EXP-2570 890.3 bps drag.
+Weights: equal-vega (inverse-vol) then rescaled by a single scalar so
+realised portfolio σ matches 18%.
+</div>
+
+<div class="verdict">
+<span class="badge">Robust — SPX-VRP-sensitive contribution &lt; 20%</span>
+<div class="kv" style="margin-top:14px">
+<div><b>Portfolio gross Sharpe</b></div><div>7.153
+&nbsp; 95% CI [6.42, 7.89]</div>
+<div><b>Portfolio net Sharpe</b></div><div>6.659</div>
+<div><b>Portfolio σ_ann</b></div><div>18.00%</div>
+<div><b>SPX-like (exp1220) contrib</b></div>
+<div>SR <strong>1.336</strong>
+(18.7% of port SR);
+risk 2.03%
+(11.3% of port σ)</div>
+<div><b>Other 7 streams contrib</b></div>
+<div>SR <strong>5.817</strong>
+(81.3% of port SR);
+risk 15.97%
+(88.7% of port σ)</div>
+<div><b>Sum check</b></div>
+<div>Σ contrib_SR = 7.153
+(should equal 7.153)</div>
+</div>
+</div>
+
+<h2>1. Per-stream attribution</h2>
+<table>
+<thead><tr>
+<th>Stream</th>
+<th>Nonzero days</th>
+<th>σ_ann</th>
+<th>μ_ann</th>
+<th>Standalone SR</th>
+<th>SR 95% CI</th>
+<th>Weight (scaled)</th>
+<th>Contrib SR</th>
+<th>% of port SR</th>
+<th>Contrib SR 95% CI</th>
+<th>Risk contrib (ann)</th>
+<th>% of port σ</th>
+</tr></thead>
+<tbody><tr class='stream spx'><td>SPY put-credit (exp1220)</td><td>1000</td><td>11.46%</td><td>+44.18%</td><td>3.86</td><td>[3.12, 4.63]</td><td>0.544</td><td>+1.336</td><td>18.7%</td><td>[+1.054, +1.634]</td><td>2.03%</td><td>11.3%</td></tr><tr class='stream'><td>v5 hedge</td><td>308</td><td>6.85%</td><td>-0.95%</td><td>-0.14</td><td>[-0.89, 0.62]</td><td>0.910</td><td>-0.048</td><td>-0.7%</td><td>[-0.298, +0.212]</td><td>1.42%</td><td>7.9%</td></tr><tr class='stream'><td>GLD calendar</td><td>1136</td><td>6.25%</td><td>+18.28%</td><td>2.92</td><td>[2.30, 3.57]</td><td>0.997</td><td>+1.013</td><td>14.2%</td><td>[+0.769, +1.268]</td><td>2.57%</td><td>14.3%</td></tr><tr class='stream'><td>SLV calendar</td><td>1163</td><td>12.85%</td><td>+33.36%</td><td>2.60</td><td>[1.96, 3.28]</td><td>0.485</td><td>+0.900</td><td>12.6%</td><td>[+0.671, +1.137]</td><td>2.46%</td><td>13.7%</td></tr><tr class='stream'><td>Cross-vol</td><td>224</td><td>3.60%</td><td>+6.32%</td><td>1.75</td><td>[0.90, 2.57]</td><td>1.730</td><td>+0.608</td><td>8.5%</td><td>[+0.304, +0.936]</td><td>1.89%</td><td>10.5%</td></tr><tr class='stream'><td>XLF credit spread</td><td>158</td><td>3.32%</td><td>+15.50%</td><td>4.67</td><td>[4.00, 5.50]</td><td>1.878</td><td>+1.618</td><td>22.6%</td><td>[+1.363, +1.901]</td><td>2.74%</td><td>15.2%</td></tr><tr class='stream'><td>XLI credit spread</td><td>112</td><td>4.96%</td><td>+16.28%</td><td>3.28</td><td>[2.54, 3.95]</td><td>1.258</td><td>+1.137</td><td>15.9%</td><td>[+0.873, +1.389]</td><td>2.84%</td><td>15.8%</td></tr><tr class='stream'><td>QQQ credit spread</td><td>75</td><td>0.94%</td><td>+1.60%</td><td>1.70</td><td>[0.88, 2.55]</td><td>6.650</td><td>+0.590</td><td>8.2%</td><td>[+0.294, +0.878]</td><td>2.06%</td><td>11.4%</td></tr></tbody>
+</table>
+<p class="muted">Rows highlighted in red are SPX-VRP-sensitive
+(exp1220 = SPY put-credit spread). Contribution Sharpe is
+<code>w_i · μ_i_ann / σ_p_ann</code>; sums to portfolio Sharpe.
+Risk contribution is <code>w_i · Cov(R_i, R_p) / σ_p</code>; sums to σ_p.</p>
+
+<p style="margin-top:3em;color:#94a3b8;font-size:0.78em;text-align:center">
+compass/exp3151_stream_attribution.py · Rule Zero · real data only
+</p>
+</body></html>
