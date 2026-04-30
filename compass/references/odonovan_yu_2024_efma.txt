@@ -1,0 +1,2787 @@
+
+
+========== PAGE 1 ==========
+
+Transaction Costs and Cost Mitigation in Option
+Investment Strategies ∗
+James O’Donovan† Gloria Yang Yu‡
+April 24, 2024
+Abstract
+We examine the impact of transaction costs on the profitability of long-short portfolios
+of delta-hedged option returns. Out of 24 variables studied, 17 generate positive and
+significant gross returns, but none remain profitable after accounting for trading costs.
+We explore cost-mitigation strategies and propose a novel approach that outperforms
+existing methods, restoring profitability to 7 long-short portfolios. Our findings empha-
+size the crucial role of implementation costs in assessing the investment opportunity set
+in equity-option markets and underscore the importance of incorporating transaction
+costs when evaluating option-based strategies.
+Keywords: Asset-pricing, option returns, transaction costs, market frictions
+∗Wei Ling provided exceptional research assistance.
+†City University of Hong Kong. Email: james.odonovan@cityu.edu.hk
+‡Singapore Management University. Email: gloriayu@smu.edu.sg
+
+========== PAGE 2 ==========
+
+1 Introduction
+Return measurement is one of the most fundamental elements of asset pricing. Although
+our objective is to measure the investment returns that would have been available to an
+investor in the past, various forms of bias can affect this measurement. For example, the data
+available to researchers may only keep observations for firms with particular features. 1 Even
+when the data is bias-free, return measurement is biased if trading costs are not accounted
+for. Transaction costs, which are unavoidable for real-world investors, represent a source of
+potentially biased measurement. As returns guide the design of theoretical models, empirical
+factor models, and real-world investment strategies, measuring returns net of sampling biases
+and transaction costs is an issue of first-order importance.
+Measuring returns to investors in option markets is particularly challenging. Compared
+to equity markets, there are many more degrees of freedom in constructing of option strate-
+gies, such as the timing of entry, the frequency of delta hedging, the choice between exiting
+before expiration or holding until maturity, and the methods of accounting for transaction
+costs. Researchers employ different combinations of methods to measure returns. Further-
+more, Duarte, Jones, Mo, and Khorram (2023) emphasize that some widely used sample
+construction techniques result in returns that are subject to a look-ahead bias. Due to dif-
+ferent approaches used across studies for sample construction, measurement of returns, and
+adjustment for transaction costs, we do not have a comprehensive understanding of option
+strategy returns.
+This paper sets out to answer three main questions. First, what are the returns to com-
+mon option investment strategies after adjusting for look-ahead bias and transaction costs?
+Second, what are the time series and cross-sectional characteristics of option strategy trans-
+action costs? Third, what transaction cost mitigation strategies can be used in the options
+market? Answering these questions is important to understand investor opportunity sets and
+market frictions. However, relative to the stock market, estimating the effects of transaction
+costs and designing cost mitigation strategies for options is more difficult because one must
+trade in both the option contract and the underlying stock. Furthermore, the literature on
+option portfolio returns has largely followed the equity-anomaly portfolio literature without
+designing portfolios and cost mitigation strategies tailored to the characteristics of option
+contracts.
+We start by calculating the returns to long-short delta-hedged call option portfolios on a
+1Fama and French (1992) point out that COMPUSTAT data pre-1962 is subject to a selection bias where
+large successful firms are retained, Shumway (1997) highlights a delisting bias in CRSP returns. Mutual
+fund data is also subject to survivorship bias (Elton, Gruber, and Blake, 1996) and incubation bias (Evans,
+2010). McLean and Pontiff (2016) provide evidence that statistical biases affect the discovery of variables
+that predict stock returns.
+1
+
+========== PAGE 3 ==========
+
+sample of returns not subject to the look-ahead bias pointed out by Duarte et al. (2023). We
+focus on portfolios formed at the end of the month and held for one month as in Zhan, Han,
+Cao, and Tong (2022). We form a set of 24 potential predictor variables suggested by the
+literature and find that 17 of the 24 variables can be used to form portfolios with significant
+long-short portfolio returns. We then study the impact of stock and option transaction costs.
+Figure 1 shows the first main result. Under the conservative assumption that options traders
+pay approximately one-fifth of the quoted half spread for options and the effective half spread
+for stocks, we find that none of the strategy returns survive transaction costs. We find that
+look-ahead bias and transaction costs have an interactive effect on delta-hedged call option
+returns. While the bias on gross returns is upward, the bias for transaction costs is downward,
+meaning the bias is magnified for net returns. Together, look-ahead bias and transaction costs
+eliminate returns of common strategies and make understanding transaction costs and cost
+mitigation strategies of utmost importance.
+In the second set of results, we investigate the properties of transaction costs. We start by
+investigating the cross-sectional relationship between portfolio sort variables and transaction
+costs. We find that transaction costs are persistent and that a large percentage of the cross-
+sectional variation in transaction costs can be predicted by variables related to size and
+volatility. Next, we construct a time series of the average transaction costs across strategies
+and decompose the series to understand the contribution of stock trading costs and option
+trading costs. We find that over 80% of the strategy trading costs come from the option
+transaction costs. Overall, transaction costs for trading the option portfolios we study have
+been increasing over time; this is in contrast to the trend in equity markets, where transaction
+costs have been decreasing over time (Jones, 2002; Angel, Harris, and Spatt, 2011). Finally,
+we investigate the time series determinants of transaction costs. The strongest predictors
+of average portfolio transaction costs are the VIX index, and the sentiment index of Baker
+and Wurgler (2006). These results suggest that transaction costs are particularly high when
+volatility and market sentiment are elevated and suggest that gross portfolio returns will be
+particularly high during these periods.
+In the third set of results, we focus on cost-mitigation strategies. We find that cost miti-
+gation strategies have a large impact on average returns. The returns of all strategies increase
+after cost mitigation. However, only a handful of strategy returns become significant. The
+most effective simple cost mitigation strategy, which uses ‘hold-to-maturity’ option returns
+that avoid paying transaction costs to exit the strategy, results in three significant long-short
+portfolios. When we combine this strategy with a limitation on the universe of investable
+options with relatively lower trading costs, we increase the number of significant anomalies
+to four.
+2
+
+========== PAGE 4 ==========
+
+We then show the returns to a novel cost mitigation strategy that relies on specific features
+of the options market. We provide analysis that motivates a focus on long-only portfolios;
+Figure 5 shows that, on average, across the 24 sorting variables, gross returns grow faster
+than transaction costs as we move from the bottom to the top decile. We examine long-only
+portfolios and portfolios that hedge the volatility risk in the long portfolio with a fixed position
+in market index volatility risk. This novel cost mitigation strategy is the most successful,
+increasing the number of significant long-short portfolios to seven. The return magnitudes
+are economically significant, ranging from 36bp to 114bp per month. These results emphasize
+the importance of applying cost mitigation strategies in general and tailoring these strategies
+to the specific features of option markets in particular.
+Finally, we show that the decision of hedging frequency is crucial once we take stock-
+trading costs into account. Our main analysis uses strategies that delta-hedge once on the
+portfolio formation date and then focuses on the impact of varying the strategy entry date
+and holding period. We also show that holding the formation date and holding period
+constant, the decision of how frequently to delta hedge has a large impact on strategy return
+characteristics. Using a strategy that is delta-hedged daily until maturity, approximately
+50% of the strategy trading costs come from the stock transaction costs. The key tradeoff
+is between strategy mean returns and variance. In the absence of transaction costs, delta-
+hedging daily typically increases Sharpe ratios through a reduction in variance. However, in
+the presence of stock trading costs, delta-hedging each day reduces the average returns to
+the point that it offsets the benefit of variance reduction. This highlights that transaction
+costs are a first-order consideration when measuring returns in option markets and that the
+impact of stock trading costs (rarely considered) depends on the return construction.
+We contribute to the literature on asset pricing and transaction costs. A large literature
+focuses on the impact of trading costs on equity investment. Novy-Marx and Velikov (2016)
+show that transaction costs reduce all anomaly returns but that high-turnover strategies
+are impacted most heavily. Detzel, Novy-Marx, and Velikov (2023) show that transaction
+costs are essential for making sensible model comparisons, and DeMiguel, Martin-Utrera,
+Nogales, and Uppal (2020) show that transaction costs are essential for understanding the
+number of significant anomalies. Focusing on the short legs of anomalies, Stambaugh, Yu,
+and Yuan (2012) find higher returns following high periods of sentiment, suggesting that
+mispricing drives those returns. Muravyev, Pearson, and Pollet (2022) find that anomalies
+do not survive adjustments for the transaction costs associated with short-selling shares.
+Chen and Velikov (2023) find that adjustments for post-publication bias and transaction
+costs eliminate the returns on the average anomaly. Thus, transaction costs are an issue of
+first-order importance in many asset pricing contexts, and we contribute to this literature by
+3
+
+========== PAGE 5 ==========
+
+analyzing the importance of transaction costs for option strategies.
+Our work is related to a large body of literature on single stock option risk premia.
+Coval and Shumway (2001) is the seminal paper suggesting that known stock risks do not
+span option risk, and thus options provide exposure to a volatility risk factor. Carr and
+Wu (2004) show that both index options and single stock options contain a risk premium.
+Driessen and Maenhout (2007) show that options should be included in investor portfolios
+under quite general conditions. Goyal and Saretto (2009) are the first to show one can create
+long-short portfolios of delta-hedged option returns to capture risk premia. Cao and Han
+(2013) show that a stock market variable can be used to predict returns on single stock
+options, and Zhan et al. (2022) show generally that multiple variables can predict option
+returns. There is now a burgeoning literature documenting option return anomalies and
+suggesting factor models to explain those anomalies (Horenstein, Vasquez, and Xiao, 2022;
+Goyal and Saretto, 2022). The results in this paper help us understand whether these factors
+tell us about return patterns that are maintained because of friction or investor preferences.
+Furthermore, our work affects the design of empirical factor models; for example, whether
+we conclude that we have an emerging ‘factor zoo’ in option markets depends on how we
+account for implementation costs.
+Empirical option researchers typically consider the impact of three frictions; the cost
+of trading the option, the cost of trading the stock, and margin costs. The impact on
+returns depends on which transaction costs are considered, the assumptions made, and sample
+construction details. For example, Neumann and Skiadopoulos (2013) find that the economic
+significance of an option strategy in S&P 500 index options disappears once they consider
+trading costs for the option contract. Furthermore, to avoid excessive stock transaction
+costs associated with delta hedging, Goyal and Saretto (2009), and others hold the option
+position for one month without rebalancing the delta hedges to limit the impact of transaction
+costs. Other studies consider different combinations of stock, option, and margin costs (Zhan
+et al., 2022; Heston, Jones, Khorram, Li, and Mo, 2023). Overall, different studies use
+different samples, different return construction methods, and different methods to adjust
+for transaction costs. We do not have a good understanding of which costs matter for
+which strategies and how costs vary over time and in the cross-section. We contribute to
+this literature by providing a comprehensive analysis of option returns after adjustment for
+transaction costs.
+4
+
+========== PAGE 6 ==========
+
+2 Data and Variables
+This section introduces the data and key variables. Section 2.1 details the sample construc-
+tion. Section 2.2 details the predictor variables used in the paper. Finally, Section 2.3 details
+how we construct the option returns and adjust them for transaction costs.
+2.1 Sample construction
+Data on end-of-day option prices, volume, and option risk characteristics come from Option-
+metrics. Data on underlying stock prices, market capitalization, adjustments for stock splits,
+and dividends comes from the CRSP. We use the WRDS link table to merge Optionmetrics
+data with CRSP. Data on stock transaction costs comes from the TAQ database, and we use
+the WRDS link table to merge CRSP data with TAQ data. Our sample includes options on
+common stocks with CRSP share codes of 10 and 11 and a stock price of at least five dollars
+on the portfolio formation date. For the construction of some predictor variables, we use
+COMPUSTAT and I/B/E/S data.
+Duarte et al. (2023) highlight that one of the most common sample construction tech-
+niques in the literature is subject to a look-ahead bias. In essence, the filters applied to option
+prices at the date of the strategy exit are correlated with strategy returns. Thus, we use their
+sample construction to avoid look-ahead bias. 2 At each month-end, we extract all call and
+put options for each optionable stock and then apply the following filters to these options
+in order to minimize the effect of erroneous recording: (1) Bid prices are positive; (2) The
+midpoint of the quoted bid and ask prices is at least $1/8; (3) The midpoint of the quoted
+bid and ask prices do not violate no-arbitrage conditions; (4) The underlying stock does not
+pay a dividend during the remaining life of the option. This makes the early exercises of
+options suboptimal, so the investigated American options are effectively European options.
+To make this filter feasible, we only drop options whose dividend-paying declaration date is
+before the portfolio formation date, and the ex-distribution date lies between the portfolio
+formation date and the expiration date simultaneously; (5) We retain options with positive
+total trading volume in the month preceding the portfolio formation date to avoid extremely
+illiquid options; (6) We exclude options with bid price larger than or equal to the ask price
+at the portfolio formation date; (7) We retain options with moneyness between 0 .8 and 1 .2
+2The look-ahead bias has two dimensions. First, common filters applied to data at the end of the holding
+period remove options that become deep in the money (ITM) or deep out of the money (OTM). These deep
+OTM/ITM options would have resulted in negative returns for delta-neutral call-writing strategies. Second,
+when used to form portfolios, characteristics associated with high stock-price volatility would systematically
+have more deep ITM/OTM options at the end of the portfolio period and thus result in portfolios that
+effectively sort on the bias.
+5
+
+========== PAGE 7 ==========
+
+where moneyness equals to stock price divided by the strike price.
+After applying these filters to each extracted option at the month-end date, for each
+optionable stock, we choose a pair of options (one call and one put) that are closest to being
+at the money and have the shortest time to maturity among options with more than 30 days
+to expiration. The vast majority of options retained each month have the same maturity, so
+we drop options with maturity different from the majority. Finally, we only keep stocks with
+both call and put options available after the filtering process as the final sample.
+After application of these filters, we have a sample of 255,240 observations. However,
+because our one-month (hold-to-maturity) returns require option price and stock price data
+(stock price data) one month later (on the maturity date), we would be subject to a subtle
+form of look-ahead-bias if we dropped stocks with missing data after the portfolio formation
+date. This look-ahead bias could be important for expected return measurement if the
+dropped observations were correlated with particular return realizations. We find that 676
+(1,010) observations are missing when we attempt to calculate one-month (hold-to-maturity)
+returns. We use the delisting codes in CRSP and find that these missing returns are due to
+merger announcements, exchanges, and delistings. We then fill in returns using the following
+procedure. First, if a delisting price exists in CRSP, we use that price to calculate the option
+price at month’s end (payoff at maturity). If the delisting price is missing, we use the last
+traded price multiplied by the delisting return. Finally, if the delisting returns are missing,
+we use the procedure of Fu (2014) and replace the missing return with the average returns
+for the same exchange and delisting reason. Filling in these missing stock prices allows us to
+calculate hold-to-maturity returns by calculating the exercise value. For one-month returns,
+we fill in option prices using the Black, Scholes, and Merton model price (using the option
+implied volatility at the portfolio formation date as an input) and the average option spread
+in that period. 3
+In some tests, we use an alternative strategy that involves forming portfolios on the third
+Friday of each month and holding the position until maturity (see Goyal and Saretto (2009);
+Heston et al. (2023)); this allows us to construct a monthly return that is held to maturity
+and avoids paying transaction costs to exit option positions. In contrast, the hold-to-maturity
+return formed at the end of each month would have a holding period longer than 30 days on
+average. For this sample, excepting the maturity filter, we use the same filters applied above.
+Table 1 contains summary statistics of the options used in our study. Statistics for our
+main sample of buy-and-hold one-month returns are contained in Table 1 Panel A. We have a
+total of 255,240 observations spanning a time period from September 2003 to December 2021.
+3Results are similar if we simply drop those missing values. In Table A1, we show the impact on portfolio
+returns of this potential look-ahead bias. The largest reduction in returns is 7bp for the IVOL portfolio.
+6
+
+========== PAGE 8 ==========
+
+The availability of the TAQ effective spread data limits the sample period. Our statistics
+are otherwise comparable with the literature. The monthly buy-and-hold return has a mean
+of 0.46%, with a large standard deviation of 8.9%. The maturities of selected options have
+a median of 50 days with a tight distribution (the 25th and 75th percentiles are 49 and 51,
+respectively). In particular, we note the large magnitude of quoted option bid-ask spreads.
+We show the spreads at the point of entry and exit of the buy-and-hold option position. The
+average spread at entry is 24% while the average spread at exit is 57%. This is because at
+entry, options are constrained to be at the money, while at exit, they can be very deep out-of-
+the-money with potentially large percentage spreads. 4 The average effective stock spread at
+entry and exit is 0.13%. 5 Panel B contains the summary statistics for buy-and-hold returns
+with the same portfolio formation date as Panel A but are held until option maturity rather
+than being exited after one month. Finally, Panel C contains summary statistics for the
+sample of returns that has a formation date on the third Friday of each month, where option
+positions are held to maturity.
+2.2 Predictor variables
+We use a comprehensive set of variables investigated by the literature. In total, we investigate
+the ability of 24 variables to predict equity-option returns. We start with the 13 variables
+investigated by Zhan et al. (2022). This includes ten stock characteristics and three additional
+control variables, which are the volatility mispricing measure from Goyal and Saretto (2009),
+idiosyncratic volatility as used in Cao and Han (2013), and the Amihud (2002) liquidity
+measure. We also include 11 other variables suggested by the option literature. We include
+volatility of volatility (Ruan, 2020), option price, option illiquidity (Christoffersen, Goyenko,
+Jacobs, and Karoui, 2018), risk-neutral skewness (Bali and Murray, 2013), and volatility term
+structure (Vasquez, 2017). We include option momentum and reversal, which are found to
+predict option returns in Heston et al. (2023).6 Finally, we follow Horenstein et al. (2022) and
+include firm size, book-to-market-equity, momentum, and reversal because they are common
+predictors of stock returns. We provide a brief description of each variable here and provide
+4This suggests another dimension to the look-ahead bias of Duarte et al. (2023); sample filters applied
+to future data that increase returns by removing deep ITM or OTM options will simultaneously reduce
+transaction costs at strategy exit. Thus, the impact of look-ahead bias should be even larger for net returns.
+5We winsorize the measure of effective spread at the upper 99.5% of the distribution to deal with a limited
+number of outliers that seem to be recording errors. In cases where the TAQ effective spread is missing, we
+fill in those values using the quoted bid-ask spread from CRSP; if it is still missing, we use the average spread
+for that month.
+6We note that the main results in Heston et al. (2023) focus on straddle returns and use an alternative
+filtering procedure to maximize the available data on past option returns. Thus we do not directly replicate
+their implementation, which is robust to the inclusion of transaction costs. We find that the option momentum
+strategy has positive and significant returns after transaction costs in Table 10.
+7
+
+========== PAGE 9 ==========
+
+detailed variable construction information in Appendix A.1.
+1. CFV: Cash flow variance, calculated as the variance of the monthly ratio of cash flow
+to the market value of equity over the last 60 months as in Haugen and Baker (1996).
+Cash flow is net income plus depreciation and amortization, all scaled by market value
+of equity.
+2. CH: The cash-to-assets ratio, computed as the value of corporate cash holdings over
+the value of the firm’s total assets as in Palazzo (2012).
+3. DISP: Analyst earnings forecast dispersion, computed as the standard deviation of an-
+nual earnings-per-share forecasts scaled by the absolute value of the average outstanding
+forecasts as in Diether, Malloy, and Scherbina (2002).
+4. ISSUE 1Y: 1-year new issues, measured as the change in shares outstanding from 11
+months ago as in Pontiff and Woodgate (2008).
+5. ISSUE 5Y: 5-year new issues, measured as five-year composite change in number of
+shares outstanding as in Daniel and Titman (2006).
+6. PM: Profit margin, calculated as earnings before interest and tax scaled by revenues as
+in Soliman (2008).
+7. Ln(PRICE): The log of the stock price at the end of last month, as in Blume and Husic
+(1973).
+8. PROFIT: Profitability, calculated as earnings divided by book equity, in which earnings
+are defined as income before extraordinary items as in Fama and French (2006).
+9. TEF: Total external financing, calculated as net share issuance plus net debt issuance
+minus cash dividends, scaled by total assets as in Bradshaw, Richardson, and Sloan
+(2006).
+10. ZS: Z-Score, (1.2 ×(Working Capital / Assets) + 1.4 ×(Retained Earnings / Assets) +
+3.3×(EBIT / Assets) + 0.6×(Market Value of Equity / Book Value of Total Liabilities)
++ (Revenues / Assets)). Higher values of ZS indicate a lower probability of bankruptcy
+as in Dichev (1998).
+11. VOL deviation: Volatility mispricing, calculated as the log difference between the real-
+ized volatility and Black-Scholes implied volatility for at-the-money options as in Goyal
+and Saretto (2009).
+8
+
+========== PAGE 10 ==========
+
+12. IVOL: Idiosyncratic volatility, computed as the standard deviation of the regression
+residual of individual stock returns on the Fama and French (1993) three factors using
+daily data in the previous month as in Ang, Hodrick, Xing, and Zhang (2006) and Cao
+and Han (2013).
+13. AMIHUD: The Amihud (2002) stock illiquidity measure, calculated as the average of
+the daily ratio of the absolute stock return to dollar volume over the previous month.
+14. Size: the natural logarithm of the market value of the firm’s equity as in Fama and
+French (1993).
+15. BM: Book-to-market ratio, measured as the ratio of book equity to market equity as
+in Fama and French (1993).
+16. Stock REV: Stock return reversal, measured as the lagged one-month return as in
+Jegadeesh and Titman (1993).
+17. Stock MOM: Stock return momentum, the cumulative return on the stock over the 11
+months ending at the beginning of the previous month as in Jegadeesh and Titman
+(1993).
+18. VTS: The slope of the volatility term structure, measured as the difference between
+long-term and short-term implied volatilities as in Vasquez (2017).
+19. VOV: Volatility of volatility, as in Ruan (2020). Measured as the standard deviation
+of implied volatility in the past month.
+20. Option MOM: Option return momentum, calculated as the cumulative option return
+on the stock over the 11 months ending at the beginning of the previous month where
+there is no missing past return as in Heston et al. (2023).
+21. Option REV: Option return reversal, measured as lagged one-month option return as
+in Heston et al. (2023).
+22. Option Price: The option price.
+23. ILLIQ: Option illiquidity as suggested in Christoffersen et al. (2018). This is measured
+using the quoted option bid-ask spread.
+24. RN SKEW: Risk neutral skewness as in Bali and Murray (2013). We use the 30-day
+risk-neutral skewness. The construction follows Bakshi and Kapadia (2003).
+9
+
+========== PAGE 11 ==========
+
+2.3 Option returns calculation and adjustment for transaction costs
+The basic unit of analysis is a delta-hedged position in a written call option. For each
+stock and each portfolio formation date, we calculate the returns to a strategy that sells one
+contract of the call option and hedges that position with a long position of delta shares of the
+underlying stock. The position is held for one month to compute the buy-and-hold return.
+Our return construction is standard in the literature (Goyal and Saretto, 2009; Zhan et al.,
+2022). Holding the position without rebalancing keeps the exposition simple and minimizes
+costs from adjusting the hedge. After constructing returns, we sort firms into decile portfolios
+depending on the levels of predictor variables. If portfolio returns decrease in a predictor
+variable, we sort on the negative value of the signal to make the long-short portfolio return
+positive.
+Let S(t) be the stock price at time t, C(t) be the midpoint of the bid and ask prices for
+the call, ∆ t be the Black-Scholes delta of the option contract at time t, and K be the option
+strike price. The return to selling a delta-neutral call at time t and holding the position until
+time t + 1, before accounting for transaction costs (‘gross’) is:
+rgross
+t = ∆tSt+1 − Ct+1
+∆tSt − Ct
+− 1.
+We add transaction costs to this. We need to consider the transaction costs associated
+with the option position itself, and the stock trading for the delta-hedge. To operationalize
+the adjustment of option returns for transaction costs, we must make some assumptions.
+Boyer and Vorkink (2014) use trade and quote data for a small sample of exchange-traded
+options in 2011 and find that almost half of the trades occur at the ask price, suggesting
+investors incur high costs to trading options. On the other hand, Muravyev and Pearson
+(2020) find predictability in options quotes of options on S&P500 stocks, implying that
+informed traders can take liquidity at favorable prices. Because we don’t have trade and
+quote data to estimate effective spreads for options, we follow Heston et al. (2023) and use
+the insight of Muravyev and Pearson (2020) that sophisticated option traders can time their
+execution to lower effective spreads and assume that option traders pay 20.3% of the quoted
+half spread for options. This is a conservative assumption and increases the possibility of
+portfolio returns surviving transaction costs.
+The delta-hedged option position requires trading of the underlying stock. For stocks,
+we assume that traders pay half the effective spread when they enter or exit a position in
+the underlying stock. This is measured using the dollar-weighted effective daily spread from
+TAQ.
+When we account for transaction costs for stock options in decile portfolios, we must
+10
+
+========== PAGE 12 ==========
+
+account for the possibility that options on the same stock can enter the portfolio in consecutive
+months, which will mean some of the stock position for the delta hedge can be carried over.
+We give an overview of the formula here, assuming the stock is in the long decile portfolio
+so that on the formation date, the option is sold, and the stock is purchased. We provide
+additional details in Appendix B.
+For an option in the long portfolio formed at the end of month t, and held until t + 1, the
+total transaction costs equal:
+T Ct,t+1 = StockBuyT C t + StockSaleT C t+1
++ OptionSaleT Ct + OptionBuyT Ct+1
+and the portfolio formation cost with transaction costs equal to
+F ormCostt = (∆tSt − Ct) + StockBuyT C t + OptionSaleT Ct.
+Therefore, the buy-and-hold one-month return of a written call position formed at the
+end of month t after accounting stock and option transaction costs (‘net’) can be written:
+rnet
+t = (∆tSt+1 − Ct) − T Ct,t+1
+F ormCostt
+− 1. (1)
+We note that the transaction costs have a similar form when we take a short position in
+a portfolio consisting of written and delta-hedged options. This trade involves buying a call
+and selling delta shares on the formation date, and then one month later selling the option
+and buying back delta shares to cover the short stock position.
+If one writes a call option and holds it to maturity, one avoids paying the transaction
+costs required to exit the position (while potentially paying costs associated with the exercise
+of the option). This involves a slightly different accounting for transaction costs due to the
+possibility that an option expires in the money and shares may need to be delivered (received).
+We detail this accounting in Appendix B.4. The returns to this alternative strategy are
+explored in detail in Section 3.3.
+3 Results
+3.1 Long-short portfolio returns and transaction costs
+In this section, we provide gross portfolio returns and returns that are net of transaction costs.
+We note, like Detzel et al. (2023), that even if portfolio returns net of transaction costs
+11
+
+========== PAGE 13 ==========
+
+are insignificant, they can still reveal important information about frictions and investor
+behavioral biases. For example, if a strategy has high gross returns that do not survive
+adjustment costs, it suggests models of mispricing combined with limited arbitrage. On the
+other hand, strategies with high returns net of transaction costs suggest a different type of
+explanation, such as investor preferences to be compensated for marginal utility variation
+associated with the strategy.
+We start by sorting firms into decile portfolios at each month-end based on the values
+of our 24 predictor variables. We then calculate the equally weighted average of buy-and-
+hold one-month option returns in these portfolios, as well as a long-short portfolio, which
+is long options in the top decile and short options in the bottom decile. Table 2 contains
+results. Looking at the results in column “ E[rgross
+10−1 ],” we see that 17 of the 24 predictor
+variables give a significant long-short return spread. Some of these results are novel to the
+literature; Duarte et al. (2023) show the importance of a look-ahead bias adjustment for
+delta-hedged option returns using the 13 variables from Zhan et al. (2022). 7 One may worry
+that these returns compensate for well-understood risk factors documented in the equity
+market. Table A4 shows the factor returns adjusted for risk using the Fama and French
+(2015) five-factor model or a simple market (volatility) model. The risk adjustment does
+not impact the average excess return, suggesting that the excess returns earned by these
+strategies are not due to equity factor exposure or market volatility exposure. Next, we
+adjust these returns for transaction costs. Figure 1 helps to visualize the main results. Some
+long-short portfolios have insignificant returns even before accounting for transaction costs,
+so we do not show their returns after adjustment. The remaining long-short portfolios have
+significantly negative returns after adjustment. The column “ E[rnet
+10−1]” in Table 2 contains
+the results. The most striking result is that none of the long-short portfolios have a positive
+and significant return after adjustment for transaction costs, even given our conservative
+assumptions about transaction costs. In fact, only one variable, V OL deviation provides
+a positive return after adjusting for transaction costs, owing to transaction costs, investors
+would lose money investing in these strategies. In Table 3, we show the contribution of
+different transaction costs for each anomaly. Although we don’t include margin costs in the
+main analysis for brevity, we include them for reference. Stock transaction costs are typically
+two to four times the size of margin costs, and option transaction costs are six to ten times
+the magnitude of stock transaction costs. We note that the relatively lower importance of
+stock-transaction costs depends heavily on the return construction method - in Section 4,
+we show that stock-trading costs can account for over 50% of the strategy costs when we
+7Our sample starts in September 2003, which is when the TAQ effective spread data becomes available.
+In Appendix Table A2, we show the impact of sample period selection on the results for gross returns.
+12
+
+========== PAGE 14 ==========
+
+delta-hedge daily and hold the option until maturity.
+3.2 Analysis of transaction costs
+Results in the preceding section reveal that transaction costs have a large impact on the
+profitability of option strategies. In this section, we investigate the cross-sectional and time
+series determinants of transaction costs.
+To examine the cross-sectional relationship between predictive variables and transaction
+costs, we use Fama and MacBeth (1973) regressions of transaction costs on predictive vari-
+ables. In particular, we use the regression specification:
+T Ci,t,t+1 = a + b × T Ci,t−1,t + c × Xi,t + εi,t, t = 1, .., T
+Where T Ci,t−1,t is the lagged transaction costs for the buy-and-hold one-month return
+for the option on stock i, and Xt represents other variables that can potentially predict
+transaction costs. The transaction cost is defined as the stock transaction costs (effective
+bid-ask spreads) plus option transaction costs (effective bid-ask spreads equal to 20.3% times
+quoted bid-ask spreads) scaled by the formation costs accounting for position entry costs.
+Results are shown in Table 4. In the cross-section, lagged percentage transaction costs are
+the strongest predictor in terms of adjusted R-squared, which implies that costs are very
+persistent. This is important, as it means to the extent that costs are stable and expected
+returns change over time, there is a chance of finding strategies that avoid these costs. In
+univariate regressions, we find that firm size (in logs), idiosyncratic volatility, log price,
+and the volatility of implied volatility are significantly related to transaction costs. 8 This
+means options on small volatile stocks that are potentially difficult to price have the largest
+transaction costs. Looking at the adjusted R2 in column (6), we can see that most of the
+univariate variables are significant predictors in a multivariate regression and that almost 50%
+of the cross-sectional variation in transaction costs can be explained by these variables. We
+note that the logarithm of market capitalization seems to drive out the economic significance
+of the log price predictor, and similarly, the sign on stock idiosyncratic volatility flips, and its
+economic magnitude diminishes in a multivariate regression. This suggests that the volatility
+of implied volatility is a more important predictor of transaction costs than stock idiosyncratic
+volatility. These results signal that any characteristics related to size, volatility, or pricing
+8In untabulated results, we find that 23 of our 24 characteristics can significantly predict transaction costs
+in univariate regressions. For brevity, we focus on variables suggested by the literature that have predictive
+power after controlling for lagged transaction costs.
+13
+
+========== PAGE 15 ==========
+
+difficulty of options may relate to high gross returns without necessarily translating to high
+net-of-transaction cost returns.
+To examine the time-series variation in transaction costs, we take an equal-weighted aver-
+age of the transaction costs for the 17 significant portfolios in Table 2 to understand trading
+costs. In terms of the level of transaction costs, Figure 3 shows that overall, transaction costs
+for trading portfolios with high long-short returns have been increasing during our sample
+period. We note that trading costs spiked during the COVID-19 crisis. We also decompose
+the costs to highlight the contribution of stock and option-related trading costs. Figure 2
+shows results. On average, over 80% of the costs can be attributed to the costs of trading
+the option and the remainder to stock trading costs. 9 These results suggest that the costs of
+trading long-short option portfolios have been increasing over our sample period. This is in
+contrast to trading costs in the stock market which have been decreasing over time (Jones,
+2002; Angel et al., 2011). 10
+Understanding the time series properties of transaction costs is important. While the
+entry costs to a strategy can be decided ahead of time, the costs of exiting the strategy
+are unknown, and this will present a significant risk to delta-hedged option investors who
+plan to exit their position before maturity. We use time series regressions to understand
+the determinants of transaction costs. Table 5 contains estimation results of regressing the
+average transaction costs on lagged predictor variables. Lagged transaction costs are highly
+persistent. Other than lagged transaction costs, the level of the CBOE Volatility Index
+(VIX) and the market-wide sentiment index of Baker and Wurgler (2006) are the only other
+predictors with a significant relation to the time series of transaction costs. These results
+motivate our later analysis that explores the difference between buy-and-hold option returns
+that are rebalanced after one month and hold-to-maturity option returns that avoid this exit
+cost.
+3.3 Cost-mitigation strategies
+The previous section showed that transaction costs eliminate the returns to all option return
+strategies. However, these strategies were not designed with transaction costs in mind.
+In this section, we investigate several cost mitigation strategies. Our buy-and-hold return,
+9In Figure 6, we repeat the decomposition for strategies where the portfolio is delta-hedged daily and held
+for one month (Panel A) or until maturity (Panel B). We see that the relative importance of stock trading
+costs increases substantially.
+10In Figure A1, we show the average transaction costs at the end of each month for our sample universe
+and find that option trading costs have increased significantly since around 2014. Thus, findings in Figure 2
+of an increase in trading costs are not isolated to the trading costs of decile portfolios sorted on certain
+characteristics.
+14
+
+========== PAGE 16 ==========
+
+which delta-hedges the portfolio only once on the formation date, already applies some cost
+mitigation. We further note that cost-mitigation strategies cannot simply be adapted directly
+from the equity anomaly literature. For example, banding — which mitigates the transaction
+costs through reducing the turnover of stocks — is an effective cost mitigation strategy
+for equity trading strategies investigated in Novy-Marx and Velikov (2016) and Chen and
+Velikov (2023). However, because options expire, they must be re-purchased, so turnover
+(and transaction costs) may not be avoided. In the same vein, the strategy of rebalancing
+at a lower frequency (say quarterly rather than monthly) is not applicable to our options
+portfolios.
+With this in mind, we adapt some strategies from the equity literature to our context
+and also analyze the returns on some novel transaction-cost mitigation strategies. First, we
+analyze filters that limit the universe of allowed options to those with low option transaction
+costs. Second, we analyze the returns of hold-to-maturity strategies, which avoid some option
+transaction costs by holding until the option maturity date. Finally, we analyze returns to
+novel cost mitigation strategies that involve long-only portfolios and portfolios that minimize
+the cost of hedging out market volatility risk.
+3.3.1 Low-cost universe
+Limiting the stock universe to those with low costs is an effective cost mitigation strategy as
+investigated in Novy-Marx and Velikov (2016) and Chen and Velikov (2023). The transaction
+costs of options are determined by bid-ask spread, so it is natural to restrict the option bid-
+ask spread below a predetermined threshold. Heston et al. (2023), for example, retain options
+with quoted bid-ask spread below 10% to form the low-cost universe. We note that because
+the average transaction cost is increasing over time, applying a filter based on the absolute
+level of the transaction cost may remove relatively more data from late in the sample. To
+deal with this, we apply a relative filter and keep stocks in the bottom four deciles of option
+transaction costs, which approximates the 10% filter while keeping a balanced sample over
+time. Once we have filtered out high option-transaction-cost stocks, we then construct the
+portfolios and adjust for transaction costs as before.
+3.3.2 Hold-to-maturity
+As shown in Figure 2, options trading costs account for the largest proportion of transaction
+costs of the delta-hedged call option writing strategy. In earlier sections, we used a strategy
+that held options for one month from the end of each formation month before rebalancing at
+the end of the next month. One transaction cost mitigation strategy suggested by Zhan et al.
+15
+
+========== PAGE 17 ==========
+
+(2022) is to hold each option in the portfolio until expiration. This means we can reduce the
+number of option trades required by half.
+This hold-to-maturity strategy gives a continuous monthly series of returns. Because
+the maturity of these strategies will be longer than 30 days, we will adjust the returns to a
+30-day basis. However, even with this adjustment, the average returns will not be directly
+comparable to the buy-and-hold option returns that hold options for one month. First,
+because each option has a median maturity of 50 days, from day 30 to day 50, we will
+potentially have two options for some stocks in the portfolio, and in general, we will invest
+in twice as many options for this period. Furthermore, the returns could be mechanically
+different because when held to maturity, the option gamma is higher when the option is close
+to maturity.11
+3.3.3 Results of simple cost-mitigation strategies
+The results can be seen in Table 6. For comparison, the column “ E[rmon
+all ]” displays the buy-
+and-hold one-month long-short portfolio returns adjusted for transaction costs as in Table 2.
+Because the hold-to-maturity strategies can have a different number of days to maturity, to
+make returns using different methods comparable, we rescale all returns to a 30-day basis
+in this section. First, we focus on cost-mitigation strategies applied to the one-month buy-
+and-hold return series that limit the universe of investable stock options before allocating
+stock options to portfolios. Looking at results in the column “ E[rmon
+lc ]”, which contains
+returns when the universe of stocks is limited to those with lower option bid-ask spreads,
+we see (relative to the first column) large increases in returns. However, returns are still
+insignificant and typically negative after adjustment for transaction costs.
+Next, we look at the hold-to-maturity returns, where returns are based on strategies
+formed at the end of the month or the third Friday of the month (columns “ E[rmat
+all ]” and
+“E[rmat2
+all ]”, respectively). These cost mitigation strategies avoid paying some transaction
+costs by holding the option to maturity. We first look at the hold-to-maturity returns of
+portfolios formed at the end of each month. Multiple long-short portfolios become significant
+using this cost mitigation strategy. The difference between implied and historical volatility
+from Goyal and Saretto (2009), the volatility of volatility from Ruan (2020), and Cash-to-
+assets (introduced by Zhan et al. (2022)) all become significant with this cost mitigation
+11Dew-Becker, Giglio, Le, and Rodriguez (2017) highlight that for index options, the returns are relatively
+larger for short-maturity options with a relatively higher gamma.
+16
+
+========== PAGE 18 ==========
+
+strategy.12 We noted earlier that the hold-to-maturity returns formed at the end of each
+month can result in overlapping option positions which might make the comparison with the
+one-month returns difficult. Thus in the column “ E[rmat2
+all ]” we focus on returns that are
+constructed on the third Friday of each month and held until maturity (approximately 30
+days). For this return construction, the portfolios formed on V OV are no longer significant,
+but portfolios formed on −V OL deviation and CH remain significant. Figure 4 helps to
+visualize the results for all of our 24 long-short portfolios; while the cost mitigation strategy
+helps to increase the returns of multiple anomalies, only two become statistically significant.
+These results underscore the importance of return construction for portfolio significance.
+Next, we consider combinations of cost mitigation strategies. Namely, we combine hold-
+to-maturity returns with restrictions on the universe of investable stock options. First, we
+analyze hold-to-maturity returns with portfolios formed at the end of each month (column
+“E[rmat
+lc ]”). This strategy has some moderate success; for example, the idiosyncratic volatility
+variable increases in magnitude and becomes significant when we combine hold-to-maturity
+returns with a constraint on options with relatively high bid-ask spreads. Next, we analyze
+returns of portfolios that are formed on the third Friday of each month and held until maturity
+(column “E[rmat2
+lc ]”). For this cost mitigation strategy, we find the highest number of long-
+short portfolio returns that are significant at a 5% level. We find that V OL deviation, V OV ,
+V T S, and CH are all significant with this cost mitigation strategy.
+Overall, these results suggest that cost mitigation is an important consideration when
+designing option portfolio strategies to capture due to high transaction costs. Many strategies
+have high average returns after simple tweaks to the return construction or option contract
+selection rules. Nonetheless, depending on the cost mitigation strategy used we only find
+two to four long-short portfolios have significant returns. This means that the achievable
+investment opportunity set is quite small and can be explained by a low-dimensional factor
+model. Regarding consistency across methods, sorts on V OL deviation are most consistent,
+with significant returns for four different cost mitigation strategies. V OV and CH are close
+behind with significant returns for three cost mitigation strategies. Sorts on variables like
+V T S and IV OL are significant for one cost-mitigation strategy each, and, notably, they
+both rely on hold-to-maturity returns which both increase the overall gamma-exposure of
+the option positions and limit the transaction costs paid for trading the options.
+12Goyal and Saretto (2024) find significant returns after transaction costs for long short portfolios formed
+using stock price and size, while we don’t. We replicate their result and trace the difference to two crucial
+factors. Their sample includes firms with a stock price of less than 5 USD on the portfolio formation date,
+and they delta hedge the strategy daily without accounting for stock trading costs. In Table 10, we can see
+that delta hedging daily increases returns on these portfolios before accounting for stock transaction costs.
+17
+
+========== PAGE 19 ==========
+
+3.3.4 Low-cost (market) volatility neutral portfolios
+In the equity market, long-short portfolios are typically constructed for three main reasons.
+First, we can generate a return series that does not load on market risk. In the context of
+equity anomalies, we typically have a zero market beta on the long-short portfolio returns.
+This implies that any positive average excess return must represent compensation for an
+additional risk-factor loading or market inefficiency. Second, the short portfolio can be used
+to take advantage of stock overpricing; indeed, Stambaugh et al. (2012) find that the returns
+to the short legs of anomaly strategies are more profitable following high sentiment periods,
+suggesting overpricing. Finally, long-short portfolios can, in theory, be constructed to be a
+zero-cost strategy if we assume the proceeds from short-selling stock can be used to invest
+in the long portfolio.
+It’s important to reconsider these motivations for forming long-short portfolios when
+analyzing equity-option returns. Figure 5 helps to visualize the main insight. When we
+average the gross returns, transaction costs, and net returns across decile portfolios for all the
+24 sort variables, we see that gross returns increase faster than transaction costs as we move
+from the bottom to the top decile. This means that investments in low-decile portfolios, on
+average, will not contribute much to the long-short portfolio return. Table 7 contains results
+that help to analyze this issue for each individual portfolio sort variable. We calculate the
+pre- and post-transaction cost returns for the top and bottom decile portfolios, respectively.
+We note that as we go from the bottom to the top decile, the average returns grow faster
+than the transaction costs. For example, for the V OL deviation portfolio sort, the returns
+increase by 210bp (from -19bp to 191bp), while the transaction costs only increase by 26bp
+(from 34bp to 60bp). This is a key insight because the transaction costs on this “short
+portfolio,” which buys the option and sells the stock, can overwhelm any positive returns.
+In this section, we suggest two novel cost mitigation strategies that take advantage of
+this insight. First, because Table 7 suggests that the call writing strategies have the highest
+returns in the top decile, we analyze the risk and returns of “long-only” option portfolios
+that involve a delta-hedged written option position. Second, to address the concern that this
+portfolio may represent compensation for loading on market volatility risk; we hedge this risk
+by taking a weighted short position in the market index options. If the only clear advantage
+of the short position in the long-short portfolio is creating neutrality to a market volatility
+risk factor, this strategy will provide a cost-effective way of achieving the same aim.
+It’s important to consider loadings of portfolios on market volatility risk because there
+is evidence that market volatility risk is priced. Bakshi and Kapadia (2003) show how
+delta-hedged gains can give qualitative information about market variance-risk-premia while
+Carr and Wu (2008) show how to quantify the variance risk premium. In the context of
+18
+
+========== PAGE 20 ==========
+
+single stock options, Driessen, Maenhout, and Vilkov (2009) show the connection between
+individual stock and market volatility risk premium.
+To achieve these aims, we calculate a time series of equity index option returns using delta-
+hedged buy-and-hold to maturity returns of written call options. We choose the SPX options
+on the Standard and Poor’s 500 index as our proxy for options on the market. We hedge the
+position in this index by trading the SPY ETF. We can consider delta-hedged returns on these
+options as a proxy for the market variance risk premium. Table 8 shows summary statistics
+for delta-neutral call writing strategies on ATM index options with maturity matched to our
+single stock options. The summary statistics highlight the low transaction costs of trading
+(and delta-hedging) these options. The average quoted spread for these options is 4.16%
+which is one-sixth the average quoted spread for single stock options reported in Table 1.
+The results are displayed in Table 9. As shown in Table A4, the returns on strategies that
+invest only in the top decile typically give high returns. One might be concerned that these
+high returns compensate for loading on some risk factor, typically hedged using the bottom
+decile portfolio. To analyze this issue we calculate market volatility loadings by regressing
+the return of the portfolios on index option returns. The first two columns contain the
+market-volatility loading for the bottom and top decile portfolio returns, respectively, and
+we confirm that they both have a relatively high loading on the return of a written option on
+the index. In the third column, we see that the long-short portfolio is often, but not always,
+neutral to the index option risk. We then consider a strategy that is long the top decile
+and short 0.9 units of the index option return. We find that the returns are approximately
+volatility-beta neutral, suggesting this strategy can net out some risk.
+In the two columns “ Ret(%)”, we show average returns to the investment in the top
+decile strategy and the strategy that is long the top decile and short 0.9 units of the index
+option. We find that returns are significant and positive for seven portfolio sort variables.
+In particular we note that profit margin and profit become significant using this strategy.
+However, one concern is that these strategies load on index option risk, which could be the
+source of the relatively higher returns. In the last two columns, we show estimates of strategy
+alphas. If the returns on the top decile portfolio are compensation for index-option risk, we
+can perform a risk adjustment by regressing their returns on the index-option returns. The
+alpha on the portfolio that is long the top decile is significant for an additional three variables,
+all three variables are related to issuance and external financing. In the last column, we show
+estimates for strategy alphas when we take a long position in the top decile and short 0.9
+units of the index option. We do this because while returns to the top portfolio decile may
+not load on market risk, they will still have high volatility when market volatility is high.
+Portfolio sorts using option and stock-based characteristics provide significant returns using
+19
+
+========== PAGE 21 ==========
+
+this cost mitigation strategy. For option characteristics, portfolios sorted on V OL deviation,
+V OV , and V T S have positive and significant returns. For stock characteristics, IV OL, CH ,
+P M, and P ROF IT all have significant returns. The significance of P M and P ROF IT are
+particularly notable because cost mitigation strategies in Table 6 did not result in significant
+returns for these variables. Furthermore, this strategy is significantly simpler logistically as
+it replaces a position in a portfolio of single stock options with a position in one index option.
+The overall message from these results is that the construction of portfolios to capture
+returns in equity options should not directly follow the methods used in the literature for stock
+returns. Regarding individual option characteristics, and depending on the cost mitigation
+strategy employed, we find up to 10 of the 24 characteristics provide valuable information
+for predicting option returns.
+4 The impact of delta-hedge frequency
+Throughout the paper, we use positions on options that are delta-hedged only once on the
+portfolio formation date. However, another popular approach in the literature is to use
+strategies that delta-hedge the option position once each day (Heston et al., 2023; Cao and
+Han, 2013; Goyal and Saretto, 2022). Delta-hedging daily has the benefit of decreasing the
+volatility of the investment by minimizing position volatility due to stock exposure (Tian
+and Wu, 2023). On the other hand, in the presence of transaction costs, daily trading of
+the stock may result in excessive transaction costs that can reduce the average return. In
+this section, we empirically investigate this tradeoff between volatility reduction and mean
+reduction of returns.
+We start by considering the delta-hedged option gain following Bakshi and Kapadia
+(2003). We consider a position in a call option, hedged N times during a period [ t, t + τ].
+The delta-hedge position can be rebalanced at the dates tn, n = 1, . . . , N (where we define
+t0 = t, tN = t + τ). The discrete delta-hedged call option gain over the period [ t, t + τ] is
+Π[t, t + τ] = Ct+τ − Ct +
+N −1X
+n=0
+∆c,tn [S(tn+1) − S(tn)] −
+N −1X
+n=0
+anrtn
+365 [C(tn) − ∆c,tnS(tn)]
+where an is the number of calendar days between tn and tn+1 and rtn is the annualized risk
+free rate.
+We scale this by ∆∗S −C to calculate a return. To isolate the effects of hedging frequency,
+we consider a position formed at the end of each month and held until maturity. We then
+calculate returns where we hedge once, every ten trading days “Biweekly”, every five trading
+days ”Weekly,” and every trading day “Daily.” For these cases, ∆ c,tn changes periodically,
+20
+
+========== PAGE 22 ==========
+
+corresponding with the associated hedge frequency.13 As before, we use characteristics to sort
+options into decile portfolios and calculate returns to a long-short decile portfolio. We also
+calculate the stock turnover per position in each portfolio to understand how hedge frequency
+affects the amount of stock traded.
+To preview the importance of daily delta-hedging, we first take an average of transaction
+costs across all long-short portfolios and then decompose the cost into a part driven by
+stock trading costs and option trading costs. Figure 6 shows results. In Panel A we show
+the decomposition for the daily delta-hedge one-month returns. This can be compared to
+the decomposition in Figure 2, where we have the same strategy hedged only once on the
+formation date. The difference comes from the increased hedging frequency, which increases
+the relative importance of stock trading costs. In Panel B, we show the decomposition for
+the strategy used in this section, i.e., for portfolios formed at the end of the month and
+delta hedged until maturity. Delta hedging until the maturity date avoids paying option
+transaction costs to exit the option position, this increases the relative importance of stock
+trading costs which is now, on average, above 40% of the overall trading costs.
+Results are contained in Table 10. For brevity, we report results for a subset of our full
+sample of variables (results for all variables can be found in Table A6). We report average
+returns, t-statistics, annual Sharpe ratios, and stock turnover for portfolios formed at the end
+of each month and held until maturity. 14 The first four columns assess the impact of more
+frequent hedging without transaction costs, and in the last four columns, we conduct the
+same analysis while accounting for transaction costs. Focusing first on turnover (the number
+in curly braces), we see that for all characteristics, the turnover more than doubles going
+from hedging once to daily hedging. 15
+Next, we focus on the effects of more frequent hedging in the absence of transaction costs.
+We see that for option characteristics, more frequent hedging has only a modest effect on
+strategy returns while decreasing strategy volatility significantly. For example, the Sharpe
+ratio on the long-short portfolio formed using VOV increases from 2.01 to 3.36 as we move
+from hedging once to hedging daily. For stock characteristics, it’s notable that more frequent
+hedging can increase returns on portfolios formed on certain stock characteristics quite sub-
+stantially: portfolios formed on −LN(P RICE ) and −Size increase by approximately 50bp
+when we hedge daily relative to hedging once.
+13If the value for delta is missing, we will forward the data from the last existing value to avoid any
+look-ahead bias.
+14The statistics for the strategies with transaction costs that are delta hedged once are almost identical to
+those for ‘E[rmat
+all ]’ in Table 6, the slight difference comes from the fact that in this section we use the formula
+for a daily delta-hedged return which accounts for returns on a cash position.
+15A turnover of 1 is consistent with buying 0.5 shares at the initiation and selling those shares at expiry
+(if delta does not change). Thus a turnover of 2 is expected for a long-short portfolio.
+21
+
+========== PAGE 23 ==========
+
+Next, we focus on the effects of hedging frequency after accounting for option transaction
+costs in the last four columns. Because we hold until maturity, the effects of the option
+transaction costs are the same for all strategies, allowing us to isolate the impact of stock
+transaction costs.
+For option characteristics, we find it possible to increase Sharpe ratios even in the face of
+higher transaction costs due to stock turnover. For OptionM OM we find significant portfo-
+lio returns when we delta-hedge weekly, and these returns do not survive the large increase
+in costs associated with the move from weekly to daily hedging. For portfolios formed on
+−V OL deviation and V OV , we find Sharpe ratios sometimes increase with hedging fre-
+quency.
+When we focus on portfolios formed using stock characteristics, results are in sharp con-
+trast to those without transaction costs. Excepting the portfolio formed using CH , we do not
+find significant returns for any portfolios. We also find that the burden of stock adjustment
+costs overwhelms any benefit of variance reduction so that the increase in returns from daily
+hedging observed without transaction costs does not survive stock transaction costs. These
+results are important as researchers often make choices about which hedging frequency to
+use without considering the impact of transaction costs.
+5 Robustness Tests
+5.1 Alternative portfolio weighting schemes
+Thus far, we have equally weighted returns in our decile portfolios. In the equity market,
+anomalies are well known to vary by stock size (Fama and French, 2008). Furthermore,
+signals that seem to predict returns may no longer be valuable after the smallest stocks are
+removed and returns are value-weighted (Hou, Xue, and Zhang, 2020). Researchers also
+place less weight on anomalies that are only present in equal-weighted returns because it is
+well-known that transaction costs are higher for these stocks. Our results in Table 4 similarly
+suggest that size is related to the cost of trading option anomalies. Thus, a weighting scheme
+that downweights returns on smaller stocks may improve the profitability of our long-short
+portfolios. In this section, we explore this idea in two ways. First, we use a value-weighting
+strategy which weights each stock using its market capitalization. Because option returns
+are decreasing in size (e.g., see the portfolio sorts on -SIZE in Table 2), this strategy will
+only increase returns after transaction costs if the reduction in returns due to putting more
+weight on options on larger stocks is offset by lower transaction costs for trading the options
+on those larger stocks. Second, we use “Option-Value-Weights,” which weighs returns by the
+22
+
+========== PAGE 24 ==========
+
+market value of option open interest at the formation date (as used in Zhan et al. (2022)).
+These weights emphasize stock options likely to have more trading and potentially lower
+transaction costs.
+Results are contained in Table A3. We apply different weighting schemes to two of our
+return strategies. The first three columns contain results for the buy-and-hold one-month
+returns with restrictions on the universe of investable options. The last three columns contain
+results for the hold-to-maturity returns, where portfolios are formed on the third Friday of
+each month.
+Focusing first on the buy-and-hold one-month returns in the first three columns, we see
+that putting more weight on stock options with larger market-capitalization stocks or option
+open interest typically increases returns. However, it is only in the case of the idiosyncratic
+volatility and volatility deviation sorts that conclusions about the significance of long-short
+portfolio returns are changed. We note that these two variables are significant using multiple
+cost mitigation strategies. Looking at the results in the last three columns (which focus
+on the strategy formed on the third Friday and held until maturity), we come to a similar
+conclusion: reweighting portfolios towards larger stocks (or stocks with a higher market value
+of open interest) typically increases returns. Still, it does not change conclusions about the
+statistical significance of the strategies we analyze.
+5.2 Adjustment for risk
+In this section, we consider whether the portfolio returns we observe (prior to adjusting for
+transaction costs) could be compensation for well-documented risks in the equity market.
+Because we consider option returns that are delta-hedged only once, they could have stock
+exposure and potentially load on existing anomalies. Likewise, some of the option portfolios
+may provide compensation for market volatility risk. While there is no established factor
+model for risk adjustment in the context of delta-hedged single stock option returns, we
+adjust the returns using the five-factor model of Fama and French (2015) and a simple
+market volatility model by adjusting for the delta-hedged return on the S&P 500 index
+option. Table A4 contains results. We observe that the long-short portfolio return alphas
+are around the same magnitude as the unadjusted average returns.
+5.3 Put options
+Our main results focus on portfolios of delta-neutral call returns. One might wonder if our
+results are driven by the use of call options in particular. In this section, we replicate our
+main analysis in Table 2 using put options. Because our sample construction requires both
+23
+
+========== PAGE 25 ==========
+
+a call and a put option with certain characteristics to exist on the portfolio formation date,
+our sample is identical. So, any difference in results will come from the difference in option
+type rather than the sample composition. For each characteristic, we sort firms into decile
+portfolios and then calculate the returns to investing in a long-short portfolio before and after
+accounting for transaction costs. As in Table 2, we use portfolios that are formed at month
+end and use buy-and-hold one-month returns accounting for stock and option transaction
+costs. The results are contained in Table A5. First, we note that 16 long-short portfolios are
+significant at a 5% level using put options, almost the same as the 17 significant long-short
+portfolios for call options. Second, we can see that the main qualitative result of the paper
+holds; that multiple characteristics that lead to significant long-short gross portfolio returns
+lead to negative net returns once we adjust for transaction costs.
+6 Conclusion
+This paper explores the impact of adjusting delta-hedged option returns for transaction costs
+and look-ahead bias. We study returns of long-short portfolios formed using 24 different vari-
+ables, and 17 lead to significant gross portfolio returns. None of the studied long-short port-
+folios have significant returns after adjusting for transaction costs. Simple cost mitigation
+strategies can increase returns by a large margin and restore significance to some portfo-
+lios. We introduce a novel cost-mitigation strategy utilizing index options and find that it
+dominates existing cost-mitigation strategies. We show that daily-delta hedged strategies
+require significant additional trading, and while they reduce strategy variance, the reduction
+in average returns due to additional trading costs typically makes the strategy unattractive.
+Overall, considering transaction costs is essential for measuring option returns.
+24
+
+========== PAGE 26 ==========
+
+References
+Amihud, Y. (2002). Illiquidity and stock returns: cross-section and time-series effects.Journal
+of Financial Markets 5 (1), 31–56.
+Ang, A., R. J. Hodrick, Y. Xing, and X. Zhang (2006). The cross-section of volatility and
+expected returns. The journal of finance 61 (1), 259–299.
+Angel, J. J., L. E. Harris, and C. S. Spatt (2011). Equity trading in the 21st century. The
+Quarterly Journal of Finance 1 (01), 1–53.
+Baker, M. and J. Wurgler (2006). Investor sentiment and the cross-section of stock returns.
+The journal of Finance 61 (4), 1645–1680.
+Bakshi, G. and N. Kapadia (2003). Delta-hedged gains and the negative market volatility
+risk premium. The Review of Financial Studies 16 (2), 527–566.
+Bali, T. G. and S. Murray (2013). Does risk-neutral skewness predict the cross-section of
+equity option portfolio returns? Journal of Financial and Quantitative Analysis 48 (4),
+1145–1171.
+Blume, M. E. and F. Husic (1973). Price, beta, and exchange listing. The Journal of
+Finance 28 (2), 283–299.
+Boyer, B. H. and K. Vorkink (2014). Stock options as lotteries.The Journal of Finance 69 (4),
+1485–1527.
+Bradshaw, M. T., S. A. Richardson, and R. G. Sloan (2006). The relation between corpo-
+rate financing activities, analysts’ forecasts and stock returns. Journal of Accounting and
+Economics 42 (1), 53–85.
+Cao, J. and B. Han (2013). Cross section of option returns and idiosyncratic stock volatility.
+Journal of Financial Economics 108 (1), 231–249.
+Carr, P. and L. Wu (2004). Variance risk premia. Forthcoming The Review of Financial
+Studies.
+Carr, P. and L. Wu (2008). Variance risk premiums. The Review of Financial Studies 22 (3),
+1311–1341.
+Chen, A. Y. and M. Velikov (2023). Zeroing in on the expected returns of anomalies. Journal
+of Financial and Quantitative Analysis 58 (3), 968–1004.
+25
+
+========== PAGE 27 ==========
+
+Christoffersen, P., R. Goyenko, K. Jacobs, and M. Karoui (2018). Illiquidity premia in the
+equity options market. The Review of Financial Studies 31 (3), 811–851.
+Coval, J. D. and T. Shumway (2001). Expected option returns.The Journal of Finance 56 (3),
+983–1009.
+Daniel, K. and S. Titman (2006). Market reactions to tangible and intangible information.
+The Journal of Finance 61 (4), 1605–1643.
+DeMiguel, V., A. Martin-Utrera, F. J. Nogales, and R. Uppal (2020). A transaction-cost
+perspective on the multitude of firm characteristics.The Review of Financial Studies 33 (5),
+2180–2222.
+Detzel, A., R. Novy-Marx, and M. Velikov (2023). Model comparison with transaction costs.
+The Journal of Finance .
+Dew-Becker, I., S. Giglio, A. Le, and M. Rodriguez (2017). The price of variance risk.Journal
+of Financial Economics 123 (2), 225–250.
+Dichev, I. D. (1998). Is the risk of bankruptcy a systematic risk? The Journal of Fi-
+nance 53 (3), 1131–1147.
+Diether, K. B., C. J. Malloy, and A. Scherbina (2002). Differences of opinion and the cross
+section of stock returns. The Journal of Finance 57 (5), 2113–2141.
+Driessen, J. and P. Maenhout (2007). An empirical portfolio perspective on option pricing
+anomalies. Review of Finance 11 (4), 561–603.
+Driessen, J., P. J. Maenhout, and G. Vilkov (2009). The price of correlation risk: Evidence
+from equity options. The Journal of Finance 64 (3), 1377–1406.
+Duarte, J., C. S. Jones, H. Mo, and M. Khorram (2023). Too good to be true: Look-ahead
+bias in empirical option research. Available at SSRN .
+Elton, E. J., M. J. Gruber, and C. R. Blake (1996). Survivor bias and mutual fund perfor-
+mance. The review of financial studies 9 (4), 1097–1120.
+Evans, R. B. (2010). Mutual fund incubation. The Journal of Finance 65 (4), 1581–1611.
+Fama, E. and K. French (2015). A five-factor asset pricing model.
+Fama, E. F. and K. R. French (1992). The cross-section of expected stock returns. the
+Journal of Finance 47 (2), 427–465.
+26
+
+========== PAGE 28 ==========
+
+Fama, E. F. and K. R. French (1993). Common risk factors in the returns on stocks and
+bonds. Journal of Financial Economics 33 (1), 3–56.
+Fama, E. F. and K. R. French (2006). Profitability, investment and average returns. Journal
+of Financial Economics 82 (3), 491–518.
+Fama, E. F. and K. R. French (2008). Dissecting anomalies. The Journal of Finance 63 (4),
+1653–1678.
+Fama, E. F. and J. D. MacBeth (1973). Risk, return, and equilibrium: Empirical tests.
+Journal of political economy 81 (3), 607–636.
+Fu, F. (2014). Dissecting the asset growth anomaly. Working Paper .
+Goyal, A. and A. Saretto (2009). Cross-section of option returns and volatility. Journal of
+Financial Economics 94 (2), 310–326.
+Goyal, A. and A. Saretto (2022). Are equity option returns abnormal? ipca says no. IPCA
+Says No (August 19, 2022) .
+Goyal, A. and A. Saretto (2024). Can equity option returns be explained by a factor model?
+ipca says yes. Available at SSRN 4194384 .
+Haugen, R. A. and N. L. Baker (1996). Commonality in the determinants of expected stock
+returns. Journal of Financial Economics 41 (3), 401–439.
+Heston, S. L., C. S. Jones, M. Khorram, S. Li, and H. Mo (2023). Option momentum. The
+Journal of Finance 78 (6), 3141–3192.
+Horenstein, A. R., A. Vasquez, and X. Xiao (2022). Common factors in equity option returns.
+Available at SSRN 3290363 .
+Hou, K., C. Xue, and L. Zhang (2020). Replicating anomalies. The Review of financial
+studies 33 (5), 2019–2133.
+Jegadeesh, N. and S. Titman (1993). Returns to buying winners and selling losers: Implica-
+tions for stock market efficiency. The Journal of Finance 48 (1), 65–91.
+Jones, C. M. (2002). A century of stock market liquidity and trading costs. Available at
+SSRN 313681 .
+McLean, R. D. and J. Pontiff (2016). Does academic research destroy stock return pre-
+dictability? The Journal of Finance 71 (1), 5–32.
+27
+
+========== PAGE 29 ==========
+
+Muravyev, D. and N. D. Pearson (2020). Options trading costs are lower than you think.
+The Review of Financial Studies 33 (11), 4973–5014.
+Muravyev, D., N. D. Pearson, and J. M. Pollet (2022). Anomalies and their short-sale costs.
+Available at SSRN 4266059 .
+Neumann, M. and G. Skiadopoulos (2013). Predictable dynamics in higher-order risk-neutral
+moments: Evidence from the s&p 500 options. Journal of Financial and Quantitative
+Analysis 48 (3), 947–977.
+Novy-Marx, R. and M. Velikov (2016). A taxonomy of anomalies and their trading costs.
+The Review of Financial Studies 29 (1), 104–147.
+Palazzo, B. (2012). Cash holdings, risk, and expected returns. Journal of Financial Eco-
+nomics 104 (1), 162–185.
+Pontiff, J. and A. Woodgate (2008). Share issuance and cross-sectional returns. The Journal
+of Finance 63 (2), 921–945.
+Ruan, X. (2020). Volatility-of-volatility and the cross-section of option returns. Journal of
+Financial Markets 48 , 100492.
+Shumway, T. (1997). The delisting bias in crsp data. Journal of Finance , 327–340.
+Soliman, M. T. (2008, 05). The Use of DuPont Analysis by Market Participants. The
+Accounting Review 83 (3), 823–853.
+Stambaugh, R. F., J. Yu, and Y. Yuan (2012). The short of it: Investor sentiment and
+anomalies. Journal of financial economics 104 (2), 288–302.
+Tian, M. and L. Wu (2023). Limits of arbitrage and primary risk-taking in derivative secu-
+rities. The Review of Asset Pricing Studies 13 (3), 405–439.
+Vasquez, A. (2017). Equity volatility term structures and the cross section of option returns.
+Journal of Financial and Quantitative Analysis 52 (6), 2727–2754.
+Zhan, X., B. Han, J. Cao, and Q. Tong (2022). Option return predictability. The Review of
+Financial Studies 35 (3), 1394–1442.
+28
+
+========== PAGE 30 ==========
+
+-VOL_deviation
+CH
+VOV
+IVOL
+-VTS
+Option Price
+ISSUE_5Y
+-PM
+Option MOM
+ISSUE_1Y
+Stock MOM
+RN SKEW
+TEF
+-LN(PRICE)
+-PROFIT
+-BM
+-ILLIQ
+Stock REV
+-Size
+Option REV
+DISP
+CFV
+-ZS
+AMIHUD
+2
+1
+0
+1
+2
+3
+Return (%)
+Gross Net of Stock and Option Transaction Costs
+Figure 1: Equal-weighted long-short portfolio returns before and after accounting
+for transaction costs
+This figure shows average returns on long-short portfolios of delta-hedged call option returns
+sorted by various characteristics. Portfolios are formed at the end of each month and held for
+one month. ‘Gross’ stands for long-short portfolio returns before accounting for transaction
+costs, and ‘Net of Stock and Option Transaction Costs’ stands for long-short portfolio return
+after accounting for transaction costs where the stock effective bid-ask spread is from the
+TAQ database and option effective bid-ask spread equals to 20.3% of the quoted bid-ask
+spread from OptionMetrics database. The error bars show two standard errors (using the
+Newey-West correction with six lags). When the portfolio gross return first becomes negative
+or insignificant, the portfolio performance with higher transaction costs is ignored since it
+must be negative or insignificant. Variables are described in Section A.1. The time period is
+between September 2003 and December 2021.
+29
+
+========== PAGE 31 ==========
+
+2004 2006 2008 2010 2012 2014 2016 2018 2020 2022
+0
+20
+40
+60
+80
+100Percentage of TC
+Option TC Stock TC
+Figure 2: Decomposition of average long-short portfolio transaction costs in per-
+cent.
+This figure shows a decomposition of average transaction costs across all the long-short port-
+folios in Figure 1. The transaction costs include stock transaction costs with an effective
+bid-ask spread from the TAQ database and option transaction costs with an effective bid-ask
+spread equal to 20.3% of the quoted bid-ask spread from the OptionMetrics database. The
+time period is between September 2003 and December 2021.
+30
+
+========== PAGE 32 ==========
+
+2004 2006 2008 2010 2012 2014 2016 2018 2020 2022
+1
+2
+3
+4
+5
+6
+7TC (%)
+Figure 3: Time series of long-short portfolio transaction costs
+This figure contains a graph of the time series of the cross-sectional average of long-short
+portfolio transaction costs of 17 significant anomalies from Table 2. The transaction costs
+include stock transaction costs with an effective bid-ask spread from the TAQ database and
+option transaction costs with an effective bid-ask spread equal to 20.3% of the quoted bid-ask
+spread from the OptionMetrics database. The time period is between September 2003 and
+December 2021.
+31
+
+========== PAGE 33 ==========
+
+-VOL_deviation
+Option MOM
+CH
+IVOL
+ISSUE_5Y
+Option Price
+ISSUE_1Y
+VOV
+-PM
+-BM
+TEF
+Stock MOM
+-VTS
+-PROFIT
+-LN(PRICE)
+CFV
+DISP
+RN SKEW
+-ILLIQ
+-Size
+Stock REV
+Option REV
+-ZS
+AMIHUD
+3
+2
+1
+0
+1
+2
+Return (%)
+Buy-and-hold (month-end, one month) Buy-and-hold (3rd-Friday, until maturity)
+Figure 4: Equal-weighted long-short portfolio returns before and after applying
+cost-mitigation
+This figure shows average returns on long-short portfolios of delta-hedged call option returns
+sorted by various characteristics with and without cost-mitigation. ‘Buy-and-hold (month-
+end, one month)’ refers to the option returns formed at the end of the month and held for
+one month. ‘Buy-and-hold (3rd Friday, until maturity)’ refers to the option returns formed
+on the third Friday of each month and held until maturity. Returns for the two strategies are
+scaled to be 30-day returns for comparability. Transaction costs are equal to stock trading
+costs (effective bid-ask spread from TAQ) plus option trading costs where effective bid-ask
+spread equals 20.3% of the quoted bid-ask spread from Optionmetrics. The error bars show
+two standard errors (using the Newey-West correction with six lags). Variables are described
+in Section A.1. The time period is between September 2003 and December 2021.
+32
+
+========== PAGE 34 ==========
+
+1 2 3 4 5 6 7 8 9 10
+0.0
+0.2
+0.4
+0.6
+0.8Return or TC (%)
+Gross TC Net
+Figure 5: Average returns and transaction costs in decile portfolios
+This graph shows statistics for decile portfolios averaged across all 24 portfolio sort variables.
+First, we sort into decile portfolios for each statistic and then average the characteristics across
+that decile for all 24 characteristics. The blue dots show gross returns for each decile. The
+green triangles show the average transaction costs for each decile (defined as the difference
+between gross and net returns). The red diamonds show net returns for each decile which are
+defined as the difference between gross returns and transaction costs. Transaction costs are
+equal to stock trading costs (effective bid-ask spread from TAQ) plus option trading costs
+where effective bid-ask spread equals 20.3% of the quoted bid-ask spread from Optionmetrics.
+The time period is between September 2003 and December 2021.
+33
+
+========== PAGE 35 ==========
+
+Panel A: Daily delta-hedge (one month)
+2004 2006 2008 2010 2012 2014 2016 2018 2020 2022
+0
+20
+40
+60
+80
+100Percentage of TC
+Option TC Stock TC
+Panel B: Daily delta-hedge (until maturity)
+2004 2006 2008 2010 2012 2014 2016 2018 2020 2022
+0
+20
+40
+60
+80
+100Percentage of TC
+Option TC Stock TC
+Figure 6: Decomposition of average long-short portfolio transaction costs in per-
+cent for the daily delta-hedged trading strategies
+This figure shows a decomposition of transaction costs for long-short portfolios of daily delta-
+hedged call returns. Panel A (Panel B) contains the decomposition for a strategy formed at
+the end of each month, and delta hedged daily for one month (until maturity). The trans-
+action costs are an average of the transaction costs across all 24 long-short portfolios. The
+transaction costs include stock transaction costs with an effective bid-ask spread from the
+TAQ database and option transaction costs with an effective bid-ask spread equal to 20.3%
+of the quoted bid-ask spread from the OptionMetrics database. The time period is between
+September 2003 and December 2021.
+34
+
+========== PAGE 36 ==========
+
+Table 1: Pooled summary statistics of delta-neutral call writing strategies for
+equity options.
+The ‘Buy-and-hold’ returns in each panel refer to a delta-neutral call writing position, which
+involves selling one contract of an equity call and taking a long position of delta shares of
+the underlying stock. The position is held for one month (Panel A) or until option maturity
+(Panels B and C). Panel A contains statistics for a strategy formed at the end of each
+month and held until the end of the next month. Panel B contains statistics for the strategy
+formed at the end of each month and held until maturity. Panel C contains statistics for the
+strategy formed on the third Friday of each month and held until maturity (the third Friday
+of the following month). Stock and option trading costs are calculated at the initiation and
+conclusion of the strategy. “Entry” refers to a statistic on the formation date, and “Exit”
+refers to the associated exit date of the strategy. Days to maturity are the number of calendar
+days until the option expires. Vega is the Black-Scholes option vega scaled by the stock price.
+The time period is between September 2003 to December 2021.
+Panel A: Buy-and-hold until month-end (formed at the month-end)
+mean sd p1 p10 p25 p50 p75 p90 p99
+Buy & hold until month-end (%) 0.46 8.85 -31.56 -7.52 -1.55 1.83 4.32 7.30 16.59
+Moneyness = S/K (%) 99.26 4.84 85.20 93.47 96.81 99.51 101.78 104.63 112.67
+Days to maturity 49.60 2.08 44.00 46.00 49.00 50.00 51.00 52.00 53.00
+Vega 0.14 0.01 0.09 0.13 0.14 0.14 0.15 0.15 0.15
+Quoted option bid-ask spread of Entry (%) 23.90 26.54 1.83 5.41 8.70 15.05 28.04 51.85 142.86
+Quoted option bid-ask spread of Exit (%) 57.07 66.39 2.00 5.94 11.20 25.26 66.67 200.00 200.00
+Effective stock bid-ask spread of Entry(%) 0.13 0.12 0.02 0.04 0.05 0.09 0.16 0.25 0.61
+Effective stock bid-ask spread of Exit(%) 0.13 0.12 0.02 0.04 0.05 0.09 0.16 0.25 0.62
+Observations 255240
+Panel B: Buy-and-hold until maturity (formed at the month-end)
+mean sd p1 p10 p25 p50 p75 p90 p99
+Buy & hold until maturity (%) 0.40 8.58 -28.75 -8.09 -2.35 1.43 4.62 8.02 17.54
+Effective stock bid-ask spread at maturity(%) 0.20 0.30 0.02 0.04 0.07 0.12 0.22 0.41 1.40
+Observations 255240
+Panel C: Buy-and-hold until maturity (formed on the third Friday)
+mean sd p1 p10 p25 p50 p75 p90 p99
+Buy & hold until maturity (%) 0.75 10.89 -37.34 -9.27 -2.44 1.89 5.81 10.21 22.55
+Moneyness = S/K (%) 99.75 4.56 87.10 94.40 97.36 99.84 102.09 105.00 112.93
+Days to maturity 31.11 3.36 28.00 28.00 29.00 29.00 35.00 36.00 36.00
+Vega 0.11 0.01 0.06 0.09 0.10 0.11 0.12 0.12 0.12
+Quoted option bid-ask spread of Entry (%) 28.62 30.43 1.94 5.88 10.00 18.18 34.48 66.67 155.56
+Effective stock bid-ask spread of Entry (%) 0.21 0.29 0.02 0.04 0.07 0.12 0.23 0.42 1.41
+Effective stock bid-ask spread of Exit (%) 0.21 0.31 0.02 0.04 0.07 0.12 0.23 0.43 1.46
+Observations 299755
+35
+
+========== PAGE 37 ==========
+
+Table 2: Equal-weighted buy & hold option portfolio returns
+This table contains buy & hold delta-hedged one-month call option portfolio returns and
+transaction costs for long-short portfolios sorted on various characteristics. Portfolios are
+formed at the end of each month and held for one month. Subscripts refer to portfolio
+deciles. Superscripts ‘net’ and ’gross’ refer to returns before and net-of transaction costs,
+respectively. The transaction costs include stock transaction costs with an effective bid-
+ask spread from the TAQ database and option transaction costs with an effective bid-ask
+spread equal to 20.3% times the quoted bid-ask spread from the OptionMetrics database.
+TC stands for portfolio transaction costs and is defined as the difference between gross and
+net returns. We report t-statistics in parentheses calculated using Newey-West standard
+errors with six lags. Long-short portfolios with significant positive returns at a 5% level or
+above are indicated in bold. Variables are described in Section A.1. The sample period is
+from September 2003 to December 2021.
+Panel A: Option Characteristics
+E[rgross
+1 ] E[rgross
+10 ] E[rgross
+10−1 ] TC E[rnet
+10−1]
+Option MOM −0.02 0 .91 0.93 1.38 −0.45
+(−0.09) (4 .41) (4.51) (−2.65)
+Option REV 0 .77 0 .83 0 .06 2 .09 −2.03
+(3.18) (3 .77) (0 .34) ( −11.77)
+-VOL deviation −0.28 2 .11 2.39 2.30 0 .09
+(−1.51) (7 .56) (8.78) (0.49)
+VOV 0 .13 1 .36 1.23 2.15 −0.92
+(1.07) (4 .70) (5.24) (−4.33)
+-VTS 0 .41 1 .50 1.09 2.52 −1.43
+(2.27) (5 .74) (4.61) (−6.53)
+Option Price −0.41 0 .62 1.03 1.77 −0.74
+(−1.60) (4 .41) (5.57) (−4.69)
+-ILLIQ 0 .06 0 .55 0.49 2.40 −1.91
+(0.27) (3 .32) (3.04) (−7.35)
+RN SKEW 0 .11 0 .68 0.57 2.16 −1.59
+(0.82) (3 .02) (4.55) (−10.34)
+Panel B: Stock Characteristics
+E[rgross
+1 ] E[rgross
+10 ] E[rgross
+10−1 ] TC E[rnet
+10−1]
+AMIHUD 0 .49 0 .41 −0.08 2 .17 −2.25
+(3.83) (1 .63) ( −0.40) ( −9.36)
+-LN(PRICE) 0 .37 0 .92 0.55 1.98 −1.43
+(2.80) (3 .23) (2.57) (−5.97)
+-Size 0 .54 0 .64 0 .11 2 .04 −1.93
+(4.21) (2 .50) (0 .53) ( −7.98)
+Continued on the next page
+36
+
+========== PAGE 38 ==========
+
+Continued from the previous page
+Before TC After TC
+E[rgross
+1 ] E[rgross
+10 ] E[rgross
+10−1 ] TC E[rnet
+10−1]
+CFV 0 .46 0 .47 0 .01 1 .53 −1.52
+(3.93) (1 .79) (0 .03) ( −6.92)
+DISP 0 .39 0 .40 0 .01 1 .54 −1.53
+(2.81) (1 .88) (0 .06) ( −9.23)
+IVOL 0 .18 1 .36 1.18 1.81 −0.63
+(1.33) (5 .66) (6.26) (−3.43)
+ISSUE 1Y 0 .17 0 .97 0.79 1.71 −0.92
+(1.01) (4 .56) (6.47) (−7.02)
+ISSUE 5Y 0 .05 1 .02 0.97 1.65 −0.68
+(0.26) (3 .91) (5.00) (−4.28)
+TEF 0 .36 0 .91 0.55 1.74 −1.19
+(2.56) (4 .74) (3.69) (−8.79)
+-BM 0 .17 0 .66 0.49 1.60 −1.11
+(0.66) (4 .19) (3.26) (−6.40)
+CH 0 .06 1 .55 1.49 2.09 −0.60
+(0.30) (7 .22) (7.95) (−4.56)
+-PM 0 .34 1 .28 0.94 1.97 −1.03
+(1.84) (5 .77) (5.42) (−7.68)
+-PROFIT 0 .53 1 .05 0.52 1.95 −1.43
+(3.38) (4 .44) (3.53) (−9.63)
+-ZS 0 .82 0 .76 −0.06 2 .03 −2.09
+(4.98) (3 .22) ( −0.42) ( −9.69)
+Stock MOM 0 .07 0 .76 0.69 2.09 −1.40
+(0.30) (3 .53) (4.46) (−9.01)
+Stock REV 0 .46 0 .72 0 .26 2 .21 −1.95
+(1.95) (3 .81) (1 .73) ( −9.50)
+37
+
+========== PAGE 39 ==========
+
+Table 3: Long-short decile portfolio returns before and after transaction costs
+This table contains buy & hold delta-hedged one-month call option portfolio returns and
+transaction costs for portfolios sorted on various characteristics. The superscript ‘net’ means
+net of a specific type of transaction cost, which is indicated in the subscript. Subscripts ‘M,’
+‘Stk,’ and ‘Opt’ refer to margin requirement, stock transaction costs, and option transaction
+costs, respectively. TC represents transaction costs and is defined as the difference between
+gross returns and returns net of the particular category of transaction costs indicated in the
+subscript. The option effective bid-ask spread equals 20.3% times the quoted option bid-ask
+spread. Variables are described in Section A.1. We report t-statistics in parentheses calcu-
+lated using Newey-West standard errors with six lags. Long-short portfolios with significant
+positive returns at a 5% level or above are indicated in bold. The time period is between
+September 2003 and December 2021.
+Panel A: Option Characteristics
+E[rgross] T CM E[rnet
+M ] T CStk E[rnet
+Stk] T COpt E[rnet
+Opt]
+Option MOM 0.93 0.08 0.85 0.11 0.82 1.27 −0.34
+(4.51) (4 .11) (3 .99) (−2.00)
+Option REV 0 .06 0 .07 −0.01 0 .33 −0.27 1 .76 −1.70
+(0.34) ( −0.06) ( −1.65) ( −10.04)
+-VOL deviation 2.39 0.09 2.29 0.26 2.13 2.04 0 .34
+(8.78) (8 .60) (8 .01) (1.93)
+VOV 1.23 0.10 1.13 0.27 0.97 1.88 −0.65
+(5.24) (4 .77) (4 .19) (−3.07)
+-VTS 1.09 0.10 1.00 0.35 0.74 2.17 −1.08
+(4.61) (4 .40) (3 .23) (−4.97)
+Option Price 1.03 0.08 0.95 0.22 0.82 1.56 −0.52
+(5.57) (5 .16) (4 .43) (−3.31)
+-ILLIQ 0.49 0.07 0.42 0.25 0 .24 2 .15 −1.66
+(3.04) (2 .56) (1.48) ( −6.47)
+RN SKEW 0.57 0.08 0.49 0.29 0.28 1.87 −1.31
+(4.55) (3 .72) (2 .31) (−8.56)
+Panel B: Stock Characteristics
+E[rgross] T CM E[rnet
+M ] T CStk E[rnet
+Stk] T COpt E[rnet
+Opt]
+AMIHUD −0.08 0 .07 −0.15 0 .28 −0.35 1 .90 −1.98
+(−0.40) ( −0.78) ( −1.82) ( −8.34)
+-LN(PRICE) 0.55 0.10 0.45 0.22 0 .33 1 .77 −1.22
+(2.57) (2 .08) (1.57) ( −5.09)
+-Size 0 .11 0 .10 0 .01 0 .24 −0.13 1 .80 −1.70
+(0.53) (0 .03) ( −0.67) ( −7.09)
+Continued on the next page
+38
+
+========== PAGE 40 ==========
+
+Continued from the previous page
+E[rgross] T CM E[rnet
+M ] T CStk E[rnet
+Stk] T COpt E[rnet
+Opt]
+CFV 0 .01 0 .08 −0.08 0 .13 −0.12 1 .40 −1.40
+(0.03) ( −0.37) ( −0.57) ( −6.38)
+DISP 0 .01 0 .04 −0.03 0 .16 −0.16 1 .37 −1.37
+(0.06) ( −0.26) ( −1.19) ( −8.29)
+IVOL 1.18 0.08 1.10 0.25 0.92 1.56 −0.38
+(6.26) (5 .81) (5 .04) (−2.04)
+ISSUE 1Y 0.79 0.06 0.73 0.14 0.66 1.57 −0.78
+(6.47) (5 .84) (5 .42) (−6.06)
+ISSUE 5Y 0.97 0.05 0.92 0.17 0.81 1.49 −0.51
+(5.00) (4 .62) (4 .18) (−3.21)
+TEF 0.55 0.05 0.50 0.14 0.41 1.60 −1.05
+(3.69) (3 .32) (2 .80) (−7.86)
+-BM 0.49 0.09 0.40 0.14 0.36 1.47 −0.97
+(3.26) (2 .62) (2 .38) (−5.63)
+CH 1.49 0.08 1.41 0.16 1.32 1.93 −0.45
+(7.95) (7 .19) (7 .25) (−3.35)
+-PM 0.94 0.07 0.87 0.15 0.79 1.82 −0.88
+(5.42) (4 .89) (4 .62) (−6.56)
+-PROFIT 0.52 0.09 0.43 0.15 0.37 1.79 −1.28
+(3.53) (2 .98) (2 .52) (−8.63)
+-ZS −0.06 0 .07 −0.13 0 .15 −0.21 1 .89 −1.94
+(−0.42) ( −0.93) ( −1.56) ( −9.13)
+Stock MOM 0.69 0.09 0.60 0.21 0.48 1.89 −1.20
+(4.46) (3 .90) (3 .14) (−7.75)
+Stock REV 0 .26 0 .11 0 .16 0 .35 −0.09 1 .86 −1.60
+(1.73) (1 .00) ( −0.60) ( −8.03)
+39
+
+========== PAGE 41 ==========
+
+Table 4: Fama-MacBeth regressions: Transaction costs for individual delta-
+hedged call option writing
+This table contains cross-sectional regressions of transaction costs on various predictor vari-
+ables. The dependent variable (in percent) is stock transaction costs (effective bid-ask spreads
+come from the TAQ database) plus option transaction costs (effective bid-ask spreads equal
+to 20.3% times quoted bid-ask spreads) scaled by the formation costs accounting for posi-
+tion entry costs. All independent variables are cross-sectionally winsorized at the 0.5% and
+99.5% percentile and standardized to have mean zero and unit standard deviation. We re-
+port t-statistics calculated using Newey-West standard errors with six lags in parentheses.
+Variables are described in Section A.1. The time period is between September 2003 and
+December 2021. *, **, *** stand for p < 0.1, p < 0.05, p < 0.01 respectively.
+(1) (2) (3) (4) (5) (6)
+Lagged TC (%) 0 .59∗∗∗ 0.36∗∗∗
+(37.48) (30 .30)
+-Size 0 .48∗∗∗ 0.23∗∗∗
+(15.85) (12 .38)
+IVOL 0 .27∗∗∗ −0.04∗∗∗
+(13.22) ( −4.88)
+-LN(PRICE) 0 .41∗∗∗ 0.07∗∗∗
+(17.55) (8 .09)
+-VOV 0 .38∗∗∗ 0.15∗∗∗
+(10.45) (7 .61)
+Constant 0 .36∗∗∗ 0.85∗∗∗ 0.85∗∗∗ 0.85∗∗∗ 0.85∗∗∗ 0.55∗∗∗
+(11.49) (15 .19) (15 .17) (15 .18) (15 .20) (13 .79)
+Adjusted R2 0.348 0 .293 0 .100 0 .227 0 .164 0 .467
+40
+
+========== PAGE 42 ==========
+
+Table 5: Time-series regression of transaction costs on predictor variables
+Time-series regression of the cross-sectional average of long-short portfolio return transaction
+costs on lagged state variables. The dependent variable is an equal-weighted average of the
+transaction costs for all the long-short portfolio returns in Table 2. The transaction costs
+include stock transaction costs with an effective bid-ask spread from the TAQ database and
+option transaction costs with an effective bid-ask spread equal to 20.3% times the quoted
+bid-ask spread from the OptionMetrics database. There are 219 observations from September
+2003 to December 2021. *, **, *** stand for p < 0.1, p < 0.05, p < 0.01 respectively.
+(1) (2) (3) (4) (5) (6) (7)
+Lagged Cross-sectional Average Anomaly TC (%) 0.83∗∗∗ 0.84∗∗∗
+(10.62) (13 .28)
+VIX / 10 0 .43∗∗∗ 0.14∗∗
+(3.61) (2 .53)
+VIX Log Difference 0 .69∗ 1.27∗∗∗
+(1.80) (7 .06)
+TED Spread (%) −0.10 −0.14∗
+(−0.54) ( −1.78)
+NBER Recession Indicator 0 .34 −0.05
+(1.06) ( −0.34)
+Sentiment 0.52∗∗∗ 0.06
+(4.95) (0 .89)
+Constant 0 .34∗∗ 1.12∗∗∗ 1.95∗∗∗ 1.99∗∗∗ 1.92∗∗∗ 2.01∗∗∗ 0.13
+(2.55) (5 .42) (31 .84) (21 .59) (31 .75) (30 .81) (0 .88)
+AdjustedR2 0.678 0 .152 0 .023 −0.003 0 .007 0 .057 0 .787
+41
+
+========== PAGE 43 ==========
+
+Table 6: Cost mitigation performance on long-short portfolio returns with trans-
+action costs
+This table contains buy-and-hold option returns for long-short decile portfolios using various
+cost-mitigation strategies. The superscripts ‘mon,’ ‘mat,’ and ‘mat2’ refer to the buy-and-
+hold one-month return formed at the end of each month, the buy-and-hold to maturity return
+formed at the end of each month, and the buy-and-hold to-maturity return formed on the
+third Friday of each month, respectively. The subscripts ‘all’ and ‘lc’ refer to the full sample
+of firms and the subsample with firms in an option bid-ask spread decile below the 5th decile
+in each cross-section. Transaction costs equal stock trading costs (effective bid-ask spread
+from TAQ) plus option trading costs where effective bid-ask spread equals 20.3% times the
+quoted bid-ask spread. All returns are scaled to be 30-day returns for comparability. We
+report t-statistics in parentheses calculated using Newey-West standard errors with six lags.
+Long-short portfolios with significant positive returns at a 5% level or above are indicated
+in bold. Variables are described in Section A.1. The time period is between September 2003
+and December 2021.
+Panel A: Option Characteristics
+Single Strategy Combined Strategy
+E[rmon
+all ] E[rmon
+lc ] E[rmat
+all ] E[rmat2
+all ] E[rmat
+lc ] E[rmat2
+lc ]
+Option MOM −0.46 −0.41 0 .21 0 .36 −0.24 0 .32
+(−2.72) ( −1.98) (0 .94) (1 .75) ( −1.11) (1 .72)
+Option REV −2.01 −1.17 −0.97 −1.22 −0.56 −0.73
+(−11.78) ( −7.39) ( −7.99) ( −6.26) ( −4.26) ( −2.76)
+-VOL deviation 0 .09 0 .11 1.16 1 .51 0 .55 0 .71
+(0.52) (0 .48) (5.38) (8 .00) (2 .38) (3 .05)
+VOV −0.91 0 .26 0.51 0.41 0.45 0 .56
+(−4.33) (1 .18) (2.77) (1.72) (2.48) (2 .23)
+-VTS −1.39 −0.31 0 .10 −0.41 0 .31 0.42
+(−6.48) ( −1.37) (0 .52) ( −2.45) (1 .63) (2.02)
+Option Price −0.73 −0.52 −0.67 −1.39 −0.33 −0.66
+(−4.66) ( −3.13) ( −5.22) ( −6.18) ( −2.10) ( −3.08)
+-ILLIQ −1.89 −0.59 −1.66 −2.70 −0.36 −0.52
+(−7.33) ( −5.58) ( −8.83) ( −11.04) ( −3.18) ( −4.65)
+RN SKEW −1.57 −0.38 −0.30 −0.39 0 .06 −0.09
+(−10.25) ( −2.21) ( −3.64) ( −2.98) (0 .46) ( −0.62)
+Panel B: Stock Characteristics
+Single Strategy Combined Strategy
+E[rmon
+all ] E[rmon
+lc ] E[rmat
+all ] E[rmat2
+all ] E[rmat
+lc ] E[rmat2
+lc ]
+AMIHUD −2.23 −0.67 −0.20 0 .07 −0.05 0 .16
+(−9.27) ( −3.59) ( −1.58) (0 .29) ( −0.40) (0 .69)
+-LN(PRICE) −1.42 −0.52 −0.10 0 .17 −0.13 0 .20
+(−5.96) ( −2.76) ( −0.55) (0 .63) ( −0.70) (0 .82)
+Continued on the next page
+42
+
+========== PAGE 44 ==========
+
+Continued from the previous page
+Single Strategy Combined Strategy
+E[rmon
+all ] E[rmon
+lc ] E[rmat
+all ] E[rmat2
+all ] E[rmat
+lc ] E[rmat2
+lc ]
+-Size −1.91 −0.63 −0.30 −0.08 −0.27 0 .07
+(−7.90) ( −3.40) ( −1.97) ( −0.37) ( −1.66) (0 .27)
+CFV −1.50 −0.69 −0.71 −0.67 −0.37 −0.50
+(−6.96) ( −3.02) ( −4.21) ( −2.86) ( −2.03) ( −1.62)
+DISP −1.51 −0.58 −0.71 −0.78 −0.31 −0.41
+(−9.31) ( −3.58) ( −4.62) ( −4.18) ( −1.93) ( −1.90)
+IVOL −0.63 0 .24 0 .16 −0.00 0.35 0.35
+(−3.44) (1 .40) (1 .01) ( −0.01) (2.08) (1.56)
+ISSUE 1Y −0.91 −0.27 −0.03 −0.12 0 .06 0 .08
+(−7.01) ( −1.82) ( −0.23) ( −0.72) (0 .43) (0 .49)
+ISSUE 5Y −0.68 −0.17 0 .11 −0.20 −0.11 −0.00
+(−4.39) ( −0.91) (0 .76) ( −1.34) ( −0.60) ( −0.01)
+TEF −1.18 −0.33 −0.22 −0.42 −0.08 −0.25
+(−8.77) ( −2.26) ( −1.31) ( −2.03) ( −0.57) ( −1.30)
+-BM −1.10 −0.46 −0.27 −0.64 −0.08 −0.38
+(−6.42) ( −2.89) ( −1.61) ( −3.77) ( −0.46) ( −1.80)
+CH −0.61 −0.12 0.64 0 .44 0.18 0.39
+(−4.56) ( −0.71) (3.58) (2 .49) (0.87) (2.27)
+-PM −1.01 −0.53 0 .08 −0.16 −0.19 −0.17
+(−7.62) ( −3.64) (0 .56) ( −0.74) ( −1.16) ( −0.70)
+-PROFIT −1.41 −0.36 −0.14 −0.37 0 .04 −0.18
+(−9.56) ( −2.84) ( −0.98) ( −1.80) (0 .25) ( −0.87)
+-ZS −2.07 −0.70 −1.02 −1.17 −0.38 −0.47
+(−9.85) ( −3.90) ( −7.24) ( −7.57) ( −2.03) ( −2.07)
+Stock MOM −1.39 −0.39 −0.40 −1.07 −0.17 −0.51
+(−8.97) ( −2.42) ( −2.03) ( −4.58) ( −0.79) ( −2.37)
+Stock REV −1.94 −0.83 −0.83 −1.14 −0.22 −0.38
+(−9.59) ( −4.71) ( −4.25) ( −6.03) ( −1.14) ( −1.83)
+43
+
+========== PAGE 45 ==========
+
+Table 7: Equal-weighted buy-and-hold until maturity returns for decile portfolios
+This table contains buy-and-hold option portfolio returns and transaction costs for portfolios
+sorted on various characteristics. Option returns are for delta-neutral call-writing strategies
+formed at the end of each month and held until maturity. Subscripts refer to portfolio deciles.
+Superscripts ‘net’ and ’gross’ refer to returns before and net-of transaction costs, respectively.
+The transaction costs include stock transaction costs with the effective bid-ask spread from
+the TAQ database and option transaction costs with an effective bid-ask spread equal to
+20.3% times the quoted bid-ask spread from the OptionMetrics database. TC represents
+transaction costs and is defined as the difference between gross returns and returns net of the
+transaction costs. All returns are scaled to be 30-day returns for comparability. Variables are
+described in Section A.1. We report t-statistics in parentheses calculated using Newey-West
+standard errors with six lags. The time period is between September 2003 and December
+2021.
+Panel A: Option Characteristics
+E[rgross
+1 ] T C1 E[rnet
+1 ] E[rgross
+10 ] T C10 E[rnet
+10 ] E[rnet
+10−1]
+Option MOM −0.17 0 .27 −0.44 0 .65 0 .33 0 .32 0 .21
+(−0.73) ( −1.88) (2 .85) (1 .45) (0 .94)
+Option REV 0 .72 0 .36 0 .36 0 .58 0 .48 0 .10 −0.97
+(2.98) (1 .47) (2 .49) (0 .43) ( −7.99)
+-VOL deviation −0.19 0 .34 −0.53 1 .91 0 .60 1 .31 1 .16
+(−0.92) ( −2.50) (6 .96) (5 .48) (5 .38)
+VOV 0 .11 0 .16 −0.05 1 .47 0 .69 0 .79 0 .51
+(0.76) ( −0.36) (5 .40) (3 .21) (2 .77)
+-VTS 0 .40 0 .40 −0.00 1 .50 0 .61 0 .89 0 .10
+(1.86) ( −0.01) (5 .68) (3 .66) (0 .52)
+Option Price 0 .25 0 .53 −0.29 0 .30 0 .19 0 .10 −0.67
+(1.04) ( −1.17) (1 .63) (0 .57) ( −5.22)
+-ILLIQ 1 .00 0 .91 0 .09 0 .28 0 .09 0 .19 −1.66
+(4.09) (0 .39) (1 .50) (1 .00) ( −8.83)
+RN SKEW 0 .24 0 .28 −0.04 0 .76 0 .54 0 .22 −0.30
+(1.40) ( −0.25) (3 .62) (1 .05) ( −3.64)
+Panel B: Stock Characteristics
+E[rgross
+1 ] T C1 E[rnet
+1 ] E[rgross
+10 ] T C10 E[rnet
+10 ] E[rnet
+10−1]
+AMIHUD 0 .29 0 .09 0 .20 1 .01 0 .83 0 .18 −0.20
+(1.95) (1 .33) (4 .48) (0 .81) ( −1.58)
+-LN(PRICE) 0 .19 0 .13 0 .06 0 .94 0 .71 0 .23 −0.10
+(1.21) (0 .36) (3 .55) (0 .86) ( −0.55)
+-Size 0 .33 0 .09 0 .24 0 .91 0 .79 0 .13 −0.30
+(2.30) (1 .66) (3 .96) (0 .54) ( −1.97)
+Continued on the next page
+44
+
+========== PAGE 46 ==========
+
+Continued from the previous page
+E[rgross
+1 ] T C1 E[rnet
+1 ] E[rgross
+10 ] T C10 E[rnet
+10 ] E[rnet
+10−1]
+CFV 0 .46 0 .19 0 .27 0 .39 0 .45 −0.06 −0.71
+(3.50) (2 .02) (1 .56) ( −0.25) ( −4.21)
+DISP 0 .46 0 .21 0 .25 0 .37 0 .42 −0.05 −0.71
+(2.90) (1 .54) (1 .55) ( −0.19) ( −4.62)
+IVOL 0 .21 0 .17 0 .05 1 .10 0 .56 0 .54 0 .16
+(1.57) (0 .33) (4 .68) (2 .34) (1 .01)
+ISSUE 1Y 0 .19 0 .23 −0.04 0 .88 0 .50 0 .38 −0.03
+(1.06) ( −0.22) (3 .67) (1 .65) ( −0.23)
+ISSUE 5Y 0 .13 0 .22 −0.09 0 .92 0 .47 0 .46 0 .11
+(0.71) ( −0.47) (3 .70) (1 .91) (0 .76)
+TEF 0 .39 0 .25 0 .13 0 .91 0 .50 0 .42 −0.22
+(2.51) (0 .85) (3 .64) (1 .74) ( −1.31)
+-BM 0 .13 0 .35 −0.23 0 .54 0 .33 0 .21 −0.27
+(0.54) ( −0.94) (2 .87) (1 .10) ( −1.61)
+CH 0 .07 0 .28 −0.21 1 .60 0 .62 0 .99 0 .64
+(0.33) ( −0.92) (7 .09) (4 .93) (3 .58)
+-PM 0 .30 0 .25 0 .05 1 .23 0 .60 0 .63 0 .08
+(1.42) (0 .22) (4 .99) (2 .69) (0 .56)
+-PROFIT 0 .40 0 .30 0 .10 1 .10 0 .56 0 .54 −0.14
+(2.42) (0 .61) (4 .09) (2 .12) ( −0.98)
+-ZS 0 .87 0 .43 0 .44 0 .73 0 .47 0 .26 −1.02
+(5.00) (2 .62) (2 .97) (1 .10) ( −7.24)
+Stock MOM 0 .08 0 .48 −0.40 0 .55 0 .41 0 .14 −0.40
+(0.31) ( −1.61) (2 .22) (0 .56) ( −2.03)
+Stock REV 0 .48 0 .46 0 .02 0 .49 0 .42 0 .08 −0.83
+(1.73) (0 .07) (2 .26) (0 .35) ( −4.25)
+45
+
+========== PAGE 47 ==========
+
+Table 8: Pooled summary of returns to delta-neutral call writing strategy for
+S&P500 index options
+This table contains summary statistics of delta-neutral call writing strategies on the SPX
+contract. The strategy involves selling one contract of an equity index call option and a long
+position of delta shares of the underlying index. The position is formed at the end of the
+month and held until maturity. The time period is between September 2003 to December
+2021.
+mean sd p1 p10 p25 p50 p75 p90 p99
+Buy & hold until maturity (TC, %) 0.08 2.43 -13.65 -2.11 -0.86 0.39 1.50 2.21 3.75
+Moneyness = S/K (%) 99.99 0.13 99.58 99.86 99.93 100.01 100.07 100.13 100.30
+Days to maturity 49.53 2.10 44.00 46.00 49.00 50.00 51.00 52.00 53.00
+Vega 0.14 0.00 0.14 0.14 0.14 0.14 0.15 0.15 0.15
+Quoted option bid-ask spread of Entry (%) 4.16 3.16 0.66 1.02 1.78 3.60 5.50 8.40 14.21
+Effective index ETF bid-ask spread of Entry (%) 0.06 0.09 0.01 0.01 0.01 0.03 0.07 0.14 0.33
+Effective index ETF bid-ask spread of Exit (%) 0.09 0.11 0.01 0.01 0.02 0.06 0.12 0.23 0.46
+Observations 218
+46
+
+========== PAGE 48 ==========
+
+Table 9: Market volatility neutral strategy characteristics
+This table contains average returns, alphas, and beta of various equal-weighted portfolios
+after accounting for transaction costs for the buy-and-hold until maturity strategy. 1, 10, 10-
+1, and 10-0.9M refer to decile one, decile ten, the long-short portfolio of deciles ten and one,
+and the portfolio long decile ten and short 0.9 units of portfolio M. ‘M’ denotes the market
+factor, which is constructed as the delta-hedged buy-and-hold to maturity S&P 500 call
+option return after accounting for transaction costs. ‘Beta’ and ‘Alpha’ denote the regression
+coefficient and intercept from a univariate regression of option portfolio returns on the option
+market factor returns. The transaction costs include stock trading costs and option trading
+costs with effective bid-ask spread equal to dollar-weighted effective stock bid-ask spread
+from TAQ and 20.3% times quoted option bid-ask spread, respectively. The t-statistics are
+adjusted using the Newey-West method with six lags. Portfolios with significant positive
+returns (alphas) at a 5% level or above are indicated in bold. Variables are described in
+Section A.1. The time period is between September 2003 and December 2021.
+Panel A: Option Characteristics
+Beta Ret (%) Alpha (%)
+1 10 10-1 10-0.9M 10 10-0.9M 10 10-0.9M
+Option MOM 0 .95 0 .83 −0.11 −0.06 0 .32 0 .14 0 .26 0 .15
+(11.07) (9 .89) ( −1.63) ( −0.76) (1 .45) (0 .75) (1 .35) (0 .78)
+Option REV 1 .03 0 .98 −0.05 0 .08 0 .10 −0.06 0 .04 −0.07
+(7.00) (11 .25) ( −0.69) (0 .88) (0 .43) ( −0.41) (0 .27) ( −0.45)
+-VOL deviation 0 .92 0 .79 −0.12 −0.11 1.31 1 .13 1 .25 1 .14
+(9.83) (8 .02) ( −2.33) ( −1.07) (5.48) (5 .93) (6 .41) (5 .89)
+VOV 0 .69 0 .92 0 .22 0 .02 0.79 0 .62 0 .74 0 .62
+(8.18) (7 .40) (1 .65) (0 .18) (3.21) (3 .35) (3 .85) (3 .30)
+-VTS 0 .87 0 .87 0 .00 −0.03 0.89 0 .71 0 .83 0 .72
+(12.15) (6 .93) (0 .01) ( −0.20) (3.66) (3 .92) (4 .42) (3 .87)
+Option Price 0 .99 0 .79 −0.21 −0.11 0 .10 −0.06 0 .06 −0.06
+(10.16) (6 .18) ( −2.47) ( −0.86) (0 .57) ( −0.55) (0 .47) ( −0.44)
+-ILLIQ 0 .88 0 .87 −0.01 −0.02 0 .19 0 .01 0 .13 0 .01
+(9.40) (12 .08) ( −0.33) ( −0.34) (1 .00) (0 .10) (1 .12) (0 .11)
+RN SKEW 0 .78 0 .96 0 .19 0 .06 0 .22 0 .03 0 .14 0 .02
+(8.53) (10 .06) (2 .64) (0 .62) (1 .05) (0 .23) (1 .09) (0 .19)
+Panel B: Stock Characteristics
+Beta Ret (%) Alpha (%)
+1 10 10-1 10-0.9M 10 10-0.9M 10 10-0.9M
+AMIHUD 0 .74 0 .90 0 .16 0 .00 0 .18 0 .00 0 .12 0 .00
+(9.36) (9 .31) (3 .36) (0 .01) (0 .81) (0 .02) (0 .80) (0 .02)
+-LN(PRICE) 0 .72 1 .03 0 .31 0 .13 0 .23 0 .07 0 .17 0 .06
+(9.61) (10 .15) (4 .47) (1 .27) (0 .86) (0 .35) (0 .93) (0 .30)
+-Size 0 .77 0 .92 0 .15 0 .02 0 .13 −0.04 0 .07 −0.05
+(10.86) (9 .84) (2 .74) (0 .21) (0 .54) ( −0.28) (0 .41) ( −0.28)
+CFV 0 .64 1 .14 0 .49 0 .24 −0.06 −0.26 −0.16 −0.28
+(12.22) (10 .48) (5 .71) (2 .20) ( −0.25) ( −1.60) ( −1.10) ( −1.84)
+Continued on the next page
+47
+
+========== PAGE 49 ==========
+
+Continued from the previous page
+Beta Ret (%) Alpha (%)
+1 10 10-1 10-0.9M 10 10-0.9M 10 10-0.9M
+DISP 0 .82 0 .98 0 .15 0 .08 −0.05 −0.23 −0.12 −0.23
+(8.72) (9 .95) (1 .69) (0 .79) ( −0.19) ( −1.35) ( −0.72) ( −1.39)
+IVOL 0 .71 0 .98 0 .26 0 .08 0.54 0 .38 0 .49 0 .38
+(10.04) (7 .79) (2 .14) (0 .63) (2.34) (2 .35) (2 .99) (2 .31)
+ISSUE 1Y 0 .88 0 .95 0 .07 0 .05 0 .38 0 .22 0.33 0.22
+(8.70) (8 .63) (0 .78) (0 .46) (1 .65) (1 .36) (2.02) (1.32)
+ISSUE 5Y 0 .89 0 .93 0 .04 0 .03 0 .46 0 .29 0.40 0.28
+(9.68) (8 .18) (0 .39) (0 .25) (1 .91) (1 .65) (2.26) (1.61)
+TEF 0 .82 0 .88 0 .06 −0.02 0 .42 0 .26 0.37 0.26
+(10.43) (6 .32) (0 .58) ( −0.13) (1 .74) (1 .45) (2.03) (1.41)
+-BM 1 .00 0 .81 −0.20 −0.09 0 .21 0 .04 0 .16 0 .05
+(10.35) (8 .27) ( −2.80) ( −0.91) (1 .10) (0 .33) (1 .24) (0 .37)
+CH 0 .90 0 .70 −0.21 −0.20 0.99 0 .83 0 .96 0 .85
+(8.30) (9 .51) ( −3.02) ( −2.68) (4.93) (4 .93) (5 .61) (5 .01)
+-PM 0 .82 0 .88 0 .06 −0.01 0.63 0 .46 0 .58 0 .46
+(8.70) (7 .23) (0 .45) ( −0.10) (2.69) (2 .57) (3 .12) (2 .52)
+-PROFIT 0 .86 1 .01 0 .14 0 .11 0.54 0 .37 0 .47 0 .36
+(9.96) (8 .69) (2 .75) (0 .93) (2.12) (1 .99) (2 .57) (1 .96)
+-ZS 0 .74 0 .92 0 .17 0 .02 0 .26 0 .07 0 .18 0 .07
+(9.34) (8 .77) (3 .94) (0 .21) (1 .10) (0 .45) (1 .13) (0 .43)
+Stock MOM 1 .01 0 .91 −0.11 0 .01 0 .14 −0.05 0 .06 −0.05
+(11.06) (6 .04) ( −0.91) (0 .09) (0 .56) ( −0.26) (0 .34) ( −0.26)
+Stock REV 1 .05 0 .90 −0.16 0 .00 0 .08 −0.09 0 .03 −0.09
+(6.82) (8 .08) ( −0.90) (0 .04) (0 .35) ( −0.57) (0 .18) ( −0.55)
+48
+
+========== PAGE 50 ==========
+
+Table 10: The impact of hedging frequency
+This table contains a performance evaluation of equal-weighted decile portfolios of option
+returns with different delta-hedge frequencies. Portfolios are formed at the end of each
+month and held until maturity. ‘Once’ represents our buy-and-hold to maturity strategy,
+hedged at the portfolio formation date. ‘Biweekly’ represents the strategy which is re-hedged
+every two weeks, a ‘Weekly’ strategy is re-hedged every week, and the ‘Daily’ strategy is
+re-hedged every trading day. The number without parentheses shows the average return
+after transaction costs and t-statistics, annual Sharpe ratios, and turnover of stocks for the
+return after transaction costs time series are shown in the parentheses, bracket parentheses,
+and curly braces, respectively. All statistics for portfolios with significant positive returns
+at a 5% level or above are indicated in bold. t-statistics are calculated using Newey-West
+standard errors with six lags. For brevity, we only show returns on a subset of our full
+set of characteristics. Variables are described in Section A.1. The time period is between
+September 2003 and December 2021.
+Panel A: Option Characteristics
+Before TC After TC
+Once Biweekly Weekly Daily Once Biweekly Weekly Daily
+Option MOM 0.81 0 .93 0 .98 0 .77 0.21 0 .32 0.33 −0.03
+(3.32) (5 .06) (5 .51) (5 .23) (0.93) (1 .94) (2.09) (−0.23)
+[0.91] [1 .55] [1 .80] [1 .72] [0.24] [0 .55] [0.63] [−0.07]
+{2.03} { 2.41} { 2.76} { 4.44} {2.03} { 2.41} {2.76} {4.44}
+-VOL deviation 2.06 1 .93 1 .90 1 .97 1 .16 1 .02 0 .94 0 .83
+(7.93) (9 .06) (9 .99) (9 .09) (5 .38) (6 .01) (6 .51) (5 .06)
+[2.98] [3 .83] [4 .15] [4 .27] [1 .80] [2 .26] [2 .34] [2 .13]
+{1.98} { 2.36} { 2.71} { 4.41} { 1.98} { 2.36} { 2.71} { 4.41}
+VOV 1.33 1 .36 1 .27 1 .48 0 .52 0 .54 0 .40 0 .44
+(6.09) (7 .45) (6 .37) (7 .36) (2 .78) (3 .58) (2 .34) (2 .64)
+[2.01] [2 .94] [2 .80] [3 .36] [0 .82] [1 .28] [0 .97] [1 .12]
+{1.98} { 2.36} { 2.73} { 4.48} { 1.98} { 2.36} { 2.73} { 4.48}
+Panel B: Stock Characteristics
+Before TC After TC
+Once Biweekly Weekly Daily Once Biweekly Weekly Daily
+-LN(PRICE) 0.72 0 .85 0 .89 1 .16 −0.10 0 .01 0 .01 0 .07
+(4.10) (4 .79) (4 .66) (7 .16) (−0.54) (0 .06) (0 .03) (0 .45)
+[1.05] [1 .77] [2 .02] [2 .99] [−0.14] [0 .02] [0 .01] [0 .18]
+{1.98} { 2.36} { 2.72} { 4.45} {1.98} { 2.36} { 2.72} { 4.45}
+-Size 0.55 0 .63 0 .69 0 .98 −0.30 −0.23 −0.23 −0.16
+(3.72) (4 .06) (4 .23) (6 .17) (−1.97) ( −1.59) ( −1.48) ( −1.16)
+[0.90] [1 .40] [1 .61] [2 .43] [−0.49] [ −0.53] [ −0.55] [ −0.42]
+{1.98} { 2.37} { 2.74} { 4.50} {1.98} { 2.37} { 2.74} { 4.50}
+CH 1.50 1 .27 1 .30 1 .34 0 .64 0 .39 0 .38 0 .23
+(6.93) (7 .20) (7 .96) (8 .72) (3 .59) (2 .95) (3 .19) (2 .29)
+[1.93] [2 .66] [3 .07] [3 .61] [0 .85] [0 .91] [1 .00] [0 .72]
+{1.98} { 2.37} { 2.74} { 4.47} { 1.98} { 2.37} { 2.74} { 4.47}
+49
+
+========== PAGE 51 ==========
+
+A Appendix
+A.1 Description of variables
+1. CFV: Cash flow variance, as in Haugen and Baker (1996), computed as the variance
+of the monthly ratio of annual cash flow to market value of equity over the last 60
+months (at least 36 nonmissing monthly observations). Annual cash flow is Net Income
+(Compustat annual item NI) plus Depreciation and Amortization (item DP), all scaled
+by monthly updated market value of equity. We assume annual accounting items known
+publicly 4 months after the fiscal year end. To avoid stale information, we do not use
+annual accounting information from the fiscal year end that is older than 15 months.
+2. CH: Following Palazzo (2012), we measure cash-to-assets, as cash holdings (Compu-
+stat quarterly item CHEQ) scaled by total assets (item ATQ). We assume quarterly
+accounting items known publicly 4 months after the fiscal quarter end. To avoid stale
+information, we do not use quarterly accounting information from the fiscal quarter
+end that is older than 6 months.
+3. DISP: Analyst earnings forecast dispersion, as in Diether et al. (2002). We measure
+dispersion in analyst earnings forecasts as the ratio of the standard deviation of earnings
+forecasts (IBES unadjusted file, item STDEV) to the absolute value of the consensus
+mean forecast (unadjusted file, item MEANEST). We use the earnings forecasts for the
+current fiscal year (fiscal period indicator = 1), and we require them to be denominated
+in US dollars (currency code = USD). Stocks with a mean forecast of zero are assigned
+to the highest dispersion group. Firms with fewer than two forecasts are excluded.
+4. ISSUE1Y: One-year new issues, as in Pontiff and Woodgate (2008), measured as the
+natural log of the ratio of the split-adjusted shares outstanding at one fiscal year end to
+the split-adjusted shares outstanding at the fiscal year-end 12 months ago. The split-
+adjusted shares outstanding are shares outstanding (Compustat annual item CSHO)
+times the adjustment factor (item AJEX). We assume annual accounting items are
+known publicly four months after the fiscal year-end. To avoid stale information, we
+do not use annual accounting information from the fiscal year end that is older than
+15 months.
+5. ISSUE5Y: Five-year new issues, as in Daniel and Titman (2006), for each month t,
+measured as the log growth rate in the market equity not attributable to stock return,
+log(Met/Met-60)-r(t-60, t). r(t-60, t) is the cumulative log stock return over the past
+50
+
+========== PAGE 52 ==========
+
+60 months, including month t, and Met is the market equity (from CRSP) on the last
+trading day of month t.
+6. PM: Profit margin, as in Soliman (2008), calculated as Earnings Before Interest and
+Taxes (Compustat annual item EBIT) scaled by Revenue (item REVT). We assume
+annual accounting items are known publicly four months after the fiscal year-end. To
+avoid stale information, we do not use annual accounting information from the fiscal
+year end that is older than 15 months.
+7. ln(PRICE): The log of the stock price at the end of last month, as in Blume and Husic
+(1973).
+8. PROFIT: Profitability, as in Fama and French (2006), calculated as earnings divided
+by book equity (the denominator is current, not lagged, book equity), in which earnings
+is defined as Income Before Extraordinary Items (Compustat annual item IB). Book
+equity is stockholders’ book equity, plus balance sheet deferred taxes and investment
+tax credit (item TXDITC) if available, minus the book value of preferred stock. Stock-
+holders’ equity is the value reported by Compustat (item SEQ), if it is available. If not,
+we measure stockholders’ equity as the book value of common equity (item CEQ) plus
+the par value of preferred stock (item PSTK), or the book value of assets (item AT)
+minus total liabilities (item LT). Depending on availability, we use redemption (item
+PSTKRV), liquidating (item PSTKL), or par value (item PSTK) for the book value of
+preferred stock. We assume annual accounting items are known publicly four months
+after the fiscal year end. To avoid stale information, we do not use annual accounting
+information from the fiscal year end that is older than 15 months.
+9. TEF: Total external financing, as in Bradshaw et al. (2006), for one fiscal year-end,
+scaled by the average of total assets (Compustat annual item AT) at the same fiscal
+year-end and the prior fiscal year-end. Total external financing is the sum of net
+equity financing and net debt financing. Net equity financing is the proceeds from
+the sale of common and preferred stocks (Compustat annual item SSTK), less cash
+payments for the repurchases of common and preferred stocks (item PRSTKC), and
+less cash payments for dividends (item DV). Net debt financing is the cash proceeds
+from the issuance of long-term debt (item DLTIS) less cash payments for long-term
+debt reductions (item DLTR) plus the net changes in current debt (item DLCCH,
+zero if missing). We assume annual accounting items are known publicly four months
+after the fiscal year end. To avoid stale information, we do not use annual accounting
+information from the fiscal year end that is older than 15 months.
+51
+
+========== PAGE 53 ==========
+
+10. ZS: Z-score. We follow Dichev (1998) to construct the Z-score (Dichev (1998)): Z =
+1.2×WCTA + 1.4×RETA + 3.3×EBITTA + 0.6×METL + SALETA, in which WCTA
+is working capital (Compustat annual item ACT minus item LCT) divided by total
+assets (item AT), RETA is retained earnings (item RE) divided by total assets, EBITTA
+is earnings before interest and taxes (item OIADP) divided by total assets, METL is
+the market equity (from CRSP, at fiscal year end) divided by total liabilities (item LT),
+and SALETA is sales (item SALE) divided by total assets. For firms with more than
+1 share class, we merge the market equity for all share classes before computing Z.
+11. VOL deviation: Volatility mispricing measure as in Goyal and Saretto (2009), calcu-
+lated as the log difference between the realized volatility and Black-Scholes implied
+volatility for at-the-money options at the end of the last month.
+12. IVOL: Idiosyncratic volatility, as in Ang et al. (2006) and Cao and Han (2013), com-
+puted as the standard deviation of the regression residual of individual stock returns
+on the Fama and French (1993) three factors using daily data in the previous month.
+13. AMIHUD: The Amihud (2002) stock illiquidity measure (calculated as the average of
+the daily ratio of the absolute stock return to dollar volume over the previous month).
+14. Size: the natural logarithm of the market value of the firm’s equity as in Fama and
+French (1993).
+15. BM: Book-to-market ratio, measured as the ratio of book equity to market equity as
+in Fama and French (1993).
+16. Stock REV: Stock return reversal, measured as lagged one-month return as in Jegadeesh
+and Titman (1993).
+17. Stock MOM: Stock return momentum, the cumulative return on the stock over the 11
+months ending at the beginning of the previous month as in Jegadeesh and Titman
+(1993).
+18. VTS: The slope of the volatility term structure, measured as the difference between
+long-term and short-term implied volatilities as in Vasquez (2017).
+19. VOV: Volatility of volatility, measured as the standard deviation of implied volatility
+in the past month as Ruan (2020).
+20. Option Momentum: Option return momentum, calculated as the cumulative option
+return on the stock over the 11 months ending at the beginning of the previous month
+as in Heston et al. (2023).
+52
+
+========== PAGE 54 ==========
+
+21. Option REV: Option return reversal, measured as lagged one-month option return as
+in Heston et al. (2023).
+22. Option Price: The option price.
+23. ILLIQ: Option illiquidity as suggested in Christoffersen et al. (2018). This is measured
+using the quoted option bid-ask spread.
+24. RN SKEW: Risk neutral skewness as in (Bali and Murray, 2013). We use the 30-day
+risk-neutral skewness. The construction follows Bakshi and Kapadia (2003). We thank
+Grigory Vilkov for making his code available online at https://osf.io/z2486/
+53
+
+========== PAGE 55 ==========
+
+A.2 Figures and Tables
+2004 2006 2008 2010 2012 2014 2016 2018 2020 2022
+0.10
+0.15
+0.20
+0.25
+0.30Stock TC (%)
+3
+4
+5
+6
+7
+8
+9
+10
+Option TC (%)
+Stock TC Option TC
+Figure A1: Time series of average transaction costs - sample universe
+This figure contains a graph of the average transaction costs in the time series for our sample
+universe. The average cost (in %) is calculated at the end of each month in our sample
+(corresponding to portfolio formation dates). ‘Stock TC’ denotes the stock transaction cost
+defined as the percentage dollar-weighted effective spread from the TAQ database. ‘Option
+TC’ denotes the option transaction cost defined as 20.3% of the percentage quoted bid-ask
+spread from the OptionMetrics database. The time period is between September 2003 and
+December 2021.
+54
+
+========== PAGE 56 ==========
+
+Table A1: The impact of filling missing values on portfolio returns
+This table contains equal-weighted delta-hedged option portfolio returns sorted by various
+characteristics using samples with and without filling of missing data. Portfolios are formed
+at the end of each month and held for one month. ‘Option’ denotes the option sample
+without filling of price data; ‘Option Fill’ denotes the option sample with filling of price
+data; ‘Difference’ represents the difference in returns (after transaction costs) between the
+‘Option’ and ‘Option Fill’ samples. The first three columns show the long-short portfolio
+return without transaction costs, and the last three columns show the long-short portfolio
+return after transaction costs. We report t-statistics in parentheses calculated using Newey-
+West standard errors with six lags. Variables are described in Section A.1. The sample
+period is from September 2003 to December 2021.
+Panel A: Option Characteristics
+Before TC After TC
+Option Option Fill Difference Option Option Fill Difference
+Option MOM 0 .94 0 .93 0 .01 −0.43 −0.45 0 .02
+(4.33) (4 .51) (0 .39) ( −2.41) ( −2.65) (0 .54)
+Option REV 0 .07 0 .06 0 .01 −2.02 −2.03 0 .01
+(0.41) (0 .34) (0 .85) ( −11.94) ( −11.77) (0 .84)
+-VOL deviation 2 .44 2 .39 0 .06 0 .15 0 .09 0 .06
+(8.92) (8 .78) (2 .86) (0 .84) (0 .49) (2 .93)
+VOV 1 .28 1 .23 0 .04 −0.87 −0.92 0 .04
+(5.42) (5 .24) (2 .35) ( −4.13) ( −4.33) (2 .29)
+-VTS 1 .14 1 .09 0 .05 −1.38 −1.43 0 .05
+(4.83) (4 .61) (2 .35) ( −6.31) ( −6.53) (2 .25)
+Option Price 1 .04 1 .03 0 .00 −0.73 −0.74 0 .01
+(5.68) (5 .57) (0 .22) ( −4.72) ( −4.69) (0 .46)
+-ILLIQ 0 .49 0 .49 −0.00 −1.91 −1.91 0 .00
+(2.99) (3 .04) ( −0.17) ( −7.27) ( −7.35) (0 .09)
+RN SKEW 0 .58 0 .57 0 .01 −1.57 −1.59 0 .02
+(4.63) (4 .55) (0 .88) ( −10.39) ( −10.34) (1 .14)
+Panel B: Stock Characteristics
+Before TC After TC
+Option Option Fill Diff Option Option Fill Diff
+AMIHUD −0.02 −0.08 0 .06 −2.19 −2.25 0 .06
+(−0.10) ( −0.40) (3 .89) ( −9.20) ( −9.36) (3 .96)
+-LN(PRICE) 0 .60 0 .55 0 .05 −1.38 −1.43 0 .05
+(2.83) (2 .57) (2 .70) ( −5.76) ( −5.97) (2 .74)
+-Size 0 .17 0 .11 0 .06 −1.87 −1.93 0 .06
+(0.83) (0 .53) (3 .56) ( −7.74) ( −7.98) (3 .66)
+Continued on the next page
+55
+
+========== PAGE 57 ==========
+
+Continued from the previous page
+Before TC After TC
+Option Option Fill Difference Option Option Fill Difference
+CFV 0 .01 0 .01 0 .01 −1.51 −1.52 0 .01
+(0.05) (0 .03) (0 .32) ( −6.77) ( −6.92) (0 .71)
+DISP 0 .01 0 .01 0 .00 −1.52 −1.53 0 .00
+(0.09) (0 .06) (0 .78) ( −9.19) ( −9.23) (0 .84)
+IVOL 1 .25 1 .18 0 .07 −0.56 −0.63 0 .07
+(6.58) (6 .26) (4 .22) ( −3.04) ( −3.43) (4 .25)
+ISSUE 1Y 0 .82 0 .79 0 .02 −0.89 −0.92 0 .03
+(6.60) (6 .47) (1 .43) ( −7.07) ( −7.02) (1 .59)
+ISSUE 5Y 0 .97 0 .97 −0.01 −0.68 −0.68 −0.00
+(5.06) (5 .00) ( −0.42) ( −4.45) ( −4.28) ( −0.20)
+TEF 0 .58 0 .55 0 .03 −1.15 −1.19 0 .03
+(3.92) (3 .69) (2 .69) ( −8.65) ( −8.79) (2 .82)
+-BM 0 .49 0 .49 −0.01 −1.11 −1.11 −0.01
+(3.24) (3 .26) ( −0.89) ( −6.44) ( −6.40) ( −0.57)
+CH 1 .49 1 .49 0 .00 −0.60 −0.60 0 .00
+(7.90) (7 .95) (0 .41) ( −4.51) ( −4.56) (0 .53)
+-PM 0 .95 0 .94 0 .01 −1.02 −1.03 0 .01
+(5.30) (5 .42) (0 .51) ( −7.55) ( −7.68) (0 .52)
+-PROFIT 0 .53 0 .52 0 .01 −1.42 −1.43 0 .01
+(3.58) (3 .53) (0 .57) ( −9.69) ( −9.63) (0 .62)
+-ZS −0.04 −0.06 0 .02 −2.07 −2.09 0 .02
+(−0.28) ( −0.42) (0 .81) ( −9.61) ( −9.69) (0 .92)
+Stock MOM 0 .67 0 .69 −0.02 −1.42 −1.40 −0.01
+(4.31) (4 .46) ( −1.13) ( −9.15) ( −9.01) ( −0.88)
+Stock REV 0 .29 0 .26 0 .03 −1.92 −1.95 0 .03
+(1.90) (1 .73) (1 .82) ( −9.42) ( −9.50) (1 .91)
+56
+
+========== PAGE 58 ==========
+
+Table A2: The impact of sample period on portfolio returns
+This table contains equal-weighted delta-hedged option portfolio returns sorted by various
+characteristics using different sample periods. Long-short decile portfolios are formed at the
+end of each month and held for one month. All returns are gross returns before transaction
+costs. ‘96-16’ denotes the sample from January 1996 to April 2016; ‘03-21’ denotes the sample
+from September 2003 to December 2021; ‘96-03’ denotes the sample from January 1996 to
+August 2003; and ‘16-21’ denotes for the sample from May 2003 to December 2021. We
+report t-statistics in parentheses calculated using Newey-West standard errors with six lags
+and Sharpe ratios in bracket parentheses. Variables are described in Section A.1.
+Panel A: Option Characteristics
+96-16 03-21 96-03 16-21
+Option MOM 0 .72 0 .93 1 .00 1 .78
+(2.48) (4 .51) (1 .34) (4 .42)
+[0.58] [1 .05] [0 .55] [1 .64]
+Option REV −0.34 0 .06 −0.78 0 .40
+(−1.61) (0 .34) ( −1.62) (1 .02)
+[−0.38] [0 .08] [ −0.62] [0 .43]
+-VOL deviation 2 .83 2 .39 4 .27 3 .35
+(10.02) (8 .78) (9 .12) (4 .84)
+[3.64] [3 .23] [4 .85] [3 .49]
+VOV 0 .95 1 .23 0 .97 1 .86
+(5.80) (5 .24) (2 .64) (2 .91)
+[1.01] [1 .70] [0 .72] [2 .01]
+-VTS 1 .31 1 .09 1 .88 1 .37
+(7.61) (4 .61) (5 .72) (2 .00)
+[1.56] [1 .55] [1 .62] [1 .40]
+Option Price 0 .76 1 .03 0 .52 1 .26
+(3.02) (5 .57) (0 .88) (2 .88)
+[0.75] [1 .49] [0 .35] [1 .36]
+-ILLIQ 0 .62 0 .49 0 .55 0 .05
+(3.19) (3 .04) (1 .37) (0 .18)
+[0.81] [0 .81] [0 .55] [0 .07]
+RN SKEW 0 .55 0 .57 0 .24 0 .59
+(6.02) (4 .55) (0 .54) (1 .67)
+[1.37] [1 .01] [0 .39] [0 .71]
+Panel B: Stock Characteristics
+96-16 03-21 96-03 16-21
+AMIHUD 0 .13 −0.08 0 .51 0 .01
+(0.67) ( −0.40) (1 .43) (0 .03)
+[0.18] [ −0.12] [0 .60] [0 .02]
+Continued on the next page
+57
+
+========== PAGE 59 ==========
+
+Continued from the previous page
+96-16 03-21 96-03 16-21
+-LN(PRICE) 0 .66 0 .55 1 .00 0 .81
+(2.69) (2 .57) (1 .73) (1 .39)
+[0.75] [0 .74] [0 .83] [0 .82]
+-Size 0 .24 0 .11 0 .53 0 .25
+(1.21) (0 .53) (1 .24) (0 .48)
+[0.33] [0 .14] [0 .58] [0 .24]
+CFV −0.15 0 .01 −0.07 0 .57
+(−0.97) (0 .03) ( −0.21) (1 .00)
+[−0.24] [0 .01] [ −0.09] [0 .61]
+DISP −0.17 0 .01 −0.32 0 .24
+(−1.02) (0 .06) ( −0.88) (0 .95)
+[−0.25] [0 .02] [ −0.35] [0 .42]
+IVOL 0 .77 1 .18 0 .52 1 .66
+(3.57) (6 .26) (1 .02) (3 .57)
+[0.80] [1 .73] [0 .37] [1 .91]
+ISSUE 1Y 0 .24 0 .79 −0.27 1 .27
+(1.71) (6 .47) ( −0.95) (4 .97)
+[0.35] [1 .44] [ −0.30] [2 .02]
+ISSUE 5Y 0 .36 0 .97 −0.07 1 .73
+(2.42) (5 .00) ( −0.25) (3 .90)
+[0.54] [1 .54] [ −0.08] [2 .15]
+TEF 0 .08 0 .55 −0.23 1 .10
+(0.51) (3 .69) ( −0.63) (3 .72)
+[0.11] [1 .04] [ −0.22] [1 .80]
+-BM 0 .30 0 .49 −0.29 0 .05
+(1.31) (3 .26) ( −0.58) (0 .13)
+[0.32] [0 .74] [ −0.22] [0 .05]
+CH 0 .63 1 .49 −0.25 2 .14
+(2.42) (7 .95) ( −0.45) (5 .77)
+[0.65] [2 .04] [ −0.19] [2 .29]
+-PM 0 .24 0 .94 −0.23 1 .83
+(1.29) (5 .42) ( −0.54) (5 .61)
+[0.29] [1 .34] [ −0.19] [1 .96]
+-PROFIT 0 .17 0 .52 −0.00 1 .07
+(1.14) (3 .53) ( −0.01) (3 .81)
+[0.27] [0 .88] [ −0.01] [1 .73]
+-ZS 0 .18 −0.06 0 .62 0 .10
+(0.92) ( −0.42) (1 .38) (0 .33)
+[0.21] [ −0.09] [0 .48] [0 .12]
+Stock MOM 0 .30 0 .69 0 .01 1 .15
+(1.26) (4 .46) (0 .02) (5 .06)
+[0.33] [0 .97] [0 .01] [1 .48]
+Stock REV 0 .12 0 .26 −0.29 −0.00
+(0.53) (1 .73) ( −0.59) ( −0.02)
+[0.15] [0 .41] [ −0.27] [ −0.01]
+58
+
+========== PAGE 60 ==========
+
+Table A3: The impact of portfolio weights on returns
+Long-short delta-hedged option portfolio returns after transaction costs under stock value-
+weighted, equal-weighted, and option value-weighted weighting schemes. ‘Stock-VW’ refers
+to a portfolio that weights each return using its stock market capitalization at the portfolio
+formation date, ‘EW’ refers to equal weights, and ‘Option-Value-Weights’ weighs by the
+market value of option open interest at the formation date. All returns are net of transaction
+costs. The transaction costs include stock trading costs and option trading costs with effective
+bid-ask spread equal to dollar-weighted effective stock bid-ask spread from TAQ and 20.3%
+times quoted option bid-ask spread, respectively. The superscripts ‘mon’ and ‘mat2’ refer to
+the buy-and-hold one-month return formed at the end of each month and the buy-and-hold
+to-maturity return formed on the third Friday of each month, respectively. The subscripts
+‘all’ and ‘lc’ refer to the full sample of firms and the subsample with firms in an option bid-ask
+spread decile below the 5th decile in each cross-section. Portfolios with significant positive
+returns at a 5% level or above are indicated in bold. The t-statistics are adjusted using the
+Newey-West method with six lags. Variables are described in Section A.1. The time period
+is between September 2003 and December 2021.
+Panel A: Option Characteristics
+E[rmon
+lc ] E[rmat2
+all ]
+Stock-VW EW Option-VW Stock-VW EW Option-VW
+Option MOM −0.38 −0.41 −0.41 0 .30 0 .36 0 .33
+(−1.91) ( −1.98) ( −0.62) (1 .49) (1 .75) (0 .71)
+Option REV −0.80 −1.17 −0.85 −1.02 −1.22 −1.36
+(−5.13) ( −7.39) ( −2.27) ( −4.78) ( −6.26) ( −4.24)
+-VOL deviation 0 .40 0 .11 1.05 1 .29 1 .51 1 .68
+(1.93) (0 .48) (2.34) (5 .79) (8 .00) (4 .78)
+VOV 0 .28 0 .26 0 .32 0 .19 0 .41 0 .15
+(1.21) (1 .18) (0 .96) (0 .53) (1 .72) (0 .42)
+-VTS 0 .23 −0.31 0 .39 0 .45 −0.41 0 .05
+(0.92) ( −1.37) (0 .83) (1 .74) ( −2.45) (0 .14)
+Option Price −0.08 −0.52 −0.72 −0.89 −1.39 −1.14
+(−0.59) ( −3.13) ( −1.97) ( −4.30) ( −6.18) ( −3.60)
+-ILLIQ −0.29 −0.59 −0.44 −1.81 −2.70 −2.52
+(−2.77) ( −5.58) ( −1.96) ( −10.66) ( −11.04) ( −6.78)
+RN SKEW −0.14 −0.38 0 .06 −0.30 −0.39 0 .29
+(−0.86) ( −2.21) (0 .19) ( −2.00) ( −2.98) (0 .96)
+Panel B: Stock Characteristics
+E[rmon
+lc ] E[rmat2
+all ]
+Stock-VW EW Option-VW Stock-VW EW Option-VW
+AMIHUD −0.73 −0.67 −0.75 0 .01 0 .07 0 .35
+(−3.78) ( −3.59) ( −1.44) (0 .03) (0 .29) (0 .80)
+-LN(PRICE) −0.41 −0.52 −0.57 −0.02 0 .17 0 .47
+(−2.20) ( −2.76) ( −1.60) ( −0.07) (0 .63) (1 .49)
+-Size −0.66 −0.63 −1.09 −0.15 −0.08 −0.03
+(−3.37) ( −3.40) ( −2.18) ( −0.68) ( −0.37) ( −0.08)
+CFV −0.53 −0.69 −0.65 −0.30 −0.67 −0.18
+(−2.61) ( −3.02) ( −1.79) ( −1.52) ( −2.86) ( −0.58)
+Continued on the next page
+59
+
+========== PAGE 61 ==========
+
+Continued from the previous page
+E[rmon
+lc ] E[rmat2
+all ]
+Stock-VW EW Option-VW Stock-VW EW Option-VW
+DISP −0.52 −0.58 −0.18 −0.53 −0.78 −0.09
+(−2.52) ( −3.58) ( −0.63) ( −2.06) ( −4.18) ( −0.34)
+IVOL 0.43 0.24 −0.04 −0.01 −0.00 0 .38
+(2.38) (1.40) ( −0.10) ( −0.04) ( −0.01) (1 .30)
+ISSUE 1Y −0.21 −0.27 −0.09 −0.26 −0.12 −0.26
+(−1.49) ( −1.82) ( −0.25) ( −1.83) ( −0.72) ( −0.96)
+ISSUE 5Y −0.22 −0.17 0 .15 −0.36 −0.20 −0.16
+(−1.40) ( −0.91) (0 .37) ( −2.34) ( −1.34) ( −0.64)
+TEF −0.28 −0.33 −0.10 −0.41 −0.42 −0.06
+(−2.13) ( −2.26) ( −0.23) ( −1.74) ( −2.03) ( −0.26)
+-BM −0.13 −0.46 −0.51 −0.27 −0.64 −0.14
+(−0.73) ( −2.89) ( −1.69) ( −1.40) ( −3.77) ( −0.49)
+CH −0.42 −0.12 −0.45 −0.06 0.44 0 .82
+(−3.06) ( −0.71) ( −1.12) ( −0.27) (2.49) (2 .69)
+-PM −0.25 −0.53 −0.59 −0.01 −0.16 0 .50
+(−1.66) ( −3.64) ( −1.33) ( −0.06) ( −0.74) (1 .93)
+-PROFIT −0.23 −0.36 −0.41 −0.03 −0.37 0 .16
+(−1.81) ( −2.84) ( −1.19) ( −0.16) ( −1.80) (0 .60)
+-ZS −0.28 −0.70 −0.70 −0.34 −1.17 −0.46
+(−1.99) ( −3.90) ( −1.25) ( −2.04) ( −7.57) ( −1.59)
+Stock MOM −0.02 −0.39 −0.83 −0.70 −1.07 −1.17
+(−0.11) ( −2.42) ( −2.14) ( −2.84) ( −4.58) ( −3.28)
+Stock REV −0.33 −0.83 −1.34 −0.36 −1.14 −0.76
+(−1.71) ( −4.71) ( −2.99) ( −1.60) ( −6.03) ( −2.30)
+60
+
+========== PAGE 62 ==========
+
+Table A4: Risk-adjustment of portfolio returns
+This table contains equal-weighted delta-hedged option portfolio returns sorted on various
+characteristics with risk adjustment. Portfolios are formed at the end of each month and
+held for one month. Subscripts refer to portfolio deciles. Superscripts ‘net’ and ’gross’ refer
+to returns before and net-of transaction costs, respectively. Column ‘ αF F5’ contains the al-
+pha relative to the Fama and French five-factor model. Column ‘ αSP 500’ contains the alphas
+relative to the delta-hedged SP500 option return. We report t-statistics in parentheses calcu-
+lated using Newey-West standard errors with six lags. Variables are described in Section A.1.
+The time period is between September 2003 and December 2021. The sample period is from
+September 2003 to December 2021.
+Panel A: Option Characteristics
+E[rgross
+1 ] E[rgross
+10 ] E[rgross
+10−1 ] αF F5 αSP 500
+Option MOM −0.02 0 .91 0.93 0 .93 0 .99
+(−0.09) (4 .41) (4.51) (4 .70) (4 .28)
+Option REV 0 .77 0 .83 0 .06 0 .06 0 .11
+(3.18) (3 .77) (0 .34) (0 .37) (0 .52)
+-VOL deviation −0.28 2 .11 2.39 2 .34 2 .41
+(−1.51) (7 .56) (8.78) (10 .10) (9 .26)
+VOV 0 .13 1 .36 1.23 1 .10 1 .08
+(1.07) (4 .70) (5.24) (5 .41) (4 .55)
+-VTS 0 .41 1 .50 1.09 1 .02 1 .05
+(2.27) (5 .74) (4.61) (5 .11) (4 .36)
+Option Price −0.41 0 .62 1.03 1 .17 1 .21
+(−1.60) (4 .41) (5.57) (7 .78) (5 .60)
+-ILLIQ 0 .06 0 .55 0.49 0 .64 0 .48
+(0.27) (3 .32) (3.04) (5 .31) (3 .10)
+RN SKEW 0 .11 0 .68 0.57 0 .57 0 .44
+(0.82) (3 .02) (4.55) (4 .29) (3 .51)
+Panel B: Stock Characteristics
+E[rgross
+1 ] E[rgross
+10 ] E[rgross
+10−1 ] αF F5 αSP 500
+AMIHUD 0 .49 0 .41 −0.08 −0.15 −0.18
+(3.83) (1 .63) ( −0.40) ( −0.97) ( −0.93)
+-LN(PRICE) 0 .37 0 .92 0.55 0 .44 0.42
+(2.80) (3 .23) (2.57) (2 .71) (1.84)
+-Size 0 .54 0 .64 0 .11 0 .03 0 .04
+(4.21) (2 .50) (0 .53) (0 .21) (0 .17)
+CFV 0 .46 0 .47 0 .01 −0.18 −0.22
+(3.93) (1 .79) (0 .03) ( −1.05) ( −0.90)
+Continued on the next page
+61
+
+========== PAGE 63 ==========
+
+Continued from the previous page
+E[rgross
+1 ] E[rgross
+10 ] E[rgross
+10−1 ] αF F5 αSP 500
+DISP 0 .39 0 .40 0 .01 −0.04 −0.07
+(2.81) (1 .88) (0 .06) ( −0.32) ( −0.52)
+IVOL 0 .18 1 .36 1.18 1 .16 1 .06
+(1.33) (5 .66) (6.26) (6 .47) (5 .68)
+ISSUE 1Y 0 .17 0 .97 0.79 0 .76 0 .80
+(1.01) (4 .56) (6.47) (5 .94) (5 .88)
+ISSUE 5Y 0 .05 1 .02 0.97 0 .88 0 .97
+(0.26) (3 .91) (5.00) (5 .13) (4 .49)
+TEF 0 .36 0 .91 0.55 0 .49 0 .49
+(2.56) (4 .74) (3.69) (3 .24) (2 .88)
+-BM 0 .17 0 .66 0.49 0 .68 0 .67
+(0.66) (4 .19) (3.26) (5 .48) (3 .90)
+CH 0 .06 1 .55 1.49 1 .49 1 .64
+(0.30) (7 .22) (7.95) (7 .66) (7 .40)
+-PM 0 .34 1 .28 0.94 0 .96 0 .99
+(1.84) (5 .77) (5.42) (4 .58) (4 .38)
+-PROFIT 0 .53 1 .05 0.52 0 .38 0 .44
+(3.38) (4 .44) (3.53) (2 .89) (2 .63)
+-ZS 0 .82 0 .76 −0.06 −0.14 −0.16
+(4.98) (3 .22) ( −0.42) ( −1.11) ( −1.14)
+Stock MOM 0 .07 0 .76 0.69 0 .66 0 .76
+(0.30) (3 .53) (4.46) (4 .21) (4 .31)
+Stock REV 0 .46 0 .72 0 .26 0.35 0.35
+(1.95) (3 .81) (1 .73) (2.28) (1.84)
+62
+
+========== PAGE 64 ==========
+
+Table A5: Equal-weighted buy & hold option portfolio returns - put options
+This table contains buy & hold delta-hedged put option portfolio returns and transaction
+costs for long-short portfolios sorted on various characteristics. Portfolios are formed at the
+end of each month and held for one month. Subscripts refer to portfolio deciles. Superscripts
+‘net’ and ’gross’ refer to returns before and net-of transaction costs, respectively. TC stands
+for portfolio transaction costs and is defined as the difference between gross and net returns.
+The transaction costs include stock transaction costs with an effective bid-ask spread from the
+TAQ database and option transaction costs with an effective bid-ask spread equal to 20.3%
+times the quoted bid-ask spread from the OptionMetrics database. We report t-statistics
+in parentheses calculated using Newey-West standard errors with six lags. Variables are
+described in Section A.1. The sample period is from September 2003 to December 2021.
+Panel A: Option Characteristics
+E[rgross
+1 ] E[rgross
+10 ] E[rgross
+10−1 ] TC E[rnet
+10−1]
+-Option MOM −0.09 −0.55 −0.45 1 .11 −1.57
+(−0.53) ( −3.20) ( −3.19) ( −9.02)
+-Option REV −0.54 −0.75 −0.21 1 .67 −1.88
+(−2.71) ( −4.58) ( −1.58) ( −8.97)
+VOL deviation −1.46 0 .23 1.70 1.92 −0.22
+(−6.89) (1 .68) (9.30) (−1.55)
+-VOV −1.01 −0.04 0.97 1.80 −0.82
+(−5.29) ( −0.34) (7.12) (−5.58)
+VTS −1.16 −0.20 0.96 2.09 −1.13
+(−6.11) ( −1.34) (5.89) (−6.03)
+-Option Price −0.37 0 .39 0.75 1.67 −0.92
+(−2.91) (1 .63) (4.19) (−6.04)
+ILLIQ −0.31 0 .10 0.41 2.15 −1.74
+(−2.16) (0 .60) (4.21) (−9.46)
+RN SKEW −0.18 0 .06 0.24 1.84 −1.60
+(−1.28) (0 .34) (2.21) (−10.95)
+Panel B: Stock Characteristics
+E[rgross
+1 ] E[rgross
+10 ] E[rgross
+10−1 ] TC E[rnet
+10−1]
+-AMIHUD −0.36 −0.31 0 .05 1 .80 −1.74
+(−2.05) ( −2.69) (0 .41) ( −10.65)
+LN(PRICE) −0.61 −0.20 0.41 1.67 −1.26
+(−2.96) ( −1.52) (2.82) (−7.30)
+Size −0.52 −0.34 0 .18 1 .68 −1.50
+(−2.82) ( −2.93) (1 .35) ( −8.96)
+-CFV −0.30 −0.24 0 .05 1 .30 −1.25
+(−1.42) ( −2.15) (0 .33) ( −7.40)
+Continued on the next page
+63
+
+========== PAGE 65 ==========
+
+Continued from the previous page
+Before TC After TC
+E[rgross
+1 ] E[rgross
+10 ] E[rgross
+10−1 ] TC E[rnet
+10−1]
+-DISP −0.34 −0.22 0 .12 1 .31 −1.19
+(−2.12) ( −1.85) (1 .30) ( −9.74)
+-IVOL −1.14 −0.08 1.06 1.52 −0.46
+(−6.72) ( −0.69) (8.64) (−3.34)
+-ISSUE 1Y −0.70 −0.10 0.60 1.44 −0.84
+(−4.34) ( −0.69) (7.20) (−7.22)
+-ISSUE 5Y −0.69 −0.06 0.63 1.40 −0.78
+(−3.47) ( −0.40) (4.68) (−6.28)
+-TEF −0.62 −0.23 0.39 1.46 −1.07
+(−4.14) ( −1.97) (3.58) (−8.98)
+BM −0.45 −0.11 0.35 1.36 −1.01
+(−3.33) ( −0.56) (2.87) (−7.37)
+-CH −1.05 −0.02 1.03 1.75 −0.72
+(−6.62) ( −0.10) (8.25) (−5.98)
+PM −0.87 −0.31 0.56 1.67 −1.11
+(−5.68) ( −2.12) (5.26) (−8.47)
+PROFIT −0.73 −0.42 0.31 1.64 −1.32
+(−4.29) ( −3.00) (3.01) (−9.16)
+-ZS −0.63 −0.50 0 .13 1 .71 −1.59
+(−4.56) ( −2.81) (1 .38) ( −9.42)
+-Stock MOM −0.49 −0.05 0.44 1.74 −1.30
+(−2.72) ( −0.26) (3.52) (−9.31)
+-Stock REV −0.53 −0.32 0 .21 1 .82 −1.61
+(−3.17) ( −1.79) (1 .63) ( −8.83)
+64
+
+========== PAGE 66 ==========
+
+Table A6: The impact of hedging frequency - all variables
+This table contains a performance evaluation of equal-weighted long-short decile portfolios
+with four kinds of hedging frequency. ‘Once’ represents the buy-and-hold to maturity strat-
+egy, hedged at the portfolio formation date. ‘Biweekly’ represents the strategy which is
+re-hedged every two weeks, a ‘Weekly’ strategy is re-hedged every week, and the ‘Daily’
+strategy is re-hedged every trading day. The number without parentheses shows the average
+return after transaction costs and t-statistics, annual Sharpe ratios, and turnover of stocks
+for the return after transaction costs time series are shown in the parentheses, bracket paren-
+theses, and curly braces, respectively. All statistics for portfolios with significant positive
+returns at a 5% level or above are indicated in bold. t-statistics are calculated using Newey-
+West standard errors with six lags. For brevity, we only show returns on a subset of our full
+set of characteristics. Variables are described in Section A.1. The time period is between
+September 2003 and December 2021.
+Panel A: Option Characteristics
+Before Transaction Costs After Transaction Costs
+Once Half-Monthly Weekly Daily Once Half-Monthly Weekly Daily
+Option MOM 0.81 0 .93 0 .98 0 .77 0.21 0 .32 0.33 −0.03
+(3.32) (5 .06) (5 .51) (5 .23) (0.93) (1 .94) (2.09) (−0.23)
+[0.91] [1 .55] [1 .80] [1 .72] [0.24] [0 .55] [0.63] [−0.07]
+{2.03} { 2.41} { 2.76} { 4.44} {2.03} { 2.41} {2.76} {4.44}
+Option REV −0.14 0.24 0 .40 0 .63 −0.97 −0.60 −0.49 −0.46
+(−1.07) (2.05) (3 .42) (6 .37) (−7.99) ( −5.96) ( −5.08) ( −5.62)
+[−0.22] [0.56] [0 .99] [1 .95] [−1.52] [ −1.42] [ −1.31] [ −1.47]
+{2.00} {2.39} { 2.75} { 4.47} {2.00} { 2.39} { 2.75} { 4.47}
+-VOL deviation 2.06 1 .93 1 .90 1 .97 1 .16 1 .02 0 .94 0 .83
+(7.93) (9 .06) (9 .99) (9 .09) (5 .38) (6 .01) (6 .51) (5 .06)
+[2.98] [3 .83] [4 .15] [4 .27] [1 .80] [2 .26] [2 .34] [2 .13]
+{1.98} { 2.36} { 2.71} { 4.41} { 1.98} { 2.36} { 2.71} { 4.41}
+VOV 1.33 1 .36 1 .27 1 .48 0 .52 0 .54 0 .40 0 .44
+(6.09) (7 .45) (6 .37) (7 .36) (2 .78) (3 .58) (2 .34) (2 .64)
+[2.01] [2 .94] [2 .80] [3 .36] [0 .82] [1 .28] [0 .97] [1 .12]
+{1.98} { 2.36} { 2.73} { 4.48} { 1.98} { 2.36} { 2.73} { 4.48}
+-VTS 1.08 0 .92 0 .84 0 .86 0.10 −0.07 −0.19 −0.39
+(4.85) (6 .14) (5 .98) (6 .28) (0.53) ( −0.49) ( −1.49) ( −3.46)
+[1.71] [2 .01] [1 .95] [2 .21] [0.17] [ −0.15] [ −0.47] [ −1.09]
+{2.00} { 2.37} { 2.72} { 4.41} {2.00} { 2.37} { 2.72} { 4.41}
+Option Price 0 .05 −0.02 −0.06 −0.16 −0.67 −0.76 −0.84 −1.15
+(0.37) ( −0.18) ( −0.39) ( −1.36) ( −5.22) ( −5.80) ( −6.06) ( −10.18)
+[0.09] [ −0.06] [ −0.14] [ −0.44] [ −1.22] [ −1.74] [ −2.09] [ −3.18]
+{1.82} { 2.19} { 2.55} { 4.23} { 1.82} { 2.19} { 2.55} { 4.23}
+-ILLIQ −0.69 −0.68 −0.66 −0.69 −1.66 −1.66 −1.68 −1.91
+(−4.92) ( −5.38) ( −5.39) ( −5.50) ( −8.84) ( −9.61) ( −9.85) ( −10.78)
+[−1.40] [ −1.76] [ −1.81] [ −1.98] [ −3.08] [ −3.78] [ −3.99] [ −4.64]
+{1.85} { 2.24} { 2.60} { 4.33} { 1.85} { 2.24} { 2.60} { 4.33}
+RN SKEW 0.50 0 .62 0 .65 0 .79 −0.30 −0.19 −0.20 −0.25
+(5.53) (5 .63) (6 .76) (7 .56) (−3.64) ( −2.11) ( −2.46) ( −3.08)
+[1.04] [1 .78] [2 .23] [2 .90] [−0.63] [ −0.58] [ −0.71] [ −1.00]
+{1.95} { 2.34} { 2.71} { 4.50} {1.95} { 2.34} { 2.71} { 4.50}
+Continued on the next page
+65
+
+========== PAGE 67 ==========
+
+Continued from the previous page
+Panel B: Stock Characteristics
+Before Transaction Costs After Transaction Costs
+Once Half-Monthly Weekly Daily Once Half-Monthly Weekly Daily
+AMIHUD 0.69 0 .66 0 .71 0 .92 −0.20 −0.25 −0.25 −0.27
+(5.00) (4 .42) (4 .72) (6 .33) (−1.57) ( −1.78) ( −1.79) ( −2.21)
+[1.32] [1 .53] [1 .74] [2 .47] [−0.39] [ −0.60] [ −0.64] [ −0.79]
+{1.97} { 2.36} { 2.72} { 4.49} {1.97} { 2.36} { 2.72} { 4.49}
+-LN(PRICE) 0.72 0 .85 0 .89 1 .16 −0.10 0 .01 0 .01 0 .07
+(4.10) (4 .79) (4 .66) (7 .16) (−0.54) (0 .06) (0 .03) (0 .45)
+[1.05] [1 .77] [2 .02] [2 .99] [−0.14] [0 .02] [0 .01] [0 .18]
+{1.98} { 2.36} { 2.72} { 4.45} {1.98} { 2.36} { 2.72} { 4.45}
+-Size 0.55 0 .63 0 .69 0 .98 −0.30 −0.23 −0.23 −0.16
+(3.72) (4 .06) (4 .23) (6 .17) (−1.97) ( −1.59) ( −1.48) ( −1.16)
+[0.90] [1 .40] [1 .61] [2 .43] [−0.49] [ −0.53] [ −0.55] [ −0.42]
+{1.98} { 2.37} { 2.74} { 4.50} {1.98} { 2.37} { 2.74} { 4.50}
+CFV −0.08 0 .24 0 .27 0.56 −0.71 −0.40 −0.41 −0.28
+(−0.47) (1 .42) (1 .65) (4.08) (−4.21) ( −2.52) ( −2.57) ( −2.37)
+[−0.12] [0 .51] [0 .65] [1.71] [−1.02] [ −0.89] [ −0.98] [ −0.93]
+{1.98} { 2.37} { 2.74} {4.49} {1.98} { 2.37} { 2.74} { 4.49}
+DISP −0.09 0 .07 0 .07 0.30 −0.71 −0.56 −0.59 −0.53
+(−0.61) (0 .69) (0 .64) (3.30) (−4.62) ( −5.14) ( −4.94) ( −5.64)
+[−0.16] [0 .22] [0 .23] [1.12] [−1.30] [ −1.67] [ −1.87] [ −1.99]
+{1.97} { 2.36} { 2.73} {4.51} {1.97} { 2.36} { 2.73} { 4.51}
+IVOL 0.87 0 .85 0 .75 0 .97 0.17 0 .13 −0.01 0 .04
+(5.06) (5 .20) (4 .41) (6 .00) (1.02) (0 .88) ( −0.07) (0 .29)
+[1.27] [1 .84] [1 .80] [2 .55] [0.25] [0 .30] [ −0.03] [0 .11]
+{1.98} { 2.37} { 2.74} { 4.50} {1.98} { 2.37} { 2.74} { 4.50}
+ISSUE 1Y 0.67 0 .69 0 .69 0 .88 −0.03 −0.02 −0.07 −0.05
+(4.39) (4 .97) (5 .52) (6 .79) (−0.22) ( −0.19) ( −0.66) ( −0.51)
+[1.20] [1 .78] [2 .04] [2 .92] [−0.06] [ −0.06] [ −0.21] [ −0.19]
+{1.98} { 2.36} { 2.73} { 4.46} {1.98} { 2.36} { 2.73} { 4.46}
+ISSUE 5Y 0.78 0 .72 0 .68 0 .85 0.11 0 .05 −0.04 −0.03
+(4.78) (4 .56) (4 .84) (6 .18) (0.76) (0 .34) ( −0.31) ( −0.28)
+[1.22] [1 .67] [1 .82] [2 .60] [0.18] [0 .11] [ −0.10] [ −0.10]
+{1.98} { 2.37} { 2.74} { 4.48} {1.98} { 2.37} { 2.74} { 4.48}
+TEF 0.51 0 .48 0 .47 0 .66 −0.21 −0.26 −0.31 −0.30
+(2.77) (2 .96) (3 .35) (5 .05) (−1.30) ( −1.84) ( −2.64) ( −2.86)
+[0.93] [1 .15] [1 .30] [2 .10] [−0.40] [ −0.66] [ −0.92] [ −1.03]
+{1.98} { 2.37} { 2.73} { 4.46} {1.98} { 2.37} { 2.73} { 4.46}
+-BM 0.41 0 .26 0 .32 0 .27 −0.27 −0.42 −0.40 −0.63
+(2.45) (2 .03) (2 .39) (2 .72) (−1.61) ( −3.33) ( −3.17) ( −6.50)
+[0.58] [0 .62] [0 .82] [0 .93] [−0.38] [ −0.99] [ −1.04] [ −2.12]
+{1.98} { 2.37} { 2.74} { 4.48} {1.98} { 2.37} { 2.74} { 4.48}
+CH 1.50 1 .27 1 .30 1 .34 0 .64 0 .39 0 .38 0 .23
+(6.93) (7 .20) (7 .96) (8 .72) (3 .59) (2 .95) (3 .19) (2 .29)
+[1.93] [2 .66] [3 .07] [3 .61] [0 .85] [0 .91] [1 .00] [0 .72]
+{1.98} { 2.37} { 2.74} { 4.47} { 1.98} { 2.37} { 2.74} { 4.47}
+-PM 0.91 1 .00 1 .08 1 .23 0.08 0 .16 0 .19 0 .15
+(5.19) (5 .68) (6 .51) (7 .60) (0.56) (1 .18) (1 .56) (1 .30)
+[1.21] [2 .12] [2 .59] [3 .21] [0.11] [0 .38] [0 .52] [0 .46]
+{1.99} { 2.38} { 2.75} { 4.49} {1.99} { 2.38} { 2.75} { 4.49}
+Continued on the next page
+66
+
+========== PAGE 68 ==========
+
+Continued from the previous page
+Before Transaction Costs After Transaction Costs
+Once Biweekly Weekly Daily Once Biweekly Weekly Daily
+-PROFIT 0.68 0 .67 0 .71 0 .82 −0.14 −0.16 −0.18 −0.25
+(4.26) (4 .35) (5 .23) (6 .78) (−0.98) ( −1.21) ( −1.55) ( −2.71)
+[1.32] [1 .66] [1 .98] [2 .72] [−0.28] [ −0.43] [ −0.53] [ −0.94]
+{2.00} { 2.38} { 2.73} { 4.44} {2.00} { 2.38} { 2.73} { 4.44}
+-ZS −0.15 0 .12 0 .20 0.30 −1.02 −0.76 −0.73 −0.82
+(−1.17) (1 .06) (1 .94) (3.52) (−7.24) ( −6.59) ( −6.76) ( −9.90)
+[−0.29] [0 .30] [0 .61] [1.15] [−1.89] [ −1.96] [ −2.20] [ −3.24]
+{2.00} { 2.38} { 2.74} {4.44} {2.00} { 2.38} { 2.74} { 4.44}
+Stock MOM 0.47 0 .38 0 .37 0 .25 −0.40 −0.50 −0.56 −0.90
+(2.29) (3 .00) (2 .70) (2 .42) (−2.03) ( −4.28) ( −4.39) ( −9.35)
+[0.60] [0 .82] [0 .86] [0 .73] [−0.52] [ −1.10] [ −1.29] [ −2.59]
+{2.00} { 2.39} { 2.75} { 4.44} {2.00} { 2.39} { 2.75} { 4.44}
+Stock REV 0 .02 0 .16 0 .15 0 .13 −0.83 −0.71 −0.77 −1.00
+(0.11) (1 .39) (1 .19) (1 .35) ( −4.24) ( −6.13) ( −5.94) ( −10.14)
+[0.03] [0 .39] [0 .39] [0 .42] [ −1.16] [ −1.73] [ −1.96] [ −3.22]
+{1.99} { 2.39} { 2.75} { 4.47} { 1.99} { 2.39} { 2.75} { 4.47}
+67
+
+========== PAGE 69 ==========
+
+B Accounting for transaction costs
+In the following sections, we detail how we adjust returns for transaction costs.
+B.1 Stock transaction costs
+To construct a delta-hedged option return on a written option, delta shares of the stock must
+be bought at initiation. Because we form portfolios that are rebalanced monthly, an option
+written on the same stock can enter the same portfolio in consecutive months. Therefore, we
+account for the possibility of already having an existing stock position when we rebalance.
+For decile portfolio k with a written option on stock i at the end of month t, one needs
+to buy bk
+i,t shares of stock i, which is determined by
+bk
+i,t = max{∆k
+i,t − ∆k
+i,t−1, 0},
+where ∆ k
+i,t denotes the delta on stock i added to portfolio k at time t. ∆ k
+i,t−1 captures any
+pre-existing stock position. If an option on stock i is not included in portfolio k at the end
+of month t − 1, ∆ k
+i,t−1 equals zero. Specifically, at the first portfolio formation date t = 1,
+one has to buy the ∆ k
+i,1 shares of the stock i for the portfolio k, hence ∆ k
+i,0 = 0.
+Rebalancing after the one-month holding period may require selling shares used to hedge
+to an option position. After holding the stock i in the portfolio k formed at the end of the
+month t for one month, one needs to sell sk
+i,t shares of stock;
+sk
+i,t = max{∆k
+i,t − ∆k
+i,t+1, 0}
+where ∆k
+i,t denotes the delta shares of stocks needed for the portfolio k at time t. As before,
+if the stock i is not included in the portfolio k at the end of the month t + 1, ∆k
+i,t+1 equals
+zero. In particular, at the end of the sample period t = T , one has to sell the ∆ k
+i,T shares of
+the stock i for the portfolio k, hence ∆ k
+i,T +1 = 0.
+Thus, the overall transaction costs for trading shares on stock i for the portfolio k formed
+at the end of the month t contains two parts, the buying cost and selling cost, which can be
+written as:
+StockBuyT C k
+i,t = bk
+i,t × Si,t × 0.5 × StockSpread i,t,
+and
+StockSaleT C k
+i,t = sk
+i,t × Si,t+1 × 0.5 × StockSpread i,t+1.
+68
+
+========== PAGE 70 ==========
+
+where StockSpread i,t denotes the effective bid-ask spread of the stock i at time t. We assume
+that half of the effective bid-ask spread is paid in the trading of stocks.
+B.2 Option transaction costs
+We also need to consider the transaction costs of buying and selling options. We denote this
+cost as OptionSpread i,t and note that effective bid-ask spreads of buying and selling options
+are approximated by a proportion of quoted option bid-ask spreads, i.e., OptionSpread i,t =
+0.203 × QuotedSpread i,t. For the specific portfolio k, if the call option i is assigned to the
+portfolio k at the end of month t, one needs to sell a contract, and the associated transaction
+cost can be written:
+OptionSaleT C k
+i,t = 0.5 × OptionSpread i,t × Ci,t
+After holding for one month, the option i moves out of the portfolio k, and we buy back
+the written option at a cost of:
+OptionBuyT C k
+i,t = 0.5 × OptionSpread i,t+1 × Ci,t+1.
+We assume that the effective option spread is 20.3% of the quoted spread as in Heston
+et al. (2023) and that traders pay the effective half-spread to enter or exit a position.
+B.3 Option return adjusted for transaction costs
+Putting the costs together, for an option i in portfolio k formed at the end of month t, and
+held until t + 1, the total transaction costs equal:
+T Ck,long
+i,t,t+1 = StockBuyT C k
+i,t + StockSaleT C k
+i,t+1
++ OptionSaleT C k
+i,t + OptionBuyT C k
+i,t+1
+and the portfolio formation cost with transaction costs equal to
+F ormCostk
+i,t = (∆k
+t Si,t − Ci,t) + StockBuyT C k
+i,t + OptionSaleT C k
+i,t.
+Therefore, the buy-and-hold one-month return of a written call position in stock i in
+portfolio k formed at the end of month t after accounting stock and option transaction costs
+69
+
+========== PAGE 71 ==========
+
+(‘net’) can be written:
+rk,long−T C−Ad justed
+i,t = (∆k
+t Si,t+1 − Ci,t) − T Ck,long
+i,t
+F ormCostk
+i,t
+− 1. (2)
+We note that the transaction costs have a similar form when we take a short position in
+a portfolio consisting of written and delta-hedged options. This trade involves buying a call
+and selling delta shares on the formation date, and then one month later selling the option
+and buying back delta shares to cover the short stock position.
+and can be written:
+T Ck,short
+i,t,t+1 = ShortSaleT C i,t + StockBuyT C k
+i,t + StockSaleT C k
+i,t (3)
++ OptionSaleT C k
+i,t + OptionBuyT C k
+i,t (4)
+T Ck,short
+i,t,t+1 = StockSaleT C k
+i,tStockBuyT C k
+i,t+1+ (5)
+OptionBuyT C k
+i,t + OptionSaleT C k
+i,t+1 (6)
+and the portfolio formation cost with transaction costs equals to
+F ormCostk
+i,t = (∆k
+t Si,t − Ci,t) + StockSellT C k
+i,t + OptionBuyT C k
+i,t (7)
+Accordingly, the corresponding transaction costs adjusted for the short position equals to
+HP Rk,short−T C−Ad justed
+i,t = −(∆k
+t Si,t+1 − Ci,t) + T Ck,short
+i,t
+F ormCostk
+i,t
+. (8)
+B.4 Transaction costs for hold-to-maturity returns
+We use two types of hold-to-maturity returns in the paper. For one strategy, we form port-
+folios at the end of the month; for the second, we form portfolios on the third Friday of each
+month. The option positions are then delta-hedged once at formation and held to maturity.
+Because options on the same stock can enter a portfolio on consecutive formation dates,
+we need to do some accounting for the position in delta shares. The accounting is slightly
+different for portfolios formed on the third Friday of each month and portfolios formed at
+the end of each month, and we detail the accounting here.
+70
+
+========== PAGE 72 ==========
+
+B.4.1 Formation on the third Friday
+We detail the costs for a position which consists of a short position in the option and a long
+position in delta shares to hedge that position.
+∆t denotes the amount of stock needed to hedge the option position at time t, St denotes
+the market price of the stock at time t and Ot denotes the market price of the option with
+the stock as the underlying asset, Kt denotes the strike price of the option at time t, SSt
+(OSt) denotes the effective bid-ask spread of the stock (option) at time t. At time t, suppose
+we have an existing short option position expiring, and an option on the same stock enters
+the portfolio. There will be ηt shares of stock held already. We need to buy ∆ t − ηt shares
+of the stock and sell one option contract, so the transaction costs of this entry is
+(∆t − ηt) × St × 0.5 × SSt + Ot × 0.5 × OSt. (9)
+At time t + 1, the position formed at time t matures, and if it is in the money, we buy extra
+1 −∆t to clear the short option position, and we are left with no stock position, i.e., ηt+1 = 0;
+if it is out the money, it will not be exercised, and we sell max {∆t − ∆t+1, 0} shares of stock
+to exit the position and the remaining stock position, ηt+1 is min{∆t+1, ∆t}. Therefore, the
+transaction costs of the exit of the portfolio formed at time t is
+
+
+
+(1 − ∆t) × St+1 × 0.5 × SSt+1 If St+1 > K t,
+max{∆t − ∆t+1, 0} × St+1 × 0.5 × SSt+1 If St+1 <= Kt.
+(10)
+B.4.2 Formation at month-end
+The key difference between portfolios of option positions formed at month-end and held for
+one month and with option positions held to maturity is the possibility of option positions
+overlapping. For example, because the maturity of the position is approximately 50 days, at
+the end of the next month, we can have two options on the same stock assigned to a portfolio.
+We typically have twice the number of options assigned to the portfolio between the month’s
+end and maturity (i.e., approximately days 30-50).
+In this case, we do not attempt to avoid transaction costs by netting off positions in the
+delta-hedge portfolio. That is, we track each option until maturity and pay any transaction
+costs associated with the initial delta-hedge and option exercise.
+71
+
+========== PAGE 73 ==========
+
+B.5 Margin costs
+We measure the margin requirement following the CBOE initial margin requirement for a
+naked short position, which is “100% of option proceeds plus 20% of underlying security /
+index value less out-of-the-money amount, if any, to a minimum for calls of option proceeds
+plus 10% of the underlying security / index value, and a minimum for puts of option proceeds
+plus 10% of the put’s exercise price.” 16 Hence, the margin requirement for the short position
+of a call option i at time t is determined by
+Mi,t = max{Ci,t + 20% × Si,t − max{Ki − Si,t, 0}, Ci,t + 10% × Si,t} (11)
+where Ki stands for the strike price of the option i. Following Zhan et al. (2022), we measure
+the margin cost as the cost of borrowing additional capital to meet the margin requirement
+over the holding period, i.e., M T Ci,t = rt × τi,t × Mi,t where rt denotes the option-maturity
+matched annual LIBOR rate and τi,t denotes the holding time of the option i in year units.
+16Website: https://cdn.cboe.com/resources/membership/Margin Manual.pdf
+72
