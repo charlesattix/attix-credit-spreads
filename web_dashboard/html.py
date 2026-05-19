@@ -383,6 +383,167 @@ _EXP_DESCRIPTIONS: dict[str, str] = {
 
 # ---------------------------------------------------------------------------
 
+_chart_counter = 0
+
+
+def _render_equity_chart(history: list[dict], today_equity: float | None = None) -> str:
+    """Render an inline SVG sparkline equity chart from alpaca_equity_history.
+
+    Args:
+        history: list of {"date": "YYYY-MM-DD", "equity": float} from Alpaca portfolio history.
+        today_equity: optional live intraday equity to append as a final "today" point.
+
+    Returns "" when fewer than 2 plottable points are available.
+    """
+    global _chart_counter
+    _chart_counter += 1
+    chart_id = f"eqc{_chart_counter}"
+
+    if len(history) < 2 and today_equity is None:
+        return ""
+
+    # Build full point list, appending today if provided.
+    all_points_data = list(history)
+    has_today = today_equity is not None
+    if has_today:
+        from datetime import date as _date
+        today_str = _date.today().isoformat()
+        if not all_points_data or all_points_data[-1].get("date") != today_str:
+            all_points_data.append({"date": today_str, "equity": today_equity})
+
+    if len(all_points_data) < 2:
+        return ""
+
+    w, h = 560, 120
+    pad_l, pad_r, pad_t, pad_b = 40, 8, 8, 14
+    cw = w - pad_l - pad_r
+    ch = h - pad_t - pad_b
+
+    equities = [d["equity"] for d in all_points_data]
+    min_eq = min(equities) * 0.999
+    max_eq = max(equities) * 1.001
+    rng = max_eq - min_eq or 1
+
+    n = len(all_points_data)
+    overall = equities[-1] - STARTING_EQUITY
+    color = "#22c55e" if overall >= 0 else "#ef4444"
+    fill_color = "rgba(34,197,94,0.08)" if overall >= 0 else "rgba(239,68,68,0.08)"
+
+    points = []
+    for i, d in enumerate(all_points_data):
+        x = pad_l + (i / (n - 1)) * cw
+        y = pad_t + ch - ((d["equity"] - min_eq) / rng) * ch
+        points.append((x, y, d["date"], d["equity"]))
+
+    hist_pts = points[:-1] if has_today else points
+    today_pt = points[-1] if has_today else None
+
+    # <polyline> renders the visible line. A separate <path> below the polyline
+    # fills the area under the curve.
+    polyline_pts = " ".join(f"{x:.1f},{y:.1f}" for (x, y, _, _) in points)
+    line_path = " ".join(f"{'M' if i == 0 else 'L'}{x:.1f},{y:.1f}" for i, (x, y, _, _) in enumerate(points))
+    area = line_path + f" L{points[-1][0]:.1f},{pad_t + ch} L{points[0][0]:.1f},{pad_t + ch} Z"
+
+    # Y-axis: 3 reference labels
+    y_ticks = ""
+    for frac, label_eq in [(0.0, max_eq), (0.5, (min_eq + max_eq) / 2), (1.0, min_eq)]:
+        ty = pad_t + frac * ch
+        y_ticks += f'<text x="{pad_l - 4}" y="{ty + 3:.1f}" text-anchor="end" fill="#94a3b8" font-size="9" font-family="system-ui">${label_eq/1000:.1f}k</text>'
+
+    # Reference line at STARTING_EQUITY when in range
+    ref_line = ""
+    if min_eq <= STARTING_EQUITY <= max_eq:
+        start_y = pad_t + ch - ((STARTING_EQUITY - min_eq) / rng) * ch
+        ref_line = f'<line x1="{pad_l}" y1="{start_y:.1f}" x2="{w - pad_r}" y2="{start_y:.1f}" stroke="#cbd5e1" stroke-width="0.8" stroke-dasharray="4,3"/>'
+
+    # X-axis: ~5 date labels
+    step = max(1, len(points) // 5)
+    x_labels = ""
+    for i, (x, _, dt, _) in enumerate(points):
+        if i % step == 0 or i == len(points) - 1:
+            x_labels += f'<text x="{x:.1f}" y="{h - 3}" text-anchor="middle" fill="#94a3b8" font-size="8" font-family="system-ui">{dt[5:]}</text>'
+
+    # Last historical point dot
+    lx, ly = hist_pts[-1][0], hist_pts[-1][1]
+
+    # Today point: pulsing hollow circle
+    today_svg = ""
+    if has_today and today_pt:
+        tx, ty = today_pt[0], today_pt[1]
+        today_svg = f"""
+    <circle cx="{tx:.1f}" cy="{ty:.1f}" r="5" fill="none" stroke="{color}" stroke-width="1.5" opacity="0.4">
+      <animate attributeName="r" values="4;7;4" dur="2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.5;0.1;0.5" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="{tx:.1f}" cy="{ty:.1f}" r="3" fill="{color}" stroke="white" stroke-width="1.5"/>"""
+
+    # Invisible hover overlay rects + tooltip via JS
+    hover_rects = ""
+    for i, (x, y, dt, eq) in enumerate(points):
+        x_left = (points[i - 1][0] + x) / 2 if i > 0 else pad_l
+        x_right = (x + points[i + 1][0]) / 2 if i < len(points) - 1 else w - pad_r
+        rect_w = x_right - x_left
+        is_today = has_today and i == len(points) - 1
+        label = "today (live)" if is_today else dt[5:]
+        eq_fmt = f"${eq:,.0f}"
+        hover_rects += (
+            f'<rect data-cid="{chart_id}" data-date="{label}" data-eq="{eq_fmt}" '
+            f'x="{x_left:.1f}" y="{pad_t}" width="{rect_w:.1f}" height="{ch}" '
+            f'fill="transparent" style="cursor:crosshair"/>'
+        )
+
+    js = f"""
+<script>
+(function(){{
+  var tip = document.getElementById('eq-tip');
+  if (!tip) {{
+    tip = document.createElement('div');
+    tip.id = 'eq-tip';
+    tip.style.cssText = 'position:fixed;display:none;background:#0f172a;color:#f1f5f9;font-size:11px;font-family:system-ui;padding:5px 9px;border-radius:6px;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,0.4);white-space:nowrap;z-index:9999;line-height:1.6';
+    document.body.appendChild(tip);
+  }}
+  document.querySelectorAll('rect[data-cid="{chart_id}"]').forEach(function(r){{
+    r.addEventListener('mouseenter', function(e){{
+      tip.innerHTML = '<span style="color:#94a3b8">' + r.dataset.date + '</span><br><b>' + r.dataset.eq + '</b>';
+      tip.style.display = 'block';
+    }});
+    r.addEventListener('mousemove', function(e){{
+      var tx = e.clientX + 14, ty = e.clientY - 36;
+      if (tx + 120 > window.innerWidth) tx = e.clientX - 130;
+      tip.style.left = tx + 'px';
+      tip.style.top = ty + 'px';
+    }});
+    r.addEventListener('mouseleave', function(){{ tip.style.display = 'none'; }});
+  }});
+}})();
+</script>"""
+
+    return f"""
+<div style="margin:8px 0 4px;overflow:hidden">
+  <svg id="{chart_id}" viewBox="0 0 {w} {h}" style="width:100%;height:{h}px">
+    {y_ticks}
+    {ref_line}
+    <path d="{area}" fill="{fill_color}"/>
+    <polyline points="{polyline_pts}" fill="none" stroke="{color}" stroke-width="2" stroke-linejoin="round"/>
+    <circle cx="{lx:.1f}" cy="{ly:.1f}" r="3" fill="{color}"/>
+    {today_svg}
+    {x_labels}
+    {hover_rects}
+  </svg>
+</div>{js}"""
+
+
+def _render_chart_placeholder() -> str:
+    """Tiny placeholder shown when an experiment has no equity history yet."""
+    return (
+        '<div style="margin:8px 0 4px;padding:14px;border:1px dashed #cbd5e1;'
+        'border-radius:6px;color:#94a3b8;font-size:11px;text-align:center;'
+        'font-family:system-ui">no equity history yet</div>'
+    )
+
+
+# ---------------------------------------------------------------------------
+
 def _render_exp_card(s: dict) -> str:
     alp = s.get("alpaca") or {}
     equity = alp.get("equity")
@@ -514,6 +675,13 @@ def _render_exp_card(s: dict) -> str:
         edesc = _EXP_DESCRIPTIONS.get(s['id'], '')
     desc_html = f'<div class="exp-desc">{edesc}</div>' if edesc else ''
 
+    # Equity sparkline chart — pass live equity as today's intraday point.
+    # Falls back to a small placeholder when no history has been synced yet.
+    history = s.get("alpaca_equity_history") or []
+    chart_html = _render_equity_chart(history, today_equity=equity)
+    if not chart_html:
+        chart_html = _render_chart_placeholder()
+
     return f"""
 <div class="exp-card">
   <div class="exp-header">
@@ -528,6 +696,7 @@ def _render_exp_card(s: dict) -> str:
     </div>
     {equity_html}
   </div>
+  {chart_html}
   {stats_row}
   {alpaca_detail}
   {pos_section}

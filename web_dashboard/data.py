@@ -344,19 +344,22 @@ def query_all_live(report_date: Optional[str] = None) -> List[dict]:
                     "open_trades":  exp.get("open_positions", []),
                     "error":        exp.get("error"),
                     "alpaca":       exp.get("alpaca"),
+                    "alpaca_equity_history": exp.get("alpaca_equity_history") or [],
                 }
                 flattened.append(flat)
             return flattened
 
     # We have local DBs — augment with alpaca data from pushed export if available
     if pushed and "experiments" in pushed:
-        alp_by_id = {
-            exp.get("id"): exp.get("alpaca")
-            for exp in pushed["experiments"]
-        }
+        by_id = {exp.get("id"): exp for exp in pushed["experiments"]}
         for r in results:
+            pushed_exp = by_id.get(r["id"]) or {}
             if r.get("alpaca") is None:
-                r["alpaca"] = alp_by_id.get(r["id"])
+                r["alpaca"] = pushed_exp.get("alpaca")
+            # Always propagate equity history from pushed export (local DBs
+            # don't store it — it's fetched from Alpaca during sync).
+            if not r.get("alpaca_equity_history"):
+                r["alpaca_equity_history"] = pushed_exp.get("alpaca_equity_history") or []
 
     return results
 
