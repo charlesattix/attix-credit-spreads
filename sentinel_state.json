@@ -91,13 +91,17 @@
             "enrolled_at": "2026-04-12",
             "sentinel_certified_at": null,
             "last_health_check": "2026-05-21T18:47:23+00:00",
-            "halt_reason": "Non-functional \u2014 0 completed trades since launch",
+            "halt_reason": null,
             "backtest_baseline": {
                 "win_rate": 78.0,
                 "avg_pnl": 525.0,
                 "avg_loss": 2100.0,
                 "mc_worst_dd_pct": 41.5
-            }
+            },
+            "halted": false,
+            "resumed_at": "2026-05-21T03:19:09.706573+00:00",
+            "resumed_by": "Carlos/Charles",
+            "resume_reason": "Stale halt \u2014 sentinel_state.json carried `0 completed trades since launch` but the live DB at data/exp800/pilotai_exp800.db actually has 16 trades (2 closed_profit + 4 closed_external). Halt never cleared after commit 96fb8ad. P3 triage by Carlos approved clear on 2026-05-20."
         },
         "EXP-1220": {
             "status": "active",
