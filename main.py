@@ -287,6 +287,20 @@ class CreditSpreadSystem:
         """
         logger.info("Starting opportunity scan")
 
+        # EXP-3309 — Pre-Close Execution Window. When execution.window_only is
+        # true, skip scans outside execution.window so all new entries land in
+        # the pre-close liquidity surge.
+        execution_cfg = self.config.get('execution', {}) or {}
+        if execution_cfg.get('window_only', False):
+            from shared.execution_window import should_skip_for_window
+            window = execution_cfg.get('window', '15:30-16:00')
+            tz = execution_cfg.get('timezone', 'America/New_York')
+            skip, reason = should_skip_for_window(window=window, tz=tz)
+            if skip:
+                logger.info("Execution window gate active — %s", reason)
+                metrics.inc('scans_skipped_window')
+                return []
+
         all_opportunities = []
 
         # Build scan universe: static list or dynamic COMPASS selection
