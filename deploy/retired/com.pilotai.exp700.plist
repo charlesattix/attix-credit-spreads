@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.pilotai.exp700</string>
+
+    <!-- One-shot ML-filtered scanner — invoked at each market-hours scan slot.
+         Uses StartCalendarInterval (not KeepAlive) because exp700_ml_scanner.py
+         is a one-shot script, not a persistent scheduler like main.py scheduler.
+         NOTE: scan-cron.sh also calls this scanner. If both are active, disable
+         EXP-700 in scan-cron.sh to avoid double-execution. -->
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python3</string>
+        <string>scripts/exp700_ml_scanner.py</string>
+        <string>--config</string>
+        <string>configs/paper_exp700.yaml</string>
+        <string>--env-file</string>
+        <string>.env.exp700</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/charlesbot/projects/pilotai-credit-spreads</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>HOME</key>
+        <string>/Users/charlesbot</string>
+        <key>PATH</key>
+        <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>/Users/charlesbot/logs/exp700.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/charlesbot/logs/exp700.log</string>
+
+    <!-- Market-hours scan slots ET Mon-Fri (matches shared/scheduler.py SCAN_TIMES).
+         launchd fires in local time; machine must be in America/New_York or
+         adjust hours accordingly. -->
+    <key>StartCalendarInterval</key>
+    <array>
+        <!-- 9:15 and 9:45 — open slots -->
+        <dict><key>Hour</key><integer>9</integer><key>Minute</key><integer>15</integer></dict>
+        <dict><key>Hour</key><integer>9</integer><key>Minute</key><integer>45</integer></dict>
+        <!-- 10:00 – 15:30 every 30 min -->
+        <dict><key>Hour</key><integer>10</integer><key>Minute</key><integer>0</integer></dict>
+        <dict><key>Hour</key><integer>10</integer><key>Minute</key><integer>30</integer></dict>
+        <dict><key>Hour</key><integer>11</integer><key>Minute</key><integer>0</integer></dict>
+        <dict><key>Hour</key><integer>11</integer><key>Minute</key><integer>30</integer></dict>
+        <dict><key>Hour</key><integer>12</integer><key>Minute</key><integer>0</integer></dict>
+        <dict><key>Hour</key><integer>12</integer><key>Minute</key><integer>30</integer></dict>
+        <dict><key>Hour</key><integer>13</integer><key>Minute</key><integer>0</integer></dict>
+        <dict><key>Hour</key><integer>13</integer><key>Minute</key><integer>30</integer></dict>
+        <dict><key>Hour</key><integer>14</integer><key>Minute</key><integer>0</integer></dict>
+        <dict><key>Hour</key><integer>14</integer><key>Minute</key><integer>30</integer></dict>
+        <dict><key>Hour</key><integer>15</integer><key>Minute</key><integer>0</integer></dict>
+        <dict><key>Hour</key><integer>15</integer><key>Minute</key><integer>30</integer></dict>
+    </array>
+
+    <!-- Minimum 10s between re-fires to guard against launchd edge cases -->
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+</dict>
+</plist>
