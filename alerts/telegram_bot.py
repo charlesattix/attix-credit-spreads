@@ -48,6 +48,7 @@ class TelegramBot:
         try:
             # Import only if enabled
             from telegram import Bot
+            from telegram.request import HTTPXRequest
 
             bot_token = self.telegram_config['bot_token']
 
@@ -56,7 +57,17 @@ class TelegramBot:
                 self.enabled = False
                 return
 
-            self.bot = Bot(token=bot_token)
+            # Bump httpx connection pool — default is 1 connection / 1s
+            # pool timeout, which raises httpcore.PoolTimeout when the
+            # scanner fires parallel sends. See EXP-600 incident 2026-05-20.
+            request = HTTPXRequest(
+                connection_pool_size=8,
+                pool_timeout=20.0,
+                read_timeout=10.0,
+                write_timeout=10.0,
+                connect_timeout=10.0,
+            )
+            self.bot = Bot(token=bot_token, request=request)
             self.chat_id = self.telegram_config['chat_id']
 
             logger.info("Telegram bot initialized")
