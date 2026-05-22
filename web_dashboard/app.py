@@ -14,6 +14,8 @@ FastAPI web app serving:
   POST /api/admin/push-data              — Data push from sync script (X-API-Key)
   POST /api/admin/push-sentinel          — Sentinel data push (X-API-Key)
   GET  /api/v1/sentinel                  — Latest Sentinel snapshot (X-API-Key or session)
+  POST /api/v1/watchdog-status           — External watchdog push (X-API-Key only)
+  GET  /api/v1/watchdog-status           — Latest watchdog status (X-API-Key or session)
 
 Environment variables:
   ATTIX_ROOT         — path to attix-credit-spreads repo (default: parent dir)
@@ -71,6 +73,7 @@ from .html import (
     render_sentinel_page,
     render_trades_page,
 )
+import web_dashboard.html as _html_module
 
 # ---------------------------------------------------------------------------
 # Config
@@ -660,6 +663,48 @@ async def get_sentinel(_key: str = Depends(require_api_key)):
     except Exception as e:
         logger.error(f"Failed to read sentinel data: {e}")
         return {"error": str(e), "experiments": {}}
+
+
+# ---------------------------------------------------------------------------
+# Watchdog status — external VPS watchdog pushes status here
+# ---------------------------------------------------------------------------
+
+# In-memory store; persists for the lifetime of the process.
+_watchdog_status: dict = {}
+
+
+@app.post("/api/v1/watchdog-status")
+async def push_watchdog_status(
+    request: Request,
+    _key: str = Depends(require_api_key_only),
+):
+    """Accept a watchdog status JSON from the external VPS watchdog script."""
+    import json as _json
+
+    raw = await request.body()
+    if len(raw) > 1_000_000:  # 1 MB guard
+        raise HTTPException(status_code=413, detail="Payload too large")
+    body = _json.loads(raw)
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=400, detail="Expected JSON object")
+
+    body["received_at"] = datetime.now(timezone.utc).isoformat()
+    _watchdog_status.clear()
+    _watchdog_status.update(body)
+
+    # Make the latest status available to the HTML renderer
+    _html_module._watchdog_status = _watchdog_status
+
+    logger.info("[watchdog] Status received: overall=%s", body.get("overall"))
+    return {"status": "ok", "received_at": body["received_at"]}
+
+
+@app.get("/api/v1/watchdog-status")
+async def get_watchdog_status(_key: str = Depends(require_api_key)):
+    """Return the latest watchdog status snapshot."""
+    if not _watchdog_status:
+        return {"status": "unknown", "detail": "No watchdog data received yet"}
+    return _watchdog_status
 
 
 # ---------------------------------------------------------------------------

@@ -10,6 +10,116 @@ from .data import STARTING_EQUITY
 
 logger = logging.getLogger(__name__)
 
+# ---------------------------------------------------------------------------
+# Watchdog status — populated by app.py when the external watchdog POSTs data
+# ---------------------------------------------------------------------------
+
+# app.py replaces this reference with the live dict after each POST.
+_watchdog_status: dict = {}
+
+
+def _render_watchdog_banner() -> str:
+    """Render a system-status banner using the latest watchdog status.
+
+    Returns an HTML string (may be empty string if dismissed via JS).
+    The banner is injected immediately after <body> on every page.
+    """
+    status = _watchdog_status
+
+    if not status:
+        # No data yet — show yellow "not checked in" banner
+        return _watchdog_banner_html(
+            color="yellow",
+            icon="⚠️",
+            message="Watchdog has not checked in yet",
+            last_check_iso=None,
+        )
+
+    last_check_iso: str | None = status.get("last_check")
+    overall = status.get("overall", "unknown")
+
+    # Compute minutes since last check
+    minutes_ago: int | None = None
+    if last_check_iso:
+        try:
+            last_dt = datetime.fromisoformat(last_check_iso.replace("Z", "+00:00"))
+            delta = datetime.now(timezone.utc) - last_dt
+            minutes_ago = int(delta.total_seconds() / 60)
+        except Exception:
+            pass
+
+    stale = minutes_ago is not None and minutes_ago > 45
+
+    if stale:
+        return _watchdog_banner_html(
+            color="yellow",
+            icon="⚠️",
+            message=f"Watchdog hasn't checked in",
+            last_check_iso=last_check_iso,
+            minutes_ago=minutes_ago,
+        )
+
+    if overall != "ok":
+        # Find the first failing item to name in the banner
+        down_items: list[str] = []
+        for name, s in (status.get("services") or {}).items():
+            if s.get("status") != "ok":
+                down_items.append(name)
+        for exp_id, s in (status.get("alpaca_accounts") or {}).items():
+            if s.get("status") != "ok":
+                down_items.append(exp_id)
+        desc = ", ".join(down_items) if down_items else "unknown"
+        return _watchdog_banner_html(
+            color="red",
+            icon="🔴",
+            message=f"ALERT: {_html.escape(desc)} is DOWN",
+            last_check_iso=last_check_iso,
+            minutes_ago=minutes_ago,
+        )
+
+    return _watchdog_banner_html(
+        color="green",
+        icon="🟢",
+        message="All systems operational",
+        last_check_iso=last_check_iso,
+        minutes_ago=minutes_ago,
+    )
+
+
+def _watchdog_banner_html(
+    color: str,
+    icon: str,
+    message: str,
+    last_check_iso: str | None,
+    minutes_ago: int | None = None,
+) -> str:
+    """Build the inline-styled banner HTML."""
+    if color == "green":
+        bg, border, text_color = "#dcfce7", "#bbf7d0", "#166534"
+    elif color == "red":
+        bg, border, text_color = "#fee2e2", "#fecaca", "#991b1b"
+    else:  # yellow
+        bg, border, text_color = "#fef9c3", "#fde68a", "#854d0e"
+
+    if minutes_ago is not None:
+        age = f"{minutes_ago}m ago" if minutes_ago < 60 else f"{minutes_ago // 60}h {minutes_ago % 60}m ago"
+        last_check_str = f" &mdash; last check: {_html.escape(age)}"
+    elif last_check_iso:
+        last_check_str = f" &mdash; last check: {_html.escape(last_check_iso)}"
+    else:
+        last_check_str = ""
+
+    return f"""<div id="watchdog-banner" style="
+        background:{bg};border-bottom:1px solid {border};color:{text_color};
+        font-size:13px;font-weight:600;padding:8px 24px;
+        display:flex;justify-content:space-between;align-items:center;gap:8px;
+        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <span>{icon} {message}{last_check_str}</span>
+  <button onclick="document.getElementById('watchdog-banner').style.display='none'"
+          style="background:transparent;border:none;cursor:pointer;font-size:16px;
+                 color:{text_color};padding:0 4px;line-height:1;" title="Dismiss">&#x2715;</button>
+</div>"""
+
 
 # ---------------------------------------------------------------------------
 # Shared navigation
@@ -763,6 +873,7 @@ def render_dashboard(all_stats: list[dict]) -> str:
   <style>{_CSS}</style>
 </head>
 <body>
+{_render_watchdog_banner()}
 {nav}
 <div class="page">
   <h1>Attix Dashboard</h1>
@@ -957,6 +1068,7 @@ def render_positions_page(all_stats: list[dict]) -> str:
   <style>{_CSS}{_REGISTRY_CSS}</style>
 </head>
 <body>
+{_render_watchdog_banner()}
 {nav}
 <div class="page" style="max-width:1200px">
   <h1>Open Positions</h1>
@@ -1052,6 +1164,7 @@ def render_trades_page(all_stats: list[dict]) -> str:
   <style>{_CSS}{_REGISTRY_CSS}</style>
 </head>
 <body>
+{_render_watchdog_banner()}
 {nav}
 <div class="page" style="max-width:1200px">
   <h1>Recent Trades</h1>
@@ -1258,6 +1371,7 @@ def render_registry_page(registry: dict, validation: dict | None = None) -> str:
   <style>{_CSS}{_REGISTRY_CSS}</style>
 </head>
 <body>
+{_render_watchdog_banner()}
 {nav}
 <div class="page" style="max-width:1200px">
   <h1>Experiment Registry</h1>
@@ -1630,6 +1744,7 @@ def render_sentinel_page(
 <html lang="en"><head><meta charset="UTF-8"><title>Sentinel</title>
 <style>{_CSS}\n{_SENTINEL_CSS}</style></head>
 <body>
+{_render_watchdog_banner()}
 {nav}
 <div class="page">
 <h2 style="margin-top:24px">No experiments enrolled</h2>
@@ -1767,6 +1882,7 @@ def render_sentinel_page(
 <title>Sentinel Dashboard</title>
 <style>{_CSS}\n{_SENTINEL_CSS}</style></head>
 <body>
+{_render_watchdog_banner()}
 {nav}
 <div class="page">
 
