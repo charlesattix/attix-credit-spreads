@@ -1,5 +1,5 @@
 """
-scheduler/jobs.py — All APScheduler job functions for the compass-scheduler service.
+scheduler/jobs.py — All APScheduler job functions for the vesper service.
 
 Jobs:
   job_pre_market_check()       08:00 ET Mon-Fri

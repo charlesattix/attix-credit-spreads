@@ -19,7 +19,7 @@ HEALTH_JSON = Path(os.environ.get("HEALTH_JSON_PATH", "/data/health.json"))
 CB_JSON     = _DATA_DIR / "circuit_breaker.json"
 
 
-app = FastAPI(title="compass-scheduler", docs_url=None, redoc_url=None)
+app = FastAPI(title="vesper", docs_url=None, redoc_url=None)
 
 
 @app.get("/health")

@@ -1,0 +1,12 @@
+APScheduler==3.10.4
+pytz==2024.1
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+httpx==0.27.0
+alpaca-py==0.28.0
+requests>=2.31.0       # for direct Polygon API calls in data_providers.py
+yfinance>=0.2.48       # L3 fallback only — do not use as primary
+
+# Core data
+numpy>=1.26
+pandas>=2.0

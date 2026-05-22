@@ -259,7 +259,7 @@ _scheduler_ref: BackgroundScheduler | None = None
 def _shutdown_handler(signum, frame) -> None:
     LOG.info("Received signal %d — shutting down gracefully", signum)
     send_telegram(
-        f"[COMPASS-SCHEDULER] Service stopping (signal {signum}).\n"
+        f"[VESPER] Service stopping (signal {signum}).\n"
         f"Uptime: {_uptime_str()} | Railway will restart if configured."
     )
     if _scheduler_ref is not None:
@@ -284,7 +284,7 @@ def main() -> None:
     signal.signal(signal.SIGINT, _shutdown_handler)
 
     LOG.info("=" * 60)
-    LOG.info("compass-scheduler starting — Railway Cron V2")
+    LOG.info("vesper starting — Railway Cron V2")
     LOG.info("=" * 60)
 
     # Start APScheduler
@@ -297,7 +297,7 @@ def main() -> None:
 
     # Startup Telegram alert
     send_telegram(
-        f"[COMPASS-SCHEDULER] Service started on Railway.\n"
+        f"[VESPER] Service started on Railway.\n"
         f"APScheduler running, {job_count} jobs registered.\n"
         f"Start time: {_START_TIME.strftime('%Y-%m-%d %H:%M UTC')}\n"
         f"Signal generator fires next trading day at 09:25 ET.\n"
