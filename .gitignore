@@ -95,3 +95,4 @@ wheels/
 !experiments/approvals.log
 !railway.json
 !sentinel_state.json
+!configs/event_blacklist.json

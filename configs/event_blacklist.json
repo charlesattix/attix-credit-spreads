@@ -1,0 +1,14 @@
+{
+  "_comment": "Event blackout dates. When 'today + 1 day' (next trading day) is in nfp_dates, the NFP entry gate blocks new entries. Source: BLS empsit schedule (https://www.bls.gov/schedule/news_release/empsit.htm). Quarterly cron job re-verifies against BLS when reachable.",
+  "_version": "2026.05.21",
+  "_verified": "2026-05-21 (instruction-file dates per Carlos approval; BLS WebFetch returned 403)",
+  "nfp_dates": [
+    "2026-06-05",
+    "2026-07-02",
+    "2026-08-07",
+    "2026-09-04",
+    "2026-10-02",
+    "2026-11-06",
+    "2026-12-04"
+  ]
+}

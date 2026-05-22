@@ -287,6 +287,23 @@ class CreditSpreadSystem:
         """
         logger.info("Starting opportunity scan")
 
+        # EXP-3311 — NFP Entry Filter. Skip new entries on the day BEFORE
+        # an NFP release when entry_gate.nfp_filter is enabled in config.
+        entry_gate_cfg = self.config.get('entry_gate', {}) or {}
+        if entry_gate_cfg.get('nfp_filter', False):
+            from datetime import date as _date
+            from shared.entry_gate import should_skip_entry_for_nfp
+            blacklist_path = entry_gate_cfg.get(
+                'blacklist_path', 'configs/event_blacklist.json'
+            )
+            skip, reason = should_skip_entry_for_nfp(
+                today=_date.today(), blacklist_path=blacklist_path
+            )
+            if skip:
+                logger.info("Entry gate active — %s", reason)
+                metrics.inc('scans_skipped_nfp')
+                return []
+
         all_opportunities = []
 
         # Build scan universe: static list or dynamic COMPASS selection
