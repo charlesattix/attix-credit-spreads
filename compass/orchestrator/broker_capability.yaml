@@ -1,0 +1,112 @@
+# broker_capability.yaml — what each broker actually supports
+#
+# The order_router consults this file before submitting any SizedOrder.
+# A capability mismatch is a hard BLOCK with reason
+#   "broker_unsupported: <detail>"
+# and the order is never sent to the wire.
+#
+# Edits to this file change live trading behavior. Keep it minimal and
+# verifiable against the broker's published API.
+#
+# Schema
+# ------
+# brokers:
+#   <broker_id>:
+#     mode:                     # paper | live | both
+#     base_url:                 # informational
+#     order_classes:
+#       multi_leg_options:      # MLEG (atomic spread) supported?
+#       bracket:                # bracket orders supported?
+#     asset_classes:            # what kinds of instruments are tradable
+#       us_equity:              true/false
+#       us_option:              true/false
+#       crypto:                 true/false
+#       futures:                true/false
+#       futures_options:        true/false
+#     submission_blackout_et:   # list of "HH:MM-HH:MM" windows (local ET)
+#                               # in which the router refuses to submit
+#     symbols:
+#       tradable: [...]         # explicit whitelist (option underliers)
+#       untradeable: [...]      # explicit blacklist (futures roots, etc)
+
+brokers:
+
+  alpaca_paper:
+    mode: paper
+    base_url: https://paper-api.alpaca.markets
+    order_classes:
+      multi_leg_options: true   # MultilegOrderRequest, OrderClass.MLEG
+      bracket: true
+    asset_classes:
+      us_equity: true
+      us_option: true
+      crypto: true
+      futures: false            # Alpaca does NOT trade futures
+      futures_options: false    # ...nor futures options
+    submission_blackout_et:
+      - "09:30-09:32"           # open auction settle
+      - "15:58-16:00"           # closing-cross window
+    symbols:
+      tradable:
+        - SPY
+        - QQQ
+        - IWM
+        - XLF
+        - XLI
+        - GLD
+        - SLV
+        - UVXY
+        - VXX
+      untradeable:
+        # CME / COMEX / NYMEX futures roots — would be referenced as
+        # leg.ticker == "GC=F" / "CL=F" / "NG=F" / etc. by upstream
+        # signal generators. The router rejects any order whose legs
+        # reference these.
+        - "GC=F"
+        - "SI=F"
+        - "CL=F"
+        - "NG=F"
+        - "ZN=F"
+        - "ZB=F"
+        - "ES=F"
+        - "NQ=F"
+        - "RTY=F"
+        - "YM=F"
+
+  alpaca_live:
+    mode: live
+    base_url: https://api.alpaca.markets
+    order_classes:
+      multi_leg_options: true
+      bracket: true
+    asset_classes:
+      us_equity: true
+      us_option: true
+      crypto: true
+      futures: false
+      futures_options: false
+    submission_blackout_et:
+      - "09:30-09:32"
+      - "15:58-16:00"
+    symbols:
+      tradable:
+        - SPY
+        - QQQ
+        - IWM
+        - XLF
+        - XLI
+        - GLD
+        - SLV
+        - UVXY
+        - VXX
+      untradeable:
+        - "GC=F"
+        - "SI=F"
+        - "CL=F"
+        - "NG=F"
+        - "ZN=F"
+        - "ZB=F"
+        - "ES=F"
+        - "NQ=F"
+        - "RTY=F"
+        - "YM=F"
