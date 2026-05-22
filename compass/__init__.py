@@ -21,12 +21,27 @@ from compass.events import (
 )
 from compass.risk_gate import RiskGate
 from compass.sizing import calculate_dynamic_risk, get_contract_size, PositionSizer
-from compass.signal_model import SignalModel
-from compass.ensemble_signal_model import EnsembleSignalModel  # GAP-8
-from compass.features import FeatureEngine
-from compass.iv_surface import IVAnalyzer
-from compass.ml_strategy import MLEnhancedStrategy, confidence_to_size_multiplier, RegimeModelRouter
-from compass.stress_test import StressTester, CRISIS_SCENARIOS
+
+
+def __getattr__(name):
+    """Lazy-load heavy ML modules to avoid import-time crashes."""
+    _ml_map = {
+        "SignalModel": ("compass.signal_model", "SignalModel"),
+        "EnsembleSignalModel": ("compass.ensemble_signal_model", "EnsembleSignalModel"),
+        "FeatureEngine": ("compass.features", "FeatureEngine"),
+        "IVAnalyzer": ("compass.iv_surface", "IVAnalyzer"),
+        "MLEnhancedStrategy": ("compass.ml_strategy", "MLEnhancedStrategy"),
+        "confidence_to_size_multiplier": ("compass.ml_strategy", "confidence_to_size_multiplier"),
+        "RegimeModelRouter": ("compass.ml_strategy", "RegimeModelRouter"),
+        "StressTester": ("compass.stress_test", "StressTester"),
+        "CRISIS_SCENARIOS": ("compass.stress_test", "CRISIS_SCENARIOS"),
+    }
+    if name in _ml_map:
+        import importlib
+        module_path, attr = _ml_map[name]
+        module = importlib.import_module(module_path)
+        return getattr(module, attr)
+    raise AttributeError(f"module 'compass' has no attribute {name!r}")
 
 __all__ = [
     # regime
@@ -57,7 +72,7 @@ __all__ = [
     "calculate_dynamic_risk",
     "get_contract_size",
     "PositionSizer",
-    # ML
+    # ML (lazy-loaded via __getattr__ to avoid import-time crashes)
     "SignalModel",
     "EnsembleSignalModel",
     "FeatureEngine",
@@ -65,7 +80,6 @@ __all__ = [
     "MLEnhancedStrategy",
     "confidence_to_size_multiplier",
     "RegimeModelRouter",
-    # stress testing
     "StressTester",
     "CRISIS_SCENARIOS",
 ]
