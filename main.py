@@ -268,9 +268,9 @@ class CreditSpreadSystem:
                 r['ticker']: r.get('rrg_quadrant', '') for r in rankings
             }
             if macro_score < 45:
-                state['macro_sizing_flag'] = 'boost'
-            elif macro_score > 75:
                 state['macro_sizing_flag'] = 'reduce'
+            elif macro_score > 75:
+                state['macro_sizing_flag'] = 'boost'
             else:
                 state['macro_sizing_flag'] = 'neutral'
             logger.debug(
@@ -1108,7 +1108,7 @@ Examples:
                     logger.warning("Failed to write heartbeat: %s", _hb_exc)
 
             # ── Phase 4: RetrainScheduler for SLOT_RETRAIN (16:30 ET daily) ──
-            from compass.retrain_scheduler import RetrainScheduler
+            from compass.archive.retrain_scheduler import RetrainScheduler
             from compass.ensemble_signal_model import EnsembleSignalModel
 
             _model_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "models")
