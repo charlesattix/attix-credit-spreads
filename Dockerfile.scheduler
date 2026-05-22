@@ -1,0 +1,48 @@
+FROM python:3.11-slim AS builder
+
+WORKDIR /build
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc g++ libffi-dev libssl-dev curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt requirements-scheduler.txt ./
+RUN pip install --no-cache-dir --prefix=/install \
+    -r requirements.txt \
+    -r requirements-scheduler.txt
+
+FROM python:3.11-slim AS runtime
+
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /install /usr/local
+COPY compass/    ./compass/
+COPY scheduler/  ./scheduler/
+
+RUN mkdir -p /data/logs /data/signals
+
+# Verify critical imports at build time — catches broken deps before 09:25 ET
+RUN python -c "
+import numpy, pandas, apscheduler, fastapi, uvicorn, pytz
+import requests
+try:
+    import yfinance
+except ImportError:
+    print('WARNING: yfinance not available — L3 fallback will be disabled')
+from alpaca.data.historical import StockHistoricalDataClient
+from scheduler.main import build_scheduler
+print('All imports OK')
+"
+
+RUN useradd -m -u 1001 compass
+USER compass
+
+EXPOSE 8080
+ENV PORT=8080
+ENV COMPASS_DATA_DIR=/data
+ENV PYTHONUNBUFFERED=1
+ENV TZ=America/New_York
+
+CMD ["python", "-m", "scheduler.main"]

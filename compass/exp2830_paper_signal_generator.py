@@ -178,26 +178,47 @@ class MarketSnapshot:
     data_sources: Dict[str, str]
 
 
-def fetch_market_snapshot(as_of: date) -> MarketSnapshot:
-    """Pull 180 calendar days of daily closes for every ticker."""
-    import yfinance as yf
-    start = (as_of - timedelta(days=180)).strftime("%Y-%m-%d")
-    end   = (as_of + timedelta(days=1)).strftime("%Y-%m-%d")
+def fetch_market_snapshot(as_of: date, data_alerts: list = None) -> MarketSnapshot:
+    """Pull 180 calendar days of daily closes for every ticker.
 
-    data: Dict[str, pd.Series] = {}
-    sources: Dict[str, str] = {}
-    for key, sym in TICKERS.items():
-        df = yf.download(sym, start=start, end=end, progress=False,
-                         auto_adjust=False)
-        if isinstance(df.columns, pd.MultiIndex):
-            df.columns = df.columns.get_level_values(0)
-        data[key] = df["Close"].dropna()
-        sources[key] = f"Yahoo Finance {sym} 180d"
+    Data hierarchy: Polygon (primary) -> Alpaca data API -> yfinance -> stale cache.
+    Each fallback logs DATA_FALLBACK at WARNING. The data_alerts list is populated
+    with any fallback events so the scheduler can send Telegram notifications.
 
-    # Today's closes (most recent bar ≤ as_of)
+    When running outside the scheduler context (local dev, backtests), the
+    ImportError fallback uses yfinance directly so research workflows are unaffected.
+    """
+    LOG_LOCAL = logging.getLogger("exp2830")
+
+    try:
+        from scheduler.data_providers import fetch_market_data
+        data, alerts = fetch_market_data(as_of, days=180)
+        if data_alerts is not None:
+            data_alerts.extend(alerts)
+        sources: Dict[str, str] = {
+            k: "Polygon/Alpaca/yfinance fallback chain" for k in data
+        }
+    except ImportError:
+        # Running outside scheduler context (local backtests, research) — use yfinance directly.
+        LOG_LOCAL.warning(
+            "DATA_FALLBACK: scheduler.data_providers not found — using yfinance directly"
+        )
+        import yfinance as yf
+        start = (as_of - timedelta(days=180)).strftime("%Y-%m-%d")
+        end   = (as_of + timedelta(days=1)).strftime("%Y-%m-%d")
+        data = {}
+        sources = {}
+        for key, sym in TICKERS.items():
+            df = yf.download(sym, start=start, end=end, progress=False, auto_adjust=False)
+            if isinstance(df.columns, pd.MultiIndex):
+                df.columns = df.columns.get_level_values(0)
+            data[key] = df["Close"].dropna()
+            sources[key] = f"Yahoo Finance {sym} 180d"
+
+    # Today's closes (most recent bar <= as_of)
     closes: Dict[str, float] = {}
     for k, s in data.items():
-        if len(s):
+        if s is not None and len(s):
             closes[k] = float(s.iloc[-1])
 
     # VIX term structure
@@ -215,17 +236,16 @@ def fetch_market_snapshot(as_of: date) -> MarketSnapshot:
         vvix_pct = 0.5
 
     # SPY trend and realised vol
-    spy = data["SPY"]
+    spy = data.get("SPY")
     spy_trend = 0.0
     spy_rv = 0.0
-    if len(spy) >= 50:
+    if spy is not None and len(spy) >= 50:
         ma50 = spy.tail(50).mean()
         spy_trend = float(spy.iloc[-1] / ma50 - 1)
-    if len(spy) >= 20:
+    if spy is not None and len(spy) >= 20:
         rets = spy.pct_change().dropna().tail(20)
         spy_rv = float(rets.std(ddof=1) * math.sqrt(252))
 
-    # SPY 20-day realised
     vix_rv = spy_rv
 
     return MarketSnapshot(
@@ -663,9 +683,11 @@ def _v5_hedge_signal(snap: MarketSnapshot, ctx: OverlayContext) -> StreamSignal:
 # Orchestrator
 # ───────────────────────────────────────────────────────────────────────────
 
-def generate_all_signals(as_of: date, logger: logging.Logger) -> Dict:
+def generate_all_signals(
+    as_of: date, logger: logging.Logger, data_alerts: list = None
+) -> Dict:
     logger.info(f"Building market snapshot for {as_of}")
-    snap = fetch_market_snapshot(as_of)
+    snap = fetch_market_snapshot(as_of, data_alerts=data_alerts)
 
     logger.info(f"VIX {snap.vix_value} VIX3M {snap.vix3m_value} "
                 f"VVIX {snap.vvix_value} (60d pct {snap.vvix_percentile_60d:.2f}) "
@@ -719,8 +741,8 @@ def generate_all_signals(as_of: date, logger: logging.Logger) -> Dict:
             "target_vol": TARGET_VOL,
         },
         "signals": [asdict(s) for s in signals],
-        "rule_zero": ("All data from Yahoo Finance (real). Option chain "
-                       "selection happens in the Alpaca integration layer "
+        "rule_zero": ("Data: Polygon (primary) -> Alpaca data API -> yfinance -> stale cache. "
+                       "Option chain selection happens in the Alpaca integration layer "
                        "using IronVault-verified strikes."),
     }
 

@@ -4,6 +4,9 @@ pyyaml==6.0.2
 python-dotenv==1.0.1
 python-multipart==0.0.20
 
+# Sentinel v2 watchdog scheduler
+APScheduler==3.10.4
+
 # ML modules (cherry-picked from maximus/ensemble-ml)
 numpy>=1.26
 pandas>=2.0
