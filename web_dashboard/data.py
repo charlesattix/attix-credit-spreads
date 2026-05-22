@@ -2,9 +2,11 @@
 data.py — Data access layer for the paper trading dashboard.
 
 Reads from:
+  - Alpaca REST API          (live equity / positions / orders — primary)
   - experiments/registry.json  (experiment metadata)
   - configs/paper_*.yaml       (db_path resolution)
-  - data/*/attix_*.db        (SQLite trade data)
+  - data/*/attix_*.db        (SQLite trade data — local dev only)
+  - data/pushed_dashboard.json / dashboard_export.json (Railway fallback)
 
 ATTIX_ROOT env var overrides the project root path.
 """
@@ -12,6 +14,7 @@ ATTIX_ROOT env var overrides the project root path.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import sqlite3
 from datetime import datetime, timedelta, timezone
@@ -19,6 +22,8 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 import yaml
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Root resolution
@@ -312,7 +317,8 @@ def query_all_live(report_date: Optional[str] = None) -> List[dict]:
         query_experiment(exp, report_date)
         for exp in get_live_experiments(registry)
     ]
-    # If all experiments have no DB (Railway), try pushed data
+
+    # Build stats from local DB or fall back to pushed data
     pushed = load_pushed_data()
     if not results or all(r.get("error") == "Database not found" for r in results):
         if pushed and "experiments" in pushed:
@@ -347,19 +353,38 @@ def query_all_live(report_date: Optional[str] = None) -> List[dict]:
                     "alpaca_equity_history": exp.get("alpaca_equity_history") or [],
                 }
                 flattened.append(flat)
-            return flattened
+            results = flattened
+    else:
+        # We have local DBs — augment with alpaca data from pushed export if available
+        if pushed and "experiments" in pushed:
+            by_id = {exp.get("id"): exp for exp in pushed["experiments"]}
+            for r in results:
+                pushed_exp = by_id.get(r["id"]) or {}
+                if r.get("alpaca") is None:
+                    r["alpaca"] = pushed_exp.get("alpaca")
+                # Always propagate equity history from pushed export (local DBs
+                # don't store it — it's fetched from Alpaca during sync).
+                if not r.get("alpaca_equity_history"):
+                    r["alpaca_equity_history"] = pushed_exp.get("alpaca_equity_history") or []
 
-    # We have local DBs — augment with alpaca data from pushed export if available
-    if pushed and "experiments" in pushed:
-        by_id = {exp.get("id"): exp for exp in pushed["experiments"]}
-        for r in results:
-            pushed_exp = by_id.get(r["id"]) or {}
-            if r.get("alpaca") is None:
-                r["alpaca"] = pushed_exp.get("alpaca")
-            # Always propagate equity history from pushed export (local DBs
-            # don't store it — it's fetched from Alpaca during sync).
-            if not r.get("alpaca_equity_history"):
-                r["alpaca_equity_history"] = pushed_exp.get("alpaca_equity_history") or []
+    # --- Live Alpaca data (overrides pushed alpaca block when available) -----
+    try:
+        from . import alpaca_live
+        live = alpaca_live.get_all_live_alpaca()
+        if live:
+            for r in results:
+                norm_id = r["id"].upper().replace("-", "") if r.get("id") else ""
+                alpaca_data = live.get(norm_id)
+                if alpaca_data and not alpaca_data.get("error"):
+                    # Preserve equity history from pushed data — not in live API
+                    existing_history = r.get("alpaca_equity_history") or []
+                    r["alpaca"] = alpaca_data
+                    r["alpaca_equity_history"] = existing_history
+                    # Update open_count to reflect live positions count
+                    r["open_count"] = len(alpaca_data.get("positions") or [])
+            logger.info("[data] Live Alpaca data injected for %d experiments", len(live))
+    except Exception as exc:
+        logger.warning("[data] Live Alpaca fetch failed, using cached/pushed data: %s", exc)
 
     return results
 
@@ -369,25 +394,67 @@ def query_all_live(report_date: Optional[str] = None) -> List[dict]:
 # ---------------------------------------------------------------------------
 
 def get_trades(exp: dict, limit: int = 100) -> list[dict]:
+    """
+    Return closed trade history for an experiment.
+
+    Priority:
+      1. Local SQLite DB (has full trade detail + P&L)
+      2. Alpaca order history (when no DB available on Railway)
+
+    Alpaca orders are normalised to include an `alpaca_order` flag so
+    callers can distinguish them from local DB trades.
+    """
     db_path = resolve_db_path(exp)
-    if not db_path or not db_path.exists():
-        return []
+    if db_path and db_path.exists():
+        try:
+            conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+            conn.row_factory = sqlite3.Row
+            placeholders = ",".join("?" * len(CLOSED_STATUSES))
+            rows = conn.execute(
+                f"SELECT * FROM trades WHERE status IN ({placeholders}) "
+                f"ORDER BY exit_date DESC LIMIT ?",
+                (*CLOSED_STATUSES, limit),
+            ).fetchall()
+            conn.close()
+            db_trades = [dict(r) for r in rows]
+            if db_trades:
+                return db_trades
+        except Exception:
+            pass
+
+    # No DB trades — try Alpaca order history
     try:
-        conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
-        conn.row_factory = sqlite3.Row
-        placeholders = ",".join("?" * len(CLOSED_STATUSES))
-        rows = conn.execute(
-            f"SELECT * FROM trades WHERE status IN ({placeholders}) "
-            f"ORDER BY exit_date DESC LIMIT ?",
-            (*CLOSED_STATUSES, limit),
-        ).fetchall()
-        conn.close()
-        return [dict(r) for r in rows]
-    except Exception:
-        return []
+        from . import alpaca_live
+        alpaca_data = alpaca_live.get_live_alpaca(exp["id"])
+        if alpaca_data and not alpaca_data.get("error"):
+            orders = alpaca_data.get("orders") or []
+            # Filter to filled orders only and normalise for API consumers
+            filled = [
+                {**o, "alpaca_order": True}
+                for o in orders
+                if o.get("status") == "filled"
+            ]
+            return filled[:limit]
+    except Exception as exc:
+        logger.warning("[data] get_trades Alpaca error for %s: %s", exp.get("id"), exc)
+
+    return []
 
 
 def get_positions(exp: dict) -> list[dict]:
+    # Try live Alpaca positions first
+    try:
+        from . import alpaca_live
+        alpaca_data = alpaca_live.get_live_alpaca(exp["id"])
+        if alpaca_data and not alpaca_data.get("error"):
+            positions = alpaca_data.get("positions") or []
+            if positions or alpaca_data.get("equity") is not None:
+                # We have a valid Alpaca response; return live positions
+                return positions
+    except Exception as exc:
+        logger.warning("[data] get_positions Alpaca error for %s: %s", exp.get("id"), exc)
+
+    # Fall back to local SQLite
     db_path = resolve_db_path(exp)
     if not db_path or not db_path.exists():
         return []
@@ -404,11 +471,11 @@ def get_positions(exp: dict) -> list[dict]:
 
 
 def summary_all() -> dict:
-    """High-level summary for /api/v1/summary."""
-    # Return the pushed summary directly if available (includes alpaca fields)
-    pushed = load_pushed_data()
-    if pushed and "summary" in pushed:
-        return pushed["summary"]
+    """High-level summary for /api/v1/summary.
+
+    Always computed from query_all_live() so live Alpaca equity is included.
+    The old pushed-summary shortcut is removed — live data is better.
+    """
     all_stats = query_all_live()
     total_pnl    = sum(s["total_pnl"]    for s in all_stats)
     total_closed = sum(s["total_closed"] for s in all_stats)
@@ -416,14 +483,32 @@ def summary_all() -> dict:
     total_wins   = sum(s["wins"]         for s in all_stats)
     combined_wr  = (total_wins / total_closed * 100) if total_closed else 0.0
     max_dd       = max((s["max_dd"] for s in all_stats), default=0.0)
+
+    # Live equity from Alpaca
+    equities = [
+        s["alpaca"]["equity"]
+        for s in all_stats
+        if s.get("alpaca") and s["alpaca"].get("equity") is not None
+    ]
+    total_equity      = sum(equities) if equities else None
+    unrealized_totals = [
+        s["alpaca"].get("unrealized_pl") or 0
+        for s in all_stats
+        if s.get("alpaca") and s["alpaca"].get("equity") is not None
+    ]
+    total_unrealized = sum(unrealized_totals) if equities else None
+
     return {
-        "experiments":    len(all_stats),
-        "total_pnl":      round(total_pnl, 2),
-        "total_pnl_pct":  round(total_pnl / STARTING_EQUITY * 100, 2),
-        "total_closed":   total_closed,
-        "total_open":     total_open,
+        "experiments":       len(all_stats),
+        "total_pnl":         round(total_pnl, 2),
+        "total_pnl_pct":     round(total_pnl / STARTING_EQUITY * 100, 2),
+        "total_closed":      total_closed,
+        "total_open":        total_open,
         "combined_win_rate": round(combined_wr, 1),
         "max_drawdown_pct":  round(max_dd, 2),
+        "total_equity":      round(total_equity, 2) if total_equity is not None else None,
+        "total_unrealized_pl": round(total_unrealized, 2) if total_unrealized is not None else None,
+        "alpaca_accounts":   len(equities),
         "experiments_detail": [
             {
                 "id":          s["id"],
@@ -434,6 +519,7 @@ def summary_all() -> dict:
                 "max_dd":      round(s["max_dd"], 2),
                 "total_closed": s["total_closed"],
                 "open_count":  s["open_count"],
+                "live_equity": s["alpaca"].get("equity") if s.get("alpaca") else None,
                 "error":       s.get("error"),
             }
             for s in all_stats

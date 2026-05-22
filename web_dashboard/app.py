@@ -385,9 +385,25 @@ async def health():
 
 @app.get("/api/v1/experiments")
 async def list_experiments(_key: str = Depends(require_api_key)):
-    """All experiments from registry (all statuses)."""
+    """All experiments from registry, augmented with live Alpaca equity."""
     registry = _cached("registry", 30.0, load_registry)
-    exps = get_all_experiments(registry)
+    # Deep-copy so we don't mutate the cached registry dicts
+    exps = [dict(e) for e in get_all_experiments(registry)]
+
+    try:
+        from .alpaca_live import get_all_live_alpaca
+        live = _cached("alpaca_live_all", 60.0, get_all_live_alpaca)
+        for exp in exps:
+            norm_id = exp.get("id", "").upper().replace("-", "")
+            alpaca_data = live.get(norm_id)
+            if alpaca_data and not alpaca_data.get("error"):
+                exp["live_equity"]        = alpaca_data.get("equity")
+                exp["live_unrealized_pl"] = alpaca_data.get("unrealized_pl")
+                exp["live_cash"]          = alpaca_data.get("cash")
+                exp["alpaca_fetched_at"]  = alpaca_data.get("fetched_at")
+    except Exception as exc:
+        logger.warning("[api] /experiments Alpaca augment failed: %s", exc)
+
     return {
         "schema_version": registry.get("schema_version"),
         "last_updated":   registry.get("last_updated"),
@@ -402,7 +418,11 @@ async def experiment_trades(
     limit: int = Query(default=100, ge=1, le=1000),  # SECURITY AUDIT #9
     _key: str = Depends(require_api_key),
 ):
-    """Trade history for one experiment (closed trades, newest first)."""
+    """Trade history for one experiment.
+
+    Returns local DB closed trades when available, merged with Alpaca order
+    history (last 30 days) in a separate field for API consumers.
+    """
     registry = _cached("registry", 30.0, load_registry)
     exp = registry["experiments"].get(exp_id.upper())
     if not exp:
@@ -410,12 +430,25 @@ async def experiment_trades(
     # SECURITY AUDIT #8: restrict access to paper_trading experiments only to prevent IDOR.
     if exp.get("status") not in ("active", "paper_trading"):
         raise HTTPException(status_code=404, detail=f"{exp_id} not found in registry")
+
     trades = get_trades(exp, limit=limit)
+
+    # Also expose raw Alpaca orders for consumers that want the full picture
+    alpaca_orders: list = []
+    try:
+        from .alpaca_live import get_live_alpaca
+        alpaca_data = get_live_alpaca(exp["id"])
+        if alpaca_data and not alpaca_data.get("error"):
+            alpaca_orders = alpaca_data.get("orders") or []
+    except Exception as exc:
+        logger.warning("[api] trades Alpaca orders error for %s: %s", exp_id, exc)
+
     return {
         "experiment_id": exp["id"],
         "name":          exp["name"],
         "count":         len(trades),
         "trades":        trades,
+        "alpaca_orders": alpaca_orders[:limit],
     }
 
 
@@ -424,7 +457,7 @@ async def experiment_positions(
     exp_id: str,
     _key: str = Depends(require_api_key),
 ):
-    """Open positions for one experiment."""
+    """Open positions for one experiment (live from Alpaca when keys available)."""
     registry = _cached("registry", 30.0, load_registry)
     exp = registry["experiments"].get(exp_id.upper())
     if not exp:
@@ -432,11 +465,26 @@ async def experiment_positions(
     # SECURITY AUDIT #8: restrict access to paper_trading experiments only to prevent IDOR.
     if exp.get("status") not in ("active", "paper_trading"):
         raise HTTPException(status_code=404, detail=f"{exp_id} not found in registry")
-    positions = get_positions(exp)
+
+    source = "local_db"
+    positions = []
+    try:
+        from .alpaca_live import get_live_alpaca
+        alpaca_data = get_live_alpaca(exp["id"])
+        if alpaca_data and not alpaca_data.get("error"):
+            positions = alpaca_data.get("positions") or []
+            source = "alpaca_live"
+    except Exception as exc:
+        logger.warning("[api] positions Alpaca error for %s: %s", exp_id, exc)
+
+    if source != "alpaca_live":
+        positions = get_positions(exp)
+
     return {
         "experiment_id": exp["id"],
         "name":          exp["name"],
         "count":         len(positions),
+        "source":        source,
         "positions":     positions,
     }
 
@@ -697,6 +745,7 @@ async def sentinel_dashboard(request: Request, _: None = Depends(require_session
 @app.on_event("startup")
 async def _on_startup():
     from .data import PROJECT_ROOT, REGISTRY_PATH
+    from .alpaca_live import discover_experiment_keys
     logger.info("=" * 60)
     logger.info("Attix Paper Trading Dashboard starting")
     logger.info(f"  ATTIX_ROOT  : {PROJECT_ROOT}")
@@ -706,6 +755,8 @@ async def _on_startup():
     import os as _os
     logger.info(f"  Dashboard pw  : {'custom' if _os.environ.get('DASHBOARD_PASSWORD') else 'default (dev)'}")
     logger.info(f"  Secret key    : {'custom' if _os.environ.get('SECRET_KEY') else 'default (dev — INSECURE)'}")
+    alpaca_keys = discover_experiment_keys()
+    logger.info(f"  Alpaca keys   : {len(alpaca_keys)} experiments configured ({', '.join(sorted(alpaca_keys))})")
     logger.info("=" * 60)
 
     if REGISTRY_PATH.exists():
