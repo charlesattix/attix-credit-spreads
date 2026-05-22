@@ -72,13 +72,43 @@ def job_log(job_name: str, message: str) -> None:
     LOG.info("[%s] %s", job_name, message)
 
 
-def get_alpaca_client():
-    """Return an Alpaca TradingClient (paper or live depending on env)."""
+def get_alpaca_client(exp_id: str = None):
+    """Return an Alpaca TradingClient (paper or live depending on env).
+
+    If *exp_id* is supplied (e.g. "EXP400"), look for per-experiment keys
+    first (ALPACA_API_KEY_EXP400 / ALPACA_API_SECRET_EXP400). Falls back
+    to the generic ALPACA_API_KEY / ALPACA_API_SECRET.
+    """
     from alpaca.trading.client import TradingClient
-    api_key    = os.environ["ALPACA_API_KEY"]
-    api_secret = os.environ["ALPACA_API_SECRET"]
+    suffix = f"_{exp_id.upper().replace('-', '')}" if exp_id else ""
+    api_key    = os.environ.get(f"ALPACA_API_KEY{suffix}") or os.environ.get("ALPACA_API_KEY", "")
+    api_secret = os.environ.get(f"ALPACA_API_SECRET{suffix}") or os.environ.get("ALPACA_API_SECRET", "")
+    if not api_key or not api_secret:
+        raise RuntimeError(f"Missing Alpaca keys for {exp_id or 'default'} (looked for ALPACA_API_KEY{suffix})")
     paper      = os.environ.get("ALPACA_PAPER", "true").lower() == "true"
     return TradingClient(api_key=api_key, secret_key=api_secret, paper=paper)
+
+
+def _get_experiment_env(exp_id: str) -> dict:
+    """Build an env dict for a per-experiment subprocess.
+
+    Reads ALPACA_API_KEY_EXPXXX / ALPACA_API_SECRET_EXPXXX from Railway
+    env vars and maps them to the standard names the subprocess expects.
+    """
+    suffix = exp_id.upper().replace("-", "")
+    env = os.environ.copy()
+    key = os.environ.get(f"ALPACA_API_KEY_{suffix}", "")
+    secret = os.environ.get(f"ALPACA_API_SECRET_{suffix}", "")
+    if key:
+        env["ALPACA_API_KEY"] = key
+    if secret:
+        env["ALPACA_API_SECRET"] = secret
+    env["ALPACA_BASE_URL"] = os.environ.get("ALPACA_BASE_URL", "https://paper-api.alpaca.markets")
+    env["ALPACA_PAPER"] = "true"
+    polygon = os.environ.get("POLYGON_API_KEY", "")
+    if polygon:
+        env["POLYGON_API_KEY"] = polygon
+    return env
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -90,13 +120,26 @@ def job_pre_market_check() -> None:
     job_log("pre_market", "=== Pre-market check start ===")
     failures = []
 
-    # 1. Required env vars
-    for var in ["ALPACA_API_KEY", "ALPACA_API_SECRET"]:
-        if not os.environ.get(var):
-            failures.append(f"env {var} MISSING")
-            job_log("pre_market", f"FAIL: env {var} MISSING")
+    # 1. Required env vars — check per-experiment keys
+    exp_ids = ["EXP400", "EXP401", "EXP503", "EXP600", "EXP800", "EXP1220", "EXP3309", "EXP3311"]
+    keys_found = 0
+    for eid in exp_ids:
+        key_var = f"ALPACA_API_KEY_{eid}"
+        secret_var = f"ALPACA_API_SECRET_{eid}"
+        if os.environ.get(key_var) and os.environ.get(secret_var):
+            keys_found += 1
+            job_log("pre_market", f"PASS: {eid} keys set")
         else:
-            job_log("pre_market", f"PASS: env {var} set")
+            job_log("pre_market", f"WARN: {eid} keys missing ({key_var})")
+    if keys_found == 0:
+        # Fallback: check generic keys
+        if os.environ.get("ALPACA_API_KEY") and os.environ.get("ALPACA_API_SECRET"):
+            job_log("pre_market", "PASS: generic ALPACA_API_KEY set (no per-experiment keys)")
+        else:
+            failures.append("No Alpaca keys found (neither per-experiment nor generic)")
+            job_log("pre_market", "FAIL: No Alpaca keys found anywhere")
+    else:
+        job_log("pre_market", f"PASS: {keys_found}/{len(exp_ids)} experiment keys configured")
 
     polygon_key = os.environ.get("POLYGON_API_KEY", "")
     if not polygon_key:
@@ -650,6 +693,9 @@ def job_run_experiment(exp_id: str, config: str, env_file: Optional[str] = None)
         else:
             job_log(job_name, f"WARN: env_file {env_file} not found, using default env")
 
+    # Build per-experiment env with the correct Alpaca keys from Railway
+    exp_env = _get_experiment_env(exp_id)
+
     try:
         result = subprocess.run(
             cmd,
@@ -657,6 +703,7 @@ def job_run_experiment(exp_id: str, config: str, env_file: Optional[str] = None)
             capture_output=True,
             text=True,
             timeout=600,  # 10-minute timeout per experiment
+            env=exp_env,
         )
         elapsed = (datetime.utcnow() - start).total_seconds()
 
