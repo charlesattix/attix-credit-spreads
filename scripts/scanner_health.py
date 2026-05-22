@@ -64,7 +64,11 @@ from typing import Any, Dict, List, Optional
 # ---------------------------------------------------------------------------
 
 LAUNCHAGENTS_DIR = Path.home() / "Library" / "LaunchAgents"
-PLIST_GLOB = "com.pilotai.*.plist"
+# Patterns we recognise as "pilotai-managed daemons":
+#   com.pilotai.*    — paper-trading scanners (one per experiment)
+#   com.attix.sentinel — sentinel watchdog (different prefix, same monitoring need)
+# Each pattern is fed into Path.glob; results are deduplicated by stem.
+PLIST_GLOBS = ("com.pilotai.*.plist", "com.attix.sentinel.plist")
 
 # Beyond this, the log is considered stale during market hours.
 LOG_STALE_SECONDS = 30 * 60
@@ -283,7 +287,20 @@ def probe(plist_path: Path, project_root: Path) -> Dict[str, Any]:
     """Run every check against one scanner's plist and return a result dict."""
     plist = _read_plist(plist_path)
     label = plist.get("Label") or plist_path.stem
-    exp_id = label.replace("com.pilotai.", "")
+    exp_id = label.replace("com.pilotai.", "").replace("com.attix.", "")
+
+    # Determine the lifecycle mode of this plist:
+    #   keepalive    → process should always be running (KeepAlive=true)
+    #   periodic     → process runs every StartInterval seconds and exits
+    #   on_demand    → run-at-load only, no schedule
+    # The "process not running" P0 alert only applies in keepalive mode.
+    keep_alive_raw = plist.get("KeepAlive")
+    if keep_alive_raw is True or isinstance(keep_alive_raw, dict):
+        lifecycle = "keepalive"
+    elif plist.get("StartInterval"):
+        lifecycle = "periodic"
+    else:
+        lifecycle = "on_demand"
 
     args: List[str] = plist.get("ProgramArguments") or []
     env_file_rel = _extract_env_file_arg(args)
@@ -332,6 +349,7 @@ def probe(plist_path: Path, project_root: Path) -> Dict[str, Any]:
         "plist_path": str(plist_path),
         "env_file": env_file_rel,
         "log_path": str(log_path) if log_path else None,
+        "lifecycle": lifecycle,
         "launchctl_loaded": bool(launchctl),
         "launchctl_pid": pid,
         "launchctl_last_exit": last_exit,
@@ -368,7 +386,13 @@ def _build_alerts(results: List[Dict[str, Any]]) -> List[Dict[str, str]]:
                 ),
             })
         # P0: launchctl says loaded but no live process
-        if r["launchctl_loaded"] and not r["process_alive"]:
+        # (only meaningful for keepalive lifecycles — periodic daemons are
+        # expected to be absent between scheduled runs)
+        if (
+            r["launchctl_loaded"]
+            and not r["process_alive"]
+            and r.get("lifecycle") == "keepalive"
+        ):
             alerts.append({
                 "level": "P0",
                 "exp_id": exp,
@@ -546,9 +570,13 @@ def main(argv: Optional[List[str]] = None) -> int:
     args = ap.parse_args(argv)
 
     project_root = Path(args.project_root).expanduser().resolve()
-    plists = sorted(LAUNCHAGENTS_DIR.glob(PLIST_GLOB))
+    plists_set = {}
+    for pat in PLIST_GLOBS:
+        for p in LAUNCHAGENTS_DIR.glob(pat):
+            plists_set.setdefault(p.stem, p)
+    plists = sorted(plists_set.values())
     if not plists:
-        msg = f"No plists matching {PLIST_GLOB} in {LAUNCHAGENTS_DIR}"
+        msg = f"No plists matching {PLIST_GLOBS} in {LAUNCHAGENTS_DIR}"
         print(msg, file=sys.stderr)
         return 2
 
