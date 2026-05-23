@@ -489,6 +489,24 @@ _EXP_DESCRIPTIONS: dict[str, str] = {
         "MA50-based trend detection, 14 DTE, 10% OTM. No ML. "
         "Optimized via mega parameter sweep (139% avg annual backtest)."
     ),
+    "EXP-3311": (
+        "NFP Entry Filter (paper). Champion strategy with the addition of "
+        "an entry gate that skips new positions the day BEFORE BLS Non-Farm "
+        "Payrolls releases. Defensive risk-reducer. Backtest: Sharpe 4.984, "
+        "Max DD 5.89%."
+    ),
+    "EXP-3309": (
+        "Pre-Close Execution Window (paper). Champion strategy restricted "
+        "to a 15:30-16:00 ET scanning window to capture pre-close liquidity. "
+        "Offensive execution-alpha. Backtest: Sharpe 5.879, 343 bps/yr "
+        "cost savings — empirical validation."
+    ),
+    "EXP-3303b": (
+        "Per-Stream Selective Regime Gate (paper). Champion strategy that "
+        "skips new SPY/QQQ entries during regime transitions (transition / "
+        "high_stress) while letting sector ETFs continue. Defensive "
+        "SPX-VRP protection. Backtest: Sharpe 6.334, gates ~4% of days."
+    ),
 }
 
 # ---------------------------------------------------------------------------

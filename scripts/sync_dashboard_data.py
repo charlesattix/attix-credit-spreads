@@ -56,6 +56,9 @@ BACKTEST_EXPECTATIONS = {
     "EXP-503": {"avg_return": None,   "max_dd": None,  "robust": None},
     "EXP-600": {"avg_return": 139.2, "max_dd": -19.4, "robust": 0.950},
     "EXP-1220": {"avg_return": 99.2, "max_dd": -11.2, "robust": None},
+    "EXP-3311": {"avg_return": 84.8,  "max_dd": -5.89, "robust": None},
+    "EXP-3309": {"avg_return": 265.7, "max_dd": None,  "robust": None},
+    "EXP-3303b": {"avg_return": 247.9, "max_dd": -10.455, "robust": None},
 }
 
 
