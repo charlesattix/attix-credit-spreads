@@ -24,6 +24,18 @@ _MAX_RETRIES = 3
 _BACKOFF_SECONDS = (1, 2, 4)
 
 
+def _pick_key(ticker: str) -> str:
+    """Return the Polygon API key for ``ticker``.
+
+    Index tickers (``I:`` prefix, e.g. ``I:VIX``, ``I:VVIX``, ``I:SKEW``)
+    are not authorized by Polygon's stocks plan; route them to
+    ``POLYGON_INDICES_API_KEY``. Everything else uses ``POLYGON_API_KEY``.
+    """
+    if ticker.upper().startswith("I:"):
+        return os.getenv("POLYGON_INDICES_API_KEY", "")
+    return os.getenv("POLYGON_API_KEY", "")
+
+
 class PolygonClient:
     """REST client for Polygon aggregates."""
 

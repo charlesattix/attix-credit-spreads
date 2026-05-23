@@ -24,6 +24,8 @@ from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 
+from shared.polygon_client import _pick_key
+
 LOG = logging.getLogger("scheduler.data_providers")
 
 # ── ETF tickers ─────────────────────────────────────────────────────────────
@@ -84,9 +86,20 @@ def _cache_age_hours(cache: dict, key: str) -> float:
 # Level 1: Polygon
 # ════════════════════════════════════════════════════════════════════════════
 
-def _polygon_get_historical(ticker: str, days: int, api_key: str) -> Optional[pd.Series]:
-    """Fetch daily close series from Polygon /v2/aggs. Returns pd.Series or None."""
+def _polygon_get_historical(ticker: str, days: int) -> Optional[pd.Series]:
+    """Fetch daily close series from Polygon /v2/aggs. Returns pd.Series or None.
+
+    Routes the API key via :func:`shared.polygon_client._pick_key` so
+    ``I:`` index tickers use ``POLYGON_INDICES_API_KEY``.
+    """
     import requests
+    api_key = _pick_key(ticker)
+    if not api_key:
+        LOG.warning(
+            "DATA_FALLBACK: ticker=%s level=L1_polygon reason='no api key for ticker'",
+            ticker,
+        )
+        return None
     end   = datetime.utcnow()
     start = end - timedelta(days=days)
     url = (
@@ -111,19 +124,22 @@ def _polygon_get_historical(ticker: str, days: int, api_key: str) -> Optional[pd
 
 
 def _polygon_fetch_all(
-    etf_tickers: list, index_map: dict, days: int, api_key: str
+    etf_tickers: list, index_map: dict, days: int
 ) -> Tuple[Dict[str, pd.Series], Dict[str, pd.Series]]:
-    """Fetch ETFs + VIX indices from Polygon. Returns (etf_dict, index_dict)."""
+    """Fetch ETFs + VIX indices from Polygon. Returns (etf_dict, index_dict).
+
+    Per-ticker key routing happens inside :func:`_polygon_get_historical`.
+    """
     etfs: Dict[str, pd.Series] = {}
     for t in etf_tickers:
-        series = _polygon_get_historical(t, days, api_key)
+        series = _polygon_get_historical(t, days)
         if series is not None and len(series) > 0:
             etfs[t] = series
             LOG.info("DATA_SOURCE: ticker=%s source=L1_polygon rows=%d", t, len(series))
 
     indices: Dict[str, pd.Series] = {}
     for key, poly_sym in index_map.items():
-        series = _polygon_get_historical(poly_sym, days, api_key)
+        series = _polygon_get_historical(poly_sym, days)
         if series is not None and len(series) > 0:
             # rename from "I:VIX" -> "VIX"
             indices[key] = series.rename(key)
@@ -291,7 +307,8 @@ def fetch_market_data(
         ETFs:    SPY, QQQ, XLF, XLI, GLD, SLV
         Indices: VIX, VIX3M, VVIX
     """
-    polygon_key   = os.environ.get("POLYGON_API_KEY", "")
+    polygon_stocks_key  = os.environ.get("POLYGON_API_KEY", "")
+    polygon_indices_key = os.environ.get("POLYGON_INDICES_API_KEY", "")
     alpaca_key    = os.environ.get("ALPACA_API_KEY", "")
     alpaca_secret = os.environ.get("ALPACA_API_SECRET", "")
 
@@ -299,15 +316,19 @@ def fetch_market_data(
     alerts: List[str] = []
     cache = _load_cache()
 
-    # ── Level 1: Polygon (all tickers) ───────────────────────────────────
-    if polygon_key:
+    # ── Level 1: Polygon (all tickers; per-ticker key routing) ──────────
+    if polygon_stocks_key or polygon_indices_key:
+        if not polygon_stocks_key:
+            LOG.warning("POLYGON_API_KEY not set — ETF fetch will fail")
+        if not polygon_indices_key:
+            LOG.warning("POLYGON_INDICES_API_KEY not set — VIX index fetch will fail")
         etfs_poly, indices_poly = _polygon_fetch_all(
-            ETF_TICKERS, POLYGON_INDEX_MAP, days, polygon_key
+            ETF_TICKERS, POLYGON_INDEX_MAP, days
         )
         data.update(etfs_poly)
         data.update(indices_poly)
     else:
-        LOG.warning("POLYGON_API_KEY not set — skipping L1")
+        LOG.warning("POLYGON_API_KEY / POLYGON_INDICES_API_KEY not set — skipping L1")
 
     # ── Level 2: Alpaca data API (ETFs only) ─────────────────────────────
     missing_etfs = [t for t in ETF_TICKERS if t not in data]
@@ -365,7 +386,7 @@ def get_spot_price(ticker: str) -> Optional[float]:
     Get a single current spot price. Uses Polygon snapshot first, then yfinance.
     Used by pre_market_check and circuit_breaker_check for quick single-ticker queries.
     """
-    polygon_key = os.environ.get("POLYGON_API_KEY", "")
+    polygon_key = _pick_key(ticker)
 
     # Level 1: Polygon snapshot
     if polygon_key:
@@ -401,33 +422,38 @@ def get_vix_values() -> Tuple[Optional[float], Optional[float]]:
     Get current VIX and VIX3M. Uses Polygon daily aggs first, then yfinance.
     Returns (vix, vix3m) — either may be None if all sources fail.
     """
-    polygon_key = os.environ.get("POLYGON_API_KEY", "")
     vix = vix3m = None
 
-    # Level 1: Polygon daily aggs
-    if polygon_key:
-        try:
-            import requests
-            today_str  = datetime.utcnow().strftime("%Y-%m-%d")
-            start_str  = (datetime.utcnow() - timedelta(days=5)).strftime("%Y-%m-%d")
-            for name, sym in [("VIX", "I:VIX"), ("VIX3M", "I:VIX3M")]:
-                resp = requests.get(
-                    f"https://api.polygon.io/v2/aggs/ticker/{sym}/range/1/day/{start_str}/{today_str}",
-                    params={"adjusted": "true", "sort": "desc", "limit": 1, "apiKey": polygon_key},
-                    timeout=10,
+    # Level 1: Polygon daily aggs (index tickers — routed to POLYGON_INDICES_API_KEY)
+    try:
+        import requests
+        today_str  = datetime.utcnow().strftime("%Y-%m-%d")
+        start_str  = (datetime.utcnow() - timedelta(days=5)).strftime("%Y-%m-%d")
+        for name, sym in [("VIX", "I:VIX"), ("VIX3M", "I:VIX3M")]:
+            api_key = _pick_key(sym)
+            if not api_key:
+                LOG.warning(
+                    "DATA_FALLBACK: ticker=%s level=L1_polygon reason='POLYGON_INDICES_API_KEY not set'",
+                    name,
                 )
-                resp.raise_for_status()
-                results = resp.json().get("results", [])
-                if results:
-                    val = float(results[0]["c"])
-                    if name == "VIX":
-                        vix = val
-                        LOG.info("DATA_SOURCE: ticker=VIX source=L1_polygon value=%.2f", vix)
-                    else:
-                        vix3m = val
-                        LOG.info("DATA_SOURCE: ticker=VIX3M source=L1_polygon value=%.2f", vix3m)
-        except Exception as e:
-            LOG.warning("DATA_FALLBACK: VIX/VIX3M level=L1_polygon reason='%s'", e)
+                continue
+            resp = requests.get(
+                f"https://api.polygon.io/v2/aggs/ticker/{sym}/range/1/day/{start_str}/{today_str}",
+                params={"adjusted": "true", "sort": "desc", "limit": 1, "apiKey": api_key},
+                timeout=10,
+            )
+            resp.raise_for_status()
+            results = resp.json().get("results", [])
+            if results:
+                val = float(results[0]["c"])
+                if name == "VIX":
+                    vix = val
+                    LOG.info("DATA_SOURCE: ticker=VIX source=L1_polygon value=%.2f", vix)
+                else:
+                    vix3m = val
+                    LOG.info("DATA_SOURCE: ticker=VIX3M source=L1_polygon value=%.2f", vix3m)
+    except Exception as e:
+        LOG.warning("DATA_FALLBACK: VIX/VIX3M level=L1_polygon reason='%s'", e)
 
     # Level 2: yfinance fallback
     if vix is None:
