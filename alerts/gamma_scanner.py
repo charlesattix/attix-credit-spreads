@@ -13,6 +13,7 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 from alerts.gamma_config import SCAN_HOURS, build_gamma_config
+from shared.data_cache import DataCache
 from shared.economic_calendar import EconomicCalendar
 from strategy import OptionsAnalyzer
 
@@ -138,8 +139,9 @@ class GammaScanner:
         5. Calculate sigma payoffs
         6. Score and return
         """
-        # Fetch price data (Polygon-backed DataCache; required)
-        price_data = self._data_cache.get_history(ticker, period="1y")
+        # Fetch price data (Polygon via DataCache; no yfinance fallback)
+        cache = self._data_cache or DataCache()
+        price_data = cache.get_history(ticker, period="1y")
 
         if price_data is None or (hasattr(price_data, "empty") and price_data.empty):
             logger.warning(f"No price data for {ticker}")
