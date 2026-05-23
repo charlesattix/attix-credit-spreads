@@ -46,7 +46,47 @@ dependency on the live path, defeating the migration.
 
 ---
 
-## Q2 — `get_ticker_obj` callers outside the live OHLCV path
+## Q2 — Phase 2 BLOCKED: Polygon plan lacks upcoming earnings dates
+
+**Probed endpoints (2026-05-22):**
+
+| Endpoint | Status | Notes |
+|---|---|---|
+| `/vX/reference/tickers/{T}/events` | OK | Only `ticker_change` events — no earnings |
+| `/vX/reference/tickers/{T}/earnings` | 404 | Endpoint does not exist |
+| `/v1/meta/symbols/{T}/earnings` | 404 | Legacy endpoint removed |
+| `/benzinga/v1/earnings?ticker={T}` | 403 NOT_AUTHORIZED | Subscription required |
+| `/benzinga/v1/earnings/calendar` | 404 | Endpoint shape unknown / inaccessible |
+| `/vX/reference/financials?ticker={T}` | OK | Filing dates of **past** quarters only |
+
+**Conclusion:** the current Polygon plan does not include forward-looking
+earnings dates. The Benzinga-backed earnings endpoints require a plan
+upgrade.
+
+Per the brief — "If the Polygon plan does not include upcoming earnings
+dates, stop and write a note to MIGRATION_QUESTIONS.md. Do not invent a
+fallback." — I am stopping Phase 2 and NOT modifying
+`shared/earnings_calendar.py`.
+
+**Decision needed (one of):**
+1. **Upgrade the Polygon plan** to include Benzinga earnings, then
+   re-trigger Phase 2.
+2. **Leave `earnings_calendar.py` on yfinance** for now (accept the
+   one-file remaining yfinance dependency on the live path). This means
+   `import yfinance as yf` will remain inside the module — Phase 5
+   (delete yfinance from requirements.txt) cannot complete cleanly until
+   this is resolved.
+3. **Wire in a different earnings source** (e.g. FMP, Alpaca, NASDAQ
+   calendar). Outside the brief — would need explicit scope expansion.
+
+Phase 3 (scanner fallback removal) does NOT depend on Phase 2 output and
+proceeded independently.
+
+I am NOT touching `shared/earnings_calendar.py` in this session.
+
+---
+
+## Q3 — `get_ticker_obj` callers outside the live OHLCV path
 
 **Status:** resolved without escalation, but worth flagging.
 
