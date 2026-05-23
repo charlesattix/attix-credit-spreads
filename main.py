@@ -481,6 +481,19 @@ class CreditSpreadSystem:
                 metrics.inc('scans_skipped_regime_gate')
                 return []
 
+            # EXP-3303b — Composite-Stress Gate.  Coexists with the label-based
+            # gate above: continuous score over VIX-term-structure / VVIX /
+            # SKEW pinned to the EXP-3303 backtest formula. Opt-in via
+            # config.risk.composite_stress_gate.enabled.
+            from shared.composite_stress_gate import should_gate_for_composite_stress
+            _cs_skip, _cs_reason = should_gate_for_composite_stress(
+                ticker=ticker, config=self.config
+            )
+            if _cs_skip:
+                logger.info("%s: %s", ticker, _cs_reason)
+                metrics.inc('scans_skipped_composite_stress_gate')
+                return []
+
             # VIX data for snapshot (already fetched for regime detector)
             vix_data = None
             try:

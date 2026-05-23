@@ -30,9 +30,12 @@ _PERIOD_DAYS = {
 _SYMBOL_MAP = {
     '^VIX':   'I:VIX',
     '^VIX3M': 'I:VIX3M',
+    '^VVIX':  'I:VVIX',
+    '^SKEW':  'I:SKEW',
     '^GSPC':  'I:SPX',
     '^DJI':   'I:DJI',
     '^IXIC':  'I:NDX',
+    '^RUT':   'I:RUT',
 }
 
 
