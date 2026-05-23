@@ -12,7 +12,7 @@ This can happen when:
 
 Usage:
     python3 scripts/orphan_check.py           # check all active experiments
-    python3 scripts/orphan_check.py --all     # include stopped/archived too
+    python3 scripts/orphan_check.py --all     # include stopped/retired too
     python3 scripts/orphan_check.py --no-color
 
 Exit codes:
@@ -141,7 +141,12 @@ def check_experiment(name: str, cfg: dict) -> CheckResult:
     result.tmux_alive = tmux_running(result.tmux_session)
 
     # Load credentials
-    env_file = ROOT / cfg.get("env_file", "")
+    env_file_str = cfg.get("env_file") or ""
+    if not env_file_str:
+        result.api_error = "env_file not configured"
+        result.verdict = "OFFLINE"
+        return result
+    env_file = ROOT / env_file_str
     creds = read_env(env_file)
     api_key    = creds.get("ALPACA_API_KEY", "")
     api_secret = creds.get("ALPACA_API_SECRET", "")
@@ -169,12 +174,12 @@ def check_experiment(name: str, cfg: dict) -> CheckResult:
         result.option_positions = count_option_positions(positions)
 
     # ── Classify ──
-    if result.status in ("archived", "stopped"):
+    if result.status in ("retired", "stopped"):
         if result.option_positions > 0:
             result.is_orphan = True
-            result.verdict = "ORPHAN"  # stopped/archived but still has positions
+            result.verdict = "ORPHAN"  # stopped/retired but still has positions
         else:
-            result.verdict = "ARCHIVED" if result.status == "archived" else "STOPPED_CLEAN"
+            result.verdict = "RETIRED" if result.status == "retired" else "STOPPED_CLEAN"
         return result
 
     # Active experiment
@@ -201,7 +206,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--all", action="store_true",
-        help="Check ALL experiments including stopped and archived",
+        help="Check ALL experiments including stopped and retired",
     )
     parser.add_argument(
         "--no-color", action="store_true",
@@ -226,7 +231,7 @@ def main() -> int:
 
     for name, cfg in experiments.items():
         status = cfg.get("status", "unknown")
-        if not args.all and status in ("archived", "stopped"):
+        if not args.all and status in ("retired", "stopped"):
             continue
 
         sys.stdout.write(f"  Checking {name}... ")
@@ -242,8 +247,8 @@ def main() -> int:
             label = f"{C.YEL}DOWN{C.NC} (no tmux, no positions)"
         elif r.verdict == "OFFLINE":
             label = f"{C.YEL}OFFLINE{C.NC} ({r.api_error})"
-        elif r.verdict == "ARCHIVED":
-            label = f"{C.DIM}ARCHIVED (clean){C.NC}"
+        elif r.verdict == "RETIRED":
+            label = f"{C.DIM}RETIRED (clean){C.NC}"
         elif r.verdict == "STOPPED_CLEAN":
             label = f"{C.DIM}STOPPED (clean){C.NC}"
         else:

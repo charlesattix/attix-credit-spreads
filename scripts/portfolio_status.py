@@ -138,8 +138,8 @@ def state_label(cfg: dict, is_running: bool) -> str:
         return f"{C.RED}{C.BOLD}DOWN{C.NC} {C.DIM}(registry=active but tmux:{tmux!r} not found){C.NC}"
     elif status == "stopped" and is_running:
         return f"{C.YEL}{C.BOLD}RUNNING{C.NC} {C.DIM}(registry=stopped — update registry){C.NC}"
-    elif status == "archived":
-        return f"{C.DIM}ARCHIVED{C.NC}"
+    elif status == "retired":
+        return f"{C.DIM}RETIRED{C.NC}"
     else:
         return f"{C.DIM}STOPPED{C.NC}"
 
@@ -310,8 +310,8 @@ def main() -> int:
         print_summary(experiments)
         return 0
 
-    # Sort: active first, then stopped, then archived
-    order = {"active": 0, "stopped": 1, "archived": 2}
+    # Sort: active first, then stopped, then retired
+    order = {"active": 0, "stopped": 1, "retired": 2}
     sorted_exps = sorted(
         list(experiments.items()),
         key=lambda kv: (order.get(kv[1].get("status", ""), 9), kv[0]),

@@ -291,7 +291,7 @@ def compute_deviations(
 ) -> Dict[str, Dict[str, Any]]:
     """Compare actual vs expected performance."""
     if expected is None:
-        exp_data = _get_manager().get("EXP-880") or {}
+        exp_data = _get_manager().get("EXP-880-max") or {}
         expected = exp_data.get("backtest_expectations", {})
     devs = {}
     for metric, exp_val in expected.items():
