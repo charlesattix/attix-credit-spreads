@@ -2,6 +2,14 @@
 
 ## Q1 — Dividend-adjustment behavior change (Phase 1 finding)
 
+**RESOLUTION (2026-05-22, Carlos via Charles):** ACCEPTED. Polygon's splits-only
+adjustment is the more correct semantics for an options-trading system — option
+strikes are not dividend-adjusted, so historical MAs/RSI on splits-only series
+compare like-for-like to live strike levels. The previous yfinance behavior was
+a latent bug that this migration silently fixes. No code change.
+
+---
+
 **Context:** The previous `DataCache` used `yfinance.Ticker(t).history(period='1y')`,
 which defaults to `auto_adjust=True`. yfinance with `auto_adjust=True` applies
 **both split and dividend back-adjustment** to historical OHLC.
