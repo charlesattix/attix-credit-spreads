@@ -138,12 +138,8 @@ class GammaScanner:
         5. Calculate sigma payoffs
         6. Score and return
         """
-        # Fetch price data
-        if self._data_cache:
-            price_data = self._data_cache.get_history(ticker, period="1y")
-        else:
-            import yfinance as yf
-            price_data = yf.Ticker(ticker).history(period="1y")
+        # Fetch price data (Polygon-backed DataCache; required)
+        price_data = self._data_cache.get_history(ticker, period="1y")
 
         if price_data is None or (hasattr(price_data, "empty") and price_data.empty):
             logger.warning(f"No price data for {ticker}")
