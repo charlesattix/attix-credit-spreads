@@ -206,8 +206,39 @@ def _load_stock(polygon_ticker: str, start_d: date, end_d: date) -> pd.DataFrame
     return df
 
 
+def _nyse_trading_days(start_d: date, end_d: date) -> Optional[pd.DatetimeIndex]:
+    """Return the set of NYSE trading days in [start_d, end_d] from SPY.
+
+    SPY's Polygon daily aggregates ARE the NYSE calendar by construction —
+    SPY only prints on trading days. Using SPY as the calendar source means
+    we don't carry a static holiday list (Juneteenth, Carter day of mourning,
+    future holidays all handled automatically).
+
+    Returns ``None`` if SPY data is unavailable for the range (caller should
+    fall back to unfiltered data rather than dropping everything).
+    """
+    try:
+        spy = _load_polygon("SPY", start_d, end_d)
+    except DataFetchError as exc:
+        logger.warning("NYSE calendar fetch (SPY) failed for %s..%s: %s",
+                       start_d, end_d, exc)
+        return None
+    if spy.empty:
+        return None
+    return spy.index
+
+
 def _load_indices_hybrid(polygon_ticker: str, start_d: date, end_d: date) -> pd.DataFrame:
-    """Concatenate SQLite (pre-2023-02-14) and Polygon (2023-02-14+) slices."""
+    """Concatenate SQLite (pre-2023-02-14) and Polygon (2023-02-14+) slices.
+
+    Polygon publishes I:VIX / I:VIX3M / I:SPX values on some US market
+    holidays (Juneteenth, July 4, Labor Day, Thanksgiving, MLK Day, etc.)
+    where Yahoo and the equity calendar do not. Those extra bars break
+    joins against SPY/TLT-driven backtests. We filter the Polygon slice
+    to the SPY trading calendar so the resulting index matches what
+    backtester loops actually iterate. SQLite was sourced from Yahoo so
+    it already follows the NYSE calendar — no filtering needed there.
+    """
     sqlite_frame = _EMPTY_DF.copy()
     polygon_frame = _EMPTY_DF.copy()
 
@@ -220,6 +251,12 @@ def _load_indices_hybrid(polygon_ticker: str, start_d: date, end_d: date) -> pd.
     if end_d >= _POLYGON_INDICES_START:
         poly_start = max(start_d, _POLYGON_INDICES_START)
         polygon_frame = _load_polygon(polygon_ticker, poly_start, end_d)
+        if not polygon_frame.empty:
+            calendar = _nyse_trading_days(poly_start, end_d)
+            if calendar is not None:
+                polygon_frame = polygon_frame.reindex(
+                    polygon_frame.index.intersection(calendar)
+                )
 
     if sqlite_frame.empty:
         return polygon_frame

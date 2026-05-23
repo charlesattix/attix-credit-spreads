@@ -15,6 +15,7 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 
+from backtest.market_history import load_market_history
 from shared.scheduler import MARKET_SCAN_TIMES as SCAN_TIMES
 
 logger = logging.getLogger(__name__)
@@ -1050,8 +1051,8 @@ class Backtester:
         start_date: datetime,
         end_date: datetime,
     ) -> pd.DataFrame:
-        """Retrieve historical price data."""
-        data = _yf_history_safe(ticker, start=start_date, end=end_date)
+        """Retrieve historical price data via the shared Polygon-backed loader."""
+        data = load_market_history(ticker, start_date, end_date)
         if data.empty:
             logger.error("No historical price data for %s (%s–%s)", ticker, start_date.date(), end_date.date())
         return data
@@ -1071,10 +1072,10 @@ class Backtester:
         from shared.indicators import calculate_iv_rank as _calc_ivr
         try:
             fetch_start = start_date - timedelta(days=300)
-            raw = _yf_download_safe(
+            raw = load_market_history(
                 "^VIX",
-                fetch_start.strftime("%Y-%m-%d"),
-                (end_date + timedelta(days=1)).strftime("%Y-%m-%d"),
+                fetch_start,
+                end_date + timedelta(days=1),
             )
             if raw.empty:
                 logger.warning("VIX data unavailable — using default iv_rank=25")
@@ -1103,10 +1104,10 @@ class Backtester:
 
             # Fetch VIX3M for term structure ratio (combo regime v2 — vix_structure signal)
             try:
-                raw3m = _yf_download_safe(
+                raw3m = load_market_history(
                     "^VIX3M",
-                    fetch_start.strftime("%Y-%m-%d"),
-                    (end_date + timedelta(days=1)).strftime("%Y-%m-%d"),
+                    fetch_start,
+                    end_date + timedelta(days=1),
                 )
                 if not raw3m.empty:
                     if isinstance(raw3m.columns, pd.MultiIndex):

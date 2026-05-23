@@ -170,10 +170,14 @@ class TestSymbolMap:
 
         mh.load_market_history("^GSPC", "2024-01-02", "2024-01-10")
 
-        # The client should have been called with the canonical Polygon ticker
-        call = client.aggregates.call_args
-        ticker = call.kwargs.get("ticker") or call.args[0]
-        assert ticker == "I:SPX"
+        # Index paths fetch SPY too (for NYSE calendar filter). The FIRST
+        # Polygon call must be the canonical index ticker.
+        tickers_called = [
+            (c.kwargs.get("ticker") or c.args[0])
+            for c in client.aggregates.call_args_list
+        ]
+        assert "I:SPX" in tickers_called
+        assert tickers_called[0] == "I:SPX"
 
     def test_unknown_symbol_passes_through(self):
         client = _mock_client_with(_make_polygon_results("2024-01-02", 3, base=80))
@@ -210,7 +214,13 @@ class TestIndexHybrid:
 
         df = mh.load_market_history("^VIX", "2023-03-01", "2023-03-15")
 
-        assert client.aggregates.call_count == 1
+        # Two Polygon calls expected: one for I:VIX, one for SPY (NYSE calendar)
+        tickers_called = [
+            (c.kwargs.get("ticker") or c.args[0])
+            for c in client.aggregates.call_args_list
+        ]
+        assert "I:VIX" in tickers_called
+        assert "SPY" in tickers_called  # calendar filter
         assert len(df) == 10
         # Polygon arm shouldn't include any SQLite rows
         assert df.index[0] >= pd.Timestamp("2023-03-01")
@@ -222,14 +232,22 @@ class TestIndexHybrid:
 
         df = mh.load_market_history("^VIX", "2023-02-09", "2023-02-21")
 
+        # Two Polygon calls: I:VIX index + SPY calendar.
+        # Mock returns the same Polygon-shaped result for both — sufficient
+        # because both calls are dated 2023-02-14..2023-02-21 (5 BDays).
         # 3 SQLite rows (2023-02-09, 02-10, 02-13) + 5 Polygon rows
-        assert client.aggregates.call_count == 1
+        tickers_called = [
+            (c.kwargs.get("ticker") or c.args[0])
+            for c in client.aggregates.call_args_list
+        ]
+        assert "I:VIX" in tickers_called
+        assert "SPY" in tickers_called
         assert len(df) == 3 + 5
         assert df.index[0] == pd.Timestamp("2023-02-09")
-        # Polygon was called with from_date == 2023-02-14
-        call = client.aggregates.call_args
-        from_d = call.kwargs.get("from_date")
-        assert from_d == "2023-02-14"
+        # The I:VIX call must be from 2023-02-14 (the SQLite/Polygon seam)
+        vix_call = next(c for c in client.aggregates.call_args_list
+                        if (c.kwargs.get("ticker") or c.args[0]) == "I:VIX")
+        assert vix_call.kwargs.get("from_date") == "2023-02-14"
 
     def test_seam_dedupe_polygon_wins_on_overlap(self, fake_sqlite):
         # Inject a Polygon row for 2023-02-13 (a date that ALSO exists in SQLite)
@@ -251,6 +269,35 @@ class TestIndexHybrid:
 
         # 2023-02-13 row's Close should be Polygon's 99.0, not SQLite's 21.0
         assert df.loc[pd.Timestamp("2023-02-13"), "Close"] == 99.0
+
+    def test_polygon_index_bars_outside_nyse_calendar_are_filtered(self, fake_sqlite):
+        """Polygon publishes I:VIX values on US market holidays (Juneteenth,
+        July 4 etc.) where the equity calendar has no bar. ``load_market_history``
+        must drop those rows so index data joins cleanly to SPY-driven loops.
+        """
+        # Polygon returns 5 consecutive business-day bars 2024-07-01..07-05.
+        # July 4 (Thursday) is a market holiday — SPY's calendar must exclude it.
+        polygon_vix = _make_polygon_results("2024-07-01", 5, base=14.0)
+        # Build a SPY mock that mirrors the date set MINUS July 4 (the holiday).
+        spy_dates = [d for d in pd.date_range("2024-07-01", periods=5, freq="B")
+                     if d.strftime("%Y-%m-%d") != "2024-07-04"]
+        polygon_spy = []
+        for d in spy_dates:
+            ts_ms = int(pd.Timestamp(d).tz_localize("UTC").timestamp() * 1000)
+            polygon_spy.append({"t": ts_ms, "o": 450.0, "h": 451.0,
+                                "l": 449.0, "c": 450.5, "v": 0})
+
+        client = MagicMock()
+        def _agg(ticker, **kwargs):
+            return polygon_spy if ticker == "SPY" else polygon_vix
+        client.aggregates.side_effect = _agg
+        mh._set_client(client)
+
+        df = mh.load_market_history("^VIX", "2024-07-01", "2024-07-05")
+
+        # July 4 must be filtered out (it isn't an NYSE trading day)
+        assert pd.Timestamp("2024-07-04") not in df.index
+        assert len(df) == 4
 
     def test_pre_2020_vix_returns_only_sqlite(self, fake_sqlite):
         client = _mock_client_with([])
