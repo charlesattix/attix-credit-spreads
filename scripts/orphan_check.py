@@ -29,13 +29,10 @@ import urllib.request
 from pathlib import Path
 from typing import Dict, List, Optional
 
-try:
-    import yaml
-except ImportError:
-    sys.exit("ERROR: PyYAML not installed. Run: pip install pyyaml")
-
 ROOT = Path(__file__).resolve().parent.parent
-REGISTRY_PATH = ROOT / "experiments.yaml"
+sys.path.insert(0, str(ROOT))
+from experiments.manager import get_manager  # noqa: E402
+
 ALPACA_BASE = "https://paper-api.alpaca.markets"
 TIMEOUT = 15
 
@@ -58,12 +55,6 @@ def disable_color() -> None:
 
 
 # ── Registry ───────────────────────────────────────────────────────────────────
-def load_registry() -> Dict[str, dict]:
-    if not REGISTRY_PATH.exists():
-        sys.exit(f"ERROR: Registry not found: {REGISTRY_PATH}")
-    with open(REGISTRY_PATH) as f:
-        data = yaml.safe_load(f)
-    return data.get("experiments", {})
 
 
 # ── Env file ───────────────────────────────────────────────────────────────────
@@ -221,7 +212,7 @@ def main() -> int:
     if args.no_color:
         disable_color()
 
-    experiments = load_registry()
+    experiments = get_manager().all()
 
     from datetime import datetime
     now = datetime.now().strftime("%Y-%m-%d %H:%M")

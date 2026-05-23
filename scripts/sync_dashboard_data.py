@@ -42,24 +42,15 @@ from typing import Optional
 # ---------------------------------------------------------------------------
 
 PROJECT_ROOT   = Path(__file__).parent.parent
-REGISTRY_PATH  = PROJECT_ROOT / "experiments" / "registry.json"
 OUTPUT_PATH    = PROJECT_ROOT / "data" / "dashboard_export.json"
 SCHEMA_VERSION = "1.2"
 
 STARTING_EQUITY    = 100_000.0
 ALPACA_PAPER_URL   = "https://paper-api.alpaca.markets"
 
-# Backtest expectations (from MASTERPLAN.md / registry notes)
-BACKTEST_EXPECTATIONS = {
-    "EXP-400": {"avg_return": 32.7,  "max_dd": -12.1, "robust": 0.870},
-    "EXP-401": {"avg_return": 40.7,  "max_dd": -7.0,  "robust": None},
-    "EXP-503": {"avg_return": None,   "max_dd": None,  "robust": None},
-    "EXP-600": {"avg_return": 139.2, "max_dd": -19.4, "robust": 0.950},
-    "EXP-1220": {"avg_return": 99.2, "max_dd": -11.2, "robust": None},
-    "EXP-3311": {"avg_return": 84.8,  "max_dd": -5.89, "robust": None},
-    "EXP-3309": {"avg_return": 265.7, "max_dd": None,  "robust": None},
-    "EXP-3303b": {"avg_return": 247.9, "max_dd": -10.455, "robust": None},
-}
+sys.path.insert(0, str(PROJECT_ROOT))
+
+from experiments.manager import get_manager  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -297,7 +288,7 @@ def _query_experiment(exp: dict, report_date: str) -> dict:
         "live_since":  exp.get("live_since", "—"),
         "account_id":  exp.get("account_id", "—"),
         "notes":       exp.get("notes", ""),
-        "backtest":    BACKTEST_EXPECTATIONS.get(exp_id, {}),
+        "backtest":    (get_manager().get(exp_id) or {}).get("backtest_expectations", {}),
         "db_path":     str(db_path) if db_path else None,
         "error":       None,
         "alpaca":      None,   # populated below
@@ -500,8 +491,8 @@ def _query_experiment(exp: dict, report_date: str) -> dict:
 
 def build_export(report_date: str) -> dict:
     """Read registry + all experiment DBs, build the full export payload."""
-    with open(REGISTRY_PATH) as f:
-        registry = json.load(f)
+    mgr = get_manager()
+    registry = mgr._registry
 
     live_exps = [
         exp for exp in registry["experiments"].values()

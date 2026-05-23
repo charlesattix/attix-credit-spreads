@@ -883,36 +883,24 @@ def backtest_comparison(model: Optional[XGBClassifier], features: List[str]) -> 
 
 def register_exp601() -> None:
     """Register EXP-601 in experiments/registry.json if not already present."""
-    registry_path = ROOT / "experiments" / "registry.json"
-    if not registry_path.exists():
-        print("  WARNING: registry.json not found, skipping registration")
-        return
-    with open(registry_path) as f:
-        registry = json.load(f)
-    experiments = registry.get("experiments", {})
-    if "EXP-601" in experiments:
+    from experiments.manager import get_manager
+    mgr = get_manager()
+    if mgr.get("EXP-601") is not None:
         return  # already registered
-    experiments["EXP-601"] = {
+    entry = {k: v for k, v in {
         "id": "EXP-601",
         "name": "IBIT ML Signal Filter",
         "created_by": "charles",
         "created_date": datetime.utcnow().strftime("%Y-%m-%d"),
         "status": "in_development",
         "ticker": "IBIT",
-        "account_id": None,
-        "live_since": None,
-        "paper_config": None,
-        "backtest_config": None,
         "notes": (
             "XGBoost binary classifier (win/loss) trained on EXP-600 champion config "
             "trade features. Time-series CV only. max_depth=3, min_child_weight=5. "
             "Backtest comparison: EXP-600 with vs without ML filter."
         ),
-    }
-    registry["experiments"] = experiments
-    registry["last_updated"] = datetime.utcnow().strftime("%Y-%m-%d")
-    with open(registry_path, "w") as f:
-        json.dump(registry, f, indent=2)
+    }.items() if v is not None}
+    mgr.register(entry)
     print(f"  Registered EXP-601 in registry.json")
 
 

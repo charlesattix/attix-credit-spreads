@@ -28,15 +28,10 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
-# ── EXP-880 Backtest Expectations ───────────────────────────────────────────
-BACKTEST_EXPECTATIONS = {
-    "cagr_pct": 76.9,
-    "sharpe": 4.97,
-    "max_dd_pct": 10.2,
-    "annual_hedge_drag_pct": 0.33,
-    "win_rate_pct": 75.0,
-    "avg_scale": 0.85,
-}
+_ROOT = Path(__file__).resolve().parent.parent
+import sys as _sys  # noqa: E402
+_sys.path.insert(0, str(_ROOT))
+from experiments.manager import get_manager as _get_manager  # noqa: E402
 
 # Deviation thresholds (fraction of expected — alert if actual deviates by more)
 DEVIATION_WARN = 0.20   # 20% worse than expected → warning
@@ -292,9 +287,12 @@ class TradeHistoryDB:
 # ── Deviation Analysis ──────────────────────────────────────────────────────
 def compute_deviations(
     actual: Dict[str, float],
-    expected: Dict[str, float] = BACKTEST_EXPECTATIONS,
+    expected: Optional[Dict[str, float]] = None,
 ) -> Dict[str, Dict[str, Any]]:
     """Compare actual vs expected performance."""
+    if expected is None:
+        exp_data = _get_manager().get("EXP-880") or {}
+        expected = exp_data.get("backtest_expectations", {})
     devs = {}
     for metric, exp_val in expected.items():
         act_val = actual.get(metric, 0.0)

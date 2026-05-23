@@ -30,14 +30,12 @@ from shared.database import get_trades
 
 # ─── Registry reset dates ────────────────────────────────────────────────────
 
-import json as _json
+from experiments.manager import get_manager as _get_manager  # noqa: E402
 
 def _get_reset_date(exp_id: str) -> Optional[str]:
     """Return the latest reset date for an experiment, or None if never reset."""
     try:
-        reg_path = ROOT / "experiments" / "registry.json"
-        reg = _json.loads(reg_path.read_text())
-        exp = reg.get("experiments", {}).get(exp_id, {})
+        exp = _get_manager().get(exp_id) or {}
         history = exp.get("reset_history", [])
         if history:
             return max(h["date"] for h in history)

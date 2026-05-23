@@ -23,14 +23,15 @@ ID allocation rules:
 """
 
 import argparse
-import json
 import re
 import sys
 from datetime import date
 from pathlib import Path
 from typing import Optional
 
-REGISTRY_PATH = Path(__file__).resolve().parent.parent / "experiments" / "registry.json"
+_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(_ROOT))
+from experiments.manager import get_manager  # noqa: E402
 
 VALID_CREATORS = ["maximus", "charles"]
 VALID_STATUSES = [
@@ -51,18 +52,6 @@ CREATOR_RANGES = {
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-
-def load_registry() -> dict:
-    if not REGISTRY_PATH.exists():
-        print(f"ERROR: registry not found at {REGISTRY_PATH}", file=sys.stderr)
-        sys.exit(1)
-    with open(REGISTRY_PATH) as f:
-        return json.load(f)
-
-
-def save_registry(registry: dict) -> None:
-    REGISTRY_PATH.write_text(json.dumps(registry, indent=2) + "\n")
-
 
 def validate_id(exp_id: str, registry: dict) -> str:
     """Validate format, range, and uniqueness. Returns normalized ID."""
@@ -223,9 +212,7 @@ def confirm_and_write(entry: dict, registry: dict) -> None:
         print("  Aborted — nothing written.")
         sys.exit(0)
 
-    registry["experiments"][exp_id] = entry
-    registry["last_updated"] = date.today().isoformat()
-    save_registry(registry)
+    get_manager().register({k: v for k, v in entry.items() if v is not None})
     print(f"\n  ✅ {exp_id} registered. Next steps:")
     print(f"     1. Fill in backtest_config and paper_config when ready.")
     print(f"     2. Run validate_registry.py to confirm integrity.")
@@ -252,7 +239,8 @@ def main() -> None:
                         help="Created date (YYYY-MM-DD, default: today)")
     args = parser.parse_args()
 
-    registry = load_registry()
+    mgr = get_manager()
+    registry = mgr._registry
 
     # Non-interactive if all required args supplied
     if args.id and args.creator and args.name:
@@ -268,9 +256,7 @@ def main() -> None:
             exp_id, creator, args.name, args.ticker,
             args.status, args.notes, args.date,
         )
-        registry["experiments"][exp_id] = entry
-        registry["last_updated"] = args.date
-        save_registry(registry)
+        mgr.register({k: v for k, v in entry.items() if v is not None})
         print(f"✅ {exp_id} registered (created_by: {creator}).")
     else:
         # Interactive mode

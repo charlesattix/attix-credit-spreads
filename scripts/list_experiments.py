@@ -9,24 +9,18 @@ Usage:
     python scripts/list_experiments.py --all     # all three tables
 """
 
-import json
 import sys
 from pathlib import Path
 
-REGISTRY = Path(__file__).resolve().parent.parent / "experiments" / "registry.json"
+_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(_ROOT))
+
+from experiments.manager import get_manager  # noqa: E402
 
 LIVE_STATUSES    = {"paper_trading", "deployed"}
 DEV_STATUSES     = {"in_development", "data_collection", "backtesting", "validated",
                     "pending", "awaiting_deploy"}
 RETIRED_STATUSES = {"retired"}
-
-
-def load_registry() -> dict:
-    if not REGISTRY.exists():
-        print(f"ERROR: registry not found at {REGISTRY}", file=sys.stderr)
-        sys.exit(1)
-    with open(REGISTRY) as f:
-        return json.load(f)
 
 
 def sort_key(e: dict) -> int:
@@ -123,7 +117,8 @@ def main() -> None:
 
     mode = args[0] if args else "--live"
 
-    registry = load_registry()
+    mgr = get_manager()
+    registry = mgr._registry
     all_exps = sorted(registry["experiments"].values(), key=sort_key)
 
     live    = [e for e in all_exps if e["status"] in LIVE_STATUSES]

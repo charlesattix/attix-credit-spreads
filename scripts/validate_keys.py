@@ -17,15 +17,12 @@ from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent
-REGISTRY_PATH = PROJECT_DIR / "experiments" / "registry.json"
+sys.path.insert(0, str(PROJECT_DIR))
+
+from experiments.manager import get_manager  # noqa: E402
+
 ALPACA_PAPER_URL = "https://paper-api.alpaca.markets/v2/account"
 TIMEOUT_SECONDS = 10
-
-
-def load_registry() -> dict:
-    with open(REGISTRY_PATH) as f:
-        data = json.load(f)
-    return data.get("experiments", {})
 
 
 def get_active_experiments(registry: dict) -> dict:
@@ -81,7 +78,7 @@ def check_account(api_key: str, api_secret: str) -> dict:
 
 
 def main():
-    registry = load_registry()
+    registry = get_manager().all()
     active_exps = get_active_experiments(registry)
 
     if not active_exps:
