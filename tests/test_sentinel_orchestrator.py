@@ -362,8 +362,8 @@ class TestExceptionHandlerSeverity:
 class TestAuditAllLoadFailure:
     """audit_all_experiments must return error audit, not empty list."""
 
-    @patch("sentinel.orchestrator._load_registry", side_effect=FileNotFoundError("registry.json not found"))
-    def test_load_failure_returns_error_audit(self, mock_reg):
+    @patch("experiments.manager.get_manager", side_effect=FileNotFoundError("registry.json not found"))
+    def test_load_failure_returns_error_audit(self, mock_mgr):
         results = audit_all_experiments()
         assert len(results) == 1
         assert results[0].experiment_id == "SYSTEM"
@@ -371,8 +371,8 @@ class TestAuditAllLoadFailure:
         assert results[0].halted is True
         assert results[0].worst_result >= GateResult.CRITICAL
 
-    @patch("sentinel.orchestrator._load_registry", side_effect=FileNotFoundError("registry.json not found"))
-    def test_load_failure_report_not_all_clear(self, mock_reg):
+    @patch("experiments.manager.get_manager", side_effect=FileNotFoundError("registry.json not found"))
+    def test_load_failure_report_not_all_clear(self, mock_mgr):
         """format_audit_report must NOT say 'All Clear' on load failure."""
         results = audit_all_experiments()
         report = format_audit_report(results)

@@ -83,20 +83,6 @@ _ORPHAN_SIMULTANEOUS_HALT = 5        # ≥5 orphans at once → HALT
 _ORPHAN_COUNT_KEY = "sentinel_orphan_counts"  # scanner_state key prefix
 
 
-# ---------------------------------------------------------------------------
-# Backtest baselines (keyed in sentinel_state.json under backtest_baseline)
-# ---------------------------------------------------------------------------
-
-# Fallback baselines if sentinel_state.json has no backtest_baseline entry.
-# These are the known baselines from backtests / MC simulations.
-_DEFAULT_BASELINES: Dict[str, Dict[str, float]] = {
-    "EXP-400":  {"win_rate": 78.0, "avg_pnl": 525.0,  "avg_loss": 2100.0, "mc_worst_dd_pct": 41.5},
-    "EXP-401":  {"win_rate": 72.0, "avg_pnl": 825.0,  "avg_loss": 2800.0, "mc_worst_dd_pct": 10.5},
-    "EXP-503":  {"win_rate": 68.0, "avg_pnl": 750.0,  "avg_loss": 2200.0, "mc_worst_dd_pct": 21.3},
-    "EXP-600":  {"win_rate": 75.0, "avg_pnl": 850.0,  "avg_loss": 2500.0, "mc_worst_dd_pct": 29.1},
-    "EXP-800":  {"win_rate": 78.0, "avg_pnl": 525.0,  "avg_loss": 2100.0, "mc_worst_dd_pct": 41.5},
-    "EXP-1220": {"win_rate": 80.0, "avg_pnl": 1200.0, "avg_loss": 1800.0, "mc_worst_dd_pct": 16.8},
-}
 
 
 # ---------------------------------------------------------------------------
@@ -184,22 +170,9 @@ def _resolve_db_path(exp_id: str) -> Optional[Path]:
 
 
 def _get_baseline(exp_id: str) -> Optional[Dict[str, float]]:
-    """
-    Retrieve backtest baseline for *exp_id*.
-
-    Checks sentinel_state.json first (under experiments.<exp_id>.backtest_baseline),
-    then falls back to the hardcoded _DEFAULT_BASELINES.
-    """
-    try:
-        from sentinel.state import load_state
-        state = load_state()
-        exp_state = state.get("experiments", {}).get(exp_id, {})
-        baseline = exp_state.get("backtest_baseline")
-        if baseline and isinstance(baseline, dict):
-            return baseline
-    except Exception:
-        pass
-    return _DEFAULT_BASELINES.get(exp_id)
+    """Retrieve backtest baseline for *exp_id* from the experiment registry."""
+    from experiments.manager import get_manager
+    return get_manager().baseline(exp_id)
 
 
 # ---------------------------------------------------------------------------
