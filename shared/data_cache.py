@@ -1,14 +1,19 @@
-"""Thread-safe TTL cache for yfinance data."""
+"""Thread-safe TTL cache for OHLCV history (Polygon-backed).
+
+Preserves the public surface of the previous yfinance-backed DataCache so
+existing callers (alerts/, strategy/, compass/) work unchanged.
+"""
 import logging
 import threading
 import time
+from datetime import datetime, timedelta, timezone
 from typing import List
 
 import pandas as pd
-import yfinance as yf
 
 from shared.exceptions import DataFetchError
 from shared.metrics import metrics
+from shared.polygon_client import PolygonClient
 
 logger = logging.getLogger(__name__)
 
@@ -21,13 +26,48 @@ _PERIOD_DAYS = {
     '1y': 252,
 }
 
+# yfinance/Yahoo index symbols → Polygon index tickers
+_SYMBOL_MAP = {
+    '^VIX':   'I:VIX',
+    '^VIX3M': 'I:VIX3M',
+    '^GSPC':  'I:SPX',
+    '^DJI':   'I:DJI',
+    '^IXIC':  'I:NDX',
+}
+
+
+def _polygon_to_dataframe(results: list) -> pd.DataFrame:
+    """Convert Polygon aggregate results to a yfinance-shaped DataFrame.
+
+    Output columns: Open, High, Low, Close, Volume.
+    Index: timezone-naive DatetimeIndex (date-only), sorted ascending.
+    """
+    if not results:
+        return pd.DataFrame(
+            columns=['Open', 'High', 'Low', 'Close', 'Volume'],
+            index=pd.DatetimeIndex([], name='Date'),
+        )
+
+    # Polygon 't' is epoch milliseconds (UTC, market-day timestamp)
+    df = pd.DataFrame(results)
+    # Index tickers may omit volume — fill with 0
+    if 'v' not in df.columns:
+        df['v'] = 0
+    df['Date'] = pd.to_datetime(df['t'], unit='ms', utc=True).dt.tz_convert(None).dt.normalize()
+    df = df.rename(columns={'o': 'Open', 'h': 'High', 'l': 'Low', 'c': 'Close', 'v': 'Volume'})
+    df = df[['Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
+    df = df.set_index('Date').sort_index()
+    return df
+
+
 class DataCache:
     """Download each ticker's data once (1y period), slice to requested period."""
 
-    def __init__(self, ttl_seconds: int = 900):
+    def __init__(self, ttl_seconds: int = 900, polygon_client: PolygonClient = None):
         self._cache: dict = {}
         self._lock = threading.Lock()
         self._ttl = ttl_seconds
+        self._client = polygon_client or PolygonClient()
 
     def get_history(self, ticker: str, period: str = '1y') -> pd.DataFrame:
         """Get historical data, using cache if fresh.
@@ -50,26 +90,29 @@ class DataCache:
 
         metrics.inc('cache_misses')
 
-        # Download full 1y outside lock.
-        # Use Ticker.history() instead of yf.download() — the latter has a
-        # known thread-safety issue where concurrent calls can return data
-        # for the wrong ticker (caused the .47 same-price bug).
+        polygon_ticker = _SYMBOL_MAP.get(ticker, _SYMBOL_MAP.get(key, ticker))
+        # Fetch ~1y of daily aggregates. Add buffer for weekends/holidays so
+        # we reliably receive ~252 trading days.
+        today = datetime.now(timezone.utc).date()
+        from_date = (today - timedelta(days=400)).isoformat()
+        to_date = today.isoformat()
+
         try:
-            data = yf.Ticker(ticker).history(period='1y')
-            if hasattr(data.columns, 'nlevels') and data.columns.nlevels > 1:
-                # Find the level containing price names (e.g. 'Close'), not ticker names
-                for lvl in range(data.columns.nlevels):
-                    vals = data.columns.get_level_values(lvl)
-                    if 'Close' in vals:
-                        data.columns = vals
-                        break
-                else:
-                    data.columns = data.columns.get_level_values(0)
-                # Drop duplicate columns created by flattening
-                data = data.loc[:, ~data.columns.duplicated()]
+            results = self._client.aggregates(
+                ticker=polygon_ticker,
+                multiplier=1,
+                timespan='day',
+                from_date=from_date,
+                to_date=to_date,
+            )
+            data = _polygon_to_dataframe(results)
+            if data.empty:
+                raise DataFetchError(f"Polygon returned 0 bars for {ticker} ({polygon_ticker})")
             with self._lock:
                 self._cache[key] = (data, time.time())
             return self._slice_to_period(data, period).copy()
+        except DataFetchError:
+            raise
         except Exception as e:
             logger.error(f"Failed to download {ticker}: {e}", exc_info=True)
             raise DataFetchError(f"Failed to download data for {ticker}: {e}") from e
@@ -95,13 +138,16 @@ class DataCache:
             except Exception as e:
                 logger.warning(f"Pre-warm failed for {ticker}: {e}")
 
-    def get_ticker_obj(self, ticker: str) -> yf.Ticker:
-        """Get a yfinance Ticker object (not cached, used for options chains)."""
-        try:
-            return yf.Ticker(ticker)
-        except Exception as e:
-            logger.error(f"Failed to create Ticker object for {ticker}: {e}", exc_info=True)
-            raise DataFetchError(f"Failed to create Ticker object for {ticker}: {e}") from e
+    def get_ticker_obj(self, ticker: str):
+        """Deprecated: yfinance Ticker objects are no longer supported.
+
+        Callers needing option chains must use ``PolygonOptionsClient``
+        directly. Callers needing OHLCV history should use ``get_history``.
+        """
+        raise NotImplementedError(
+            "get_ticker_obj is no longer supported after the Polygon migration. "
+            "Use PolygonOptionsClient for option chains or get_history for OHLCV."
+        )
 
     def clear(self):
         """Clear all cached data."""
