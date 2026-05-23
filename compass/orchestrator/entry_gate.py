@@ -46,6 +46,10 @@ from datetime import date, datetime, timedelta, timezone
 from typing import Dict, List, Optional, Tuple
 
 from compass.orchestrator import calendars
+from compass.orchestrator.canonical_params import (
+    CanonicalRegistry,
+    load_canonical_params,
+)
 from compass.orchestrator.portfolio_state import PortfolioState
 from compass.orchestrator.types import GatedSignal, GateStatus, SignalIntent
 
@@ -53,60 +57,13 @@ LOG = logging.getLogger(__name__)
 
 
 # ───────────────────────────────────────────────────────────────────────────
-# Canonical parameters per sleeve
+# Canonical parameters
 # ───────────────────────────────────────────────────────────────────────────
-# Frozen snapshot of the validated backtest parameters. Mirrors the eventual
-# `canonical_params.yaml` (ORCHESTRATOR_PROPOSAL §4.1, §7.4) — kept inline
-# here as a dict so entry_gate is self-contained until that file lands.
-#
-# Fields:
-#   structure       — strategy archetype
-#   delta           — target short delta (None for non-delta-anchored sleeves)
-#   otm_pct         — target OTM percentage (alternative anchor)
-#   dte             — target days-to-expiration
-#   width           — spread width in $
-#   vix_block       — hard VIX ceiling above which new entries are blocked
-#   monthly_cycle   — True if the sleeve uses standard monthly OpEx expiries
-#                     (these are the ones penalised by the OpEx-week gate)
-
-CANONICAL_PARAMS: Dict[str, Dict] = {
-    "exp1220": {
-        # 5% OTM put-credit-spread ≈ short delta 0.18 (sourced from the
-        # locked backtest config). Anchor the drift check on delta so the
-        # gate can compare against signal output without a spot price.
-        "structure": "put_credit_spread", "delta": 0.18, "otm_pct": 0.05,
-        "dte": 28, "width": 5.0, "vix_block": 40.0, "monthly_cycle": True,
-    },
-    "xlf_cs": {
-        "structure": "put_credit_spread", "delta": 0.30,  "otm_pct": None,
-        "dte": 35, "width": 2.0, "vix_block": 40.0, "monthly_cycle": True,
-    },
-    "xli_cs": {
-        "structure": "put_credit_spread", "delta": 0.30,  "otm_pct": None,
-        "dte": 35, "width": 2.0, "vix_block": 40.0, "monthly_cycle": True,
-    },
-    "qqq_cs": {
-        # Same 5% OTM PCS structure as exp1220 — anchor on delta 0.18.
-        "structure": "put_credit_spread", "delta": 0.18, "otm_pct": 0.05,
-        "dte": 28, "width": 5.0, "vix_block": 40.0, "monthly_cycle": True,
-    },
-    "gld_cal": {
-        "structure": "calendar", "delta": None, "otm_pct": None,
-        "dte": None, "width": None, "vix_block": None, "monthly_cycle": False,
-    },
-    "slv_cal": {
-        "structure": "calendar", "delta": None, "otm_pct": None,
-        "dte": None, "width": None, "vix_block": None, "monthly_cycle": False,
-    },
-    "cross_vol": {
-        "structure": "vol_pairs", "delta": None, "otm_pct": None,
-        "dte": None, "width": None, "vix_block": None, "monthly_cycle": False,
-    },
-    "v5_hedge": {
-        "structure": "equity_basket", "delta": None, "otm_pct": None,
-        "dte": None, "width": None, "vix_block": None, "monthly_cycle": False,
-    },
-}
+# Source of truth is ``canonical_params.yaml`` loaded via
+# ``load_canonical_params()``. The registry exposes per-sleeve
+# ``CanonicalParams`` dataclasses plus a ``validate_signal`` method that
+# enforces the per-sleeve drift tolerances declared in the YAML
+# (delta_tol / dte_tol / width_tol). See compass/orchestrator/canonical_params.py.
 
 
 # Sleeves whose canonical execution requires instruments the broker can't
@@ -171,10 +128,10 @@ class EntryGate:
 
     def __init__(
         self,
-        canonical_params: Optional[Dict[str, Dict]] = None,
+        canonical_params: Optional[CanonicalRegistry] = None,
         unsupported_streams: Optional[Dict[str, frozenset]] = None,
     ):
-        self.canonical_params = canonical_params or CANONICAL_PARAMS
+        self.canonical_params = canonical_params or load_canonical_params()
         # Map: broker_mode → set of unsupported sleeve ids
         self.unsupported = unsupported_streams or {
             "alpaca_paper": BROKER_UNSUPPORTED_STREAMS_ALPACA_PAPER,
@@ -352,52 +309,34 @@ class EntryGate:
     def _gate_param_drift(
         self, intent: SignalIntent
     ) -> Tuple[GateStatus, Optional[str], float]:
-        canon = self.canonical_params.get(intent.stream)
-        if canon is None:
-            return ("BLOCK", f"param_drift: no canonical params for stream {intent.stream!r}", 1.0)
-
-        # Delta anchor: only check when canonical specifies it.
-        c_delta = canon.get("delta")
-        if c_delta is not None and intent.delta is not None:
-            if abs(intent.delta - c_delta) > DELTA_TOLERANCE:
-                return (
-                    "BLOCK",
-                    f"param_drift: signal.delta={intent.delta:.2f} vs canonical={c_delta:.2f} "
-                    f"(tol ±{DELTA_TOLERANCE})",
-                    1.0,
-                )
-
-        # DTE anchor.
-        c_dte = canon.get("dte")
-        if c_dte is not None and intent.dte is not None:
-            if abs(intent.dte - c_dte) > DTE_TOLERANCE_DAYS:
-                return (
-                    "BLOCK",
-                    f"param_drift: signal.dte={intent.dte} vs canonical={c_dte} "
-                    f"(tol ±{DTE_TOLERANCE_DAYS}d)",
-                    1.0,
-                )
-
-        # Width anchor (fractional tolerance).
-        c_width = canon.get("width")
-        if c_width is not None and intent.width is not None and c_width > 0:
-            if abs(intent.width - c_width) / c_width > WIDTH_TOLERANCE_FRAC:
-                return (
-                    "BLOCK",
-                    f"param_drift: signal.width={intent.width} vs canonical={c_width} "
-                    f"(tol ±{int(WIDTH_TOLERANCE_FRAC * 100)}%)",
-                    1.0,
-                )
-
+        """BLOCK if signal drifts beyond the per-sleeve tolerances declared
+        in canonical_params.yaml. Delegates the actual comparison to
+        ``CanonicalRegistry.validate_signal`` so the YAML's per-sleeve
+        delta_tol / dte_tol / width_tol overrides are honoured.
+        """
+        if not self.canonical_params.has(intent.stream):
+            return (
+                "BLOCK",
+                f"param_drift: no canonical params for stream {intent.stream!r}",
+                1.0,
+            )
+        result = self.canonical_params.validate_signal(intent)
+        if not result.ok:
+            return ("BLOCK", "; ".join(result.reasons), 1.0)
         return ("ALLOW", None, 1.0)
 
     def _gate_vix_extreme(
         self, intent: SignalIntent, market: MarketContext
     ) -> Tuple[GateStatus, Optional[str], float]:
-        canon = self.canonical_params.get(intent.stream, {})
-        vix_block = canon.get("vix_block")
-        if vix_block is None:                    # sleeve doesn't gate on VIX
+        if not self.canonical_params.has(intent.stream):
             return ("ALLOW", None, 1.0)
+        canon = self.canonical_params.get(intent.stream)
+        # VIX gating applies only to listed-option credit-spread structures
+        # (PCS / CCS / IC). Calendar / iv_rv_pair / equity_etf sleeves do
+        # not condition entry on VIX level.
+        if not canon.is_credit_spread:
+            return ("ALLOW", None, 1.0)
+        vix_block = canon.vix_block
         if market.vix is None:                   # fail-closed if data missing
             return ("BLOCK", "vix_unavailable: cannot evaluate VIX gate", 1.0)
         if market.vix > vix_block:
@@ -472,9 +411,14 @@ class EntryGate:
         self, intent: SignalIntent, today: date
     ) -> Tuple[GateStatus, Optional[str], float]:
         """DEGRADE monthly-cycle sleeves during the week of monthly OPEX
-        (3rd Friday). Non-monthly sleeves are unaffected."""
-        canon = self.canonical_params.get(intent.stream, {})
-        if not canon.get("monthly_cycle"):
+        (3rd Friday). Monthly-cycle alignment is derived from the sleeve's
+        canonical structure: PCS / CCS / IC sleeves trade the standard
+        listed monthly cycle; calendar / iv_rv_pair / equity_etf do not.
+        """
+        if not self.canonical_params.has(intent.stream):
+            return ("ALLOW", None, 1.0)
+        canon = self.canonical_params.get(intent.stream)
+        if not canon.is_credit_spread:
             return ("ALLOW", None, 1.0)
         if calendars.is_opex_week(today):
             return (
@@ -614,16 +558,12 @@ def evaluate(
 
 __all__ = [
     "BROKER_UNSUPPORTED_STREAMS_ALPACA_PAPER",
-    "CANONICAL_PARAMS",
     "CORRELATION_CAP",
     "CORRELATION_FLOOR_PENALTY",
     "CPI_DEGRADE_MULTIPLIER",
-    "DELTA_TOLERANCE",
-    "DTE_TOLERANCE_DAYS",
     "EntryGate",
     "MarketContext",
     "OPEX_DEGRADE_MULTIPLIER",
     "STALE_SIGNAL_HOURS",
-    "WIDTH_TOLERANCE_FRAC",
     "evaluate",
 ]
