@@ -96,6 +96,13 @@ I am NOT touching `shared/earnings_calendar.py` in this session.
 
 ## Q3 — `get_ticker_obj` callers outside the live OHLCV path
 
+**RESOLUTION (2026-05-22, Carlos via Charles):** RESOLVED. yfinance removed
+from strategy/options_analyzer.py entirely. Tradier/Polygon are the only
+options providers; with no provider configured, get_options_chain() now
+raises RuntimeError instead of silently falling back to a yfinance path
+that was already broken by Phase 1 (DataCache.get_ticker_obj raises
+NotImplementedError).
+
 **Status:** resolved without escalation, but worth flagging.
 
 `shared/data_cache.py::get_ticker_obj` is referenced by two live-path files:
