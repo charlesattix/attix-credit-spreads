@@ -1,6 +1,6 @@
 """Tests for OptionsAnalyzer."""
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import numpy as np
 import pandas as pd
@@ -13,22 +13,22 @@ from strategy.options_analyzer import OptionsAnalyzer
 # ---------------------------------------------------------------------------
 
 def _make_config(**overrides):
-    """Build a minimal config for OptionsAnalyzer."""
+    """Build a minimal config for OptionsAnalyzer with no provider configured."""
     config = {
         'strategy': {
             'min_dte': 30,
             'max_dte': 45,
         },
         'data': {
-            'provider': 'yfinance',
+            'provider': '',
         },
     }
     config.update(overrides)
     return config
 
 
-def _make_options_df(n_strikes=5, exp_date=None):
-    """Create a synthetic options DataFrame."""
+def _make_chain_df(n_strikes=5, exp_date=None):
+    """Create a synthetic options chain DataFrame matching provider output."""
     if exp_date is None:
         exp_date = datetime.now() + timedelta(days=35)
     strikes = np.arange(100, 100 + n_strikes * 5, 5, dtype=float)
@@ -48,74 +48,65 @@ def _make_options_df(n_strikes=5, exp_date=None):
     return pd.DataFrame(rows)
 
 
+def _analyzer_with_polygon(provider_mock):
+    """Build an analyzer with a mocked polygon provider attached."""
+    analyzer = OptionsAnalyzer(_make_config())
+    analyzer.polygon = provider_mock
+    return analyzer
+
+
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
 
 class TestGetOptionsChain:
 
-    @patch('strategy.options_analyzer.yf.Ticker')
-    def test_returns_dataframe_on_success(self, mock_ticker_cls):
-        """get_options_chain should return a non-empty DataFrame."""
-        exp_date = (datetime.now() + timedelta(days=35)).strftime('%Y-%m-%d')
-        mock_ticker = MagicMock()
-        mock_ticker.options = [exp_date]
+    def test_returns_dataframe_on_success(self):
+        """get_options_chain returns the provider's chain when configured."""
+        provider = MagicMock()
+        provider.get_full_chain.return_value = _make_chain_df()
+        analyzer = _analyzer_with_polygon(provider)
 
-        calls_df = pd.DataFrame({
-            'strike': [100.0, 105.0],
-            'bid': [3.0, 2.0],
-            'ask': [3.5, 2.5],
-            'impliedVolatility': [0.25, 0.30],
-            'volume': [100, 200],
-        })
-        puts_df = pd.DataFrame({
-            'strike': [100.0, 105.0],
-            'bid': [2.0, 3.0],
-            'ask': [2.5, 3.5],
-            'impliedVolatility': [0.25, 0.30],
-            'volume': [100, 200],
-        })
-        chain_mock = MagicMock()
-        chain_mock.calls = calls_df
-        chain_mock.puts = puts_df
-        mock_ticker.option_chain.return_value = chain_mock
-        mock_ticker_cls.return_value = mock_ticker
-
-        analyzer = OptionsAnalyzer(_make_config())
         result = analyzer.get_options_chain('SPY')
 
         assert isinstance(result, pd.DataFrame)
         assert len(result) > 0
+        provider.get_full_chain.assert_called_once()
 
-    @patch('strategy.options_analyzer.yf.Ticker')
-    def test_returns_empty_when_no_options(self, mock_ticker_cls):
-        """get_options_chain should return empty DataFrame when no options exist."""
-        mock_ticker = MagicMock()
-        mock_ticker.options = []
-        mock_ticker_cls.return_value = mock_ticker
+    def test_returns_empty_when_provider_returns_empty(self):
+        """An empty provider response is returned as-is (caller handles)."""
+        provider = MagicMock()
+        provider.get_full_chain.return_value = pd.DataFrame()
+        analyzer = _analyzer_with_polygon(provider)
 
-        analyzer = OptionsAnalyzer(_make_config())
         result = analyzer.get_options_chain('NOOPT')
 
         assert isinstance(result, pd.DataFrame)
         assert result.empty
 
-    @patch('strategy.options_analyzer.yf.Ticker')
-    def test_returns_empty_on_exception(self, mock_ticker_cls):
-        """get_options_chain should return empty DataFrame on error."""
-        mock_ticker_cls.side_effect = Exception("network error")
+    def test_returns_empty_on_provider_exception(self):
+        """Provider exceptions are caught and surface as an empty DataFrame."""
+        provider = MagicMock()
+        provider.get_full_chain.side_effect = Exception("network error")
+        analyzer = _analyzer_with_polygon(provider)
 
-        analyzer = OptionsAnalyzer(_make_config())
         result = analyzer.get_options_chain('ERR')
 
         assert isinstance(result, pd.DataFrame)
         assert result.empty
 
+    def test_raises_when_no_provider_configured(self):
+        """Without Tradier or Polygon, get_options_chain raises RuntimeError."""
+        analyzer = OptionsAnalyzer(_make_config())
+
+        with pytest.raises(RuntimeError, match="No options provider configured"):
+            analyzer.get_options_chain('SPY')
+
 
 class TestCleanOptionsData:
 
     def test_renames_columns(self):
-        """_clean_options_data should rename yfinance columns to standard names."""
+        """_clean_options_data should rename provider columns to standard names."""
         analyzer = OptionsAnalyzer(_make_config())
         exp_date = datetime.now() + timedelta(days=35)
         df = pd.DataFrame({
@@ -146,67 +137,32 @@ class TestCleanOptionsData:
         assert result.iloc[0]['strike'] == 105.0
 
 
-class TestDTEFiltering:
-
-    @patch('strategy.options_analyzer.yf.Ticker')
-    def test_filters_expirations_by_dte(self, mock_ticker_cls):
-        """Only expirations within DTE range (+/- buffer) should be downloaded."""
-        now = datetime.now()
-        exp_close = (now + timedelta(days=35)).strftime('%Y-%m-%d')  # within range
-        exp_far = (now + timedelta(days=120)).strftime('%Y-%m-%d')    # outside range
-        exp_near = (now + timedelta(days=5)).strftime('%Y-%m-%d')     # outside range
-
-        mock_ticker = MagicMock()
-        mock_ticker.options = [exp_near, exp_close, exp_far]
-
-        calls_df = pd.DataFrame({
-            'strike': [100.0],
-            'bid': [3.0],
-            'ask': [3.5],
-            'impliedVolatility': [0.25],
-            'volume': [100],
-        })
-        puts_df = pd.DataFrame({
-            'strike': [100.0],
-            'bid': [2.0],
-            'ask': [2.5],
-            'impliedVolatility': [0.25],
-            'volume': [100],
-        })
-        chain_mock = MagicMock()
-        chain_mock.calls = calls_df
-        chain_mock.puts = puts_df
-        mock_ticker.option_chain.return_value = chain_mock
-        mock_ticker_cls.return_value = mock_ticker
-
-        analyzer = OptionsAnalyzer(_make_config())
-        analyzer._get_chain_yfinance('SPY')
-
-        # option_chain should only be called once (for exp_close)
-        assert mock_ticker.option_chain.call_count == 1
-
-
 class TestCalculateIVRank:
 
-    @patch('strategy.options_analyzer.yf.Ticker')
-    def test_returns_valid_iv_rank(self, mock_ticker_cls):
-        """calculate_iv_rank should return a dict with iv_rank key."""
+    def test_returns_valid_iv_rank(self):
+        """calculate_iv_rank should return a dict with iv_rank key when DataCache is provided."""
         np.random.seed(42)
         dates = pd.date_range('2024-01-01', periods=252, freq='B')
         prices = 100.0 + np.cumsum(np.random.randn(252) * 0.5)
 
-        mock_ticker = MagicMock()
-        mock_ticker.history.return_value = pd.DataFrame(
+        data_cache = MagicMock()
+        data_cache.get_history.return_value = pd.DataFrame(
             {'Close': prices}, index=dates
         )
-        mock_ticker_cls.return_value = mock_ticker
 
-        analyzer = OptionsAnalyzer(_make_config())
+        analyzer = OptionsAnalyzer(_make_config(), data_cache=data_cache)
         result = analyzer.calculate_iv_rank('SPY', current_iv=25.0)
 
         assert 'iv_rank' in result
         assert 'iv_percentile' in result
         assert isinstance(result['iv_rank'], float)
+
+    def test_raises_when_data_cache_missing(self):
+        """calculate_iv_rank requires a DataCache and raises RuntimeError otherwise."""
+        analyzer = OptionsAnalyzer(_make_config())
+
+        with pytest.raises(RuntimeError, match="DataCache is required"):
+            analyzer.calculate_iv_rank('SPY', current_iv=25.0)
 
 
 class TestGetCurrentIV:
@@ -214,7 +170,7 @@ class TestGetCurrentIV:
     def test_returns_median_iv(self):
         """get_current_iv should return the median IV times 100."""
         analyzer = OptionsAnalyzer(_make_config())
-        df = _make_options_df()
+        df = _make_chain_df()
         result = analyzer.get_current_iv(df)
         assert result == pytest.approx(25.0, abs=0.1)
 
