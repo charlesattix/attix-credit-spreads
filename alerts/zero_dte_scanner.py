@@ -10,6 +10,7 @@ from datetime import datetime, time
 from typing import Dict, List, Optional
 
 from alerts.zero_dte_config import SPX_PROPERTIES, build_zero_dte_config
+from shared.data_cache import DataCache
 from strategy import CreditSpreadStrategy, OptionsAnalyzer, TechnicalAnalyzer
 
 logger = logging.getLogger(__name__)
@@ -135,12 +136,9 @@ class ZeroDTEScanner:
                 return []
             price_ticker = SPX_PROPERTIES["price_ticker"]  # ^GSPC
 
-        # Fetch price data
-        if self._data_cache:
-            price_data = self._data_cache.get_history(price_ticker, period="1y")
-        else:
-            import yfinance as yf
-            price_data = yf.Ticker(price_ticker).history(period="1y")
+        # Fetch price data (Polygon via DataCache; no yfinance fallback)
+        cache = self._data_cache or DataCache()
+        price_data = cache.get_history(price_ticker, period="1y")
 
         if price_data is None or (hasattr(price_data, "empty") and price_data.empty):
             logger.warning(f"No price data for {price_ticker}")

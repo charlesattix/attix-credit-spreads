@@ -9,7 +9,6 @@ from typing import Dict, Optional
 
 import numpy as np
 import pandas as pd
-import yfinance as yf
 
 from shared.constants import DEFAULT_RISK_FREE_RATE
 from shared.indicators import calculate_iv_rank as _shared_iv_rank
@@ -76,10 +75,16 @@ class OptionsAnalyzer:
         if self.polygon:
             return self._get_chain_from_provider(self.polygon, "Polygon", ticker)
 
-        return self._get_chain_yfinance(ticker)
+        # No yfinance fallback after the Polygon migration. Callers
+        # must configure either a Tradier or Polygon provider.
+        logger.warning(
+            "No options-chain provider configured for %s; returning empty chain",
+            ticker,
+        )
+        return pd.DataFrame()
 
     def _get_chain_from_provider(self, provider: DataProvider, provider_name: str, ticker: str) -> pd.DataFrame:
-        """Get options chain from a provider (Tradier or Polygon) with yfinance fallback.
+        """Get options chain from a provider (Tradier or Polygon).
 
         Args:
             provider: Provider instance satisfying the :class:`DataProvider` protocol.
@@ -87,7 +92,9 @@ class OptionsAnalyzer:
             ticker: Stock ticker symbol.
 
         Returns:
-            DataFrame with options chain data.
+            DataFrame with options chain data, or empty DataFrame on
+            provider failure (no yfinance fallback after the Polygon
+            migration — Rule Zero: fail closed).
         """
         try:
             min_dte = max(self.config['strategy'].get('min_dte', 30) - 5, 0)
@@ -95,79 +102,23 @@ class OptionsAnalyzer:
             chain = provider.get_full_chain(ticker, min_dte=min_dte, max_dte=max_dte)
 
             if chain.empty:
-                logger.warning(f"{provider_name} returned no data for {ticker}, falling back to yfinance")
-                return self._get_chain_yfinance(ticker)
+                logger.warning(f"{provider_name} returned no data for {ticker}; no fallback")
+                return pd.DataFrame()
 
-            # Check data quality - Polygon contracts endpoint doesn't have bid/ask pricing
-            # If we have strikes but no meaningful pricing, fall back to yfinance
+            # Check data quality — Polygon contracts endpoint may lack bid/ask pricing.
             if 'bid' in chain.columns and 'ask' in chain.columns:
                 valid_pricing = ((chain['bid'] > 0.05) & (chain['ask'] > 0.05)).sum()
                 if valid_pricing < len(chain) * 0.1:  # Less than 10% have real prices
-                    logger.warning(f"{provider_name} returned {len(chain)} options but insufficient pricing data for {ticker}, falling back to yfinance")
-                    return self._get_chain_yfinance(ticker)
+                    logger.warning(
+                        f"{provider_name} returned {len(chain)} options but "
+                        f"insufficient pricing data for {ticker}; no fallback"
+                    )
+                    return pd.DataFrame()
 
             logger.info(f"Retrieved {len(chain)} options for {ticker} via {provider_name} (real-time)")
             return chain
         except Exception as e:
-            logger.error(f"{provider_name} error for {ticker}: {e}, falling back to yfinance", exc_info=True)
-            return self._get_chain_yfinance(ticker)
-
-    def _get_chain_yfinance(self, ticker: str) -> pd.DataFrame:
-        """Get options chain via yfinance (delayed, estimated Greeks)."""
-        try:
-            # data_cache no longer exposes get_ticker_obj after the Polygon migration;
-            # options chains use the yfinance fallback path directly.
-            stock = yf.Ticker(ticker)
-            expirations = stock.options
-
-            if not expirations:
-                logger.warning(f"No options available for {ticker}")
-                return pd.DataFrame()
-
-            all_options = []
-
-            min_dte = max(self.config.get('strategy', {}).get('min_dte', 30) - 5, 0)  # buffer
-            max_dte = self.config.get('strategy', {}).get('max_dte', 45) + 5
-            now = datetime.now(timezone.utc)
-
-            for exp_date_str in expirations:
-                exp_date = datetime.strptime(exp_date_str, '%Y-%m-%d').replace(tzinfo=timezone.utc)
-
-                dte = (exp_date - now).days
-                if dte < min_dte or dte > max_dte:
-                    continue
-
-                # Get options chain for this expiration
-                opt_chain = stock.option_chain(exp_date_str)
-
-                # Process calls
-                calls = opt_chain.calls.copy()
-                calls['type'] = 'call'
-                calls['expiration'] = exp_date
-
-                # Process puts
-                puts = opt_chain.puts.copy()
-                puts['type'] = 'put'
-                puts['expiration'] = exp_date
-
-                all_options.append(calls)
-                all_options.append(puts)
-
-            if not all_options:
-                return pd.DataFrame()
-
-            # Combine all options
-            options_df = pd.concat(all_options, ignore_index=True)
-
-            # Clean and standardize
-            options_df = self._clean_options_data(options_df)
-
-            logger.info(f"Retrieved {len(options_df)} options for {ticker}")
-
-            return options_df
-
-        except Exception as e:
-            logger.error(f"Error retrieving options for {ticker}: {e}", exc_info=True)
+            logger.error(f"{provider_name} error for {ticker}: {e}", exc_info=True)
             return pd.DataFrame()
 
     def _clean_options_data(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -245,12 +196,11 @@ class OptionsAnalyzer:
             Dictionary with IV metrics
         """
         try:
-            # Get historical data (1 year)
-            if self.data_cache:
-                hist = self.data_cache.get_history(ticker, period='1y')
-            else:
-                stock = yf.Ticker(ticker)
-                hist = stock.history(period='1y')
+            # Get historical data (1 year) — Polygon via DataCache; no yfinance fallback.
+            if self.data_cache is None:
+                from shared.data_cache import DataCache
+                self.data_cache = DataCache()
+            hist = self.data_cache.get_history(ticker, period='1y')
 
             if hist.empty:
                 logger.warning(f"No historical data for {ticker}")

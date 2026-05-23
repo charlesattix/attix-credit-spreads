@@ -3,14 +3,22 @@
 The headline guarantee these tests defend:
 
   compass.live_composite_stress.build_composite_stress
-      ===
-  compass.exp3303_regime_transition_dd.build_composite_stress
+      === the EXP-3303b reference formula (inlined below as
+          ``_reference_build_composite_stress``).
 
-If that equality breaks the live gate will diverge from the EXP-3303b
-backtest and the live decisions become unauditable. ``test_formula_matches_backtest``
-locks the two together on deterministic feature frames. Note: the
-fabricated frames here are TEST inputs, not production data — Rule Zero
-(no fabricated prices in live code paths) is unaffected.
+The reference is a verbatim copy of
+``compass/exp3303_regime_transition_dd.py::build_composite_stress`` at
+the time of writing — copied here, not imported, so that
+(a) the test does not depend on a research-only module that may be
+absent from production deployments, and
+(b) any drift between the live module and the reference is loud (a
+test diff, not a silent import).
+
+If you edit the live formula you MUST also edit the reference below
+and confirm the diff is intentional.
+
+Note: the fabricated frames here are TEST inputs, not production data
+— Rule Zero (no fabricated prices in live code paths) is unaffected.
 """
 from __future__ import annotations
 
@@ -22,10 +30,31 @@ import pandas as pd
 import pytest
 
 from compass import live_composite_stress as live
-from compass.exp3303_regime_transition_dd import (
-    build_composite_stress as backtest_build_composite_stress,
-)
 from shared.exceptions import DataFetchError
+
+
+# ---------------------------------------------------------------------------
+# Reference formula — verbatim copy of EXP-3303b's build_composite_stress.
+# DO NOT IMPORT from compass.exp3303_regime_transition_dd here — that module
+# is a research script (imports yfinance, pulls fixtures) and is not part of
+# the production deployment.
+# ---------------------------------------------------------------------------
+
+_REF_ZSCORE_WINDOW = 63
+
+
+def _reference_build_composite_stress(features: pd.DataFrame) -> pd.DataFrame:
+    """Reference impl from compass/exp3303_regime_transition_dd.py."""
+    f = features.copy()
+    f["term_spread"] = f["vix3m"] - f["vix"]
+    for col, neg in [("term_spread", True), ("vvix", False), ("skew", False)]:
+        roll = f[col].rolling(_REF_ZSCORE_WINDOW, min_periods=_REF_ZSCORE_WINDOW)
+        z = (f[col] - roll.mean()) / roll.std(ddof=1)
+        f[f"{col}_z"] = z if not neg else -z
+    f["composite_stress"] = (
+        f["term_spread_z"] + f["vvix_z"] + f["skew_z"]
+    ) / math.sqrt(3.0)
+    return f
 
 
 # ---------------------------------------------------------------------------
@@ -88,7 +117,7 @@ class TestFormulaMatchesBacktest:
     def test_full_frame_matches_backtest(self):
         feats = _make_features()
         live_out = live.build_composite_stress(feats)
-        bt_out = backtest_build_composite_stress(feats)
+        bt_out = _reference_build_composite_stress(feats)
 
         for col in ("term_spread", "term_spread_z", "vvix_z", "skew_z", "composite_stress"):
             assert col in live_out.columns

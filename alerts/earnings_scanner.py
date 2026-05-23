@@ -19,6 +19,7 @@ from alerts.earnings_config import (
     EARNINGS_LOOKAHEAD_DAYS,
     build_earnings_config,
 )
+from shared.data_cache import DataCache
 from shared.earnings_calendar import EarningsCalendar
 from strategy import OptionsAnalyzer
 
@@ -168,12 +169,9 @@ class EarningsScanner:
         5. Build iron condor at 1.2x expected move
         6. Score and return
         """
-        # Fetch price data
-        if self._data_cache:
-            price_data = self._data_cache.get_history(ticker, period="1y")
-        else:
-            import yfinance as yf
-            price_data = yf.Ticker(ticker).history(period="1y")
+        # Fetch price data (Polygon via DataCache; no yfinance fallback)
+        cache = self._data_cache or DataCache()
+        price_data = cache.get_history(ticker, period="1y")
 
         if price_data is None or (hasattr(price_data, "empty") and price_data.empty):
             logger.warning(f"No price data for {ticker}")
