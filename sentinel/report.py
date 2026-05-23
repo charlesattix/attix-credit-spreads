@@ -169,6 +169,10 @@ def generate_daily_html(
     health_results, sentinel_state) are all optional — report degrades
     gracefully if they are not available.
     """
+    if registry is None:
+        from experiments.manager import get_manager
+        registry = get_manager()._registry
+
     now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     report_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
@@ -439,6 +443,9 @@ def generate_history_html(
     changes: List[Dict] = timeline.get("config_changes", [])
     alerts: List[Dict] = timeline.get("alerts", [])
 
+    if registry_entry is None:
+        from experiments.manager import get_manager
+        registry_entry = get_manager().get(exp_id)
     reg = registry_entry or {}
     exp_name = reg.get("name", exp_id)
     ticker = reg.get("ticker", "?")
@@ -608,6 +615,10 @@ def generate_telegram_daily(
       Guards: ✅ All configs match | ✅ All APIs healthy
       ...
     """
+    if registry is None:
+        from experiments.manager import get_manager
+        registry = get_manager()._registry
+
     now_str = datetime.now(timezone.utc).strftime("%b %d, %Y")
     experiments = summary.get("experiments", {})
     crit = summary.get("critical_alerts", [])

@@ -1018,7 +1018,8 @@ def audit_all_experiments(
     Returns list of ExperimentAudit results.
     """
     try:
-        registry = _load_registry()
+        from experiments.manager import get_manager
+        registry = get_manager()._registry
         state = _load_state()
     except Exception as e:
         logger.error("Failed to load registry/state: %s", e)
@@ -1140,11 +1141,6 @@ def format_audit_report(audits: List[ExperimentAudit]) -> str:
 # Internal helpers
 # ---------------------------------------------------------------------------
 
-
-def _load_registry() -> dict:
-    registry_path = _PROJECT_ROOT / "experiments" / "registry.json"
-    with open(registry_path) as f:
-        return json.load(f)
 
 
 def _load_state() -> dict:

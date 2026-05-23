@@ -765,6 +765,9 @@
                 "avg_return": 84.8,
                 "max_dd": -5.89,
                 "robust": null
+            },
+            "backtest_baseline": {
+                "mc_worst_dd_pct": 5.89
             }
         },
         "EXP-3309": {
@@ -821,6 +824,9 @@
                 "avg_return": 247.9,
                 "max_dd": -10.455,
                 "robust": null
+            },
+            "backtest_baseline": {
+                "mc_worst_dd_pct": 10.455
             }
         }
     }
