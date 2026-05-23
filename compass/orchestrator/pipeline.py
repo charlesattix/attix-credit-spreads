@@ -446,7 +446,13 @@ def _default_sizer_fn() -> Callable[..., List[SizedOrder]]:
         return None
 
     def _adapter(gated, portfolio, _connector):
-        return size_orders(gated, portfolio, _no_chain)
+        sized = size_orders(gated, portfolio, _no_chain)
+        if gated and not sized:
+            LOG.warning(
+                "WARNING: _default_sizer_fn fallback active - no contracts sized "
+                "(chain fetcher unavailable or no data). This order will not execute."
+            )
+        return sized
 
     return _adapter
 
