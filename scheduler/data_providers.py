@@ -309,8 +309,8 @@ def fetch_market_data(
     """
     polygon_stocks_key  = os.environ.get("POLYGON_API_KEY", "")
     polygon_indices_key = os.environ.get("POLYGON_INDICES_API_KEY", "")
-    alpaca_key    = os.environ.get("ALPACA_API_KEY", "")
-    alpaca_secret = os.environ.get("ALPACA_API_SECRET", "")
+    # Generic ALPACA_API_KEY retired 2026-05-23 (P0-4). The L2 Alpaca data
+    # fallback below is therefore disabled — we go Polygon → yfinance → cache.
 
     data: Dict[str, pd.Series] = {}
     alerts: List[str] = []
@@ -330,16 +330,11 @@ def fetch_market_data(
     else:
         LOG.warning("POLYGON_API_KEY / POLYGON_INDICES_API_KEY not set — skipping L1")
 
-    # ── Level 2: Alpaca data API (ETFs only) ─────────────────────────────
-    missing_etfs = [t for t in ETF_TICKERS if t not in data]
-    if missing_etfs and alpaca_key:
-        recovered = _alpaca_get_historical(missing_etfs, days, alpaca_key, alpaca_secret)
-        data.update(recovered)
-        still_missing = [t for t in missing_etfs if t not in data]
-        if still_missing:
-            alerts.append(f"L2_alpaca failed for: {still_missing}")
-    elif missing_etfs:
-        LOG.warning("Alpaca credentials not set — skipping L2 for %s", missing_etfs)
+    # ── Level 2: Alpaca data API — DISABLED (P0-4 cleanup, 2026-05-23) ───
+    # The L2 Alpaca historical fallback relied on the generic ALPACA_API_KEY,
+    # which is dead (Alpaca returns 401). L1 Polygon + L3 yfinance + L4 cache
+    # provide adequate coverage; per-experiment keys are not used for shared
+    # ETF data (identity-neutral fetch).
 
     # ── Level 3: yfinance (for anything still missing) ────────────────
     all_tickers = ETF_TICKERS + list(YFINANCE_INDEX_MAP.keys())

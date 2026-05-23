@@ -72,19 +72,21 @@ def job_log(job_name: str, message: str) -> None:
     LOG.info("[%s] %s", job_name, message)
 
 
-def get_alpaca_client(exp_id: str = None):
-    """Return an Alpaca TradingClient (paper or live depending on env).
+def get_alpaca_client(exp_id: str):
+    """Return an Alpaca TradingClient for a specific experiment.
 
-    If *exp_id* is supplied (e.g. "EXP400"), look for per-experiment keys
-    first (ALPACA_API_KEY_EXP400 / ALPACA_API_SECRET_EXP400). Falls back
-    to the generic ALPACA_API_KEY / ALPACA_API_SECRET.
+    *exp_id* is required (e.g. "EXP400"). Looks up per-experiment keys
+    ALPACA_API_KEY_EXP400 / ALPACA_API_SECRET_EXP400. There is no generic
+    fallback — the generic ALPACA_API_KEY was retired 2026-05-23 (dead key).
     """
     from alpaca.trading.client import TradingClient
-    suffix = f"_{exp_id.upper().replace('-', '')}" if exp_id else ""
-    api_key    = os.environ.get(f"ALPACA_API_KEY{suffix}") or os.environ.get("ALPACA_API_KEY", "")
-    api_secret = os.environ.get(f"ALPACA_API_SECRET{suffix}") or os.environ.get("ALPACA_API_SECRET", "")
+    if not exp_id:
+        raise RuntimeError("get_alpaca_client requires an exp_id (e.g. 'EXP400')")
+    suffix = f"_{exp_id.upper().replace('-', '')}"
+    api_key    = os.environ.get(f"ALPACA_API_KEY{suffix}", "")
+    api_secret = os.environ.get(f"ALPACA_API_SECRET{suffix}", "")
     if not api_key or not api_secret:
-        raise RuntimeError(f"Missing Alpaca keys for {exp_id or 'default'} (looked for ALPACA_API_KEY{suffix})")
+        raise RuntimeError(f"Missing Alpaca keys for {exp_id} (looked for ALPACA_API_KEY{suffix})")
     paper      = os.environ.get("ALPACA_PAPER", "true").lower() == "true"
     return TradingClient(api_key=api_key, secret_key=api_secret, paper=paper)
 
@@ -132,12 +134,8 @@ def job_pre_market_check() -> None:
         else:
             job_log("pre_market", f"WARN: {eid} keys missing ({key_var})")
     if keys_found == 0:
-        # Fallback: check generic keys
-        if os.environ.get("ALPACA_API_KEY") and os.environ.get("ALPACA_API_SECRET"):
-            job_log("pre_market", "PASS: generic ALPACA_API_KEY set (no per-experiment keys)")
-        else:
-            failures.append("No Alpaca keys found (neither per-experiment nor generic)")
-            job_log("pre_market", "FAIL: No Alpaca keys found anywhere")
+        failures.append("No per-experiment Alpaca keys found (ALPACA_API_KEY_EXP*)")
+        job_log("pre_market", "FAIL: No per-experiment Alpaca keys found")
     else:
         job_log("pre_market", f"PASS: {keys_found}/{len(exp_ids)} experiment keys configured")
 
@@ -148,15 +146,22 @@ def job_pre_market_check() -> None:
     else:
         job_log("pre_market", "PASS: env POLYGON_API_KEY set")
 
-    # 2. Alpaca trading API connectivity
-    try:
-        tc = get_alpaca_client()
-        acct = tc.get_account()
-        equity = float(acct.equity)
-        job_log("pre_market", f"PASS: Alpaca equity=${equity:,.0f}")
-    except Exception as e:
-        failures.append(f"Alpaca connectivity: {e}")
-        job_log("pre_market", f"FAIL: Alpaca connectivity: {e}")
+    # 2. Alpaca trading API connectivity — probe each configured per-experiment key
+    probed_any = False
+    for eid in exp_ids:
+        if not (os.environ.get(f"ALPACA_API_KEY_{eid}") and os.environ.get(f"ALPACA_API_SECRET_{eid}")):
+            continue
+        probed_any = True
+        try:
+            tc = get_alpaca_client(eid)
+            acct = tc.get_account()
+            equity = float(acct.equity)
+            job_log("pre_market", f"PASS: {eid} Alpaca equity=${equity:,.0f}")
+        except Exception as e:
+            failures.append(f"Alpaca connectivity ({eid}): {e}")
+            job_log("pre_market", f"FAIL: {eid} Alpaca connectivity: {e}")
+    if not probed_any:
+        job_log("pre_market", "SKIP: no per-experiment Alpaca keys to probe")
 
     # 3. Market data — Polygon primary, yfinance fallback
     spy_price = get_spot_price("SPY")
@@ -226,127 +231,11 @@ def job_event_gate_check() -> None:
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# job_signal_generator — 09:25 ET Mon-Fri
+# job_signal_generator — REMOVED (P0-4 cleanup, 2026-05-23)
 # ════════════════════════════════════════════════════════════════════════════
-
-def job_signal_generator() -> None:
-    """09:25 ET Mon-Fri — signal generator with data fallbacks, validation, and Alpaca retry."""
-    today_str = today_et().isoformat()
-    job_log("signal_generator", f"=== Signal generator START for {today_str} ===")
-    start = datetime.utcnow()
-
-    # Read event gate sizing
-    sizing_multiplier = 1.0
-    if EG_JSON.exists():
-        try:
-            gate = json.loads(EG_JSON.read_text())
-            sizing_multiplier = float(gate.get("sizing_multiplier", 1.0))
-        except Exception:
-            pass
-
-    try:
-        from compass.exp2830_paper_signal_generator import generate_all_signals
-        from scheduler.signal_validator import validate_signal_payload
-
-        # Collect data fallback alerts during signal generation
-        data_alerts: list = []
-
-        # Generate signals (data_providers fallback chain runs inside)
-        signals = generate_all_signals(
-            as_of=datetime.strptime(today_str, "%Y-%m-%d").date(),
-            logger=logging.getLogger("exp2830"),
-            data_alerts=data_alerts,
-        )
-
-        # Send data fallback alerts early (before validation)
-        if data_alerts:
-            send_telegram(
-                f"[DATA FALLBACK] {today_str}: {len(data_alerts)} data source issue(s):\n"
-                + "\n".join(f"  - {a}" for a in data_alerts[:10])
-            )
-
-        # Validate signal payload
-        is_valid, validation_errors = validate_signal_payload(signals)
-        if not is_valid:
-            err_text = "\n".join(f"  - {e}" for e in validation_errors)
-            job_log("signal_generator", f"VALIDATION FAILED: {validation_errors}")
-            send_telegram(
-                f"CRITICAL: Signal validation FAILED on {today_str}\n"
-                f"{len(validation_errors)} error(s):\n{err_text}\n"
-                f"No orders submitted."
-            )
-            return
-
-        # Apply event gate sizing
-        if sizing_multiplier != 1.0:
-            for stream_sig in signals.get("signals", []):
-                if isinstance(stream_sig, dict) and stream_sig.get("action") == "OPEN":
-                    orig = stream_sig.get("target_contracts", 0)
-                    stream_sig["target_contracts"] = max(1, round(orig * sizing_multiplier))
-                    stream_sig["event_gate_applied"] = True
-                    stream_sig["event_gate_multiplier"] = sizing_multiplier
-
-        # Write signal file
-        signal_path = SIGNALS_DIR / f"{today_str}.json"
-        signal_path.parent.mkdir(parents=True, exist_ok=True)
-        signal_path.write_text(json.dumps(signals, indent=2, default=str))
-
-        # Audit log
-        audit_log = LOGS_DIR / "paper_signals_audit.jsonl"
-        audit_log.parent.mkdir(parents=True, exist_ok=True)
-        with open(audit_log, "a") as f:
-            f.write(json.dumps({
-                "timestamp": ts(),
-                "date": today_str,
-                "signals": signals,
-            }, default=str) + "\n")
-
-        elapsed = (datetime.utcnow() - start).total_seconds()
-        stream_sigs = signals.get("signals", [])
-        opens = [s["stream"] for s in stream_sigs
-                 if isinstance(s, dict) and s.get("action") == "OPEN"]
-
-        job_log(
-            "signal_generator",
-            f"VALIDATED+COMPLETE in {elapsed:.1f}s — "
-            f"streams={len(stream_sigs)} opens={len(opens)} "
-            f"event_mult={sizing_multiplier}"
-        )
-
-        # ── EXP-2890 SEAM: Order submission with retry ─────────────────────
-        from compass.alpaca_connector import AlpacaConnector
-        connector = AlpacaConnector(paper_mode=True)
-        for stream_sig in [s for s in stream_sigs if isinstance(s, dict) and s.get("action") == "OPEN"]:
-            for attempt in range(3):
-                try:
-                    result = connector.submit_spread(stream_sig)
-                    job_log("signal_generator", f"Order {stream_sig['stream']}: {result}")
-                    break
-                except Exception as e:
-                    wait = 2 ** attempt  # 2s, 4s, 8s
-                    if attempt < 2:
-                        job_log("signal_generator", f"Alpaca retry {attempt+1}: {e}, waiting {wait}s")
-                        time.sleep(wait)
-                    else:
-                        job_log("signal_generator", f"Alpaca FAILED after 3 attempts: {e}")
-                        send_telegram(f"[ORDER FAIL] {stream_sig['stream']} on {today_str}: {e}")
-
-        send_telegram(
-            f"[SIGNAL GEN] {today_str}: {len(opens)} OPEN ({', '.join(opens) or 'none'}) "
-            f"| {len(stream_sigs) - len(opens)} gated | {elapsed:.0f}s"
-            + (f" | EVENT GATE {sizing_multiplier}x" if sizing_multiplier != 1.0 else "")
-            + (f" | DATA FALLBACK(S): {len(data_alerts)}" if data_alerts else "")
-        )
-
-    except Exception as e:
-        elapsed = (datetime.utcnow() - start).total_seconds()
-        tb = traceback.format_exc()
-        job_log("signal_generator", f"FAILED after {elapsed:.1f}s: {e}\n{tb}")
-        send_telegram(
-            f"CRITICAL: EXP-2830 signal generator FAILED on {today_str}\n"
-            f"{type(e).__name__}: {e}\nNo signals generated. No orders today."
-        )
-        raise
+# EXP-2830 signal generator was disabled because it submitted orders via the
+# dead generic ALPACA_API_KEY (Alpaca returned 401). Per-experiment scanners
+# (EXP-400 etc.) registered in scheduler/main.py replace it.
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -354,13 +243,17 @@ def job_signal_generator() -> None:
 # ════════════════════════════════════════════════════════════════════════════
 
 def job_monitor_poll() -> None:
-    """Every 5 min 09:30-16:00 ET — update health.json. Polygon-primary VIX."""
+    """Every 5 min 09:30-16:00 ET — update health.json. Polygon-primary VIX.
+
+    Uses EXP-400 (champion) per-experiment Alpaca key for the equity probe;
+    generic ALPACA_API_KEY was retired 2026-05-23 (P0-4).
+    """
     vix, _ = get_vix_values()
 
     equity = None
     open_positions = []
     try:
-        tc = get_alpaca_client()
+        tc = get_alpaca_client("EXP400")
         acct = tc.get_account()
         equity = float(acct.equity)
         positions = tc.get_all_positions()
@@ -462,7 +355,7 @@ def job_post_market() -> None:
     equity = None
     positions = []
     try:
-        tc = get_alpaca_client()
+        tc = get_alpaca_client("EXP400")
         acct = tc.get_account()
         equity = float(acct.equity)
         raw_positions = tc.get_all_positions()
