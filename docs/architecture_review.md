@@ -36,10 +36,10 @@ The proposal spends its most detailed technical section (Section 6, "Isolation M
 **STATUS: REAL — AND ALREADY FIXED TODAY**
 
 This was a genuine gap as of this morning. It was fixed by:
-- `experiments.yaml` at the project root: maps every dimension (name ↔ env file ↔ config ↔ account ↔ tmux ↔ DB ↔ status ↔ start date)
+- `experiments/registry.json` managed by `ExperimentManager`: maps every dimension (name ↔ env file ↔ config ↔ account ↔ tmux ↔ DB ↔ status ↔ start date)
 - `scripts/portfolio_status.py`: reads the registry, checks tmux sessions live, pings all Alpaca accounts, shows equity/positions/P&L
 
-Maximus's proposed replacement — a SQLite `experiment_registry.db` with an `experiments` and `experiment_events` table — is heavier and harder to edit by hand. The YAML file is human-readable and version-controlled. The SQLite approach requires `pilotctl` to modify it; the YAML approach works with any text editor.
+Maximus's proposed replacement — a SQLite `experiment_registry.db` with an `experiments` and `experiment_events` table — is heavier and harder to edit by hand. The JSON registry is human-readable, version-controlled, and managed via `ExperimentManager`. The SQLite approach requires `pilotctl` to modify it; the JSON approach works with any text editor.
 
 **Verdict: solved. Don't build the SQLite registry.**
 
@@ -161,7 +161,7 @@ In priority order:
 | 🟡 SOON | `pilotctl.py` — thin wrapper for start/stop/restart via tmux | 2 hr | Convenience, not necessity |
 | 🟢 LATER | Telegram experiment name prefix (5-line change) | 30 min | Cleaner notifications |
 | 🟢 LATER | Extend `validate_params.py` to check unit consistency | 2 hr | Guards against config drift |
-| ⬜ SKIP | SQLite experiment registry | — | experiments.yaml does the job |
+| ⬜ SKIP | SQLite experiment registry | — | experiments/registry.json + ExperimentManager does the job |
 | ⬜ SKIP | `client_order_id` tagging / position filtering | — | Accounts are already separate |
 | ⬜ SKIP | ProcessSupervisor with auto-restart | — | Dangerous for live trading |
 | ⬜ SKIP | Config factory / template system | — | Adds complexity, solved by validate_params |
@@ -182,4 +182,4 @@ The biggest error in the proposal is the Alpaca account sharing diagnosis. That 
 
 ---
 
-*All claims in this review verified against: `.env.*` credential files (5 separate API keys confirmed), `execution/execution_engine.py` (commission formula), `shared/scheduler.py` (heartbeat path), `shared/healthcheck.py` (never instantiated), `shared/reconciler.py` (account-scoped), `data/pilotai_*.db` (0 and 5 trades in active DBs), today's `experiments.yaml` and `scripts/portfolio_status.py` (P1 already solved).*
+*All claims in this review verified against: `.env.*` credential files (5 separate API keys confirmed), `execution/execution_engine.py` (commission formula), `shared/scheduler.py` (heartbeat path), `shared/healthcheck.py` (never instantiated), `shared/reconciler.py` (account-scoped), `data/pilotai_*.db` (0 and 5 trades in active DBs), today's `experiments/registry.json` and `scripts/portfolio_status.py` (P1 already solved).*

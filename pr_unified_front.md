@@ -126,7 +126,7 @@ These commits were already on the branch from earlier sessions:
 | `280829b` | EXP-401 ROBUST scoring (0.951) + Phase 5 final validation |
 | `068f48f` | MASTERPLAN rewrite with experiment registry |
 | `c8e073f` | DB isolation, dedup schema, order dedup, config defaults |
-| `84cd8e2` | `pilotctl.py` + `experiments.yaml` for experiment management |
+| `84cd8e2` | `pilotctl.py` + `experiments/registry.json` for experiment management |
 | `c1ba087` | `preflight_check.py` config validator |
 | `d1cc8d3` | Preserve exact strike prices through execution pipeline |
 

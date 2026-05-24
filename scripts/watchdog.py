@@ -14,7 +14,7 @@ Actions:
   - Outputs JSON status to stdout for cron consumption
 
 Usage:
-    python scripts/watchdog.py --config experiments.yaml
+    python scripts/watchdog.py
 """
 
 from __future__ import annotations
@@ -30,7 +30,9 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-import yaml
+import sys as _sys
+_sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from experiments.manager import get_manager  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -212,20 +214,13 @@ def send_telegram_alert(message: str) -> bool:
 # ---------------------------------------------------------------------------
 
 
-def load_experiments(config_path: str) -> Dict[str, Any]:
-    """Load experiments.yaml and return the experiments dict."""
-    with open(config_path) as f:
-        data = yaml.safe_load(f)
-    return data.get("experiments", {})
-
-
-def run_watchdog(config_path: str, project_dir: Optional[str] = None) -> Dict[str, Any]:
+def run_watchdog(project_dir: Optional[str] = None) -> Dict[str, Any]:
     """Run all watchdog checks. Returns JSON-serializable status dict."""
 
     if project_dir is None:
-        project_dir = str(Path(config_path).resolve().parent)
+        project_dir = str(Path(__file__).resolve().parent.parent)
 
-    experiments = load_experiments(config_path)
+    live_experiments = get_manager().live()
     data_dir = os.path.join(project_dir, "data")
     now = _now_et()
     market_open = is_market_hours(now)
@@ -238,13 +233,9 @@ def run_watchdog(config_path: str, project_dir: Optional[str] = None) -> Dict[st
         "restarts": [],
     }
 
-    for exp_id, exp in experiments.items():
+    for exp in live_experiments:
+        exp_id = exp.get("id", "unknown")
         status = exp.get("status", "unknown")
-
-        # Only monitor active experiments
-        if status != "active":
-            results["experiments"][exp_id] = {"status": status, "monitored": False}
-            continue
 
         exp_result: Dict[str, Any] = {
             "status": status,
@@ -253,44 +244,45 @@ def run_watchdog(config_path: str, project_dir: Optional[str] = None) -> Dict[st
 
         session_name = exp.get("tmux_session")
         env_file = exp.get("env_file", "")
-        config_file = exp.get("config_file", "")
+        config_file = exp.get("config_path", "")
         db_path = exp.get("db_path", "")
 
         # Resolve relative paths
         env_file_abs = os.path.join(project_dir, env_file) if env_file else ""
         db_path_abs = os.path.join(project_dir, db_path) if db_path else ""
 
-        # 1. tmux session alive?
+        # 1. tmux session alive? (paused experiments: check only, no restart)
         try:
-            alive = tmux_session_alive(session_name)
-            exp_result["tmux_alive"] = alive
+            if status != "paused":
+                alive = tmux_session_alive(session_name)
+                exp_result["tmux_alive"] = alive
 
-            if not alive and session_name:
-                msg = f"🔴 <b>WATCHDOG: {exp_id} tmux session '{session_name}' is DEAD</b>"
-                logger.warning(msg)
+                if not alive and session_name:
+                    msg = f"🔴 <b>WATCHDOG: {exp_id} tmux session '{session_name}' is DEAD</b>"
+                    logger.warning(msg)
 
-                # Attempt restart
-                restarted = restart_tmux_session(
-                    session_name, project_dir, env_file, config_file, db_path,
-                )
-                exp_result["restarted"] = restarted
-
-                if restarted:
-                    restart_msg = (
-                        f"🔄 <b>WATCHDOG RESTART: {exp_id}</b>\n\n"
-                        f"Session <code>{session_name}</code> was dead — restarted automatically.\n"
-                        f"Config: <code>{config_file}</code>"
+                    # Attempt restart
+                    restarted = restart_tmux_session(
+                        session_name, project_dir, env_file, config_file, db_path,
                     )
-                    results["restarts"].append(exp_id)
-                    send_telegram_alert(restart_msg)
-                else:
-                    fail_msg = (
-                        f"🚨 <b>WATCHDOG FAILED TO RESTART: {exp_id}</b>\n\n"
-                        f"Session <code>{session_name}</code> is dead and auto-restart failed.\n"
-                        f"Manual intervention required!"
-                    )
-                    results["alerts"].append(f"{exp_id}: restart failed")
-                    send_telegram_alert(fail_msg)
+                    exp_result["restarted"] = restarted
+
+                    if restarted:
+                        restart_msg = (
+                            f"🔄 <b>WATCHDOG RESTART: {exp_id}</b>\n\n"
+                            f"Session <code>{session_name}</code> was dead — restarted automatically.\n"
+                            f"Config: <code>{config_file}</code>"
+                        )
+                        results["restarts"].append(exp_id)
+                        send_telegram_alert(restart_msg)
+                    else:
+                        fail_msg = (
+                            f"🚨 <b>WATCHDOG FAILED TO RESTART: {exp_id}</b>\n\n"
+                            f"Session <code>{session_name}</code> is dead and auto-restart failed.\n"
+                            f"Manual intervention required!"
+                        )
+                        results["alerts"].append(f"{exp_id}: restart failed")
+                        send_telegram_alert(fail_msg)
         except Exception as exc:
             exp_result["tmux_error"] = str(exc)
             logger.error("tmux check failed for %s: %s", exp_id, exc)
@@ -352,8 +344,7 @@ def run_watchdog(config_path: str, project_dir: Optional[str] = None) -> Dict[st
 
 def main():
     parser = argparse.ArgumentParser(description="PilotAI watchdog — auto-restart & health checks")
-    parser.add_argument("--config", default="experiments.yaml", help="Path to experiments.yaml")
-    parser.add_argument("--project-dir", default=None, help="Project root (default: parent of config)")
+    parser.add_argument("--project-dir", default=None, help="Project root (default: parent of scripts/)")
     parser.add_argument("--verbose", "-v", action="store_true")
     args = parser.parse_args()
 
@@ -363,7 +354,7 @@ def main():
     )
 
     try:
-        results = run_watchdog(args.config, args.project_dir)
+        results = run_watchdog(args.project_dir)
         print(json.dumps(results, indent=2, default=str))
     except Exception as exc:
         # The watchdog itself must never crash
