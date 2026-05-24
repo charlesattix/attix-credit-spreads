@@ -906,6 +906,10 @@ class AlpacaProvider:
                 results.append({
                     "id": a.get("id"),
                     "activity_type": a.get("activity_type"),
+                    # activity_subtype distinguishes opening vs closing fills
+                    # (e.g. "sell_to_open", "buy_to_close"). Required by the
+                    # reconciler to avoid treating entry fills as external closes.
+                    "activity_subtype": a.get("activity_subtype"),
                     "symbol": a.get("symbol"),
                     "qty": a.get("qty"),
                     "price": a.get("price"),

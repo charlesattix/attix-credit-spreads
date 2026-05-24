@@ -27,7 +27,7 @@ Reconciliation targets:
 """
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Tuple
 
 # How often to run orphan detection from reconcile_pending_only() (minutes)
@@ -59,6 +59,17 @@ _CLOSE_ACTIVITY_TYPES = ("OPEXP", "OASGN", "FILL")
 
 # Default commission per contract ($) — matches backtester default
 _DEFAULT_COMMISSION_PER_CONTRACT = 0.65
+
+# Grace window after a trade's entry_date during which FILL activities are
+# assumed to be the entry order's own fills (Alpaca records FILL activities
+# asynchronously — typically 1-60s after the order is submitted). Activities
+# within this window are NOT treated as evidence of an external close.
+#
+# Without this guard, the reconciler matches a trade's own opening FILLs to
+# itself and force-marks it `external_fill`, which then triggers orphan
+# placeholder creation downstream. See:
+# /Users/charlesbot/.openclaw/workspace/reports/orphan-spreads-root-cause-2026-05-02.html
+ENTRY_FILL_GRACE_SECONDS = 90
 
 
 class ReconciliationResult:
@@ -590,9 +601,19 @@ class PositionReconciler:
               pnl = credit × contracts × 100 − entry_commission
           OPEXP with significant net_amount → expired_itm
               pnl = credit × contracts × 100 + total_net_amount − entry_commission
-          FILL (side=sell / buy-to-close) → external_fill
+          FILL (genuine closing fill, see below) → external_fill
               pnl derived from net_amount of fill activities
           OASGN → returns (None, None, None) — assignment logic is complex
+
+        Race-condition guards on FILL classification (see ENTRY_FILL_GRACE_SECONDS
+        comment for context — orphan-spreads-root-cause-2026-05-02.html):
+          1. Drop FILL activities within ENTRY_FILL_GRACE_SECONDS of entry_date
+             (Alpaca records entry-order fills asynchronously, 1-60s after entry)
+          2. Drop FILL activities whose activity_subtype is `*_to_open`
+             (Alpaca distinguishes opening from closing intent on each leg)
+          3. Even after filtering, refuse to declare external_fill if Alpaca
+             /v2/positions still reports any of the trade's legs as live —
+             a contradiction means we missed an entry fill somewhere.
         """
         credit = float(trade.get("credit") or 0)
         contracts = int(trade.get("contracts", 1))
@@ -602,7 +623,12 @@ class PositionReconciler:
 
         opexp_acts = [a for a in activities if a.get("activity_type") == "OPEXP"]
         oasgn_acts = [a for a in activities if a.get("activity_type") == "OASGN"]
-        fill_acts = [a for a in activities if a.get("activity_type") == "FILL"]
+        raw_fill_acts = [a for a in activities if a.get("activity_type") == "FILL"]
+
+        # Filter FILL activities to exclude the trade's own entry-order fills.
+        # OPEXP and OASGN are unambiguously close events, so no filtering needed
+        # for those.
+        fill_acts = self._filter_close_fills(trade, raw_fill_acts)
 
         # OASGN (assignment): too complex to auto-compute — return None
         if oasgn_acts:
@@ -623,6 +649,18 @@ class PositionReconciler:
 
         # FILL (external close by someone buying/selling our legs)
         if fill_acts:
+            # Paranoid double-check: if any leg is still listed in /v2/positions,
+            # the FILL we matched cannot have been a closing fill — refuse to
+            # classify as external_fill rather than corrupt the trade row.
+            if self._trade_legs_still_open(trade):
+                logger.warning(
+                    "Reconciler: %s has close-eligible FILL activity but legs "
+                    "still appear in /v2/positions — aborting external_fill "
+                    "classification (possible missed entry fill in filter)",
+                    trade.get("id", "?"),
+                )
+                return None, None, None
+
             # net_amount for closing fills: negative means we paid (bought back)
             total_net = sum(float(a.get("net_amount") or 0) for a in fill_acts)
             primary_id = fill_acts[0].get("id")
@@ -633,6 +671,109 @@ class PositionReconciler:
             return pnl, "external_fill", primary_id
 
         return None, None, None
+
+    def _filter_close_fills(
+        self, trade: Dict, fills: List[Dict]
+    ) -> List[Dict]:
+        """Drop FILL activities that are the trade's own entry-order fills.
+
+        Two-pronged filter:
+          - Subtype: drop activities whose activity_subtype is `*_to_open`
+            (e.g. ``sell_to_open``, ``buy_to_open``). Alpaca distinguishes open
+            from close on each FILL via activity_subtype.
+          - Grace period: drop activities whose transaction_time is within
+            ENTRY_FILL_GRACE_SECONDS of the trade's entry_date. Alpaca records
+            entry-order FILL activities asynchronously (1-60s after entry).
+
+        If activity_subtype is missing/unknown (older accounts, paper API quirks),
+        the grace period alone protects the entry-fill window. If both are
+        missing, we let the activity through — and the /v2/positions guard in
+        `_compute_external_close_pnl` is the last line of defense.
+        """
+        if not fills:
+            return fills
+
+        trade_id = trade.get("id", "?")
+        entry_dt = self._parse_iso(trade.get("entry_date"))
+        grace_cutoff = (
+            entry_dt + timedelta(seconds=ENTRY_FILL_GRACE_SECONDS)
+            if entry_dt is not None
+            else None
+        )
+
+        kept: List[Dict] = []
+        for a in fills:
+            subtype = (a.get("activity_subtype") or "").lower()
+            if subtype.endswith("_to_open"):
+                logger.debug(
+                    "Reconciler: %s — dropping FILL %s (subtype=%s, entry fill)",
+                    trade_id, a.get("id"), subtype,
+                )
+                continue
+
+            if grace_cutoff is not None:
+                tx_dt = self._parse_iso(a.get("transaction_time"))
+                if tx_dt is not None and tx_dt < grace_cutoff:
+                    logger.debug(
+                        "Reconciler: %s — dropping FILL %s "
+                        "(transaction_time %s within %ds grace of entry %s)",
+                        trade_id, a.get("id"), a.get("transaction_time"),
+                        ENTRY_FILL_GRACE_SECONDS, trade.get("entry_date"),
+                    )
+                    continue
+
+            kept.append(a)
+        return kept
+
+    def _trade_legs_still_open(self, trade: Dict) -> bool:
+        """Return True if any of the trade's expected OCC legs are still in /v2/positions.
+
+        Used as a paranoid guard before declaring `external_fill` — if the broker
+        still reports the legs as live, the FILL we matched cannot have been a
+        closing fill, so we refuse the classification rather than corrupt the row.
+
+        Returns False on any error (the guard is best-effort; primary defense is
+        the grace+subtype filter in `_filter_close_fills`).
+        """
+        ticker = trade.get("ticker", "")
+        exp = str(trade.get("expiration", "")).split(" ")[0]
+        spread_type = str(trade.get("strategy_type", trade.get("type", ""))).lower()
+        try:
+            expected = set(self._expected_symbols(trade, ticker, exp, spread_type))
+        except Exception as e:
+            logger.debug("Reconciler: position guard expected_symbols failed: %s", e)
+            return False
+        if not expected:
+            return False
+
+        try:
+            positions = self.alpaca.get_positions() or []
+        except Exception as e:
+            logger.debug("Reconciler: position guard get_positions failed: %s", e)
+            return False
+
+        held = {p.get("symbol") for p in positions if p.get("symbol")}
+        return bool(expected & held)
+
+    @staticmethod
+    def _parse_iso(value: Optional[str]) -> Optional[datetime]:
+        """Parse an ISO-8601 timestamp string into a timezone-aware datetime.
+
+        Tolerates `Z` suffix and naive strings (treated as UTC). Returns None
+        on any parse error.
+        """
+        if not value:
+            return None
+        s = str(value)
+        if s.endswith("Z"):
+            s = s[:-1] + "+00:00"
+        try:
+            dt = datetime.fromisoformat(s)
+        except (ValueError, TypeError):
+            return None
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
 
     def _fetch_activities_for_trade(
         self, trade: Dict, since: Optional[str] = None
