@@ -24,12 +24,13 @@ RESPONSIBILITIES
 
 CONFIG
 ------
-Environment variables (set in .env or shell):
-    ALPACA_API_KEY       = "<paper key>"
-    ALPACA_SECRET_KEY    = "<paper secret>"
+Per-experiment env vars (set by scheduler/jobs.py from Railway):
+    ALPACA_API_KEY       = per-experiment key (mapped from ALPACA_API_KEY_EXP400 etc.)
+    ALPACA_API_SECRET    = per-experiment secret (mapped from ALPACA_API_SECRET_EXP400 etc.)
     ALPACA_PAPER         = "true"   (default; "false" for live)
     ALPACA_BASE_URL      = "https://paper-api.alpaca.markets"  (optional override)
 
+NOTE: Generic (non-suffixed) Alpaca key retired 2026-05-23.
 The `paper_mode` flag in `AlpacaConnector.__init__` overrides the env.
 Default endpoint is paper-api.alpaca.markets for safety.
 
@@ -63,6 +64,9 @@ ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_PAPER_URL = "https://paper-api.alpaca.markets"
 DEFAULT_LIVE_URL = "https://api.alpaca.markets"
 
+# NOTE: In production these are set per-experiment by scheduler/jobs.py
+# which maps ALPACA_API_KEY_EXP400 → ALPACA_API_KEY in subprocess env.
+# The generic (non-suffixed) Railway key was retired 2026-05-23.
 ENV_KEY = "ALPACA_API_KEY"
 ENV_SECRET = "ALPACA_API_SECRET"
 ENV_PAPER = "ALPACA_PAPER"
@@ -231,7 +235,11 @@ class AlpacaConnector:
         paper = os.environ.get(ENV_PAPER, "true").strip().lower() != "false"
         base = os.environ.get(ENV_BASE_URL) or None
         if not key or not secret:
-            LOG.warning("Alpaca credentials missing (%s / %s unset)", ENV_KEY, ENV_SECRET)
+            raise RuntimeError(
+                f"Alpaca credentials missing ({ENV_KEY} / {ENV_SECRET} unset). "
+                f"Generic key retired 2026-05-23 — ensure scheduler/jobs.py mapped "
+                f"per-experiment keys into subprocess env."
+            )
         return cls(api_key=key, secret_key=secret, paper_mode=paper, base_url=base)
 
     def _init_sdk(self) -> None:
