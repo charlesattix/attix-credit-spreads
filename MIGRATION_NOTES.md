@@ -87,6 +87,61 @@ decision (see MIGRATION_QUESTIONS.md Q2).
 
 ---
 
+## Phase 2 — Earnings calendar (D2 followup) — RESOLVED via Unusual Whales
+
+**Branch:** `feature/migrate-earnings-to-uw` (off main).
+**Resolves:** Q2 in `MIGRATION_QUESTIONS.md`.
+
+Polygon's plan still does not include forward earnings, so the path
+chosen was Unusual Whales (Carlos provided `UW_API_TOKEN` in `.env`).
+
+**Files changed:**
+
+- `shared/uw_client.py` *(new, 165 lines)* — thin REST wrapper for UW.
+  Exposes `get_earnings_history(ticker)`,
+  `get_earnings_premarket(date=None)`,
+  `get_earnings_afterhours(date=None)`. 30s timeout, 3-retry backoff on
+  429/5xx, 24h in-memory TTL cache, raises `DataFetchError` on permanent
+  failure. Both required headers (`Authorization: Bearer …` and
+  `UW-CLIENT-API-ID: 100001`) attached to every request.
+- `shared/earnings_calendar.py` *(rewritten)* — `import yfinance` removed.
+  `get_next_earnings`, `get_lookahead_calendar`, and
+  `get_historical_earnings_dates` now read from
+  `UWClient.get_earnings_history`. `calculate_historical_stay_in_range`
+  fetches its 5y daily closes directly from `PolygonClient.aggregates`
+  (DataCache is bounded to 1y). Public signatures preserved.
+  `calculate_expected_move(options_chain, current_price)` is retained
+  as ATM-straddle math — UW does not expose a pre-computed expected
+  move on the documented endpoints (verified live against `AAPL` on
+  2026-05-22; the response carries `report_date`, EPS fields, and
+  `surprise_percentage`, nothing more).
+- `alerts/earnings_scanner.py` — **unchanged.** All caller signatures
+  preserved.
+- `tests/test_uw_client.py` *(new, 22 tests)* — HTTP-mocked happy path,
+  401/403, 429 retry-then-succeed, 429 exhaust, 503 retry, network
+  error, cache hit, cache TTL=0, cache clear, per-ticker isolation.
+
+**Live smoke test (2026-05-22):**
+
+```
+next_earnings(AAPL)         → 2026-07-30 00:00:00+00:00
+lookahead([AAPL,MSFT,NVDA]) → [('AAPL', 67)]
+historical(AAPL, 4)         → ['2026-04-30','2026-01-29','2025-10-30','2025-07-31']
+expected_move(chain, 200)   → 6.00   (ATM straddle, synthetic chain)
+expected_move(None, 200)    → None   (backwards-compat sentinel)
+```
+
+**Tests:** baseline pre-D2 was 3787 passing, 14 pre-existing failures.
+With D2: **3809 passing** (+22 UW client tests), 14 pre-existing
+failures, zero new failures.
+
+**Removed dependency:** `import yfinance` no longer appears anywhere in
+`shared/earnings_calendar.py`. This is the last yfinance reference on
+the live trade-decision path. Phase 5 (delete yfinance from
+`requirements.txt`) is no longer blocked by Q2.
+
+---
+
 ## Phase 3 — Delete inline yfinance fallbacks
 
 Removed the `if self._data_cache: ... else: import yfinance` block from all

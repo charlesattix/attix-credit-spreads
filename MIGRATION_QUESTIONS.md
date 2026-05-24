@@ -56,6 +56,27 @@ dependency on the live path, defeating the migration.
 
 ## Q2 — Phase 2 BLOCKED: Polygon plan lacks upcoming earnings dates
 
+**RESOLUTION (2026-05-22, Carlos via Charles):** RESOLVED via Unusual Whales.
+`shared/earnings_calendar.py` migrated to UW (see `shared/uw_client.py`).
+Polygon plan upgrade not needed. `import yfinance` removed from the file —
+zero references remain on the live trade-decision path.
+
+Note: the brief expected UW's `/api/stock/{ticker}/earnings` to return a
+pre-computed `expected_move_perc`. **It does not.** Live probe of the
+endpoint returned only `report_date`, `reported_eps`, `estimated_eps`,
+`surprise`, `surprise_percentage`, `report_time` (verified against
+`AAPL`, 2026-05-22). No dedicated UW expected-move endpoint exists in
+the documented skill.md.
+
+Therefore the ATM-straddle math in `calculate_expected_move(options_chain,
+current_price)` is **retained** — it has no yfinance dependency, operates
+on a chain the caller already fetches, and is the only available source
+of an implied expected move given the UW response shape. Net code change
+in this file is a reduction (yfinance branches deleted, UW-backed branches
+added) but the ATM-straddle helper survives.
+
+---
+
 **Probed endpoints (2026-05-22):**
 
 | Endpoint | Status | Notes |
@@ -96,13 +117,6 @@ I am NOT touching `shared/earnings_calendar.py` in this session.
 
 ## Q3 — `get_ticker_obj` callers outside the live OHLCV path
 
-**RESOLUTION (2026-05-22, Carlos via Charles):** RESOLVED. yfinance removed
-from strategy/options_analyzer.py entirely. Tradier/Polygon are the only
-options providers; with no provider configured, get_options_chain() now
-raises RuntimeError instead of silently falling back to a yfinance path
-that was already broken by Phase 1 (DataCache.get_ticker_obj raises
-NotImplementedError).
-
 **Status:** resolved without escalation, but worth flagging.
 
 `shared/data_cache.py::get_ticker_obj` is referenced by two live-path files:
@@ -125,234 +139,102 @@ fallback path doubly redundant.
 
 ---
 
-## Q4 — Gate 1 vendor divergences on `^VIX` / `^VIX3M` (RESOLVED)
+## Q5 — D4 backtest migration: branch base contradiction with PolygonClient requirement
 
-**RESOLUTION (2026-05-23, Carlos: "go with option 1"):** Implemented in
-`backtest/market_history.py` — Polygon index slices now intersect with
-SPY's NYSE trading-day calendar inside `_load_indices_hybrid`, eliminating
-the 21 holiday bars. The 11 documented single-day Yahoo↔Polygon vendor
-disagreements are allowlisted in `scripts/gate1_gate2_equivalence.py`.
-Both Gate 1 and Gate 2 now PASS at the original 0.1% Close threshold and
-±2 bar tolerance. No gate was weakened.
+**Raised:** 2026-05-22, during attempted execution of `MIGRATION_D4_BACKTEST_TASK.md`.
+**Status:** BLOCKED. No code changed. No branch created. No push attempted.
 
-**Final allowlist (12 dates):**
-- `^VIX`: 2023-11-28, 2023-11-29, 2023-12-06, 2024-03-18, 2025-01-17, 2025-08-01, 2026-02-06
-- `^VIX3M`: 2023-11-24, 2023-11-28, 2023-11-29, 2023-12-06, 2025-01-17
+### The contradiction
 
-Each is a discrete vendor disagreement (Polygon partial-session capture or
-Yahoo intraday-vs-CBOE-settlement). Most cluster around Thanksgiving 2023,
-suggesting a CBOE feed disruption that week. Strategy-impact analysis below
-still applies — these are point-data quality issues, not systematic drift.
+`MIGRATION_D4_BACKTEST_TASK.md` (the execution wrapper) says:
 
-**Status:** Bar-equivalence gate fails on indices. SPY/TLT pass. Gate 2
-(SQLite vs Yahoo pre-2023) passes identically. Gate 3 not run — paused
-per instruction "DO NOT weaken any gate threshold to make a test pass".
+> Create `feature/migrate-backtest-to-polygon` off `main` (NOT off PR #34 — PR
+> #34 will likely be merged first; this stacks behind it conceptually, but
+> works against current main since backtest code is untouched by #34).
 
-**Run (2026-05-22, `scripts/gate1_gate2_equivalence.py`):**
+`BACKTEST_MIGRATION_PROPOSAL.md` §4.1 and §4.3 (the detailed playbook the task
+points to as the source of truth) says:
 
-| Ticker | Yahoo bars | Polygon bars | Bar diff | Max rel dev (Close) | Worst date |
-|---|---|---|---|---|---|
-| ^VIX | 811 | **832 (+21)** | 21 | 10.9% (after excl 2026-02-06) | 2025-08-01 |
-| ^VIX3M | 811 | 811 | 0 | **2.51%** | 2023-11-29 |
-| SPY | 811 | 811 | 0 | 5.7e-8 | OK |
-| TLT | 811 | 811 | 0 | 5.8e-5 | OK |
+> Use the **same `PolygonClient` from `shared/polygon_client.py`** (DO NOT
+> create a parallel client). … Any reviewer who sees `import requests` next
+> to a `polygon.io` URL string outside of `shared/polygon_client.py` should
+> reject the PR.
 
-**Three distinct issues:**
-
-### Issue A — 21 extra Polygon `^VIX` bars on US market holidays (structural)
-
-Every single one of the 21 "extra" Polygon bars falls on a US equity-market
-holiday where CBOE/Polygon publishes a VIX print but Yahoo's daily series
-omits the row. The dates (2023-06-19 onward) cover Juneteenth, July 4,
-Labor Day, Thanksgiving (early-close), MLK Day, Presidents Day, Memorial
-Day, and the 2025-01-09 Carter day of mourning.
-
-This is not a bug on either side — Yahoo follows NYSE's daily schedule;
-Polygon follows CBOE's computed-index schedule. The values look sensible
-(e.g. 2024-07-04: O 12.10 / C 12.26).
-
-**Strategy impact:** the backtester's main loop iterates the equity calendar
-(SPY trading days), not VIX bars, so these extra rows would normally just sit
-in the cache un-consumed. But the `±2 bars` Gate 1 tolerance was written
-assuming the calendars matched, which they don't.
-
-**Mitigation options:**
-1. Filter `^VIX`/`^VIX3M` Polygon results to NYSE trading days inside
-   `load_market_history` (deterministic; small ~3 LOC).
-2. Loosen Gate 1 bar-diff tolerance from ±2 to ±25 on indices, and document
-   that holiday bars are extra (not deleted). This *is* weakening a gate.
-
-Option 1 is preferred — it produces a strict match to the pre-migration
-behavior. Recommend implementing in Phase 8 before re-running Gate 1.
-
-### Issue B — Second `^VIX` vendor outlier on 2025-08-01 (10.9%)
-
-| Date | Yahoo Close | Polygon Close | Δ |
-|---|---|---|---|
-| 2025-08-01 | 20.38 | 18.15 | -10.9% |
-| 2026-02-06 | 20.94 | 17.76 | -12.8% (already allowlisted) |
-
-Same shape as the 2026-02-06 outlier already documented in Q1 / live
-migration: a single-day vendor-side disagreement. Recommend extending the
-allowlist to include `2025-08-01` and documenting both as pinned vendor
-discrepancies (CBOE settlement vs Yahoo intraday timestamp).
-
-### Issue C — `^VIX3M` 2023-11-29 — Polygon has a degenerate (compressed) bar
-
-| Source | Open | High | Low | Close |
-|---|---|---|---|---|
-| Yahoo | 15.11 | 15.60 | 15.08 | 15.51 |
-| Polygon | 15.11 | 15.12 | 15.08 | 15.12 |
-
-Polygon reports a 4-cent range on a day Yahoo shows a 52-cent range. Open
-and Low match across vendors; High and Close are truncated on Polygon —
-suggests Polygon truncated to a partial-session capture.
-
-This is a single-day data-quality issue, isolated. Polygon's I:VIX3M record
-is the wrong one (sanity check: the 11-30 Open=15.61 reconnects with Yahoo's
-11-29 Close=15.51 path, not Polygon's 15.12).
-
-**Strategy impact:** ^VIX3M only enters the strategy via the VIX/VIX3M
-contango ratio used in regime detection. On 2023-11-29 the Polygon value
-would yield VIX/VIX3M ≈ 12.63 / 15.12 = 0.835 (deep contango → BULL signal),
-while Yahoo's would yield 12.98 / 15.51 = 0.836 — basically identical
-ratio. Probably not strategy-changing, but the absolute number is wrong.
-
-Recommend: surface as a known Polygon data defect, optionally hardcode an
-override for 2023-11-29 from the SQLite bootstrap (which has the correct
-Yahoo number, since the bootstrap loaded through 2023-02-13 — actually no,
-bootstrap ends at 2023-02-13, so that's not an option).
-
-Better recommendation: file a Polygon data-quality ticket; in the meantime
-allowlist 2023-11-29 the same way 2026-02-06 is allowlisted (treat as a
-vendor data-quality stub, accept the ~2.5% one-day divergence).
-
----
-
-**Decision needed (Carlos):**
-
-1. **(Recommended) Fix Issue A in code** + allowlist 2025-08-01 (Issue B) +
-   allowlist 2023-11-29 (Issue C). Re-run Gate 1. If it passes, continue
-   Phase 8.
-2. Accept the divergences as documented vendor differences and loosen Gate 1
-   indices thresholds (max rel 0.001 → ~0.03, bar diff ±2 → ±25). I do not
-   recommend this — it bends the gate to fit the data.
-3. Reject the migration as-is and either negotiate a different indices data
-   source or keep the Yahoo curl path for indices only.
-
-**Until decision:** D4 is paused at Phase 8. No push, no PR. SQLite bootstrap
-(Phase 6) and `load_market_history` (Phase 7) commits remain on
-`feature/migrate-backtest-to-polygon` and are individually safe.
-
----
-
-## Q5 — Gate 3 strategy drift from Q1 div-adjust fix (RESOLVED)
-
-**RESOLUTION (2026-05-23, Carlos):** Accepted. The Polygon split-only path
-is the correct semantics for an options-trading system (Q1 resolution) and
-its propagation into the backtester is the latent-bug fix landing in
-historical results. Gate 3 thresholds were implicitly written assuming
-bit-for-bit backward compatibility with the previous adj-close behavior;
-that assumption is overridden by Q1. Re-baselining of MASTERPLAN /
-leaderboard / champion numbers against the corrected backtester is a
-post-migration follow-up — NOT a blocker for this PR.
-
-Migration continues: Phase 9 script/experiment migration + Phase 10 cleanup.
-Gate 3 artifacts (`data/gate3_baseline_yahoo.csv`,
-`data/gate3_baseline_polygon.csv`) and the `scripts/gate3_champion_equity.py`
-harness remain in the tree so the re-baseline workstream can re-use them.
-
----
-
-## Q5 (original) — Gate 3 FAIL (Q1 dividend-adjustment propagates into backtest)
-
-**Status:** Strategy-equivalence gate FAILS at all three thresholds. The
-backtester swap on this branch produces materially different equity curves
-than the pre-migration Yahoo path on the EXP-400 champion config over
-2024-01-01..2025-12-31. Per the task spec, Gate 3 is the **no-fly zone** —
-"If Gate 3 fails... STOP and document the divergence... Do not push."
-
-**Gate 3 run (2026-05-23, `scripts/gate3_champion_equity.py`):**
-
-| Metric | Yahoo arm | Polygon arm | Δ | Threshold | Pass? |
-|---|---|---|---|---|---|
-| Trades | 338 | 364 | +7.7% | ±5% | **FAIL** |
-| Total PnL | $13,230 | $7,064 | -46.6% | ±2% | **FAIL** |
-| Equity correlation | — | — | **0.648** | ≥0.99 | **FAIL** |
-
-Equity curves persisted to `data/gate3_baseline_yahoo.csv` and
-`data/gate3_baseline_polygon.csv` for review.
-
-### Root cause: Q1 dividend-adjustment behavior change → strike selection drift
-
-The pre-migration backtester pulls SPY prices via `_yf_history_safe`, which
-reads Yahoo's `adjclose` field (split **and** dividend back-adjusted —
-`backtest/backtester.py::_yf_chart_to_df` line 83). The post-migration
-backtester reads Polygon's adjusted aggregate (split-only). On SPY over the
-test window this is a ~0.5% constant offset (documented in Q1).
-
-Q1 anticipated that **ratios** (price/MA200, RSI) would be unchanged because
-numerator and denominator shift by the same factor — and that's true for
-the regime detector. But strikes are picked from **absolute** price:
+### Verified state (2026-05-22)
 
 ```
-strike_target = current_price * (1 - otm_pct)   # bull put short
+$ git ls-tree main -- shared/polygon_client.py shared/data_cache.py shared/exceptions.py
+100644 blob a5f6520…  shared/data_cache.py    (yfinance-backed — pre-migration)
+100644 blob 166965…   shared/exceptions.py
+                       shared/polygon_client.py  ←  ABSENT on main
 ```
 
-Polygon's split-only spot is ~0.5% lower than Yahoo's div-adjusted spot
-during the back-test window, so the backtester selects slightly different
-strike contracts on each entry. Different OCC contract → different
-historical IronVault premium → different PnL → drift compounds across 338+
-trades into a 46.6% PnL gap.
+`shared/polygon_client.py` exists only on `feature/migrate-yfinance-to-polygon`
+(commit `2d75151 feat(data): migrate DataCache from yfinance to Polygon (preserve interface)`),
+which is the live-path PR #34 branch. PR #34 is **not yet merged**.
 
-**Note: this is not a bug introduced by the migration.** The Polygon path
-matches live trading reality (option strikes are not dividend-adjusted, so
-the spot price the strategy "sees" today is split-only). The pre-migration
-backtester was using a back-adjusted historical price that never matched
-what a live trader would have observed. Q1's resolution stated exactly this:
+### Why this blocks Phase 7
 
-> "Polygon's splits-only adjustment is the more correct semantics for an
-> options-trading system — option strikes are not dividend-adjusted, so
-> historical MAs/RSI on splits-only series compare like-for-like to live
-> strike levels. The previous yfinance behavior was a latent bug that this
-> migration silently fixes."
+Phase 7 builds `backtest/market_history.py` whose public surface (§4.1)
+delegates the HTTP call to `PolygonClient.aggregates(...)`. With the file
+absent on main, none of the following are runnable on a branch cut from main:
 
-So Gate 3's failure is a measurement of the latent bug being fixed, not of
-new corruption being introduced. **But Gate 3 doesn't distinguish between
-those two cases** — it just measures backwards-compatibility against the
-previous (buggy) code. The migration intentionally breaks that
-backwards-compatibility.
+- `from shared.polygon_client import PolygonClient` → ImportError
+- `tests/test_market_history.py` mocked HTTP fixtures (the test mocks
+  `PolygonClient.aggregates`, not raw `requests.get`)
+- Gate 1 (bar equivalence on Polygon era) — the Polygon arm has no client
+- Gate 3 (champion equity curve correlation) — same blocker, plus the
+  yfinance baseline arm requires Yahoo's curl path to still work at runtime
+  (LibreSSL/cookie-jar fragility; no fallback if Yahoo has changed since
+  last successful pull)
 
-### What this means for production results
+### Options I considered and rejected
 
-Every leaderboard entry and MASTERPLAN champion recorded against the
-pre-migration backtester is built on adj-close prices that don't match live
-strike selection. Going forward, the same configs will produce ~50% lower
-PnL on the corrected (Polygon) path. The strategy itself is not changed,
-but the historical claims about its edge are revised downward.
+1. **Branch off `feature/migrate-yfinance-to-polygon` instead** — gives me
+   `PolygonClient` but directly contradicts the task's explicit branch-base
+   instruction. Also entangles the backtest PR's diff with whatever Phases
+   2-5 of the live migration finally end up looking like (Q2 still
+   unresolved; Phase 2 BLOCKED on the earnings endpoint).
+2. **Create a parallel client in `backtest/market_history.py`** — explicitly
+   forbidden by §4.3. Would be a reviewer auto-reject.
+3. **Vendor a copy of `shared/polygon_client.py` from the other branch into
+   this branch** — same architectural smell as #2 (two clients in tree
+   until PR #34 merges; merge would then need manual conflict resolution).
+4. **Wait for PR #34 to merge, then start** — externally gated; not
+   actionable by me right now.
 
-### Decision needed (Carlos)
+### What I need from Carlos / Charles
 
-1. **Accept Gate 3 failure as the natural consequence of the Q1 fix** and
-   merge. All MASTERPLAN/leaderboard numbers will need to be re-baselined
-   against the corrected backtester. No code change.
+Choose one and confirm:
 
-2. **Reject this migration** and keep the backtester on yfinance. The live
-   path stays on Polygon (Q1 already accepted), the backtest path stays on
-   the buggy adj-close. Live/backtest divergence is permanent.
+- **(A)** Merge PR #34 first; I rebase off the new main and proceed.
+- **(B)** Approve branching off `feature/migrate-yfinance-to-polygon` (the
+  PR #34 branch) — `feature/migrate-backtest-to-polygon` becomes a stacked
+  PR that auto-resolves to a clean diff once #34 lands on main.
+- **(C)** Approve a single-file vendoring of `shared/polygon_client.py`
+  into this branch with the understanding that the merge will collapse it
+  against #34's version.
+- **(D)** Some other path I'm missing.
 
-3. **Compensate: feed Polygon's split-only series through a div-adjustment
-   filter** before handing to the backtester so historical prices match the
-   old adj-close behavior. Re-introduces a dividend-history dependency on
-   the backtest path. Not recommended — re-creates the original bug.
+I lean **(B)** — it's the closest to the proposal's stated intent
+("stacks behind it conceptually"), keeps the backtest PR's diff
+self-contained to backtest/* and scripts/* files, and avoids dual-client
+smell. The cost is the dependency on #34 landing first; the benefit is
+that no code on this branch will be wasted regardless of the order things
+land.
 
-**Recommendation:** Option 1. The Polygon path is correct; Gate 3's
-threshold was implicitly assuming the migration preserved the latent bug.
-The right follow-up is a one-time MASTERPLAN re-baseline rather than
-holding the migration hostage to legacy adj-close behavior.
+### Pre-flight concern on Gate 3 (independent of Q5)
 
-**Until decision:** D4 stays paused at Phase 9. Phase 8 backtester swap is
-committed (commit 24c93a5). Scripts/experiments in Phase 9 are not yet
-migrated. Gate 4 not run. **Per task spec, no push and no PR while a gate
-is failing.**
+Gate 3 requires running the EXP-400 champion config end-to-end TWICE
+(once on main with yfinance, once on this branch with Polygon) over
+2024-01-01 → 2025-12-31, then asserting daily equity-curve correlation
+≥ 0.99. The yfinance arm depends on Yahoo's `query1.finance.yahoo.com/v8/`
+endpoint still serving daily bars to the LibreSSL-on-macOS-Python-3.9
+cookie-jar workaround in `backtest/backtester.py:38-66`. If Yahoo has
+silently changed its cookie/consent flow since the last successful run,
+the baseline arm cannot be produced, and Gate 3 has no documented
+fallback. Suggest a Phase-6 sub-step: run a single-bar Yahoo fetch
+under the existing helper before committing to a multi-hour bake-off,
+so we discover this failure mode at minute 5 instead of hour 4.
 
+— D4 executor session, paused awaiting decision on (A)/(B)/(C)/(D).
