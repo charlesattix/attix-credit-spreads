@@ -26,6 +26,7 @@ COPY shared/     ./shared/
 COPY alerts/     ./alerts/
 COPY backtest/   ./backtest/
 COPY strategy/   ./strategy/
+COPY strategies/ ./strategies/
 COPY tracker/    ./tracker/
 COPY configs/    ./configs/
 COPY scripts/    ./scripts/
@@ -44,6 +45,10 @@ except ImportError:
 from alpaca.data.historical import StockHistoricalDataClient
 from scheduler.main import build_scheduler
 from execution.execution_engine import ExecutionEngine
+from execution.position_monitor import PositionMonitor
+from strategies.base import MarketSnapshot, PositionAction
+from strategies.credit_spread import CreditSpreadStrategy
+from shared.strategy_factory import build_strategy
 print('All imports OK')
 "
 
