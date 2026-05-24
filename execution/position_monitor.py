@@ -35,10 +35,18 @@ except ImportError:                        # pragma: no cover — Python < 3.9
 
 from shared.database import close_trade, get_open_leg_symbols, get_trades, upsert_trade, init_db
 from shared.strategy_adapter import trade_dict_to_position
-from shared.telegram_alerts import notify_api_failure
+from shared.telegram_alerts import notify_api_failure as _notify_api_failure_raw
 from strategies.base import MarketSnapshot, PositionAction
 
 logger = logging.getLogger(__name__)
+
+
+def notify_api_failure(**kwargs):
+    """Wrap notify_api_failure so a Telegram error never kills the scan loop."""
+    try:
+        _notify_api_failure_raw(**kwargs)
+    except Exception as _alert_err:
+        logger.warning("notify_api_failure itself failed: %s", _alert_err)
 
 # Tier 1: how often to run pending resolution + activity check (seconds)
 _CHECK_INTERVAL_SECONDS = 60

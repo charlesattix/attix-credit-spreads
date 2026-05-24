@@ -19,6 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY --from=builder /install /usr/local
 COPY compass/    ./compass/
+COPY execution/  ./execution/
 COPY scheduler/  ./scheduler/
 COPY sentinel/   ./sentinel/
 COPY shared/     ./shared/
@@ -42,6 +43,7 @@ except ImportError:
     print('WARNING: yfinance not available — L3 fallback will be disabled')
 from alpaca.data.historical import StockHistoricalDataClient
 from scheduler.main import build_scheduler
+from execution.execution_engine import ExecutionEngine
 print('All imports OK')
 "
 

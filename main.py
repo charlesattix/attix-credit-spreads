@@ -161,7 +161,13 @@ class CreditSpreadSystem:
                 )
                 logger.info("AlpacaProvider initialized (paper=%s)", alpaca_cfg.get('paper', True))
             except Exception as e:
-                logger.warning("AlpacaProvider init failed — running in alert-only mode: %s", e)
+                logger.critical(
+                    "AlpacaProvider init FAILED — cannot start with alpaca.enabled=true: %s", e,
+                    exc_info=True,
+                )
+                raise RuntimeError(
+                    f"AlpacaProvider init failed (alpaca.enabled=true): {e}"
+                ) from e
 
         # ExecutionEngine (P0 Fix 1)
         from execution.execution_engine import ExecutionEngine
@@ -341,11 +347,14 @@ class CreditSpreadSystem:
                     all_opportunities.extend(opportunities)
                 except Exception as e:
                     logger.error(f"Error analyzing {ticker}: {e}", exc_info=True)
-                    from shared.telegram_alerts import notify_api_failure
-                    notify_api_failure(
-                        error_msg=str(e),
-                        context=f"scan_ticker ({ticker})",
-                    )
+                    try:
+                        from shared.telegram_alerts import notify_api_failure
+                        notify_api_failure(
+                            error_msg=str(e),
+                            context=f"scan_ticker ({ticker})",
+                        )
+                    except Exception as _alert_err:
+                        logger.warning("notify_api_failure itself failed: %s", _alert_err)
 
         if not all_opportunities:
             logger.info("No opportunities found")
@@ -1194,6 +1203,7 @@ Examples:
 
             # P0 Fix 2: Start PositionMonitor as background daemon thread
             position_monitor = None
+            alpaca_enabled = system.config.get('alpaca', {}).get('enabled', False)
             if system.alpaca_provider:
                 position_monitor = PositionMonitor(
                     alpaca_provider=system.alpaca_provider,
@@ -1209,8 +1219,13 @@ Examples:
                 )
                 monitor_thread.start()
                 logger.info("PositionMonitor started as background thread")
+            elif alpaca_enabled:
+                raise RuntimeError(
+                    "PositionMonitor cannot start: alpaca.enabled=true but AlpacaProvider is None. "
+                    "Positions would be completely unmonitored. Fix AlpacaProvider init first."
+                )
             else:
-                logger.info("PositionMonitor skipped — no AlpacaProvider configured")
+                logger.info("PositionMonitor skipped — alpaca not enabled in config")
 
             # Let SIGTERM/SIGINT stop cleanly
             def _stop_scheduler(signum, frame):

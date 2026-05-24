@@ -387,7 +387,19 @@ class ExecutionEngine:
                 "client_order_id": client_id,
                 "message": f"market closed; next_open={next_open}",
             }
-        # is_open=None means clock check failed — fail open (don't block)
+        # is_open=None means clock check failed — fail CLOSED (block orders for safety)
+        if is_open is None:
+            logger.critical(
+                "ExecutionEngine: clock check returned None — cannot verify market hours. "
+                "Blocking order for %s %s (client_id=%s) for safety.",
+                ticker, spread_type, client_id,
+            )
+            self._mark_pending_failed(client_id, "clock_check_failed: is_open=None")
+            return {
+                "status": "clock_check_failed",
+                "client_order_id": client_id,
+                "message": "clock check failed — blocking order for safety",
+            }
 
         # Drawdown circuit breaker: block new entries if equity drops below threshold
         cb_reason = self._check_drawdown_cb()
@@ -581,19 +593,42 @@ class ExecutionEngine:
         if call_result.get("status") != "submitted":
             # Put wing is live — attempt to cancel it to avoid a naked position
             put_order_id = put_result.get("order_id")
-            logger.error(
-                "ExecutionEngine: call wing failed for IC %s — attempting to cancel put wing order_id=%s. call_result=%s",
+            logger.critical(
+                "ExecutionEngine: CRITICAL — call wing failed for IC %s "
+                "(put_order_id=%s, call_result=%s). Cancelling put wing to prevent naked position.",
                 client_id, put_order_id, call_result,
             )
+            try:
+                from shared.telegram_alerts import notify_api_failure
+                notify_api_failure(
+                    error_msg=(
+                        f"Iron condor call wing FAILED — cancelling put wing to prevent naked position "
+                        f"(put_order_id={put_order_id}, client_id={client_id})"
+                    ),
+                    context="iron_condor_partial_fill",
+                )
+            except Exception as alert_err:
+                logger.error("ExecutionEngine: Telegram CRITICAL alert failed: %s", alert_err)
             if put_order_id:
-                try:
-                    self.alpaca.cancel_order(put_order_id)
-                    logger.info("ExecutionEngine: put wing cancel requested for order_id=%s", put_order_id)
-                except Exception as cancel_err:
-                    logger.error(
-                        "ExecutionEngine: CRITICAL — put wing cancel FAILED for order_id=%s: %s. Manual intervention required.",
-                        put_order_id, cancel_err,
-                    )
+                cancel_succeeded = self._cancel_with_retry(
+                    put_order_id,
+                    context=f"iron_condor put-wing rollback ({ticker}/{client_id})",
+                )
+                if not cancel_succeeded:
+                    try:
+                        from shared.telegram_alerts import notify_api_failure
+                        notify_api_failure(
+                            error_msg=(
+                                f"EMERGENCY: iron condor put wing cancel FAILED after retries "
+                                f"(put_order_id={put_order_id}, client_id={client_id}). "
+                                f"NAKED POSITION RISK — manual intervention required."
+                            ),
+                            context="iron_condor_cancel_failed_EMERGENCY",
+                        )
+                    except Exception as alert_err:
+                        logger.error(
+                            "ExecutionEngine: EMERGENCY Telegram alert failed: %s", alert_err
+                        )
             return {"status": "partial_error", "put_result": put_result, "call_result": call_result}
 
         return {

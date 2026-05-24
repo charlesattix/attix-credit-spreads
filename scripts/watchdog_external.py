@@ -35,10 +35,7 @@ except ImportError:
 # Config
 # ---------------------------------------------------------------------------
 
-TELEGRAM_BOT_TOKEN = os.environ.get(
-    "TELEGRAM_BOT_TOKEN",
-    "8720867957:AAGrW-Qz0k50P9hRpyF9Bm-zZn_qsbTwIME",
-)
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "451136954")
 
 DASHBOARD_URL = os.environ.get(
@@ -84,6 +81,14 @@ logging.basicConfig(
     format="%(asctime)s  %(levelname)s  %(message)s",
 )
 logger = logging.getLogger("watchdog_external")
+
+if not TELEGRAM_BOT_TOKEN:
+    print(
+        "ERROR: TELEGRAM_BOT_TOKEN env var is not set. "
+        "Set it before running this script.",
+        file=sys.stderr,
+    )
+    sys.exit(1)
 
 
 # ---------------------------------------------------------------------------
