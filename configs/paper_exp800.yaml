@@ -48,6 +48,7 @@ tickers:
 strategy:
   target_dte: 15
   min_dte: 15
+  max_dte: 25
 
   direction: both             # regime selects bull_put vs bear_call vs iron_condor
 
