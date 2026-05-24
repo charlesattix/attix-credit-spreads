@@ -1,30 +1,29 @@
-"""Selective per-ticker regime gating.
+"""Regime gating for the live trading pipeline.
 
-EXP-3303b — Per-Stream Selective Regime Gate. Skips new entries for
-SPX-sensitive tickers (SPY, QQQ) during regime transitions while keeping
-non-sensitive tickers (sector ETFs like XLF, XLI, GLD, SLV) running at
-full size.
+Two independent gates coexist:
 
-Instruction-file semantics described a 50% size multiplier; this paper
-deployment implements a *skip* (hard 0% multiplier) instead — see the PR
-for rationale. The skip is more conservative than the half-size variant
-and avoids touching ``AlertPositionSizer`` (which would risk regression
-across the other 6 active paper accounts).
+1. **Per-ticker selective gate** (``should_gate_for_regime``) — EXP-3303b
+   skips SPX-sensitive tickers during regime transitions.
 
-Usage:
-    from shared.regime_gate import should_gate_for_regime
-    skip, reason = should_gate_for_regime(regime, ticker, config)
-    if skip:
-        logger.info("Regime gate: %s", reason)
-        return []
+2. **Composite-stress gate** (``RegimeGate``) — wires the live composite-
+   stress signal into the SPX stream sizer.  Callers ask::
+
+       gate = RegimeGate.from_env()
+       if gate.should_gate_spx_streams():
+           # scale down
 """
-
 from __future__ import annotations
 
 import logging
+import os
+from dataclasses import dataclass
 from typing import Iterable, Optional, Tuple
 
 logger = logging.getLogger(__name__)
+
+# =====================================================================
+# 1. Per-ticker selective regime gate (used by main.py scan loop)
+# =====================================================================
 
 DEFAULT_GATED_REGIMES = ("transition", "high_stress")
 DEFAULT_SENSITIVE_TICKERS = ("SPY", "QQQ")
@@ -43,25 +42,8 @@ def should_gate_for_regime(
     Gating triggers when ALL of:
       1. The gate is enabled (via ``config.risk.regime_gate.enabled`` or the
          explicit ``enabled`` keyword).
-      2. ``regime`` is one of the configured gated regimes
-         (default: ``transition``, ``high_stress``).
-      3. ``ticker`` is in the configured sensitive set
-         (default: ``SPY``, ``QQQ``).
-
-    The keyword overrides (``gated_regimes``, ``sensitive_tickers``,
-    ``enabled``) are primarily for tests; in production the values come from
-    the YAML config.
-
-    Args:
-        regime: Detected combo-regime label (e.g. ``"bull"``, ``"transition"``).
-        ticker: Underlying ticker symbol (case-insensitive).
-        config: Application config dict.  Reads ``risk.regime_gate.*``.
-        gated_regimes: Override for regimes that trigger the gate.
-        sensitive_tickers: Override for tickers that get gated.
-        enabled: Override for the enabled flag.
-
-    Returns:
-        ``(True, reason)`` to skip the ticker, otherwise ``(False, "")``.
+      2. ``regime`` is one of the configured gated regimes.
+      3. ``ticker`` is in the configured sensitive set.
     """
     cfg = (config or {}).get("risk", {}).get("regime_gate", {}) or {}
 
@@ -82,3 +64,48 @@ def should_gate_for_regime(
         f"Per-stream regime gate: {ticker.upper()} skipped — regime={regime!r} "
         f"is in {sorted(regimes)} AND ticker is SPX-sensitive"
     )
+
+
+# =====================================================================
+# 2. Composite-stress regime gate (used by sizer)
+# =====================================================================
+
+DEFAULT_THETA = 2.5
+
+
+def _theta_from_env(default: float = DEFAULT_THETA) -> float:
+    raw = os.environ.get("REGIME_GATE_THETA")
+    if not raw:
+        return default
+    try:
+        return float(raw)
+    except ValueError:
+        logger.warning(
+            "REGIME_GATE_THETA=%r is not a float; falling back to %.2f",
+            raw, default,
+        )
+        return default
+
+
+@dataclass
+class RegimeGate:
+    """Thin façade over ``compass.live_composite_stress``.
+
+    Holds the gate threshold so the sizer reads a single object rather
+    than reaching into the composite module directly.
+    """
+
+    theta: float = DEFAULT_THETA
+
+    @classmethod
+    def from_env(cls) -> "RegimeGate":
+        return cls(theta=_theta_from_env())
+
+    def current_stress(self) -> Optional[float]:
+        from compass.live_composite_stress import get_current_composite_stress
+        return get_current_composite_stress()
+
+    def should_gate_spx_streams(self) -> bool:
+        """Return True iff the SPX streams should be scaled down right now."""
+        from compass.live_composite_stress import should_gate_spx_streams as _should_gate
+        return _should_gate(theta=self.theta)

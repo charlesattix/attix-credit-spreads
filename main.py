@@ -324,6 +324,24 @@ class CreditSpreadSystem:
                 metrics.inc('scans_skipped_window')
                 return []
 
+        # EXP-3303b — Composite-stress regime gate. When the live
+        # composite-stress reading exceeds theta (default 2.5, per the
+        # backtest sweep), skip the scan for the day. Matches the
+        # NFP/window-gate pattern above. Opt-in via config so existing
+        # experiments do not change behaviour without explicit enable.
+        regime_gate_cfg = self.config.get('regime_gate', {}) or {}
+        if regime_gate_cfg.get('enabled', False):
+            from shared.regime_gate import RegimeGate
+            gate = RegimeGate.from_env()
+            if gate.should_gate_spx_streams():
+                logger.info(
+                    "Composite-stress regime gate active — composite=%s "
+                    "exceeds theta=%.2f; skipping scan",
+                    gate.current_stress(), gate.theta,
+                )
+                metrics.inc('scans_skipped_regime_gate')
+                return []
+
         all_opportunities = []
 
         # Build scan universe: static list or dynamic COMPASS selection

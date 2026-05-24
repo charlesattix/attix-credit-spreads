@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 
 from alerts.momentum_config import SCAN_HOURS, build_momentum_config
+from shared.data_cache import DataCache
 from shared.indicators import calculate_rsi
 from strategy import OptionsAnalyzer
 
@@ -119,8 +120,9 @@ class MomentumScanner:
 
     def _scan_ticker(self, ticker: str) -> List[Dict]:
         """Scan a single ticker for momentum triggers and build debit spreads."""
-        # Fetch price data (Polygon-backed DataCache; required)
-        price_data = self._data_cache.get_history(ticker, period="1y")
+        # Fetch price data (Polygon via DataCache; no yfinance fallback)
+        cache = self._data_cache or DataCache()
+        price_data = cache.get_history(ticker, period="1y")
 
         if price_data is None or (hasattr(price_data, "empty") and price_data.empty):
             logger.warning(f"No price data for {ticker}")
