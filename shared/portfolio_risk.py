@@ -237,7 +237,7 @@ class PortfolioRiskMonitor:
         except Exception:
             total_positions = -1  # unknown
 
-        accounts = {e['id']: e.get('env_file') for e in get_manager().active() if e.get('env_file')}
+        accounts = {e['id']: e.get('env_file') for e in get_manager().live() if e.get('env_file')}
         msg = (
             f"HARD_STOP TRIGGERED: would flatten {total_positions} option "
             f"position(s) across {len(accounts)} accounts. "
@@ -268,7 +268,7 @@ class PortfolioRiskMonitor:
         """Fetch equity from each Alpaca account.  Returns {exp_id: equity}."""
         from alpaca.trading.client import TradingClient
 
-        accounts = {e['id']: e.get('env_file') for e in get_manager().active() if e.get('env_file')}
+        accounts = {e['id']: e.get('env_file') for e in get_manager().live() if e.get('env_file')}
         results: Dict[str, float] = {}
         for exp_id, env_file in accounts.items():
             env_path = self._root / env_file
@@ -395,7 +395,7 @@ class PortfolioRiskMonitor:
         """Approximate total open option positions across all accounts."""
         from alpaca.trading.client import TradingClient
 
-        accounts = {e['id']: e.get('env_file') for e in get_manager().active() if e.get('env_file')}
+        accounts = {e['id']: e.get('env_file') for e in get_manager().live() if e.get('env_file')}
         total = 0
         for exp_id, env_file in accounts.items():
             env_path = self._root / env_file

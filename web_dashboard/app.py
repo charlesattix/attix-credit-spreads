@@ -388,6 +388,7 @@ async def health():
 async def list_experiments(_key: str = Depends(require_api_key)):
     """All experiments from registry, augmented with live Alpaca equity."""
     mgr = get_manager()
+    mgr.reload()
     # Deep-copy so we don't mutate the cached registry dicts
     exps = [dict(e) for e in get_all_experiments()]
 
