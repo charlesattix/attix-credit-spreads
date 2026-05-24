@@ -2,7 +2,7 @@
 """
 portfolio_status.py — PilotAI Paper Trading Dashboard
 
-Reads experiments.yaml registry, checks tmux session state, pings each
+Reads experiments/registry.json, checks tmux session state, pings each
 Alpaca paper account, and prints a live status dashboard.
 
 Usage:
@@ -289,7 +289,7 @@ def main() -> int:
     # Filter
     if args.experiment:
         if args.experiment not in experiments:
-            print(f"ERROR: '{args.experiment}' not in experiments.yaml.")
+            print(f"ERROR: '{args.experiment}' not in registry.")
             print(f"  Known: {', '.join(experiments)}")
             return 1
         experiments = {args.experiment: experiments[args.experiment]}

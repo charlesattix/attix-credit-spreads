@@ -14,7 +14,7 @@ Actions:
   - Outputs JSON status to stdout for cron consumption
 
 Usage:
-    python scripts/watchdog.py --config experiments.yaml
+    python scripts/watchdog.py
 """
 
 from __future__ import annotations
@@ -30,7 +30,9 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-import yaml
+import sys as _sys
+_sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from experiments.manager import get_manager  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -212,20 +214,13 @@ def send_telegram_alert(message: str) -> bool:
 # ---------------------------------------------------------------------------
 
 
-def load_experiments(config_path: str) -> Dict[str, Any]:
-    """Load experiments.yaml and return the experiments dict."""
-    with open(config_path) as f:
-        data = yaml.safe_load(f)
-    return data.get("experiments", {})
-
-
-def run_watchdog(config_path: str, project_dir: Optional[str] = None) -> Dict[str, Any]:
+def run_watchdog(project_dir: Optional[str] = None) -> Dict[str, Any]:
     """Run all watchdog checks. Returns JSON-serializable status dict."""
 
     if project_dir is None:
-        project_dir = str(Path(config_path).resolve().parent)
+        project_dir = str(Path(__file__).resolve().parent.parent)
 
-    experiments = load_experiments(config_path)
+    live_experiments = get_manager().live()
     data_dir = os.path.join(project_dir, "data")
     now = _now_et()
     market_open = is_market_hours(now)
@@ -238,13 +233,9 @@ def run_watchdog(config_path: str, project_dir: Optional[str] = None) -> Dict[st
         "restarts": [],
     }
 
-    for exp_id, exp in experiments.items():
+    for exp in live_experiments:
+        exp_id = exp.get("id", "unknown")
         status = exp.get("status", "unknown")
-
-        # Only monitor active experiments
-        if status != "active":
-            results["experiments"][exp_id] = {"status": status, "monitored": False}
-            continue
 
         exp_result: Dict[str, Any] = {
             "status": status,
@@ -253,7 +244,7 @@ def run_watchdog(config_path: str, project_dir: Optional[str] = None) -> Dict[st
 
         session_name = exp.get("tmux_session")
         env_file = exp.get("env_file", "")
-        config_file = exp.get("config_file", "")
+        config_file = exp.get("config_path", "")
         db_path = exp.get("db_path", "")
 
         # Resolve relative paths
@@ -352,8 +343,7 @@ def run_watchdog(config_path: str, project_dir: Optional[str] = None) -> Dict[st
 
 def main():
     parser = argparse.ArgumentParser(description="PilotAI watchdog — auto-restart & health checks")
-    parser.add_argument("--config", default="experiments.yaml", help="Path to experiments.yaml")
-    parser.add_argument("--project-dir", default=None, help="Project root (default: parent of config)")
+    parser.add_argument("--project-dir", default=None, help="Project root (default: parent of scripts/)")
     parser.add_argument("--verbose", "-v", action="store_true")
     args = parser.parse_args()
 
@@ -363,7 +353,7 @@ def main():
     )
 
     try:
-        results = run_watchdog(args.config, args.project_dir)
+        results = run_watchdog(args.project_dir)
         print(json.dumps(results, indent=2, default=str))
     except Exception as exc:
         # The watchdog itself must never crash

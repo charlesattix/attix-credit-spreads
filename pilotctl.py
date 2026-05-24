@@ -13,14 +13,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-import yaml
-
-EXPERIMENTS_FILE = Path(__file__).parent / "experiments.yaml"
-
-
-def load_experiments() -> dict:
-    with open(EXPERIMENTS_FILE) as f:
-        return yaml.safe_load(f)
+from experiments.manager import get_manager
 
 
 def _resolve_targets(experiments: dict, target: str) -> list:
@@ -65,13 +58,13 @@ def cmd_start(experiments: dict, target: str) -> None:
         if _tmux_session_exists(session):
             print(f"[{name}] already running in tmux session '{session}'")
             continue
-        if not _run_preflight(cfg["config_file"]):
+        if not _run_preflight(cfg.get("config_path", "")):
             print(f"[{name}] preflight FAILED — not starting")
             continue
         # SECURITY AUDIT #5: use list args to prevent shell injection via
         # config_file/env_file values containing shell metacharacters.
-        config_path = Path(cfg["config_file"])
-        env_path    = Path(cfg["env_file"])
+        config_path = Path(cfg.get("config_path", ""))
+        env_path    = Path(cfg.get("env_file", ""))
         if not config_path.exists():
             print(f"[{name}] config file not found: {config_path}")
             continue
@@ -136,7 +129,7 @@ def main():
     command = sys.argv[1]
     target = sys.argv[2] if len(sys.argv) > 2 else "all"
 
-    experiments = load_experiments()
+    experiments = get_manager().all()
 
     commands = {
         "start": cmd_start,
