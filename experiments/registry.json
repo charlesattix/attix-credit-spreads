@@ -1,6 +1,6 @@
 {
     "schema_version": "3.0",
-    "last_updated": "2026-05-21",
+    "last_updated": "2026-05-24",
     "experiments": {
         "EXP-400": {
             "id": "EXP-400",
@@ -744,7 +744,7 @@
             "name": "NFP Entry Filter",
             "created_by": "maximus",
             "created_date": "2026-05-21",
-            "status": "configuring",
+            "status": "active",
             "ticker": "SPY",
             "account_id": "PA3QDEOF3VW7",
             "live_since": null,
@@ -758,8 +758,8 @@
             "db_path": "data/pilotai_exp3311.db",
             "strategy_type": "credit_spread_nfp_gated",
             "created_at": "2026-05-21T18:56:25.729115+00:00",
-            "updated_at": "2026-05-21T18:56:25.729115+00:00",
-            "last_started_at": null,
+            "updated_at": "2026-05-24T15:03:43.452592+00:00",
+            "last_started_at": "2026-05-24T15:03:43.452614+00:00",
             "tmux_session": "exp3311",
             "backtest_expectations": {
                 "avg_return": 84.8,
@@ -768,14 +768,15 @@
             },
             "backtest_baseline": {
                 "mc_worst_dd_pct": 5.89
-            }
+            },
+            "status_reason": "Railway deployment \u2014 activating for paper trading"
         },
         "EXP-3309": {
             "id": "EXP-3309",
             "name": "Pre-Close Execution Window",
             "created_by": "maximus",
             "created_date": "2026-05-21",
-            "status": "configuring",
+            "status": "active",
             "ticker": "SPY",
             "account_id": "PA33QC3WE4TO",
             "live_since": null,
@@ -789,14 +790,15 @@
             "db_path": "data/pilotai_exp3309.db",
             "strategy_type": "credit_spread_preclose",
             "created_at": "2026-05-21T18:56:25.729115+00:00",
-            "updated_at": "2026-05-21T18:56:25.729115+00:00",
-            "last_started_at": null,
+            "updated_at": "2026-05-24T15:03:43.453395+00:00",
+            "last_started_at": "2026-05-24T15:03:43.453399+00:00",
             "tmux_session": "exp3309",
             "backtest_expectations": {
                 "avg_return": 265.7,
                 "max_dd": null,
                 "robust": null
-            }
+            },
+            "status_reason": "Railway deployment \u2014 activating for paper trading"
         },
         "EXP-3303b": {
             "id": "EXP-3303b",
