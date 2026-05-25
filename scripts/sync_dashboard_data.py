@@ -51,6 +51,7 @@ ALPACA_PAPER_URL   = "https://paper-api.alpaca.markets"
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from experiments.manager import get_manager  # noqa: E402
+from experiments.registry import LIVE_STATUSES  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -496,7 +497,7 @@ def build_export(report_date: str) -> dict:
 
     live_exps = [
         exp for exp in registry["experiments"].values()
-        if exp.get("status") in ("active", "paper_trading")
+        if exp.get("status") in LIVE_STATUSES
     ]
     live_exps.sort(key=lambda e: e["id"])
 
