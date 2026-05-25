@@ -483,8 +483,11 @@ def main() -> None:
         mgr.reload()
         live_exps = {e["id"]: e for e in mgr.live()}
         state = load_state()
-        enrolled = set(state.get("experiments", {}).keys())
-        missing = set(live_exps.keys()) - enrolled
+        enrolled = state.get("experiments", {})
+        # Find experiments that are either missing entirely or enrolled but
+        # not in 'active' status (e.g. stuck in 'configuring' from partial setup).
+        missing = {eid for eid in live_exps if eid not in enrolled
+                   or enrolled.get(eid, {}).get("status") != "active"}
         if missing:
             from datetime import datetime, timezone
             _now = datetime.now(timezone.utc).isoformat(timespec="seconds")

@@ -123,7 +123,7 @@
             "halted": false
         },
         "EXP-3311": {
-            "status": "configuring",
+            "status": "active",
             "paper_config": "configs/paper_exp3311.yaml",
             "config_fingerprint": null,
             "account_id": "PA3QDEOF3VW7",
@@ -142,7 +142,7 @@
             "halted": false
         },
         "EXP-3309": {
-            "status": "configuring",
+            "status": "active",
             "paper_config": "configs/paper_exp3309.yaml",
             "config_fingerprint": null,
             "account_id": "PA33QC3WE4TO",
@@ -161,7 +161,7 @@
             "halted": false
         },
         "EXP-3303b": {
-            "status": "configuring",
+            "status": "active",
             "paper_config": "configs/paper_exp3303b.yaml",
             "config_fingerprint": null,
             "account_id": "PA3ZLF9F1QNI",
