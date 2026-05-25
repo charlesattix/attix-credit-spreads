@@ -251,21 +251,26 @@ def _check_alpaca_health(experiment_id: str) -> None:
     Uses raw requests to avoid the full SDK initialisation overhead.
     Must complete within ~500 ms (timeout=3 s but usually <200 ms on LAN).
     """
-    api_key = (
-        os.environ.get("ALPACA_API_KEY")
-        or os.environ.get("APCA_API_KEY_ID")
-    )
-    api_secret = (
-        os.environ.get("ALPACA_API_SECRET")
-        or os.environ.get("APCA_API_SECRET_KEY")
-    )
+    suffix = experiment_id.replace("-", "").upper()  # e.g. 'EXP-400' -> 'EXP400'
+    key_var = f"ALPACA_API_KEY_{suffix}"
+    secret_var = f"ALPACA_API_SECRET_{suffix}"
+    api_key = os.environ.get(key_var)
+    api_secret = os.environ.get(secret_var)
 
     if not api_key or not api_secret:
-        logger.debug(
-            "SENTINEL: %s — Alpaca credentials not set, skipping health check",
-            experiment_id,
+        missing = [v for v, val in ((key_var, api_key), (secret_var, api_secret)) if not val]
+        msg = (
+            f"🛡️ SENTINEL — SCANNER BLOCKED\n"
+            f"🛑 <b>{experiment_id}</b> per-experiment Alpaca credentials not set.\n"
+            f"Missing env var(s): {', '.join(f'<code>{v}</code>' for v in missing)}\n"
+            f"Set the required variables and re-run the scanner."
         )
-        return
+        logger.critical(
+            "SENTINEL HALT: %s — missing Alpaca env var(s): %s. Aborting scan.",
+            experiment_id, ", ".join(missing),
+        )
+        _send_alert(msg)
+        sys.exit(1)
 
     paper_env = os.environ.get("ALPACA_PAPER", "true").lower()
     paper = paper_env not in ("false", "0", "no")
@@ -290,7 +295,7 @@ def _check_alpaca_health(experiment_id: str) -> None:
                 f"🛡️ SENTINEL — SCANNER BLOCKED\n"
                 f"🛑 <b>{experiment_id}</b> Alpaca API key is invalid (401).\n"
                 f"Endpoint: <code>GET {base_url}/v2/account</code>\n"
-                f"Check <code>ALPACA_API_KEY</code> / <code>ALPACA_API_SECRET</code>.\n"
+                f"Check <code>{key_var}</code> / <code>{secret_var}</code>.\n"
                 f"Fix credentials then re-run the scanner."
             )
             logger.critical(
