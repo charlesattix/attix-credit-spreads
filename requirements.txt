@@ -11,7 +11,7 @@ APScheduler==3.10.4
 # Trading scheduler dependencies
 pytz==2024.1
 colorlog>=6.8.0
-alpaca-py==0.28.0
+alpaca-py==0.38.0
 yfinance>=0.2.48
 
 # ML modules (cherry-picked from maximus/ensemble-ml)
