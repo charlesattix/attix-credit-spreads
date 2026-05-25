@@ -65,6 +65,7 @@ from .data import (
     load_pushed_data,
 )
 from experiments.manager import get_manager
+from experiments.registry import LIVE_STATUSES
 from .html import (
     render_dashboard,
     render_login_page,
@@ -366,7 +367,7 @@ async def health():
     try:
         mgr = get_manager()
         mgr.reload()
-        live_count = len(mgr.by_status("active", "paper_trading"))
+        live_count = len(mgr.by_status(*LIVE_STATUSES))
         return {
             "status":           "ok",
             "live_experiments": live_count,
@@ -429,7 +430,7 @@ async def experiment_trades(
     if not exp:
         raise HTTPException(status_code=404, detail=f"{exp_id} not found in registry")
     # SECURITY AUDIT #8: restrict access to paper_trading experiments only to prevent IDOR.
-    if exp.get("status") not in ("active", "paper_trading"):
+    if exp.get("status") not in LIVE_STATUSES:
         raise HTTPException(status_code=404, detail=f"{exp_id} not found in registry")
 
     trades = get_trades(exp, limit=limit)
@@ -463,7 +464,7 @@ async def experiment_positions(
     if not exp:
         raise HTTPException(status_code=404, detail=f"{exp_id} not found in registry")
     # SECURITY AUDIT #8: restrict access to paper_trading experiments only to prevent IDOR.
-    if exp.get("status") not in ("active", "paper_trading"):
+    if exp.get("status") not in LIVE_STATUSES:
         raise HTTPException(status_code=404, detail=f"{exp_id} not found in registry")
 
     source = "local_db"
@@ -802,7 +803,7 @@ async def _on_startup():
         try:
             mgr = get_manager()
             mgr.reload()
-            live = mgr.by_status("active", "paper_trading")
+            live = mgr.by_status(*LIVE_STATUSES)
             logger.info(f"  Live experiments: {[e['id'] for e in live]}")
         except Exception as e:
             logger.warning(f"  Could not load registry: {e}")

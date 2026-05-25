@@ -65,6 +65,35 @@ ET = pytz.timezone("America/New_York")
 _START_TIME = datetime.utcnow()
 
 
+# ── Live experiment discovery (registry-driven) ───────────────────────────────
+
+def live_experiment_jobs() -> list[tuple[str, str, str | None]]:
+    """Return (exp_id, config_path, env_file) for every live experiment.
+
+    Sourced from experiments/registry.json filtered to LIVE_STATUSES
+    (active, paused) — the single source of truth. Replaces the former
+    hardcoded list. Returns [] (so the scheduler still serves /health) if the
+    registry can't be read or an experiment is missing a config_path.
+    """
+    try:
+        from experiments.manager import get_manager
+        live = get_manager().live()
+    except Exception as exc:
+        LOG.error("Could not load live experiments from registry: %s", exc)
+        return []
+    jobs: list[tuple[str, str, str | None]] = []
+    for exp in sorted(live, key=lambda e: e.get("id", "")):
+        exp_id = exp.get("id")
+        config = exp.get("config_path")
+        if not exp_id or not config:
+            LOG.warning("Skipping live experiment with missing id/config_path: %r", exp)
+            continue
+        # env_file is optional: on Railway secrets come from env vars, and
+        # job_run_experiment tolerates a missing/None env file.
+        jobs.append((exp_id, config, exp.get("env_file")))
+    return jobs
+
+
 # ── APScheduler event listeners ──────────────────────────────────────────────
 
 def on_job_error(event) -> None:
@@ -217,16 +246,12 @@ def build_scheduler() -> BackgroundScheduler:
 
     # ── Per-experiment scanners: 09:25 ET Mon-Fri ───────────────────────────
     # Each runs main.py scheduler --config <config> [--env-file <env>] as subprocess.
-    _experiments = [
-        ("EXP-400",  "configs/paper_champion.yaml",  ".env.exp400"),
-        ("EXP-401",  "configs/paper_exp401.yaml",    ".env.exp401"),
-        ("EXP-503",  "configs/paper_exp503.yaml",    None),
-        ("EXP-600",  "configs/paper_exp600.yaml",    None),
-        ("EXP-800",  "configs/paper_exp800.yaml",    None),
-        ("EXP-1220", "configs/paper_exp1220.yaml",   None),
-        ("EXP-3309", "configs/paper_exp3309.yaml",   ".env.exp3309"),
-        ("EXP-3311", "configs/paper_exp3311.yaml",   ".env.exp3311"),
-    ]
+    # Driven entirely from experiments/registry.json (status in LIVE_STATUSES) —
+    # no hardcoded list. To add/remove an experiment from the schedule, change its
+    # registry status (e.g. via `python -m experiments.launch <EXP-ID>`).
+    _experiments = live_experiment_jobs()
+    LOG.info("Registering %d live experiment scanners: %s",
+             len(_experiments), [e[0] for e in _experiments])
     for exp_id, config, env_file in _experiments:
         job_id = f"exp_{exp_id.lower().replace('-', '_')}_scanner"
         scheduler.add_job(

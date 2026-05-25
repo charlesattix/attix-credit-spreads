@@ -24,6 +24,7 @@ from typing import Dict, List, Optional
 import yaml
 
 from experiments.manager import get_manager
+from experiments.registry import LIVE_STATUSES
 
 logger = logging.getLogger(__name__)
 
@@ -90,12 +91,12 @@ def get_live_experiments(registry: dict | None = None) -> list[dict]:
     if registry is None:
         exps = [
             e for e in get_manager().all().values()
-            if e.get("status") in ("active", "paper_trading")
+            if e.get("status") in LIVE_STATUSES
         ]
     else:
         exps = [
             e for e in registry["experiments"].values()
-            if e.get("status") in ("active", "paper_trading")
+            if e.get("status") in LIVE_STATUSES
         ]
     return sorted(exps, key=lambda e: e["id"])
 
