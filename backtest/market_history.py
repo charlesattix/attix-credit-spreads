@@ -30,11 +30,33 @@ from typing import Optional, Union
 
 import pandas as pd
 
-from shared.data_cache import _SYMBOL_MAP, _polygon_to_dataframe
+from shared.data_cache import _INDEX_TICKER_MAP
 from shared.exceptions import DataFetchError
 from shared.polygon_client import PolygonClient
 
 logger = logging.getLogger(__name__)
+
+
+def _polygon_to_dataframe(results: list) -> pd.DataFrame:
+    """Convert Polygon aggregate results to a yfinance-shaped DataFrame.
+
+    Output columns: Open, High, Low, Close, Volume.
+    Index: timezone-naive DatetimeIndex (date-only), sorted ascending.
+    """
+    if not results:
+        return pd.DataFrame(
+            columns=["Open", "High", "Low", "Close", "Volume"],
+            index=pd.DatetimeIndex([], name="Date"),
+        )
+
+    df = pd.DataFrame(results)
+    if "v" not in df.columns:
+        df["v"] = 0
+    df["Date"] = pd.to_datetime(df["t"], unit="ms", utc=True).dt.tz_convert(None).dt.normalize()
+    df = df.rename(columns={"o": "Open", "h": "High", "l": "Low", "c": "Close", "v": "Volume"})
+    df = df[["Date", "Open", "High", "Low", "Close", "Volume"]]
+    df = df.set_index("Date").sort_index()
+    return df
 
 # First date Polygon provides for I:VIX / I:VIX3M / I:SPX daily aggregates.
 # Strictly before this boundary we read from SQLite; on/after we read Polygon.
@@ -81,11 +103,11 @@ def _to_date(value: Union[str, datetime, date]) -> date:
 
 def _normalize(ticker: str) -> str:
     """Map yfinance-style symbols (``^VIX``) to Polygon canonical (``I:VIX``)."""
-    if ticker in _SYMBOL_MAP:
-        return _SYMBOL_MAP[ticker]
+    if ticker in _INDEX_TICKER_MAP:
+        return _INDEX_TICKER_MAP[ticker]
     upper = ticker.upper()
-    if upper in _SYMBOL_MAP:
-        return _SYMBOL_MAP[upper]
+    if upper in _INDEX_TICKER_MAP:
+        return _INDEX_TICKER_MAP[upper]
     return ticker
 
 
@@ -168,7 +190,7 @@ def load_market_history(
     already gate on ``.empty``). Raises ``DataFetchError`` on transport failure.
 
     Symbol normalization (``^VIX``→``I:VIX`` etc.) is applied via
-    ``shared.data_cache._SYMBOL_MAP``.
+    ``shared.data_cache._INDEX_TICKER_MAP``.
 
     For index tickers, rows strictly before 2023-02-14 are served from the
     ``historical_indices`` SQLite table (populated by
