@@ -368,9 +368,19 @@ async def health():
         mgr = get_manager()
         mgr.reload()
         live_count = len(mgr.by_status(*LIVE_STATUSES))
+        # Alpaca key discovery diagnostic
+        alpaca_diag = {}
+        try:
+            from web_dashboard.alpaca_live import discover_experiment_keys
+            keys = discover_experiment_keys()
+            alpaca_diag = {k: True for k in sorted(keys.keys())}
+        except Exception as ae:
+            alpaca_diag = {"error": str(ae)}
         return {
             "status":           "ok",
             "live_experiments": live_count,
+            "live_ids":         sorted([e["id"] for e in mgr.by_status(*LIVE_STATUSES)]),
+            "alpaca_keys_found": alpaca_diag,
             "registry_version": mgr._registry.get("schema_version"),
             "timestamp":        datetime.now(timezone.utc).isoformat(),
         }
