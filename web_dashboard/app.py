@@ -869,3 +869,31 @@ async def _on_startup():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run("web_dashboard.app:app", host="0.0.0.0", port=port, reload=False)
+
+
+# ---------------------------------------------------------------------------
+# Per-experiment trade sync (worker → dashboard)
+# ---------------------------------------------------------------------------
+
+EXPERIMENT_DATA_DIR = PUSHED_DATA_PATH.parent / "experiment_trades"
+
+
+@app.post("/api/v1/experiments/{exp_id}/sync-trades")
+async def sync_experiment_trades(
+    exp_id: str,
+    request: Request,
+    _key: str = Depends(require_api_key_only),
+):
+    """Accept trade data push from the worker for a single experiment."""
+    import json as _json
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=400, detail="Expected JSON object")
+
+    EXPERIMENT_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    norm = exp_id.upper().replace("-", "")
+    path = EXPERIMENT_DATA_DIR / f"{norm}.json"
+    body["synced_at"] = datetime.now(timezone.utc).isoformat()
+    path.write_text(_json.dumps(body, indent=2))
+    _cache.clear()
+    return {"status": "ok", "experiment": exp_id, "synced_at": body["synced_at"]}

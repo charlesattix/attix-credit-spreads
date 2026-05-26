@@ -204,6 +204,29 @@ def query_experiment(exp: dict, report_date: Optional[str] = None) -> dict:
     }
 
     if not db_path or not db_path.exists():
+        # Try synced trade data from worker push
+        try:
+            import json as _json
+            norm = exp_id.upper().replace("-", "")
+            synced_path = PROJECT_ROOT / "data" / "experiment_trades" / f"{norm}.json"
+            if synced_path.exists():
+                synced = _json.loads(synced_path.read_text())
+                trades = synced.get("trades", [])
+                closed = [t for t in trades if t.get("status") in ("closed_profit", "closed_loss", "closed_external", "expired")]
+                pnls = [float(t.get("pnl", 0) or 0) for t in closed]
+                base["total_closed"] = len(closed)
+                base["wins"] = sum(1 for p in pnls if p > 0)
+                base["losses"] = sum(1 for p in pnls if p <= 0)
+                base["total_pnl"] = sum(pnls)
+                base["win_rate"] = (base["wins"] / len(pnls) * 100) if pnls else 0.0
+                base["open_count"] = len(synced.get("open_trades", []))
+                base["open_trades"] = synced.get("open_trades", [])
+                base["recent_trades"] = trades[:10]
+                base["db_found"] = True
+                base["error"] = None
+                return base
+        except Exception:
+            pass
         base["error"] = "Database not found"
         return base
 

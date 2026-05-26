@@ -1217,6 +1217,33 @@ Examples:
                     _write_heartbeat()
                     emit_heartbeat(_exp_id, notes="scan complete")
 
+                # Sync trade data to dashboard (separate volume)
+                try:
+                    import requests as _req
+                    _dashboard_url = os.environ.get("RAILWAY_SERVICE_PILOTAI_CREDIT_SPREADS_URL", "")
+                    _api_key = os.environ.get("DASHBOARD_API_KEY", "")
+                    _db_path = args.db_path or os.environ.get("PILOTAI_DB_PATH", "")
+                    if _dashboard_url and _api_key and _db_path and os.path.exists(_db_path):
+                        _base = _dashboard_url if _dashboard_url.startswith("http") else f"https://{_dashboard_url}"
+                        import sqlite3 as _sql
+                        _conn = _sql.connect(f"file:{_db_path}?mode=ro", uri=True)
+                        _conn.row_factory = _sql.Row
+                        _trades = [dict(r) for r in _conn.execute(
+                            "SELECT * FROM trades ORDER BY entry_date DESC LIMIT 50"
+                        ).fetchall()]
+                        _open = [dict(r) for r in _conn.execute(
+                            "SELECT * FROM trades WHERE status = 'open'"
+                        ).fetchall()]
+                        _conn.close()
+                        _req.post(
+                            f"{_base.rstrip('/')}/api/v1/experiments/{_exp_id}/sync-trades",
+                            json={"trades": _trades, "open_trades": _open},
+                            headers={"X-API-Key": _api_key},
+                            timeout=5,
+                        )
+                except Exception:
+                    pass  # non-fatal
+
                 # Sentinel v3: push scan heartbeat to dashboard API so the
                 # API-based watchdog can check scan recency without filesystem access.
                 try:
