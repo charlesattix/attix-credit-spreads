@@ -1,463 +1,413 @@
 """
-sentinel/v2/watchdog.py — Sentinel v2 main watchdog process.
+sentinel/v2/watchdog.py — Sentinel v3: API-based watchdog.
 
-ARCHITECTURAL INVERSION:
-  v1: scanner starts → calls sentinel (sentinel is reactive, goes silent if scanner dies)
-  v2: watchdog starts → calls scanner (watchdog is proactive, always running)
+Monitors via HTTP API calls only — no filesystem reads, no shared volumes.
+Designed for Railway where each service runs in an isolated container.
+
+Three checks every 5 min during market hours (9:00-16:30 ET, Mon-Fri):
+  1. Alpaca heartbeat — direct GET /v2/account per active experiment
+  2. Scan recency   — dashboard heartbeat endpoint (worker pushes after each scan)
+  3. Trade recency  — dashboard trades endpoint; YELLOW >3 days, RED >5 days
 
 Entry point: python -m sentinel.v2.watchdog
-
-The watchdog owns the scan schedule. Scanners are subprocesses that the
-watchdog calls, monitors, and reports on. Sentinel never goes silent because
-the scanner dies — the watchdog is always running, always checking.
 """
 
 from __future__ import annotations
 
 import logging
 import os
-import sqlite3
-import subprocess
-import sys
-from dataclasses import dataclass
-from datetime import date, datetime, timedelta
-from pathlib import Path
+from datetime import datetime, timedelta, timezone
+from typing import Any
 from zoneinfo import ZoneInfo
 
+import requests as _requests
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import fastapi
 import uvicorn
 
-from sentinel.v2.dead_man_switch import push_heartbeat, push_failure
-from sentinel.v2.cadence_engine import check_all_active
-from sentinel.v2.scan_monitor import check_scan_execution
-from sentinel.v2.liveness import check_liveness
 from sentinel.alerting import Alert, Severity, send_alert
 
-LOG = logging.getLogger("sentinel.v2.watchdog")
+LOG = logging.getLogger("sentinel.v3.watchdog")
 ET = ZoneInfo("America/New_York")
-DATA_DIR = Path(os.environ.get("DATA_DIR", "data"))
-SENTINEL_DB_PATH = os.environ.get("SENTINEL_DB_PATH", "sentinel/db/sentinel.db")
+
+# ---------------------------------------------------------------------------
+# Config from env vars
+# ---------------------------------------------------------------------------
+
+_DASHBOARD_URL = os.environ.get("RAILWAY_SERVICE_PILOTAI_CREDIT_SPREADS_URL", "")
+_DASHBOARD_API_KEY = os.environ.get("DASHBOARD_API_KEY", "")
+_REQUEST_TIMEOUT = 10  # seconds per HTTP call
+
+# ---------------------------------------------------------------------------
+# In-memory state — check results stored here, served via /health
+# ---------------------------------------------------------------------------
+
+_check_results: dict[str, Any] = {
+    "alpaca_heartbeat": {"status": "pending", "experiments_checked": 0, "failures": []},
+    "scan_recency":     {"status": "pending", "stale_experiments": []},
+    "trade_recency":    {"status": "pending", "yellow": [], "red": []},
+}
+_last_check: datetime | None = None
 
 
-# ── Watchdog runs table (meta-monitoring) ─────────────────────────────────────
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 
-def _ensure_watchdog_table() -> None:
-    Path(SENTINEL_DB_PATH).parent.mkdir(parents=True, exist_ok=True)
-    with sqlite3.connect(SENTINEL_DB_PATH, timeout=10) as conn:
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS watchdog_runs (
-                id          INTEGER PRIMARY KEY AUTOINCREMENT,
-                run_time    TEXT    NOT NULL,
-                scan_slot   TEXT,
-                exp_id      TEXT,
-                outcome     TEXT    NOT NULL,
-                duration_s  REAL,
-                notes       TEXT
-            )
-        """)
-        conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_wr_run_time ON watchdog_runs(run_time)"
+def _is_market_hours() -> bool:
+    """True if current ET time is Mon-Fri 09:00-16:30."""
+    now = datetime.now(ET)
+    if now.weekday() >= 5:
+        return False
+    market_open  = now.replace(hour=9,  minute=0,  second=0, microsecond=0)
+    market_close = now.replace(hour=16, minute=30, second=0, microsecond=0)
+    return market_open <= now <= market_close
+
+
+def _dashboard_headers() -> dict[str, str]:
+    return {"X-API-Key": _DASHBOARD_API_KEY}
+
+
+def _dashboard_base() -> str:
+    url = _DASHBOARD_URL.strip()
+    if not url:
+        return ""
+    if not url.startswith("http"):
+        url = f"https://{url}"
+    return url.rstrip("/")
+
+
+def _send_alert(message: str, severity: Severity, exp_id: str | None = None) -> None:
+    try:
+        alert = Alert(
+            severity=severity,
+            experiment_id=exp_id or "__WATCHDOG__",
+            gate_id="G_WATCHDOG_V3",
+            message=message,
         )
-        conn.commit()
-
-
-def _record_run(
-    scan_slot: str | None,
-    exp_id: str | None,
-    outcome: str,
-    duration_s: float | None = None,
-    notes: str | None = None,
-) -> None:
-    try:
-        with sqlite3.connect(SENTINEL_DB_PATH, timeout=5) as conn:
-            conn.execute(
-                """
-                INSERT INTO watchdog_runs (run_time, scan_slot, exp_id, outcome, duration_s, notes)
-                VALUES (?, ?, ?, ?, ?, ?)
-                """,
-                (datetime.now(ET).isoformat(), scan_slot, exp_id, outcome, duration_s, notes),
-            )
-            conn.commit()
+        send_alert(alert, force=(severity >= Severity.CRITICAL))
     except Exception as exc:
-        LOG.warning("watchdog: could not record run: %s", exc)
+        LOG.error("alert dispatch failed: %s", exc)
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# Dashboard API helpers
+# ---------------------------------------------------------------------------
 
-def _active_exp_ids() -> list[str]:
-    """Return exp_ids that are active (not halted) from sentinel_state.json."""
+def _get_active_experiments() -> list[dict]:
+    """Fetch active experiments from dashboard API."""
+    base = _dashboard_base()
+    if not base or not _DASHBOARD_API_KEY:
+        LOG.warning("RAILWAY_SERVICE_PILOTAI_CREDIT_SPREADS_URL or DASHBOARD_API_KEY not set")
+        return []
     try:
-        from sentinel.state import load_state, list_active
-        state = load_state()
-        return list_active(state)
+        resp = _requests.get(
+            f"{base}/api/v1/experiments",
+            headers=_dashboard_headers(),
+            timeout=_REQUEST_TIMEOUT,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        exps = data.get("experiments", [])
+        return [e for e in exps if e.get("status") == "active"]
     except Exception as exc:
-        LOG.error("watchdog: could not load state: %s", exc)
+        LOG.error("failed to fetch experiments from dashboard: %s", exc)
         return []
 
 
-def _is_market_day(d: date | None = None) -> bool:
-    d = d or datetime.now(ET).date()
-    return d.weekday() < 5
+def _alpaca_creds_for(exp_id: str) -> tuple[str, str] | None:
+    """Look up ALPACA_API_KEY_{SUFFIX} / ALPACA_API_SECRET_{SUFFIX} from env."""
+    suffix = exp_id.upper().replace("-", "")
+    key    = os.environ.get(f"ALPACA_API_KEY_{suffix}", "")
+    secret = os.environ.get(f"ALPACA_API_SECRET_{suffix}", "")
+    if key and secret:
+        return key, secret
+    return None
 
 
-def _send_watchdog_alert(message: str, severity: str = "INFO") -> None:
-    """Send a Telegram alert tagged as watchdog origin."""
-    sev_map = {
-        "INFO":     Severity.INFO,
-        "WARN":     Severity.WARNING,
-        "WARNING":  Severity.WARNING,
-        "CRITICAL": Severity.CRITICAL,
-        "HALT":     Severity.HALT,
-    }
-    sev = sev_map.get(severity.upper(), Severity.INFO)
-    try:
-        alert = Alert(
-            severity=sev,
-            experiment_id="__WATCHDOG__",
-            gate_id="G_WATCHDOG",
-            message=message,
-        )
-        send_alert(alert, force=(sev >= Severity.CRITICAL))
-    except Exception as exc:
-        LOG.error("watchdog: alert dispatch failed: %s", exc)
+# ---------------------------------------------------------------------------
+# Check 1: Alpaca Heartbeat
+# ---------------------------------------------------------------------------
 
+def check_alpaca_heartbeat(experiments: list[dict]) -> dict:
+    failures: list[dict] = []
 
-# ── Pre-scan gate wrapper ─────────────────────────────────────────────────────
+    for exp in experiments:
+        exp_id = exp.get("id", "")
+        creds = _alpaca_creds_for(exp_id)
+        if not creds:
+            LOG.debug("no Alpaca creds for %s — skipping", exp_id)
+            continue
 
-@dataclass
-class _PreScanResult:
-    blocked: bool
-    reason: str = ""
-
-
-def _run_pre_scan_gates(exp_id: str, config_path: str | None = None) -> _PreScanResult:
-    """
-    Wrap sentinel.guards.pre_scan_check, which calls sys.exit(1) on failure.
-    We catch SystemExit so the watchdog process is not terminated.
-    """
-    try:
-        from sentinel.guards import pre_scan_check
-        pre_scan_check(exp_id, config_path)
-        return _PreScanResult(blocked=False)
-    except SystemExit:
-        return _PreScanResult(blocked=True, reason="Pre-scan gate blocked (see logs)")
-    except Exception as exc:
-        return _PreScanResult(blocked=True, reason=f"Pre-scan gate error: {exc}")
-
-
-# ── Scheduled jobs ─────────────────────────────────────────────────────────────
-
-def job_run_scan(slot_name: str = "adhoc") -> None:
-    """
-    Execute one scan cycle across all active experiments.
-    For each active exp:
-      1. Run v1 pre-scan guards (G0-G3)
-      2. Call main.py --run-once for this experiment
-      3. Run v1 post-scan gates (G6-G9)
-      4. Record result to watchdog_runs
-    """
-    if not _is_market_day():
-        return
-
-    active = _active_exp_ids()
-    LOG.info("watchdog: scan slot %s — %d active experiments", slot_name, len(active))
-
-    for exp_id in active:
-        t0 = datetime.now(ET)
-        outcome = "ok"
-        notes = None
+        key, secret = creds
         try:
-            # Pre-scan gates (v1 guards.py) — wrapped to catch sys.exit
-            config_path = _resolve_config(exp_id)
-            gate_result = _run_pre_scan_gates(exp_id, config_path)
-            if gate_result.blocked:
-                outcome = "gate_blocked"
-                notes = gate_result.reason
-                LOG.warning("watchdog: %s blocked by pre-scan gate: %s", exp_id, gate_result.reason)
-                _record_run(slot_name, exp_id, outcome, notes=notes)
+            resp = _requests.get(
+                "https://paper-api.alpaca.markets/v2/account",
+                headers={
+                    "APCA-API-KEY-ID":     key,
+                    "APCA-API-SECRET-KEY": secret,
+                },
+                timeout=_REQUEST_TIMEOUT,
+            )
+            if resp.status_code != 200:
+                failures.append({"exp_id": exp_id, "reason": f"HTTP {resp.status_code}"})
+                _send_alert(
+                    f"[ALPACA] {exp_id}: account unreachable (HTTP {resp.status_code})",
+                    Severity.CRITICAL, exp_id,
+                )
                 continue
 
-            # Run scanner as subprocess (isolates crashes from watchdog)
-            env_file = _resolve_env_file(exp_id)
-            result = subprocess.run(
-                [sys.executable, "main.py", "--run-once",
-                 "--config", config_path, "--env-file", env_file],
-                capture_output=True, text=True, timeout=600,
-                cwd=str(Path(__file__).parent.parent.parent),
-            )
-            if result.returncode != 0:
-                outcome = "scanner_error"
-                notes = f"exit={result.returncode}: {result.stderr[-500:]}"
-                LOG.error("watchdog: scanner %s failed: %s", exp_id, notes)
-                _send_watchdog_alert(
-                    f"[SCAN ERROR] {exp_id} at {slot_name}: {notes[:300]}", "WARN"
+            acct = resp.json()
+            status = acct.get("status", "")
+            equity = float(acct.get("equity", 0) or 0)
+
+            if status != "ACTIVE":
+                failures.append({"exp_id": exp_id, "reason": f"account status={status}"})
+                _send_alert(
+                    f"[ALPACA] {exp_id}: account status={status} (expected ACTIVE)",
+                    Severity.CRITICAL, exp_id,
+                )
+            elif equity == 0:
+                failures.append({"exp_id": exp_id, "reason": "equity=0"})
+                _send_alert(
+                    f"[ALPACA] {exp_id}: account equity is 0",
+                    Severity.CRITICAL, exp_id,
                 )
             else:
-                # Post-scan gates (v1 runtime.py)
-                db_path = _resolve_db(exp_id)
-                try:
-                    from sentinel.runtime import post_scan_check
-                    rt = post_scan_check(exp_id, db_path=db_path, config={})
-                    if rt.get("halted"):
-                        outcome = "halt"
-                        notes = "Runtime gate triggered halt"
-                        push_failure(f"{exp_id} halted by runtime gate at {slot_name}")
-                except Exception as rt_exc:
-                    LOG.error("watchdog: post_scan_check failed for %s: %s", exp_id, rt_exc)
-
-        except subprocess.TimeoutExpired:
-            outcome = "scanner_timeout"
-            notes = "Scanner exceeded 600s timeout"
-            LOG.error("watchdog: %s timed out", exp_id)
-            _send_watchdog_alert(
-                f"[SCAN TIMEOUT] {exp_id} at {slot_name} — killed after 600s", "CRITICAL"
-            )
+                LOG.info("[alpaca] %s ok — status=%s equity=%.2f", exp_id, status, equity)
 
         except Exception as exc:
-            outcome = "watchdog_error"
-            notes = str(exc)
-            LOG.exception("watchdog: unexpected error running %s: %s", exp_id, exc)
+            failures.append({"exp_id": exp_id, "reason": str(exc)})
+            _send_alert(
+                f"[ALPACA] {exp_id}: exception checking account: {exc}",
+                Severity.CRITICAL, exp_id,
+            )
 
-        finally:
-            duration = (datetime.now(ET) - t0).total_seconds()
-            _record_run(slot_name, exp_id, outcome, duration_s=duration, notes=notes)
+    status = "ok" if not failures else "critical"
+    return {
+        "status": status,
+        "experiments_checked": len(experiments),
+        "failures": failures,
+    }
 
 
-def job_check_scan_execution() -> None:
-    """Every 5 minutes during market hours — check if expected scans ran."""
-    if not _is_market_day():
+# ---------------------------------------------------------------------------
+# Check 2: Scan Recency
+# ---------------------------------------------------------------------------
+
+def check_scan_recency(experiments: list[dict]) -> dict:
+    base = _dashboard_base()
+    stale: list[str] = []
+    now_utc = datetime.now(timezone.utc)
+    cutoff = now_utc - timedelta(minutes=15)
+
+    for exp in experiments:
+        exp_id = exp.get("id", "")
+        if not base or not _DASHBOARD_API_KEY:
+            break
+        try:
+            resp = _requests.get(
+                f"{base}/api/v1/experiments/{exp_id}/heartbeat",
+                headers=_dashboard_headers(),
+                timeout=_REQUEST_TIMEOUT,
+            )
+            if resp.status_code == 404:
+                # No heartbeat yet — only alert if market hours
+                if _is_market_hours():
+                    stale.append(exp_id)
+                    _send_alert(
+                        f"[SCAN] {exp_id}: no scan heartbeat recorded yet during market hours",
+                        Severity.CRITICAL, exp_id,
+                    )
+                continue
+            resp.raise_for_status()
+            hb = resp.json()
+            scan_time_str = hb.get("scan_time")
+            if not scan_time_str:
+                stale.append(exp_id)
+                continue
+
+            scan_time = datetime.fromisoformat(scan_time_str.replace("Z", "+00:00"))
+            if scan_time.tzinfo is None:
+                scan_time = scan_time.replace(tzinfo=timezone.utc)
+
+            if scan_time < cutoff:
+                stale.append(exp_id)
+                age_min = int((now_utc - scan_time).total_seconds() / 60)
+                _send_alert(
+                    f"[SCAN] {exp_id}: last scan {age_min}m ago (>{15}m threshold)",
+                    Severity.CRITICAL, exp_id,
+                )
+            else:
+                LOG.info("[scan] %s ok — last scan at %s", exp_id, scan_time_str)
+
+        except Exception as exc:
+            LOG.error("[scan] error checking heartbeat for %s: %s", exp_id, exc)
+
+    status = "ok" if not stale else "critical"
+    return {"status": status, "stale_experiments": stale}
+
+
+# ---------------------------------------------------------------------------
+# Check 3: Trade Recency
+# ---------------------------------------------------------------------------
+
+def check_trade_recency(experiments: list[dict]) -> dict:
+    base = _dashboard_base()
+    yellow: list[str] = []
+    red: list[str] = []
+    now_utc = datetime.now(timezone.utc)
+
+    for exp in experiments:
+        exp_id = exp.get("id", "")
+        live_since_str = exp.get("live_since") or exp.get("created_at") or exp.get("enrolled_at")
+
+        # How long has this experiment been live?
+        live_days: float | None = None
+        if live_since_str:
+            try:
+                live_since = datetime.fromisoformat(live_since_str.replace("Z", "+00:00"))
+                if live_since.tzinfo is None:
+                    live_since = live_since.replace(tzinfo=timezone.utc)
+                live_days = (now_utc - live_since).total_seconds() / 86400
+            except Exception:
+                pass
+
+        if not base or not _DASHBOARD_API_KEY:
+            break
+        try:
+            resp = _requests.get(
+                f"{base}/api/v1/experiments/{exp_id}/trades",
+                headers=_dashboard_headers(),
+                params={"limit": 1},
+                timeout=_REQUEST_TIMEOUT,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            trades = data.get("trades", [])
+
+            if not trades:
+                # Zero trades ever
+                if live_days is not None and live_days > 5:
+                    red.append(exp_id)
+                    _send_alert(
+                        f"[TRADES] {exp_id}: ZERO trades after {live_days:.0f} days live",
+                        Severity.CRITICAL, exp_id,
+                    )
+                else:
+                    LOG.info("[trades] %s has no trades yet (live %.1f days)", exp_id, live_days or 0)
+                continue
+
+            # Find most recent trade timestamp
+            last_ts_str: str | None = None
+            for t in trades:
+                ts = t.get("closed_at") or t.get("open_time") or t.get("timestamp")
+                if ts and (last_ts_str is None or ts > last_ts_str):
+                    last_ts_str = ts
+
+            if not last_ts_str:
+                LOG.warning("[trades] %s: trades returned but no timestamp field found", exp_id)
+                continue
+
+            last_ts = datetime.fromisoformat(last_ts_str.replace("Z", "+00:00"))
+            if last_ts.tzinfo is None:
+                last_ts = last_ts.replace(tzinfo=timezone.utc)
+            age_days = (now_utc - last_ts).total_seconds() / 86400
+
+            if age_days > 5:
+                red.append(exp_id)
+                _send_alert(
+                    f"[TRADES] {exp_id}: no trade in {age_days:.1f} days (RED >5d threshold)",
+                    Severity.CRITICAL, exp_id,
+                )
+            elif age_days > 3:
+                yellow.append(exp_id)
+                _send_alert(
+                    f"[TRADES] {exp_id}: no trade in {age_days:.1f} days (YELLOW >3d threshold)",
+                    Severity.WARNING, exp_id,
+                )
+            else:
+                LOG.info("[trades] %s ok — last trade %.1f days ago", exp_id, age_days)
+
+        except Exception as exc:
+            LOG.error("[trades] error checking trades for %s: %s", exp_id, exc)
+
+    overall = "ok"
+    if red:
+        overall = "critical"
+    elif yellow:
+        overall = "yellow"
+    return {"status": overall, "yellow": yellow, "red": red}
+
+
+# ---------------------------------------------------------------------------
+# Scheduled job — all three checks
+# ---------------------------------------------------------------------------
+
+def job_run_checks() -> None:
+    global _last_check
+
+    if not _is_market_hours():
         return
-    now_et = datetime.now(ET)
-    # Only check during trading hours (9:00 - 16:30)
-    if not (9 <= now_et.hour < 17):
-        return
 
-    report = check_scan_execution(SENTINEL_DB_PATH)
-    if report.status == "critical":
-        LOG.error("scan_monitor: %s", report.message)
-        _send_watchdog_alert(f"[SCAN MONITOR] {report.message}", "CRITICAL")
-        push_failure(report.message)
-    elif report.status == "warn":
-        LOG.warning("scan_monitor: %s", report.message)
-        _send_watchdog_alert(f"[SCAN MONITOR] {report.message}", "WARN")
+    LOG.info("sentinel v3: running checks")
 
+    experiments = _get_active_experiments()
+    if not experiments:
+        LOG.warning("sentinel v3: no active experiments found — check dashboard connection")
 
-def job_check_trade_cadence() -> None:
-    """Daily at 17:00 ET — check trade cadence for all active experiments."""
-    if not _is_market_day():
-        return
-    active = _active_exp_ids()
-    results = check_all_active(active, as_of=datetime.now(ET).date())
+    _check_results["alpaca_heartbeat"] = check_alpaca_heartbeat(experiments)
+    _check_results["scan_recency"]     = check_scan_recency(experiments)
+    _check_results["trade_recency"]    = check_trade_recency(experiments)
+    _last_check = datetime.now(timezone.utc)
 
-    critical_msgs = [r.message for r in results if r.status == "critical"]
-    warn_msgs     = [r.message for r in results if r.status == "warn"]
-
-    for msg in critical_msgs:
-        _send_watchdog_alert(f"[CADENCE CRITICAL] {msg}", "CRITICAL")
-        push_failure(msg)
-
-    for msg in warn_msgs:
-        _send_watchdog_alert(f"[CADENCE WARN] {msg}", "WARN")
-
-    if not critical_msgs and not warn_msgs:
-        ok_count = sum(1 for r in results if r.status == "ok")
-        LOG.info("cadence: all %d active experiments trading on cadence", ok_count)
-
-
-def job_check_system_liveness() -> None:
-    """Every hour — check if anything at all happened in the last 24h on a market day."""
-    if not _is_market_day():
-        return
-
-    active = _active_exp_ids()
-    report = check_liveness(
-        db_path=SENTINEL_DB_PATH,
-        data_dir=str(DATA_DIR),
-        active_exp_ids=active,
+    LOG.info(
+        "sentinel v3: checks done — alpaca=%s scan=%s trades=%s",
+        _check_results["alpaca_heartbeat"]["status"],
+        _check_results["scan_recency"]["status"],
+        _check_results["trade_recency"]["status"],
     )
 
-    if not report.alive:
-        LOG.critical(report.message)
-        _send_watchdog_alert(f"[LIVENESS CRITICAL] {report.message}", "CRITICAL")
-        push_failure(report.message)
-    else:
-        LOG.debug("liveness: %s", report.message)
 
+# ---------------------------------------------------------------------------
+# FastAPI health endpoint
+# ---------------------------------------------------------------------------
 
-def job_push_dead_mans_switch() -> None:
-    """Every 4 hours — push heartbeat to external dead man's switch."""
-    ok = push_heartbeat()
-    if not ok:
-        LOG.warning("watchdog: dead man's switch ping failed (check HEALTHCHECKS_PING_URL)")
-
-
-def job_daily_report() -> None:
-    """16:30 ET — run full orchestrator audit and send daily report."""
-    try:
-        from sentinel.daily_report import run_daily_report
-        run_daily_report(dry_run=False)
-    except Exception as exc:
-        LOG.exception("watchdog: daily report failed: %s", exc)
-        _send_watchdog_alert(f"[DAILY REPORT FAILED] {exc}", "CRITICAL")
-
-
-# ── Config resolution (per-experiment) ───────────────────────────────────────
-
-def _resolve_config(exp_id: str) -> str:
-    """Map experiment ID to its config file path."""
-    mapping = {
-        "EXP-400":  "configs/paper_champion.yaml",
-        "EXP-401":  "configs/paper_exp401.yaml",
-        "EXP-600":  "configs/paper_exp600.yaml",
-        "EXP-1220": "configs/paper_exp1220.yaml",
-    }
-    return mapping.get(exp_id, f"configs/paper_{exp_id.lower().replace('-', '')}.yaml")
-
-
-def _resolve_env_file(exp_id: str) -> str:
-    mapping = {
-        "EXP-400":  ".env.champion",
-        "EXP-401":  ".env.exp401",
-        "EXP-600":  ".env.exp600",
-        "EXP-1220": ".env.exp1220",
-    }
-    return mapping.get(exp_id, f".env.{exp_id.lower().replace('-', '')}")
-
-
-def _resolve_db(exp_id: str) -> str:
-    num = exp_id.replace("EXP-", "").replace("exp", "").lower()
-    return str(DATA_DIR / f"pilotai_exp{num}.db")
-
-
-# ── FastAPI health endpoints ──────────────────────────────────────────────────
-
-app = fastapi.FastAPI(title="Sentinel v2 Watchdog")
+app = fastapi.FastAPI(title="Sentinel v3 Watchdog")
 
 
 @app.get("/health")
 def health():
-    from sentinel.v2.liveness import _last_watchdog_scan, _last_health_check
-    last_scan = _last_watchdog_scan(SENTINEL_DB_PATH)
-    last_hc   = _last_health_check()
     return {
-        "alive": True,
-        "last_scan_et": last_scan.isoformat() if last_scan else None,
-        "last_health_check": last_hc.isoformat() if last_hc else None,
-        "active_experiments": _active_exp_ids(),
-        "market_day": _is_market_day(),
+        "alive":      True,
+        "last_check": _last_check.isoformat() if _last_check else None,
+        "checks":     _check_results,
     }
 
 
-@app.get("/sentinel/status")
-def sentinel_status():
-    try:
-        from sentinel.state import load_state
-        state = load_state()
-        scan_report = check_scan_execution(SENTINEL_DB_PATH)
-        return {
-            "experiments": state.get("experiments", {}),
-            "scan_monitor": {
-                "status": scan_report.status,
-                "message": scan_report.message,
-                "slots_ran": scan_report.slots_ran,
-                "slots_expected": scan_report.slots_expected,
-            },
-        }
-    except Exception as exc:
-        return {"error": str(exc)}
-
-
-@app.get("/sentinel/cadence")
-def cadence_status():
-    active = _active_exp_ids()
-    results = check_all_active(active)
-    return [
-        {
-            "exp_id": r.exp_id,
-            "status": r.status,
-            "message": r.message,
-            "last_trade": r.last_trade_date.isoformat() if r.last_trade_date else None,
-            "missed_periods": r.missed_periods,
-        }
-        for r in results
-    ]
-
-
-@app.post("/api/scan")
-def manual_scan():
-    """Trigger an immediate manual scan (with all gate checks)."""
+@app.post("/api/trigger-check")
+def trigger_check():
+    """Manually trigger an immediate check cycle (for testing)."""
     import threading
-    t = threading.Thread(target=job_run_scan, args=("manual",), daemon=True)
-    t.start()
-    return {"status": "scan_triggered", "note": "Check /health for results"}
+    threading.Thread(target=job_run_checks, daemon=True).start()
+    return {"status": "triggered"}
 
 
-# ── Scheduler setup and main entry ───────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# Scheduler + main
+# ---------------------------------------------------------------------------
 
 def build_scheduler() -> BackgroundScheduler:
     sched = BackgroundScheduler(timezone=ET)
-
-    # Scan slots (market hours, weekdays only)
-    for slot_time, slot_name in [
-        ("9:25",  "09:25"), ("10:00", "10:00"), ("10:30", "10:30"),
-        ("11:00", "11:00"), ("11:30", "11:30"), ("12:00", "12:00"),
-        ("12:30", "12:30"), ("13:00", "13:00"), ("13:30", "13:30"),
-        ("14:00", "14:00"), ("14:30", "14:30"), ("15:00", "15:00"),
-        ("15:30", "15:30"),
-    ]:
-        h, m = slot_time.split(":")
-        sched.add_job(
-            job_run_scan,
-            CronTrigger(day_of_week="mon-fri", hour=int(h), minute=int(m), timezone=ET),
-            args=[slot_name],
-            id=f"scan_{slot_name.replace(':', '')}",
-            misfire_grace_time=120,
-            coalesce=True,
-        )
-
-    # Scan execution monitor (every 5 min during market hours)
+    # Every 5 minutes during market hours (09:00-16:30 ET, Mon-Fri)
     sched.add_job(
-        job_check_scan_execution,
+        job_run_checks,
         CronTrigger(day_of_week="mon-fri", hour="9-16", minute="*/5", timezone=ET),
-        id="scan_monitor",
+        id="sentinel_v3_checks",
         misfire_grace_time=60,
         coalesce=True,
     )
-
-    # Trade cadence check (daily at 17:00 ET)
-    sched.add_job(
-        job_check_trade_cadence,
-        CronTrigger(day_of_week="mon-fri", hour=17, minute=0, timezone=ET),
-        id="cadence_check",
-        coalesce=True,
-    )
-
-    # Daily report (16:30 ET)
-    sched.add_job(
-        job_daily_report,
-        CronTrigger(day_of_week="mon-fri", hour=16, minute=30, timezone=ET),
-        id="daily_report",
-        coalesce=True,
-    )
-
-    # System liveness (every hour)
-    sched.add_job(
-        job_check_system_liveness,
-        CronTrigger(minute=0, timezone=ET),
-        id="liveness_check",
-        coalesce=True,
-    )
-
-    # Dead man's switch heartbeat (every 4 hours, at :05 to avoid top-of-hour contention)
-    sched.add_job(
-        job_push_dead_mans_switch,
-        CronTrigger(hour="*/4", minute=5, timezone=ET),
-        id="dead_mans_switch",
-        coalesce=True,
-    )
-
     return sched
 
 
@@ -467,81 +417,24 @@ def main() -> None:
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
 
-    _ensure_watchdog_table()
+    if not _DASHBOARD_API_KEY:
+        LOG.warning("DASHBOARD_API_KEY not set — sentinel cannot reach dashboard API")
+    if not _DASHBOARD_URL:
+        LOG.warning("RAILWAY_SERVICE_PILOTAI_CREDIT_SPREADS_URL not set — sentinel cannot reach dashboard")
 
     scheduler = build_scheduler()
     scheduler.start()
 
-    # Auto-enroll any registry-active experiments missing from sentinel_state.json.
-    # This catches experiments that were activated before the atomic launcher existed
-    # or were enrolled outside the normal launch flow.
-    try:
-        from experiments.manager import get_manager
-        from experiments.registry import LIVE_STATUSES
-        from sentinel.state import load_state, save_state
-        mgr = get_manager()
-        mgr.reload()
-        live_exps = {e["id"]: e for e in mgr.live()}
-        state = load_state()
-        enrolled = state.get("experiments", {})
-        # Find experiments that are either missing entirely or enrolled but
-        # not in 'active' status (e.g. stuck in 'configuring' from partial setup).
-        missing = {eid for eid in live_exps if eid not in enrolled
-                   or enrolled.get(eid, {}).get("status") != "active"}
-        if missing:
-            from datetime import datetime, timezone
-            _now = datetime.now(timezone.utc).isoformat(timespec="seconds")
-            _today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-            experiments = state.setdefault("experiments", {})
-            for exp_id in sorted(missing):
-                exp = live_exps[exp_id]
-                experiments[exp_id] = {
-                    "status": "active",
-                    "paper_config": exp.get("config_path"),
-                    "config_fingerprint": None,  # will be set by re-baseline below
-                    "account_id": exp.get("alpaca_account_id"),
-                    "live_since": exp.get("live_since") or _today,
-                    "enrolled_at": _now,
-                    "last_health_check": _now,
-                    "halt_reason": None,
-                    "halted": False,
-                }
-                LOG.info("watchdog: auto-enrolled %s from registry", exp_id)
-            save_state(state)
-    except Exception as exc:
-        LOG.warning("watchdog: auto-enroll from registry failed: %s", exc)
+    LOG.info("Sentinel v3 watchdog started — monitoring via API calls only")
 
-    active = _active_exp_ids()
-
-    # Re-baseline config fingerprints on startup so Gate 2 doesn't fire on
-    # every deploy due to stale digests in sentinel_state.json.
-    from sentinel.state import update_fingerprint
-    for exp_id in active:
-        try:
-            config_path = _resolve_config(exp_id)
-            update_fingerprint(exp_id, config_path)
-            LOG.info("watchdog: re-baselined fingerprint for %s (%s)", exp_id, config_path)
-        except Exception as exc:
-            LOG.warning("watchdog: could not re-baseline fingerprint for %s: %s", exp_id, exc)
-
-    scan_jobs = [j for j in scheduler.get_jobs() if j.id.startswith("scan_")]
-    LOG.info(
-        "Sentinel v2 watchdog started — %d jobs scheduled, %d active experiments",
-        len(scheduler.get_jobs()), len(active),
+    _send_alert(
+        "[SENTINEL V3] Watchdog started on Railway.\n"
+        f"Dashboard URL: {_DASHBOARD_URL or 'NOT SET'}\n"
+        "Checks: Alpaca heartbeat, scan recency, trade recency\n"
+        "Schedule: every 5 min during market hours (Mon-Fri 9:00-16:30 ET)",
+        Severity.INFO,
     )
 
-    _send_watchdog_alert(
-        f"[SENTINEL V2] Watchdog started on Railway.\n"
-        f"Active experiments: {', '.join(active) or 'none'}\n"
-        f"Scan schedule: {len(scan_jobs)} daily slots\n"
-        f"Dead man's switch: "
-        f"{'ACTIVE' if os.environ.get('HEALTHCHECKS_PING_URL') else 'NOT CONFIGURED'}"
-    )
-
-    # Push initial heartbeat immediately on startup
-    push_heartbeat()
-
-    # Run FastAPI (blocks until process exits)
     port = int(os.environ.get("PORT", 8080))
     uvicorn.run(app, host="0.0.0.0", port=port, log_level="warning")
 

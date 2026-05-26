@@ -1217,6 +1217,27 @@ Examples:
                     _write_heartbeat()
                     emit_heartbeat(_exp_id, notes="scan complete")
 
+                # Sentinel v3: push scan heartbeat to dashboard API so the
+                # API-based watchdog can check scan recency without filesystem access.
+                try:
+                    import requests as _req
+                    _dashboard_url = os.environ.get("RAILWAY_SERVICE_PILOTAI_CREDIT_SPREADS_URL", "")
+                    _api_key = os.environ.get("DASHBOARD_API_KEY", "")
+                    if _dashboard_url and _api_key:
+                        _base = _dashboard_url if _dashboard_url.startswith("http") else f"https://{_dashboard_url}"
+                        _req.post(
+                            f"{_base.rstrip('/')}/api/v1/experiments/{_exp_id}/heartbeat",
+                            json={
+                                "scan_slot": slot_type,
+                                "scan_time": datetime.now(timezone.utc).isoformat(),
+                                "status": "ok",
+                            },
+                            headers={"X-API-Key": _api_key},
+                            timeout=5,
+                        )
+                except Exception:
+                    pass  # non-fatal
+
             scheduler = ScanScheduler(scan_fn=scan_and_sync)
 
             # P0 Fix 2: Start PositionMonitor as background daemon thread

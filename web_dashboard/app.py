@@ -713,6 +713,49 @@ async def get_watchdog_status(_key: str = Depends(require_api_key)):
 
 
 # ---------------------------------------------------------------------------
+# Scan heartbeats — worker pushes after each scan, sentinel reads these
+# ---------------------------------------------------------------------------
+
+# In-memory: {exp_id: {scan_slot, scan_time, opportunities_found, status, received_at}}
+_scan_heartbeats: dict[str, dict] = {}
+
+
+@app.post("/api/v1/experiments/{exp_id}/heartbeat")
+async def push_scan_heartbeat(
+    exp_id: str,
+    request: Request,
+    _key: str = Depends(require_api_key_only),
+):
+    """Worker posts here after each scan completes. Sentinel reads it to check recency."""
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=400, detail="Expected JSON object")
+    body["received_at"] = datetime.now(timezone.utc).isoformat()
+    body["exp_id"] = exp_id.upper()
+    _scan_heartbeats[exp_id.upper()] = body
+    logger.info("[heartbeat] %s scan heartbeat received: slot=%s", exp_id, body.get("scan_slot"))
+    return {"status": "ok", "exp_id": exp_id.upper(), "received_at": body["received_at"]}
+
+
+@app.get("/api/v1/experiments/{exp_id}/heartbeat")
+async def get_scan_heartbeat(
+    exp_id: str,
+    _key: str = Depends(require_api_key),
+):
+    """Return the latest scan heartbeat for an experiment."""
+    hb = _scan_heartbeats.get(exp_id.upper())
+    if not hb:
+        raise HTTPException(status_code=404, detail=f"No heartbeat recorded for {exp_id}")
+    return hb
+
+
+@app.get("/api/v1/scan-heartbeats")
+async def get_all_scan_heartbeats(_key: str = Depends(require_api_key)):
+    """Return all experiment scan heartbeats."""
+    return {"count": len(_scan_heartbeats), "heartbeats": _scan_heartbeats}
+
+
+# ---------------------------------------------------------------------------
 # Sentinel Dashboard — server-rendered HTML (uses render_sentinel_page from html.py)
 # ---------------------------------------------------------------------------
 
