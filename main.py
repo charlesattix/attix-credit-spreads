@@ -1265,6 +1265,39 @@ Examples:
                 except Exception:
                     pass  # non-fatal
 
+                # Push Alpaca portfolio snapshot to dashboard
+                try:
+                    import requests as _req
+                    _dashboard_url = os.environ.get("RAILWAY_SERVICE_PILOTAI_CREDIT_SPREADS_URL", "")
+                    _api_key = os.environ.get("DASHBOARD_API_KEY", "")
+                    _alpaca_key = os.environ.get("ALPACA_API_KEY", "")
+                    _alpaca_secret = os.environ.get("ALPACA_API_SECRET", "")
+                    if _dashboard_url and _api_key and _alpaca_key and _alpaca_secret:
+                        _base = _dashboard_url if _dashboard_url.startswith("http") else f"https://{_dashboard_url}"
+                        _alpaca_base = "https://paper-api.alpaca.markets"
+                        _alpaca_headers = {
+                            "APCA-API-KEY-ID": _alpaca_key,
+                            "APCA-API-SECRET-KEY": _alpaca_secret,
+                        }
+                        _account = _req.get(f"{_alpaca_base}/v2/account", headers=_alpaca_headers, timeout=5).json()
+                        _positions = _req.get(f"{_alpaca_base}/v2/positions", headers=_alpaca_headers, timeout=5).json()
+                        _orders = _req.get(f"{_alpaca_base}/v2/orders?status=open&limit=50", headers=_alpaca_headers, timeout=5).json()
+                        _req.post(
+                            f"{_base.rstrip('/')}/api/v1/experiments/{_exp_id}/push-portfolio",
+                            json={
+                                "equity": float(_account.get("equity") or 0),
+                                "cash": float(_account.get("cash") or 0),
+                                "buying_power": float(_account.get("buying_power") or 0),
+                                "unrealized_pl": float(_account.get("unrealized_pl") or 0),
+                                "positions": _positions if isinstance(_positions, list) else [],
+                                "orders": _orders if isinstance(_orders, list) else [],
+                            },
+                            headers={"X-API-Key": _api_key},
+                            timeout=5,
+                        )
+                except Exception:
+                    pass  # non-fatal
+
             scheduler = ScanScheduler(scan_fn=scan_and_sync)
 
             # P0 Fix 2: Start PositionMonitor as background daemon thread

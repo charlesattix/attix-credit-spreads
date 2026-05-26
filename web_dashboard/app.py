@@ -876,6 +876,7 @@ if __name__ == "__main__":
 # ---------------------------------------------------------------------------
 
 EXPERIMENT_DATA_DIR = PUSHED_DATA_PATH.parent / "experiment_trades"
+EXPERIMENT_PORTFOLIO_DIR = PUSHED_DATA_PATH.parent / "experiment_portfolio"
 
 
 @app.post("/api/v1/experiments/{exp_id}/sync-trades")
@@ -897,3 +898,25 @@ async def sync_experiment_trades(
     path.write_text(_json.dumps(body, indent=2))
     _cache.clear()
     return {"status": "ok", "experiment": exp_id, "synced_at": body["synced_at"]}
+
+
+@app.post("/api/v1/experiments/{exp_id}/push-portfolio")
+async def push_experiment_portfolio(
+    exp_id: str,
+    request: Request,
+    _key: str = Depends(require_api_key_only),
+):
+    """Accept Alpaca portfolio snapshot push from the worker for a single experiment."""
+    import json as _json
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=400, detail="Expected JSON object")
+
+    EXPERIMENT_PORTFOLIO_DIR.mkdir(parents=True, exist_ok=True)
+    norm = exp_id.upper().replace("-", "")
+    path = EXPERIMENT_PORTFOLIO_DIR / f"{norm}.json"
+    body["pushed_at"] = datetime.now(timezone.utc).isoformat()
+    body["exp_id"] = exp_id.upper()
+    path.write_text(_json.dumps(body, indent=2))
+    _cache.clear()
+    return {"status": "ok", "experiment": exp_id, "pushed_at": body["pushed_at"]}

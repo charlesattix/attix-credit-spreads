@@ -408,6 +408,22 @@ def query_all_live(report_date: Optional[str] = None) -> List[dict]:
     except Exception as exc:
         logger.warning("[data] Live Alpaca fetch failed, using cached/pushed data: %s", exc)
 
+    # --- Worker-pushed portfolio fallback ------------------------------------
+    # For experiments where live Alpaca keys aren't available in the dashboard
+    # process, fall back to the portfolio JSON pushed by the worker after each scan.
+    _portfolio_dir = PROJECT_ROOT / "data" / "experiment_portfolio"
+    if _portfolio_dir.exists():
+        for r in results:
+            if r.get("alpaca") is not None:
+                continue
+            norm_id = r["id"].upper().replace("-", "") if r.get("id") else ""
+            portfolio_path = _portfolio_dir / f"{norm_id}.json"
+            if portfolio_path.exists():
+                try:
+                    r["alpaca"] = json.loads(portfolio_path.read_text())
+                except Exception:
+                    pass
+
     return results
 
 
