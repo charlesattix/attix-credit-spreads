@@ -843,12 +843,21 @@ def render_dashboard(all_stats: list[dict]) -> str:
     total_wins   = sum(s["wins"] for s in all_stats)
     wr = (total_wins / total_closed * 100) if total_closed else 0
 
-    # Combined live equity from Alpaca
-    equities = [
-        s["alpaca"]["equity"]
-        for s in all_stats
-        if s.get("alpaca") and s["alpaca"].get("equity") is not None
-    ]
+    # Combined live equity — always fetch directly from all Alpaca accounts
+    # so the header total is never stale or missing experiments.
+    try:
+        from .alpaca_live import get_all_live_alpaca
+        _all_live = get_all_live_alpaca()
+        equities = [
+            d["equity"] for d in _all_live.values()
+            if d.get("equity") is not None and not d.get("error")
+        ]
+    except Exception:
+        equities = [
+            s["alpaca"]["equity"]
+            for s in all_stats
+            if s.get("alpaca") and s["alpaca"].get("equity") is not None
+        ]
     combined_equity = sum(equities) if equities else None
     combined_unrealized = sum(
         s["alpaca"].get("unrealized_pl") or 0
