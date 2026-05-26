@@ -52,7 +52,7 @@ VESPER_HEALTH_URL = os.environ.get(
 )
 SENTINEL_HEALTH_URL = os.environ.get(
     "SENTINEL_HEALTH_URL",
-    "https://sentinel-production.up.railway.app/health",
+    "https://sentinel-watchdog-production.up.railway.app/health",
 )
 
 SERVICES: dict[str, str] = {
