@@ -26,7 +26,7 @@
 
 # --- Paper trading safety flags ---
 paper_mode: true
-db_path: "data/pilotai_etha.db"
+db_path: "data/attix_etha.db"
 experiment_id: "EXP-ETHA-001"
 created_by: "maximus"     # Attribution: experiment creator
 

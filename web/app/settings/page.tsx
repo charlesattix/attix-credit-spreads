@@ -211,8 +211,8 @@ export default function SettingsPage() {
           <p className="mb-4 opacity-90">
             Unlock premium educational content, video tutorials, and live trading sessions.
           </p>
-          <a href="https://pilotai.com" target="_blank" rel="noopener noreferrer" className="inline-block px-6 py-2 bg-white text-brand-purple font-medium rounded-lg hover:bg-white/90 transition-colors">
-            Learn More at PilotAI →
+          <a href="https://attix.com" target="_blank" rel="noopener noreferrer" className="inline-block px-6 py-2 bg-white text-brand-purple font-medium rounded-lg hover:bg-white/90 transition-colors">
+            Learn More at Attix →
           </a>
         </div>
       </div>

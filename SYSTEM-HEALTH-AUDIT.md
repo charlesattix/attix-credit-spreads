@@ -67,8 +67,8 @@ update the import in `main.py:1111` to `from compass.online_retrain import Retra
 ---
 
 #### P0-2: Launchd Plists Are Dead — Mac Paths, No Railway Equivalent
-**Files**: `deploy/com.pilotai.exp400.plist`, `com.pilotai.exp401.plist`,
-`com.pilotai.exp503.plist`, `com.pilotai.exp600.plist`, `com.pilotai.exp1220.plist`
+**Files**: `deploy/com.attix.exp400.plist`, `com.attix.exp401.plist`,
+`com.attix.exp503.plist`, `com.attix.exp600.plist`, `com.attix.exp1220.plist`
 **Root Cause**: Every plist hardcodes `WorkingDirectory = /Users/charlesbot/projects/pilotai-credit-spreads`
 and uses `/usr/bin/python3` with a Mac-only environment. These have not been loaded into launchctl
 since migration to Railway.

@@ -38,7 +38,7 @@ ERRORS=0
 
 echo ""
 echo "============================================================"
-echo "  PilotAI — Paper Trading Deployment"
+echo "  Attix — Paper Trading Deployment"
 echo "  Ultimate Portfolio (4 strategies at adaptive leverage)"
 echo "============================================================"
 echo ""
@@ -291,7 +291,7 @@ ok "Scanner script: $SCAN_SCRIPT"
 if command -v crontab &>/dev/null; then
     # Build crontab entries
     CRON_ENTRIES=$(cat << CRONEOF
-# PilotAI Paper Trading — Ultimate Portfolio v4
+# Attix Paper Trading — Ultimate Portfolio v4
 # Scanner: every 30 min during market hours (Mon-Fri, 9:30-16:00 ET)
 */30 9-15 * * 1-5 ${SCAN_SCRIPT} >> ${LOG_DIR}/cron.log 2>&1
 # Data refresh: daily at 16:30 ET (after market close)

@@ -506,7 +506,7 @@ Since the API has no historical endpoint, the service starts accumulating from t
 3. **1-year performance period includes SNDK anomaly:** The value-investing strategy's +216.5% is driven by a single stock's +1,034% move. This is not representative of expected future returns.
 4. **All strategies beat SPY during analysis period:** The 13-month window (Feb 2025–Mar 2026) was particularly favorable for active management relative to SPY. Future periods may show more dispersion.
 5. **Gold overlay may not persist:** If macro regime shifts (dollar strengthens, geopolitical risk declines), Attix's optimizer will likely reduce gold allocations. Monitor SGDM/GOEX conviction as a real-time macro barometer.
-6. **Staging API only:** `ai-stag.pilotai.com` — production endpoint may differ. Confirm with Attix team before relying on production data.
+6. **Staging API only:** `ai-stag.attix.com` — production endpoint may differ. Confirm with Attix team before relying on production data.
 
 ---
 

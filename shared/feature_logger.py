@@ -6,7 +6,7 @@ so we can train real ML models on real data. Outcome columns (outcome,
 pnl_pct, hold_days) are filled when the trade closes.
 
 Usage as CLI:
-    python -m shared.feature_logger --db data/pilotai_champion.db --stats
+    python -m shared.feature_logger --db data/attix_champion.db --stats
 """
 
 import logging

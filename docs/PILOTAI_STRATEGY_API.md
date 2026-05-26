@@ -5,7 +5,7 @@ Retrieve portfolio weightage and stock allocations for investment strategies.
 ## Endpoint
 
 ```
-POST https://ai-stag.pilotai.com/v2/strategy_recommendation
+POST https://ai-stag.attix.com/v2/strategy_recommendation
 ```
 
 ## Authentication
@@ -41,19 +41,19 @@ x-api-key: cZZP6he1Qez8Lb6njh6w5vUe
 
 ```bash
 # Single strategy
-curl -s -X POST https://ai-stag.pilotai.com/v2/strategy_recommendation \
+curl -s -X POST https://ai-stag.attix.com/v2/strategy_recommendation \
   -H "Content-Type: application/json" \
   -H "x-api-key: cZZP6he1Qez8Lb6njh6w5vUe" \
   -d '{"strategy_slugs": ["dividend-aristocrats"]}'
 
 # Multiple strategies
-curl -s -X POST https://ai-stag.pilotai.com/v2/strategy_recommendation \
+curl -s -X POST https://ai-stag.attix.com/v2/strategy_recommendation \
   -H "Content-Type: application/json" \
   -H "x-api-key: cZZP6he1Qez8Lb6njh6w5vUe" \
   -d '{"strategy_slugs": ["dividend-aristocrats", "growth-investing", "low-beta-stocks"]}'
 
 # Top recommendations only (no specific slugs)
-curl -s -X POST https://ai-stag.pilotai.com/v2/strategy_recommendation \
+curl -s -X POST https://ai-stag.attix.com/v2/strategy_recommendation \
   -H "Content-Type: application/json" \
   -H "x-api-key: cZZP6he1Qez8Lb6njh6w5vUe" \
   -d '{}'

@@ -9,7 +9,7 @@
 
 **The headline finding — and it is unmistakable:**
 
-> **PILOTAI IS SCREAMING: BUY GOLD.**
+> **ATTIX IS SCREAMING: BUY GOLD.**
 
 Gold-related instruments dominate the consensus signal with a force that is impossible to ignore. DBP (Invesco DB Precious Metals Fund) appears in **20 of 57 strategies**. SGDM (Sprott Gold Miners ETF) and GOEX (Global X Gold Explorers ETF) each appear in **27 strategies** — nearly half of every portfolio in the system. IAU (iShares Gold Trust) appears in 15 strategies. Most remarkably: these gold ETFs are appearing as top holdings in portfolios labeled "AI-Related Companies," "Cloud Computing Boom," "Technology Sector Innovation Fund," and "Semiconductor Supercycle." The model is so bullish on gold that it is overriding thematic classification and injecting gold into every category.
 
@@ -366,7 +366,7 @@ High-overlap clusters identified:
 
 ---
 
-## SECTION 8: THE PILOTAI CONSENSUS SIGNAL
+## SECTION 8: THE ATTIX CONSENSUS SIGNAL
 
 ### Methodology
 The Consensus Signal combines three independent signals for each ticker:
@@ -517,7 +517,7 @@ NVIDIA (the defining stock of the AI era, +170% in 2024) appears in only 6 strat
 
 ---
 
-## SECTION 12: ACTIONABLE INSIGHTS FOR PILOTAI
+## SECTION 12: ACTIONABLE INSIGHTS FOR ATTIX
 
 ### For the Credit Spread / Options System
 

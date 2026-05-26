@@ -10,7 +10,7 @@
 # Usage:
 #   ./scripts/setup_polygon_cron.sh              # install all cron entries
 #   ./scripts/setup_polygon_cron.sh --status     # show current cron state
-#   ./scripts/setup_polygon_cron.sh --remove     # remove all pilotai cron entries
+#   ./scripts/setup_polygon_cron.sh --remove     # remove all attix cron entries
 #
 # Prerequisites:
 #   - .env file with POLYGON_API_KEY
@@ -126,8 +126,8 @@ case "$ACTION" in
     --status|-s)
         echo "=== Cron Status ==="
         echo
-        echo "PilotAI cron entries:"
-        crontab -l 2>/dev/null | grep -A1 "pilotai" || echo "  (none installed)"
+        echo "Attix cron entries:"
+        crontab -l 2>/dev/null | grep -A1 "attix" || echo "  (none installed)"
         echo
         echo "Full crontab:"
         crontab -l 2>/dev/null || echo "  (no crontab)"
@@ -144,16 +144,16 @@ case "$ACTION" in
         ;;
 
     --remove|-r)
-        if crontab -l 2>/dev/null | grep -q "pilotai"; then
-            crontab -l 2>/dev/null | grep -v "pilotai" | grep -v "daily_data_update" | grep -v "scan-cron" | crontab -
-            echo "Removed all pilotai cron entries."
+        if crontab -l 2>/dev/null | grep -q "attix"; then
+            crontab -l 2>/dev/null | grep -v "attix" | grep -v "daily_data_update" | grep -v "scan-cron" | crontab -
+            echo "Removed all attix cron entries."
         else
-            echo "No pilotai cron entries found."
+            echo "No attix cron entries found."
         fi
         ;;
 
     install|--install|-i|"")
-        echo "=== Installing PilotAI Cron Jobs ==="
+        echo "=== Installing Attix Cron Jobs ==="
         echo
 
         # Check prerequisites
@@ -170,9 +170,9 @@ case "$ACTION" in
         mkdir -p "$PROJECT_DIR/data" "$PROJECT_DIR/logs"
         mkdir -p "$PROJECT_DIR/data/exp503" "$PROJECT_DIR/data/exp600"
 
-        # Remove existing pilotai entries
-        if crontab -l 2>/dev/null | grep -q "pilotai"; then
-            crontab -l 2>/dev/null | grep -v "pilotai" | grep -v "daily_data_update" | grep -v "scan-cron" | crontab -
+        # Remove existing attix entries
+        if crontab -l 2>/dev/null | grep -q "attix"; then
+            crontab -l 2>/dev/null | grep -v "attix" | grep -v "daily_data_update" | grep -v "scan-cron" | crontab -
         fi
 
         # Install cron entries

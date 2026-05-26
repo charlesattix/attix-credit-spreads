@@ -106,8 +106,8 @@ def _resolve_db_path(exp_id: str) -> Optional[str]:
     """Try common DB locations for an experiment."""
     exp_lower = exp_id.lower().replace("-", "")
     candidates = [
-        _PROJECT_ROOT / "data" / exp_lower / f"pilotai_{exp_lower}.db",
-        _PROJECT_ROOT / "data" / f"pilotai_{exp_lower}.db",
+        _PROJECT_ROOT / "data" / exp_lower / f"attix_{exp_lower}.db",
+        _PROJECT_ROOT / "data" / f"attix_{exp_lower}.db",
     ]
     for p in candidates:
         if p.exists():

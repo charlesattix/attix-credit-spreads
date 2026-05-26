@@ -27,7 +27,7 @@ from shared.deviation_tracker import (
 EXPERIMENTS = {
     "EXP-400": {
         "label": "Champion",
-        "db_path": str(ROOT / "data" / "pilotai_champion.db"),
+        "db_path": str(ROOT / "data" / "attix_champion.db"),
     },
     "EXP-401": {
         "label": "EXP-401",

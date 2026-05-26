@@ -119,7 +119,7 @@ def get_all_portfolios() -> List[Dict]:
         alpaca_key    str   — ALPACA_API_KEY value
         alpaca_secret str   — ALPACA_API_SECRET value
         polygon_key   str   — POLYGON_API_KEY value
-        db_path       Path  — data/pilotai_<exp>.db
+        db_path       Path  — data/attix_<exp>.db
     """
     portfolios = []
     for env_file in sorted(PROJECT_DIR.glob(".env.exp*")):
@@ -132,7 +132,7 @@ def get_all_portfolios() -> List[Dict]:
             "alpaca_key":    env.get("ALPACA_API_KEY", ""),
             "alpaca_secret": env.get("ALPACA_API_SECRET", ""),
             "polygon_key":   env.get("POLYGON_API_KEY", ""),
-            "db_path":       PROJECT_DIR / "data" / f"pilotai_{exp}.db",
+            "db_path":       PROJECT_DIR / "data" / f"attix_{exp}.db",
         })
     return portfolios
 

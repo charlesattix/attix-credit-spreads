@@ -13,7 +13,7 @@ Auth:
         X-API-Key: <key>
 
     Valid keys set via env var MACRO_API_KEYS (comma-separated).
-    Default dev key: dev-pilotai-macro-2026
+    Default dev key: dev-attix-macro-2026
 
 Rate limit: 100 requests/minute per API key (in-memory sliding window).
 """

@@ -182,4 +182,4 @@ The biggest error in the proposal is the Alpaca account sharing diagnosis. That 
 
 ---
 
-*All claims in this review verified against: `.env.*` credential files (5 separate API keys confirmed), `execution/execution_engine.py` (commission formula), `shared/scheduler.py` (heartbeat path), `shared/healthcheck.py` (never instantiated), `shared/reconciler.py` (account-scoped), `data/pilotai_*.db` (0 and 5 trades in active DBs), today's `experiments/registry.json` and `scripts/portfolio_status.py` (P1 already solved).*
+*All claims in this review verified against: `.env.*` credential files (5 separate API keys confirmed), `execution/execution_engine.py` (commission formula), `shared/scheduler.py` (heartbeat path), `shared/healthcheck.py` (never instantiated), `shared/reconciler.py` (account-scoped), `data/attix_*.db` (0 and 5 trades in active DBs), today's `experiments/registry.json` and `scripts/portfolio_status.py` (P1 already solved).*

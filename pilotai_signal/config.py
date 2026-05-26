@@ -11,7 +11,7 @@ PROJECT_ROOT = Path(__file__).parent.parent
 # ── API ───────────────────────────────────────────────────────────────────────
 API_URL = os.environ.get(
     "PILOTAI_API_URL",
-    "https://ai-stag.pilotai.com/v2/strategy_recommendation",
+    "https://ai-stag.attix.com/v2/strategy_recommendation",
 )
 API_KEY = os.environ.get("PILOTAI_API_KEY", "cZZP6he1Qez8Lb6njh6w5vUe")
 API_BATCH_SIZE = int(os.environ.get("PILOTAI_BATCH_SIZE", "6"))

@@ -21,7 +21,7 @@ type ChatAlert = z.infer<typeof ChatAlertSchema>;
 const RATE_LIMIT_MAX = 10;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 
-const SYSTEM_PROMPT = `You are the PilotAI Trading Assistant — an expert in credit spread options strategies. You help users understand their trades, analyze market conditions, and learn options trading concepts.
+const SYSTEM_PROMPT = `You are the Attix Trading Assistant — an expert in credit spread options strategies. You help users understand their trades, analyze market conditions, and learn options trading concepts.
 
 Your personality:
 - Concise and direct — traders don't want essays
@@ -35,7 +35,7 @@ You know about:
 - Technical analysis (RSI, moving averages, support/resistance)
 - Risk management (position sizing, max loss, profit targets)
 - Market conditions (IV rank, VIX, sector rotation)
-- The PilotAI alerts system (scans SPY/QQQ/IWM every 30 min, targets 70%+ PoP, 0.15-0.30 delta)
+- The Attix alerts system (scans SPY/QQQ/IWM every 30 min, targets 70%+ PoP, 0.15-0.30 delta)
 
 When users ask about a specific alert or trade, reference the actual numbers they provide. Keep responses under 150 words unless they ask for a deep explanation.
 
@@ -151,7 +151,7 @@ function generateLocalResponse(message: string, alerts?: ChatAlert[]): string {
 • **Bull Put Spread** — bullish, sell a put + buy a lower put
 • **Bear Call Spread** — bearish, sell a call + buy a higher call
 
-Your max profit is the credit received. Max loss is the spread width minus the credit. PilotAI targets spreads with **70%+ probability of profit**.`;
+Your max profit is the credit received. Max loss is the spread width minus the credit. Attix targets spreads with **70%+ probability of profit**.`;
   }
 
   if (message.includes('delta') || message.includes('greek')) {
@@ -162,19 +162,19 @@ Your max profit is the credit received. Max loss is the spread width minus the c
 • **Vega** — IV sensitivity. High IV at entry = more premium collected
 • **Gamma** — acceleration risk. Increases near expiry, which is why we close at 7 DTE
 
-PilotAI targets **0.15-0.30 delta** on the short leg — the sweet spot between premium and safety.`;
+Attix targets **0.15-0.30 delta** on the short leg — the sweet spot between premium and safety.`;
   }
 
   if (message.includes('pop') || message.includes('probability') || message.includes('win rate')) {
     return `**Probability of Profit (PoP)** measures the likelihood a credit spread expires profitable.
 
-PilotAI filters for **70%+ PoP** — meaning roughly 7 out of 10 trades should be winners. Combined with disciplined risk management (50% profit target, 2.5x stop loss), this creates a strong edge over time.
+Attix filters for **70%+ PoP** — meaning roughly 7 out of 10 trades should be winners. Combined with disciplined risk management (50% profit target, 2.5x stop loss), this creates a strong edge over time.
 
 Higher PoP = less premium collected but more consistent wins. It's a tradeoff — we optimize for the sweet spot.`;
   }
 
   if (message.includes('risk') || message.includes('position size') || message.includes('how much')) {
-    return `**PilotAI Risk Management:**
+    return `**Attix Risk Management:**
 
 • **Max 2% risk per trade** — on a $100K account, max loss per trade is $2,000
 • **Max 5 concurrent positions** — limits total portfolio risk to ~10%
@@ -189,7 +189,7 @@ This means even a losing streak won't blow up the account. Consistency over home
     const alertCount = alerts?.length || 0;
     return `**Current Market Scan:**
 
-PilotAI monitors **SPY, QQQ, and IWM** — the three most liquid ETFs for credit spreads. High volume = tight bid-ask spreads = better fills.
+Attix monitors **SPY, QQQ, and IWM** — the three most liquid ETFs for credit spreads. High volume = tight bid-ask spreads = better fills.
 
 ${alertCount > 0 ? `We currently have **${alertCount} active alerts**. The system scans every 30 minutes during market hours (9:45 AM - 3:45 PM ET).` : 'No active alerts right now. The system scans every 30 minutes during market hours (9:45 AM - 3:45 PM ET).'}
 
@@ -208,7 +208,7 @@ You start with a **$100K virtual balance**. No real money at risk — just pract
   }
 
   if (message.includes('hello') || message.includes('hi') || message.includes('hey')) {
-    return `Hey! 👋 I'm the PilotAI Trading Assistant. I can help you with:
+    return `Hey! 👋 I'm the Attix Trading Assistant. I can help you with:
 
 • **Understanding alerts** — what the numbers mean
 • **Credit spread basics** — Greeks, risk, strategy

@@ -61,9 +61,9 @@ Carlos approval ← GATE (required before any deploy)
   ▼
 deploy (status: paper_trading)
   │  • Create configs/paper_expNNN.yaml
-  │  • Create deploy/com.pilotai.expNNN.plist
+  │  • Create deploy/com.attix.expNNN.plist
   │  • Copy plist to ~/Library/LaunchAgents/, launchctl load
-  │  • Verify process running: launchctl list | grep pilotai
+  │  • Verify process running: launchctl list | grep attix
   │  • Run dryrun: python scripts/dryrun_expNNN.py
   │  • Update registry.json: status, account_id, live_since
   │  • Commit + push immediately
@@ -109,7 +109,7 @@ Commit and push to the current branch immediately. Do not batch registry changes
 Other agents read registry.json from the repo — stale state causes conflicts.
 
 ### Retiring an experiment
-1. `launchctl unload ~/Library/LaunchAgents/com.pilotai.expNNN.plist`
+1. `launchctl unload ~/Library/LaunchAgents/com.attix.expNNN.plist`
 2. Update registry.json: `status: retired`, add `retired_reason`.
 3. Update MASTERPLAN.md: move row from Live/Dev table to Retired table.
 4. Commit + push.
@@ -122,7 +122,7 @@ Other agents read registry.json from the repo — stale state causes conflicts.
 |----------|---------|---------|
 | Paper config | `configs/paper_expNNN.yaml` | `configs/paper_exp600.yaml` |
 | Backtest config | `configs/expNNN_<descriptor>.json` | `configs/exp503_lowvol.json` |
-| Plist | `deploy/com.pilotai.expNNN.plist` | `deploy/com.pilotai.exp600.plist` |
+| Plist | `deploy/com.attix.expNNN.plist` | `deploy/com.attix.exp600.plist` |
 | Log | `~/logs/expNNN.log` | `~/logs/exp600.log` |
 | DB | `data/expNNN/pilotai_expNNN.db` | `data/exp600/pilotai_exp600.db` |
 | Dryrun | `scripts/dryrun_expNNN.py` | `scripts/dryrun_exp600.py` |

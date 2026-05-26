@@ -54,7 +54,7 @@ export function Navbar() {
               <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 bg-white rounded-sm"></div>
             </div>
             <span className="text-lg sm:text-xl font-bold bg-gradient-brand bg-clip-text text-transparent">
-              Alerts by PilotAI
+              Alerts by Attix
             </span>
           </Link>
 
@@ -89,8 +89,8 @@ export function Navbar() {
             </div>
 
             {/* CTA - hidden on smallest screens */}
-            <a href="https://pilotai.com" target="_blank" rel="noopener noreferrer" className="hidden xs:inline-flex px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-brand text-white text-xs sm:text-sm font-medium rounded-lg hover:opacity-90 transition-opacity">
-              Try PilotAI →
+            <a href="https://attix.com" target="_blank" rel="noopener noreferrer" className="hidden xs:inline-flex px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-brand text-white text-xs sm:text-sm font-medium rounded-lg hover:opacity-90 transition-opacity">
+              Try Attix →
             </a>
 
             {/* Hamburger */}
@@ -124,12 +124,12 @@ export function Navbar() {
               </Link>
             ))}
             <a
-              href="https://pilotai.com"
+              href="https://attix.com"
               target="_blank"
               rel="noopener noreferrer"
               className="block px-3 py-2.5 mt-2 text-center bg-gradient-brand text-white text-sm font-medium rounded-lg xs:hidden"
             >
-              Try PilotAI →
+              Try Attix →
             </a>
           </div>
         </div>

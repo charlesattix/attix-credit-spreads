@@ -12,7 +12,7 @@ export function UpsellCard() {
       <p className="text-sm opacity-90 mb-4">
         Get unlimited alerts, advanced AI analysis, and priority support.
       </p>
-      <a href="https://pilotai.com" target="_blank" rel="noopener noreferrer" className="block w-full px-4 py-2 bg-white text-brand-purple font-medium rounded-lg hover:bg-white/90 transition-colors text-center">
+      <a href="https://attix.com" target="_blank" rel="noopener noreferrer" className="block w-full px-4 py-2 bg-white text-brand-purple font-medium rounded-lg hover:bg-white/90 transition-colors text-center">
         Learn More →
       </a>
     </div>

@@ -111,7 +111,7 @@ def _resolve_db_path(exp_id: str, state: dict, registry: dict) -> Optional[Path]
 
     # Fallback: common naming patterns
     for pattern in [
-        f"data/pilotai_{exp_id.lower().replace('-', '')}.db",
+        f"data/attix_{exp_id.lower().replace('-', '')}.db",
         f"data/{exp_id.lower().replace('-', '_')}.db",
     ]:
         p = PROJECT_ROOT / pattern

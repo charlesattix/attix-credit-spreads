@@ -767,7 +767,7 @@ def main():
         from shared.constants import DATA_DIR
         candidates = [
             os.environ.get("PILOTAI_DB_PATH", ""),
-            os.path.join(DATA_DIR, "pilotai_champion.db"),
+            os.path.join(DATA_DIR, "attix_champion.db"),
             os.path.join(DATA_DIR, "pilotai.db"),
         ]
         for c in candidates:

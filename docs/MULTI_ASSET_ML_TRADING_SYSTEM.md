@@ -2080,7 +2080,7 @@ def calculate_cross_asset_metrics(portfolio_history: pd.DataFrame) -> Dict:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  PILOTAI MULTI-ASSET DASHBOARD                    ⚙ 🔴  │
+│  ATTIX MULTI-ASSET DASHBOARD                    ⚙ 🔴  │
 ├─────────────────────────────────────────────────────────┤
 │                                                         │
 │  Total Portfolio: $105,230  (+5.23%)   Drawdown: 1.2%  │

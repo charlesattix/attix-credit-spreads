@@ -27,7 +27,7 @@ railway run --service=web cp data/pilotai.db /app/data/pilotai.db
 
 OR manually via Railway Dashboard:
 1. Go to Railway Dashboard → pilotai-credit-spreads-production
-2. Go to Volumes → pilotai-data
+2. Go to Volumes → attix-data
 3. Upload `data/pilotai.db` to `/app/data/pilotai.db`
 
 ## Step 4: Verify Upload
@@ -72,8 +72,8 @@ jobs:
 crontab -l | grep -v "pilotai-credit-spreads" | crontab -
 
 # If using launchd (macOS)
-launchctl list | grep pilotai
-launchctl unload ~/Library/LaunchAgents/com.pilotai.scanner.plist
+launchctl list | grep attix
+launchctl unload ~/Library/LaunchAgents/com.attix.scanner.plist
 ```
 
 ### Stop Local Next.js Server (if running)
@@ -94,11 +94,11 @@ pkill -f "next dev"
 
 ## Rollback Plan (if needed)
 Local database is backed up at:
-- `data/pilotai_backup_20260219_143853.db`
+- `data/attix_backup_20260219_143853.db`
 
 To restore locally:
 ```bash
-cp data/pilotai_backup_20260219_143853.db data/pilotai.db
+cp data/attix_backup_20260219_143853.db data/pilotai.db
 ```
 
 ## URLs

@@ -28,8 +28,8 @@ ACTION="${1:-install}"
 
 case "$ACTION" in
     --status|-s)
-        echo "Current crontab entries matching pilotai:"
-        crontab -l 2>/dev/null | grep -i "pilotai" || echo "  (none found)"
+        echo "Current crontab entries matching attix:"
+        crontab -l 2>/dev/null | grep -i "attix" || echo "  (none found)"
         echo
         echo "Full crontab:"
         crontab -l 2>/dev/null || echo "  (no crontab)"

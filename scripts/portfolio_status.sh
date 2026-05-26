@@ -137,7 +137,7 @@ PYEOF
 # ── Main ──────────────────────────────────────────────────────────────────────
 echo ""
 echo -e "${BOLD}╔══════════════════════════════════════════════════════╗${NC}"
-echo -e "${BOLD}║    PilotAI Portfolio Status — $(date '+%Y-%m-%d %H:%M %Z')   ║${NC}"
+echo -e "${BOLD}║    Attix Portfolio Status — $(date '+%Y-%m-%d %H:%M %Z')   ║${NC}"
 echo -e "${BOLD}╚══════════════════════════════════════════════════════╝${NC}"
 
 # Auto-discover .env.exp* — exclude .env.example, .env.local, plain .env

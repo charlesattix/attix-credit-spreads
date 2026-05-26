@@ -34,7 +34,7 @@ from strategies import STRATEGY_REGISTRY
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_DB = str(ROOT / "data" / "pilotai_champion.db")
+DEFAULT_DB = str(ROOT / "data" / "attix_champion.db")
 DEFAULT_CONFIG = str(ROOT / "configs" / "champion.json")
 OUTPUT_DIR = ROOT / "results" / "paper_trading"
 

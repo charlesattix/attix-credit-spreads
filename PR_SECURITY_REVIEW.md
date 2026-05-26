@@ -215,7 +215,7 @@ Changed from exp400/401/503/600 to exp036/059/154/305. Config and DB paths updat
 
 ### `Dockerfile` + `docker-entrypoint.sh`
 
-- Non-root user (`pilotai:1001`) enforced ✓
+- Non-root user (`attix:1001`) enforced ✓
 - Specific Node.js version pinned ✓
 - Tini init process for signal handling ✓
 - `exec "$@"` fallback in entrypoint is standard Docker pattern ✓

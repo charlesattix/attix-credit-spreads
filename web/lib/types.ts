@@ -1,4 +1,4 @@
-// Canonical domain types for the PilotAI credit spread system
+// Canonical domain types for the Attix credit spread system
 
 export type TradeStatus = 'open' | 'closed_profit' | 'closed_loss' | 'closed_expiry' | 'closed_manual';
 

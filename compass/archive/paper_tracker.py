@@ -65,8 +65,8 @@ def _resolve_db_path(experiment: Dict[str, Any]) -> Optional[Path]:
 
     Tries in order:
       1. Explicit db_path from YAML config
-      2. data/{experiment_id}/pilotai_{id}.db
-      3. data/pilotai_{id_lower}.db
+      2. data/{experiment_id}/attix_{id}.db
+      3. data/attix_{id_lower}.db
       4. data/pilotai.db (default for EXP-400)
     """
     exp_id = experiment.get("id", "")
@@ -89,9 +89,9 @@ def _resolve_db_path(experiment: Dict[str, Any]) -> Optional[Path]:
 
     # Convention-based paths
     candidates = [
-        ROOT / "data" / exp_id.lower() / f"pilotai_{exp_id.lower()}.db",
-        ROOT / "data" / f"pilotai_{exp_id.lower().replace('-', '')}.db",
-        ROOT / "data" / f"pilotai_{exp_id.lower().replace('exp-', 'exp')}.db",
+        ROOT / "data" / exp_id.lower() / f"attix_{exp_id.lower()}.db",
+        ROOT / "data" / f"attix_{exp_id.lower().replace('-', '')}.db",
+        ROOT / "data" / f"attix_{exp_id.lower().replace('exp-', 'exp')}.db",
     ]
 
     # Special cases

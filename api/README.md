@@ -24,7 +24,7 @@ uvicorn api.macro_api:app --port 8420 --reload
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `MACRO_API_KEYS` | No | `dev-pilotai-macro-2026` | Comma-separated valid API keys |
+| `MACRO_API_KEYS` | No | `dev-attix-macro-2026` | Comma-separated valid API keys |
 | `POLYGON_API_KEY` | Yes (weekly job) | — | Polygon.io API key |
 | `PILOTAI_DATA_DIR` | No | `./data` | Override data directory path |
 
@@ -41,7 +41,7 @@ POLYGON_API_KEY=your_polygon_key_here
 All endpoints except `/api/v1/health` require an API key passed as a request header:
 
 ```
-X-API-Key: dev-pilotai-macro-2026
+X-API-Key: dev-attix-macro-2026
 ```
 
 **HTTP 401** — missing or invalid key
@@ -79,7 +79,7 @@ curl http://localhost:8420/api/v1/health
 Full weekly snapshot: sector rankings, macro score, events.
 
 ```bash
-curl -H "X-API-Key: dev-pilotai-macro-2026" \
+curl -H "X-API-Key: dev-attix-macro-2026" \
   http://localhost:8420/api/v1/macro/snapshot/latest
 ```
 
@@ -129,10 +129,10 @@ curl -H "X-API-Key: dev-pilotai-macro-2026" \
 Snapshot for a specific Friday (YYYY-MM-DD). Coverage: 2020-01-03 to present.
 
 ```bash
-curl -H "X-API-Key: dev-pilotai-macro-2026" \
+curl -H "X-API-Key: dev-attix-macro-2026" \
   http://localhost:8420/api/v1/macro/snapshot/2022-06-17
 
-curl -H "X-API-Key: dev-pilotai-macro-2026" \
+curl -H "X-API-Key: dev-attix-macro-2026" \
   http://localhost:8420/api/v1/macro/snapshot/2020-03-20
 ```
 
@@ -140,7 +140,7 @@ curl -H "X-API-Key: dev-pilotai-macro-2026" \
 Lightweight summaries for a date range (max 3 years). Returns date, SPY close, top sector, macro score.
 
 ```bash
-curl -H "X-API-Key: dev-pilotai-macro-2026" \
+curl -H "X-API-Key: dev-attix-macro-2026" \
   "http://localhost:8420/api/v1/macro/history?from=2022-01-01&to=2022-12-31"
 ```
 
@@ -166,15 +166,15 @@ Current sector RS rankings with RRG quadrants.
 
 ```bash
 # All sectors and thematic ETFs
-curl -H "X-API-Key: dev-pilotai-macro-2026" \
+curl -H "X-API-Key: dev-attix-macro-2026" \
   http://localhost:8420/api/v1/macro/sectors
 
 # SPDR sectors only
-curl -H "X-API-Key: dev-pilotai-macro-2026" \
+curl -H "X-API-Key: dev-attix-macro-2026" \
   "http://localhost:8420/api/v1/macro/sectors?category=sector"
 
 # Thematic ETFs only (SOXX, XBI, PAVE, ITA)
-curl -H "X-API-Key: dev-pilotai-macro-2026" \
+curl -H "X-API-Key: dev-attix-macro-2026" \
   "http://localhost:8420/api/v1/macro/sectors?category=thematic"
 ```
 
@@ -194,7 +194,7 @@ curl -H "X-API-Key: dev-pilotai-macro-2026" \
 Current 4-dimension macro score.
 
 ```bash
-curl -H "X-API-Key: dev-pilotai-macro-2026" \
+curl -H "X-API-Key: dev-attix-macro-2026" \
   http://localhost:8420/api/v1/macro/score
 ```
 
@@ -234,11 +234,11 @@ Upcoming FOMC, CPI, and NFP events with position scaling factors.
 
 ```bash
 # Default: 14-day horizon
-curl -H "X-API-Key: dev-pilotai-macro-2026" \
+curl -H "X-API-Key: dev-attix-macro-2026" \
   http://localhost:8420/api/v1/macro/events
 
 # Extended: 30-day horizon
-curl -H "X-API-Key: dev-pilotai-macro-2026" \
+curl -H "X-API-Key: dev-attix-macro-2026" \
   "http://localhost:8420/api/v1/macro/events?horizon_days=30"
 ```
 
@@ -280,15 +280,15 @@ Eligible underlyings for credit spread trading given regime.
 
 ```bash
 # Bull regime
-curl -H "X-API-Key: dev-pilotai-macro-2026" \
+curl -H "X-API-Key: dev-attix-macro-2026" \
   "http://localhost:8420/api/v1/macro/eligible?regime=BULL"
 
 # Neutral (default)
-curl -H "X-API-Key: dev-pilotai-macro-2026" \
+curl -H "X-API-Key: dev-attix-macro-2026" \
   http://localhost:8420/api/v1/macro/eligible
 
 # Bear regime
-curl -H "X-API-Key: dev-pilotai-macro-2026" \
+curl -H "X-API-Key: dev-attix-macro-2026" \
   "http://localhost:8420/api/v1/macro/eligible?regime=BEAR"
 ```
 
@@ -334,14 +334,14 @@ kill $(cat /tmp/macro_api.pid)
 
 ### launchd (macOS)
 
-Create `~/Library/LaunchAgents/com.pilotai.macro-api.plist`:
+Create `~/Library/LaunchAgents/com.attix.macro-api.plist`:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" ...>
 <plist version="1.0">
 <dict>
-  <key>Label</key><string>com.pilotai.macro-api</string>
+  <key>Label</key><string>com.attix.macro-api</string>
   <key>ProgramArguments</key>
   <array>
     <string>/usr/bin/python3</string>
@@ -357,7 +357,7 @@ Create `~/Library/LaunchAgents/com.pilotai.macro-api.plist`:
 ```
 
 ```bash
-launchctl load ~/Library/LaunchAgents/com.pilotai.macro-api.plist
+launchctl load ~/Library/LaunchAgents/com.attix.macro-api.plist
 ```
 
 ---
@@ -368,7 +368,7 @@ launchctl load ~/Library/LaunchAgents/com.pilotai.macro-api.plist
 import requests
 
 BASE = "http://localhost:8420"
-HEADERS = {"X-API-Key": "dev-pilotai-macro-2026"}
+HEADERS = {"X-API-Key": "dev-attix-macro-2026"}
 
 # Get latest snapshot
 snap = requests.get(f"{BASE}/api/v1/macro/snapshot/latest", headers=HEADERS).json()

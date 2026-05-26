@@ -29,7 +29,7 @@
 # ============================================================================
 
 paper_mode: true
-db_path: "data/ultimate_v4/pilotai_ultimate_v4.db"
+db_path: "data/ultimate_v4/attix_ultimate_v4.db"
 experiment_id: "ULTIMATE-V4"
 created_by: "maximus"
 version: "4.0"

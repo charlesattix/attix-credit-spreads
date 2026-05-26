@@ -100,13 +100,13 @@ To run paper trading automatically on login:
 
 ```bash
 mkdir -p ~/Library/LaunchAgents
-cat > ~/Library/LaunchAgents/com.pilotai.paper-trading.plist << 'PLIST'
+cat > ~/Library/LaunchAgents/com.attix.paper-trading.plist << 'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.pilotai.paper-trading</string>
+    <string>com.attix.paper-trading</string>
     <key>ProgramArguments</key>
     <array>
         <string>/bin/bash</string>
@@ -130,9 +130,9 @@ cat > ~/Library/LaunchAgents/com.pilotai.paper-trading.plist << 'PLIST'
         <string>https://paper-api.alpaca.markets</string>
     </dict>
     <key>StandardOutPath</key>
-    <string>/tmp/pilotai-paper-trading.out</string>
+    <string>/tmp/attix-paper-trading.out</string>
     <key>StandardErrorPath</key>
-    <string>/tmp/pilotai-paper-trading.err</string>
+    <string>/tmp/attix-paper-trading.err</string>
     <key>StartCalendarInterval</key>
     <dict>
         <key>Hour</key>
@@ -149,12 +149,12 @@ PLIST
 
 Load the agent:
 ```bash
-launchctl load ~/Library/LaunchAgents/com.pilotai.paper-trading.plist
+launchctl load ~/Library/LaunchAgents/com.attix.paper-trading.plist
 ```
 
 Unload:
 ```bash
-launchctl unload ~/Library/LaunchAgents/com.pilotai.paper-trading.plist
+launchctl unload ~/Library/LaunchAgents/com.attix.paper-trading.plist
 ```
 
 ---

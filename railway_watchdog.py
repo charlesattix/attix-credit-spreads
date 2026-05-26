@@ -111,13 +111,13 @@ def _parse_env_file(path: Path) -> Dict[str, str]:
 def _heartbeat_key_from_db(db_path: str) -> str:
     """Derive heartbeat filename key from db_path — mirrors main.py's _write_heartbeat().
 
-    main.py writes: data/.last_scan_{basename(db).replace("pilotai_","").replace(".db","")}
+    main.py writes: data/.last_scan_{basename(db).replace("attix_","").replace(".db","")}
     e.g. data/pilotai_exp400.db -> "exp400"
          data/exp503/pilotai_exp503.db -> "exp503"
     """
     resolved = resolve_db_path(db_path)
     base = Path(resolved).name  # e.g. "pilotai_exp400.db"
-    key = base.replace("pilotai_", "").replace(".db", "")
+    key = base.replace("attix_", "").replace(".db", "")
     return key  # e.g. "exp400"
 
 

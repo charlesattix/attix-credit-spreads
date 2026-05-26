@@ -486,7 +486,7 @@ def send_html_report_telegram(html: str, report_date: str, experiment_id: str) -
 
     try:
         with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".html", delete=False, prefix="pilotai_report_"
+            mode="w", suffix=".html", delete=False, prefix="attix_report_"
         ) as f:
             f.write(html)
             tmp_path = f.name

@@ -434,7 +434,7 @@ Process dies unexpectedly
 ```
 
 **State persistence:**
-- All position state in SQLite (`data/pilotai_ultimate.db`)
+- All position state in SQLite (`data/attix_ultimate.db`)
 - Equity curve, trade history, risk state persisted per cycle
 - On crash, worst case is one missed signal cycle (not a position loss)
 
@@ -457,7 +457,7 @@ Process dies unexpectedly
 
 - [ ] Install cron jobs for daily scanner + data update on production host
 - [ ] Create `.env.ultimate` with Alpaca paper credentials
-- [ ] Create `data/pilotai_ultimate.db` SQLite database
+- [ ] Create `data/attix_ultimate.db` SQLite database
 - [ ] Configure Telegram bot + channel, test message delivery
 - [ ] Verify Python environment: all dependencies installed, tests passing
 - [ ] Verify IronVault `options_cache.db` accessible and current

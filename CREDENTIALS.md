@@ -34,7 +34,7 @@ python3 scripts/portfolio_status.py --summary
 
 | Experiment | Status | Alpaca Account | .env File | Config | DB |
 |---|---|---|---|---|---|
-| **exp400** | **ACTIVE** (tmux:exp400) | PA3D6UPXF5F2 | `.env.champion` | `paper_champion.yaml` | `pilotai_champion.db` |
+| **exp400** | **ACTIVE** (tmux:exp400) | PA3D6UPXF5F2 | `.env.champion` | `paper_champion.yaml` | `attix_champion.db` |
 | **exp401** | **ACTIVE** (tmux:exp401) | PA3Y2XDYB9I3 | `.env.exp401` | `paper_exp401.yaml` | `pilotai_exp401.db` |
 | exp036 | stopped | PA3D6UPXF5F2 | `.env.exp036` | `paper_exp036.yaml` | `pilotai_exp036.db` |
 | exp059 | stopped | PA3LP867WNGU | `.env.exp059` | `exp_059_friday_ic_risk10.json` | `pilotai_exp059.db` |

@@ -26,7 +26,7 @@ paper_mode: true
 experiment_id: "EXP-1570"
 parent_experiment: "EXP-1470"  # North Star portfolio source
 created_by: "maximus"
-db_path: "data/pilotai_north_star.db"
+db_path: "data/attix_north_star.db"
 
 # --- Tickers ---
 tickers:

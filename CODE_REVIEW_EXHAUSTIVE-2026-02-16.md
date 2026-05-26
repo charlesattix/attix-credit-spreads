@@ -3925,7 +3925,7 @@ The application uses a single static Bearer token (`API_AUTH_TOKEN`) for all API
 **Files:**
 - `/home/pmcerlean/projects/pilotai-credit-spreads/web/lib/user-id.ts`, lines 5-18
 
-**Description:** The `getUserId()` function generates and stores a user ID in `localStorage` under the key `pilotai_user_id`. Any JavaScript running on the same origin (or a user via DevTools) can read, modify, or replace this value to impersonate another user. The value is sent in request bodies and query parameters (though as noted in SEC-AUTH-04, the server ignores it for the `x-user-id` header).
+**Description:** The `getUserId()` function generates and stores a user ID in `localStorage` under the key `attix_user_id`. Any JavaScript running on the same origin (or a user via DevTools) can read, modify, or replace this value to impersonate another user. The value is sent in request bodies and query parameters (though as noted in SEC-AUTH-04, the server ignores it for the `x-user-id` header).
 
 **Impact:** If the application is ever updated to trust client-supplied userId values, user impersonation becomes trivial. Currently, this is a latent vulnerability since the server derives userId from the auth token.
 

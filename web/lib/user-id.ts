@@ -2,7 +2,7 @@
 // Generates a persistent browser-based user ID for paper trading
 // When real auth is connected, replace getUserId() with the real user ID
 
-const STORAGE_KEY = 'pilotai_user_id'
+const STORAGE_KEY = 'attix_user_id'
 
 // Feature flag — set to false to disable anonymous paper trading
 export const PAPER_TRADING_ENABLED = true

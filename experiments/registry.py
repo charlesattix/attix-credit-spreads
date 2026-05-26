@@ -377,7 +377,7 @@ def find_orphan_dbs(registry: Optional[dict] = None) -> list[str]:
         num = m.group(1)
         candidates = {f"EXP-{num}", f"EXP-{int(num)}"}
         # Check if any DB file exists in this directory
-        dbs = list(db_dir.glob("pilotai_*.db"))
+        dbs = list(db_dir.glob("attix_*.db"))
         if dbs and not (candidates & set(experiments.keys())):
             orphans.append(str(dbs[0].relative_to(PROJECT_ROOT)))
     return orphans

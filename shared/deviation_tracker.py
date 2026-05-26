@@ -9,7 +9,7 @@ Two layers:
 Reuses functions from scripts/live_vs_backtest.py rather than duplicating logic.
 
 CLI usage:
-    python -m shared.deviation_tracker --db data/pilotai_champion.db --report
+    python -m shared.deviation_tracker --db data/attix_champion.db --report
 """
 
 import argparse

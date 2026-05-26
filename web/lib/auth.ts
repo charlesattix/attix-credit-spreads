@@ -28,7 +28,7 @@ export async function verifyAuth(request: Request): Promise<NextResponse | null>
     }
 
     // Derive the same key used in api/auth/route.ts for JWT signing
-    const secret = crypto.createHmac('sha256', 'pilotai-jwt-signing-v1').update(token).digest()
+    const secret = crypto.createHmac('sha256', 'attix-jwt-signing-v1').update(token).digest()
     await jwtVerify(jwt, secret)
 
     return null

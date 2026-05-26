@@ -21,7 +21,7 @@ The system runs autonomously at market open each trading day, archives all data 
 
 ## API Constraints (Confirmed)
 
-**One endpoint exists:** `POST https://ai-stag.pilotai.com/v2/strategy_recommendation`
+**One endpoint exists:** `POST https://ai-stag.attix.com/v2/strategy_recommendation`
 
 All 22 alternative endpoints probed returned HTTP 404. There is no:
 - Historical data endpoint
@@ -344,7 +344,7 @@ TELEGRAM_CHAT_ID=<your-chat-id>
 
 # Optional overrides
 PILOTAI_DB_PATH=/path/to/pilotai_signal.db   # default: data/pilotai_signal.db
-PILOTAI_API_URL=https://ai-stag.pilotai.com/v2/strategy_recommendation
+PILOTAI_API_URL=https://ai-stag.attix.com/v2/strategy_recommendation
 PILOTAI_BATCH_SIZE=6                           # slugs per API request
 PILOTAI_REQUEST_TIMEOUT=90                     # seconds per batch
 ```

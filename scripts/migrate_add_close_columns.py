@@ -5,7 +5,7 @@ Migration: add close_source and alpaca_close_activity_id columns to trades table
 Discovers DB paths from:
   - .env.exp* files (PILOTAI_DB_PATH)
   - config*.yaml files (db_path key)
-  - glob scan of data/**/*.db for pilotai*.db files
+  - glob scan of data/**/*.db for attix*.db files
 
 Uses ALTER TABLE ADD COLUMN with try/except for idempotency — safe to re-run.
 """
@@ -56,11 +56,11 @@ def collect_db_paths() -> set[Path]:
     except ImportError:
         pass
 
-    # 3. Glob scan for all pilotai*.db in data/
-    for db_file in PROJECT_ROOT.glob("data/**/pilotai*.db"):
+    # 3. Glob scan for all attix*.db in data/
+    for db_file in PROJECT_ROOT.glob("data/**/attix*.db"):
         paths.add(db_file)
-    # Also catch top-level data/pilotai*.db
-    for db_file in PROJECT_ROOT.glob("data/pilotai*.db"):
+    # Also catch top-level data/attix*.db
+    for db_file in PROJECT_ROOT.glob("data/attix*.db"):
         paths.add(db_file)
 
     return paths

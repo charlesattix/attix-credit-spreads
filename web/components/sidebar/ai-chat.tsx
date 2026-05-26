@@ -138,7 +138,7 @@ export function AIChat({ forceExpanded }: { forceExpanded?: boolean } = {}) {
             <Sparkles className="w-3.5 h-3.5 text-white" />
           </div>
           <div>
-            <h3 className="font-semibold text-sm">PilotAI Assistant</h3>
+            <h3 className="font-semibold text-sm">Attix Assistant</h3>
             <div className="flex items-center gap-1">
               <div className="w-1.5 h-1.5 bg-profit rounded-full animate-pulse"></div>
               <span className="text-[10px] text-muted-foreground">Online</span>

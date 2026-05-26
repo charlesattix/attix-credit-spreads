@@ -8,7 +8,7 @@ import { Toaster } from "sonner"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Alerts by PilotAI - Smart Options Trading Alerts",
+  title: "Alerts by Attix - Smart Options Trading Alerts",
   description: "AI-powered credit spread trading alerts with high probability of profit",
 }
 

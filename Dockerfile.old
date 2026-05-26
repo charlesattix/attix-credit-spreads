@@ -62,12 +62,12 @@ COPY docker-entrypoint.sh .
 RUN chmod +x docker-entrypoint.sh
 
 # Create non-root user and data directories
-RUN groupadd --gid 1001 pilotai && \
-    useradd --uid 1001 --gid 1001 --create-home pilotai && \
+RUN groupadd --gid 1001 attix && \
+    useradd --uid 1001 --gid 1001 --create-home attix && \
     mkdir -p /app/data /app/output /app/logs && \
-    chown -R pilotai:pilotai /app/data /app/output /app/logs
+    chown -R attix:attix /app/data /app/output /app/logs
 
-USER pilotai
+USER attix
 
 # Volume is configured via railway.toml (not VOLUME directive, which conflicts
 # with Railway's volume management). For local Docker: use -v flag to mount.

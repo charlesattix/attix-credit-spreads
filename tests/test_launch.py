@@ -32,7 +32,7 @@ def _registry(status="configuring"):
                 "alpaca_account_id": "PATEST123",
                 "env_file": ".env.test",
                 "config_path": "configs/test.yaml",
-                "db_path": "data/pilotai_test.db",
+                "db_path": "data/attix_test.db",
                 "tmux_session": "exptest",
                 "backtest_baseline": {"win_rate": 70.0, "mc_worst_dd_pct": 12.0},
             },
@@ -77,7 +77,7 @@ def project(tmp_path):
         "root": tmp_path,
         "registry": reg_path,
         "sentinel": sent_path,
-        "db": tmp_path / "data" / "pilotai_test.db",
+        "db": tmp_path / "data" / "attix_test.db",
     }
 
 

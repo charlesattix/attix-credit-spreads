@@ -24,7 +24,7 @@ pilotai-credit-spreads/
 ├── configs/
 │   └── deploy_exp1220_1.5x.yaml       ← strategy config
 ├── deploy/
-│   ├── com.pilotai.exp1220.plist      ← macOS LaunchAgent
+│   ├── com.attix.exp1220.plist      ← macOS LaunchAgent
 │   └── README_launchagent.md          ← LaunchAgent install guide
 ├── tests/
 │   └── test_run_exp1220.py            ← 53 tests, all passing
@@ -37,7 +37,7 @@ Verify with:
 git checkout maximus/clean-features
 git pull
 ls scripts/run_exp1220.py scripts/launch_exp1220.sh configs/deploy_exp1220_1.5x.yaml \
-   deploy/com.pilotai.exp1220.plist .env.exp1220.example DEPLOY_CHECKLIST.md
+   deploy/com.attix.exp1220.plist .env.exp1220.example DEPLOY_CHECKLIST.md
 ```
 
 ---
@@ -53,7 +53,7 @@ ls scripts/run_exp1220.py scripts/launch_exp1220.sh configs/deploy_exp1220_1.5x.
 
 ### 0.2 — Repo checkout
 ```bash
-cd ~/pilotai  # or wherever your checkout lives
+cd ~/attix  # or wherever your checkout lives
 git fetch origin
 git checkout maximus/clean-features
 git pull
@@ -86,7 +86,7 @@ Yahoo Finance VIX/SPY fetch uses stdlib `urllib`, no extra package needed.
 
 ### 1.1 — Create `.env` from template
 ```bash
-cd ~/pilotai  # or your actual checkout path
+cd ~/attix  # or your actual checkout path
 cp .env.exp1220.example .env
 ```
 
@@ -219,8 +219,8 @@ Only enable after 3-5 successful manual scans.
 
 ### 4.1 — Edit plist for your actual path
 ```bash
-# If your checkout is NOT at /Users/charles/pilotai, edit the plist:
-sed -i '' "s|/Users/charles/pilotai|$(pwd)|g" deploy/com.pilotai.exp1220.plist
+# If your checkout is NOT at /Users/charles/attix, edit the plist:
+sed -i '' "s|/Users/charles/attix|$(pwd)|g" deploy/com.attix.exp1220.plist
 ```
 
 ### 4.2 — Install LaunchAgent
@@ -232,13 +232,13 @@ This copies the plist, loads it via `launchctl`, and confirms registration.
 
 ### 4.3 — Verify installation
 ```bash
-launchctl list | grep pilotai
+launchctl list | grep attix
 ```
-Should show: `com.pilotai.exp1220` with PID or `-`.
+Should show: `com.attix.exp1220` with PID or `-`.
 
 ### 4.4 — Test manual trigger (bypass schedule)
 ```bash
-launchctl start com.pilotai.exp1220
+launchctl start com.attix.exp1220
 sleep 5
 tail -20 logs/exp1220.log
 ```
@@ -298,7 +298,7 @@ Prompts for confirmation. Submits BTC (short) + STC (long) for every open positi
 
 ### Disable the scheduler
 ```bash
-launchctl unload ~/Library/LaunchAgents/com.pilotai.exp1220.plist
+launchctl unload ~/Library/LaunchAgents/com.attix.exp1220.plist
 ```
 
 ### Uninstall completely
@@ -369,7 +369,7 @@ After 8 weeks of paper trading:
 | `scripts/run_exp1220.py` | Main scanner |
 | `scripts/launch_exp1220.sh` | One-command launcher |
 | `configs/deploy_exp1220_1.5x.yaml` | Strategy config |
-| `deploy/com.pilotai.exp1220.plist` | macOS LaunchAgent |
+| `deploy/com.attix.exp1220.plist` | macOS LaunchAgent |
 | `deploy/README_launchagent.md` | Detailed install guide |
 | `.env` | Credentials (YOU create this) |
 | `.env.exp1220.example` | Template |
@@ -465,7 +465,7 @@ Each config:
 Before installing any LaunchAgents:
 
 ```bash
-cd ~/pilotai
+cd ~/attix
 for lev in 2x 3x 4x 5x; do
   echo "═══ Smoke test paper_exp1220_${lev}.yaml ═══"
   python3 scripts/run_exp1220.py \
@@ -495,17 +495,17 @@ logs/paper_exp1220_5x.log
 
 ### A.3 — LaunchAgent for each leverage level
 
-Copy `deploy/com.pilotai.exp1220.plist` four times, one per leverage:
+Copy `deploy/com.attix.exp1220.plist` four times, one per leverage:
 
 ```bash
 cd deploy
 for lev in 2x 3x 4x 5x; do
-  cp com.pilotai.exp1220.plist com.pilotai.exp1220.${lev}.plist
+  cp com.attix.exp1220.plist com.attix.exp1220.${lev}.plist
 done
 ```
 
 Edit each new plist and change:
-1. `<key>Label</key>` value to `com.pilotai.exp1220.${lev}`
+1. `<key>Label</key>` value to `com.attix.exp1220.${lev}`
 2. The `ProgramArguments` array to add `--config configs/paper_exp1220_${lev}.yaml`
 3. The `StandardOutPath` and `StandardErrorPath` to point to
    `logs/paper_exp1220_${lev}.launchagent.{out,err}.log`
@@ -514,10 +514,10 @@ Install all four:
 
 ```bash
 for lev in 2x 3x 4x 5x; do
-  cp deploy/com.pilotai.exp1220.${lev}.plist ~/Library/LaunchAgents/
-  launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.pilotai.exp1220.${lev}.plist
+  cp deploy/com.attix.exp1220.${lev}.plist ~/Library/LaunchAgents/
+  launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.attix.exp1220.${lev}.plist
 done
-launchctl list | grep com.pilotai.exp1220
+launchctl list | grep com.attix.exp1220
 ```
 
 You should see five entries (1.5× baseline + 2x/3x/4x/5x).

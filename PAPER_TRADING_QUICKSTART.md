@@ -127,7 +127,7 @@ python main.py dashboard --config configs/paper_champion.yaml --env-file .env.ch
 
 ### View Trade Log
 ```bash
-sqlite3 data/pilotai_champion.db "SELECT * FROM trades ORDER BY opened_at DESC LIMIT 20;"
+sqlite3 data/attix_champion.db "SELECT * FROM trades ORDER BY opened_at DESC LIMIT 20;"
 ```
 
 ### Telegram Alerts (if configured)

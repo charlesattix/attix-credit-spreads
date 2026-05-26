@@ -13,7 +13,7 @@ Auth:
         X-API-Key: <key>
 
     Valid keys set via env var MACRO_API_KEYS (comma-separated).
-    Default dev key: dev-pilotai-macro-2026
+    Default dev key: dev-attix-macro-2026
 
 Rate limit: 100 requests/minute per API key (in-memory sliding window).
 """
@@ -73,7 +73,7 @@ REGIME_SUPPORTED_UNDERLYINGS: frozenset = frozenset({"SPY"})
 # Auth + rate limiting
 # ─────────────────────────────────────────────────────────────────────────────
 
-_DEFAULT_DEV_KEY = "dev-pilotai-macro-2026"
+_DEFAULT_DEV_KEY = "dev-attix-macro-2026"
 _rate_windows: Dict[str, deque] = defaultdict(deque)
 _RATE_LIMIT = 100      # requests per 60s window
 _RATE_WINDOW = 60.0    # seconds

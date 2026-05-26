@@ -166,7 +166,7 @@ def load_mc_trades(max_files: int = 20, sample_seeds: int = 50) -> pd.DataFrame:
 def load_db_trades() -> pd.DataFrame:
     """Load closed trades from all experiment SQLite DBs."""
     db_files = (
-        list(DATA_DIR.glob("pilotai_*.db"))
+        list(DATA_DIR.glob("attix_*.db"))
         + list(DATA_DIR.glob("paper_trading.db"))
     )
     all_rows: list[dict] = []

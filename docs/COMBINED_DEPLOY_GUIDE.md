@@ -45,7 +45,7 @@ pilotai-credit-spreads/
 │   ├── run_exp1220.py                 ← autonomous EXP-1220 scanner
 │   └── launch_exp1220.sh              ← EXP-1220 launcher
 ├── deploy/
-│   ├── com.pilotai.exp1220.plist     ← existing LaunchAgent for EXP-1220
+│   ├── com.attix.exp1220.plist     ← existing LaunchAgent for EXP-1220
 │   └── README_launchagent.md
 ├── docs/
 │   └── COMBINED_DEPLOY_GUIDE.md       ← this file
@@ -78,7 +78,7 @@ ls configs/combined_portfolio.yaml \
 
 ### 0.2 Repo + Python
 ```bash
-cd ~/pilotai  # or your actual checkout path
+cd ~/attix  # or your actual checkout path
 git fetch origin
 git checkout maximus/clean-features
 git pull
@@ -244,7 +244,7 @@ python3 scripts/run_combined.py --report --report-days 7
 Only automate after 3-5 successful manual runs.
 
 ### 4.1 Create LaunchAgent plist
-Save to `~/Library/LaunchAgents/com.pilotai.combined.plist`:
+Save to `~/Library/LaunchAgents/com.attix.combined.plist`:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -252,18 +252,18 @@ Save to `~/Library/LaunchAgents/com.pilotai.combined.plist`:
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.pilotai.combined</string>
+    <string>com.attix.combined</string>
 
     <key>ProgramArguments</key>
     <array>
         <string>/usr/bin/env</string>
         <string>bash</string>
         <string>-lc</string>
-        <string>cd /Users/charles/pilotai &amp;&amp; set -a &amp;&amp; source .env &amp;&amp; set +a &amp;&amp; /usr/bin/python3 scripts/run_combined.py</string>
+        <string>cd /Users/charles/attix &amp;&amp; set -a &amp;&amp; source .env &amp;&amp; set +a &amp;&amp; /usr/bin/python3 scripts/run_combined.py</string>
     </array>
 
     <key>WorkingDirectory</key>
-    <string>/Users/charles/pilotai</string>
+    <string>/Users/charles/attix</string>
 
     <key>StartCalendarInterval</key>
     <array>
@@ -275,9 +275,9 @@ Save to `~/Library/LaunchAgents/com.pilotai.combined.plist`:
     </array>
 
     <key>StandardOutPath</key>
-    <string>/Users/charles/pilotai/logs/combined_launchd.out.log</string>
+    <string>/Users/charles/attix/logs/combined_launchd.out.log</string>
     <key>StandardErrorPath</key>
-    <string>/Users/charles/pilotai/logs/combined_launchd.err.log</string>
+    <string>/Users/charles/attix/logs/combined_launchd.err.log</string>
 
     <key>RunAtLoad</key>
     <false/>
@@ -295,29 +295,29 @@ Save to `~/Library/LaunchAgents/com.pilotai.combined.plist`:
 </plist>
 ```
 
-**IMPORTANT:** Replace `/Users/charles/pilotai` with your actual checkout path.
+**IMPORTANT:** Replace `/Users/charles/attix` with your actual checkout path.
 
 ### 4.2 Install
 ```bash
-chmod 644 ~/Library/LaunchAgents/com.pilotai.combined.plist
-launchctl unload ~/Library/LaunchAgents/com.pilotai.combined.plist 2>/dev/null
-launchctl load   ~/Library/LaunchAgents/com.pilotai.combined.plist
-launchctl list | grep pilotai
+chmod 644 ~/Library/LaunchAgents/com.attix.combined.plist
+launchctl unload ~/Library/LaunchAgents/com.attix.combined.plist 2>/dev/null
+launchctl load   ~/Library/LaunchAgents/com.attix.combined.plist
+launchctl list | grep attix
 ```
 
 ### 4.3 Test
 ```bash
-launchctl start com.pilotai.combined
+launchctl start com.attix.combined
 sleep 5
 tail -20 logs/combined_portfolio.log
 ```
 
 Both the combined runner AND EXP-1220 scanner should run daily. Verify:
 ```bash
-launchctl list | grep pilotai
+launchctl list | grep attix
 # should show both:
-#   com.pilotai.combined
-#   com.pilotai.exp1220
+#   com.attix.combined
+#   com.attix.exp1220
 ```
 
 ---
@@ -393,8 +393,8 @@ Prompts for confirmation, then submits BTC+STC for every open EXP-1220 position.
 
 ### Disable schedulers
 ```bash
-launchctl unload ~/Library/LaunchAgents/com.pilotai.combined.plist
-launchctl unload ~/Library/LaunchAgents/com.pilotai.exp1220.plist
+launchctl unload ~/Library/LaunchAgents/com.attix.combined.plist
+launchctl unload ~/Library/LaunchAgents/com.attix.exp1220.plist
 ```
 
 ### Runner won't start
@@ -455,9 +455,9 @@ python3 scripts/run_combined.py --report       # weekly P&L
 ./scripts/launch_exp1220.sh close-all
 
 # LaunchAgent management
-launchctl load ~/Library/LaunchAgents/com.pilotai.combined.plist
-launchctl start com.pilotai.combined
-launchctl list | grep pilotai
+launchctl load ~/Library/LaunchAgents/com.attix.combined.plist
+launchctl start com.attix.combined
+launchctl list | grep attix
 ```
 
 ---

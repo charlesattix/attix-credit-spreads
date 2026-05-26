@@ -75,9 +75,9 @@ COMPASS score has a **negative correlation (-0.13)** with forward returns:
 
 ## API Access
 
-**Live API:** https://pilotai-macro-intelligence-production.up.railway.app
-**Swagger docs:** https://pilotai-macro-intelligence-production.up.railway.app/docs
-**Auth:** `X-API-Key: dev-pilotai-macro-2026`
+**Live API:** https://attix-macro-intelligence-production.up.railway.app
+**Swagger docs:** https://attix-macro-intelligence-production.up.railway.app/docs
+**Auth:** `X-API-Key: dev-attix-macro-2026`
 
 ### Python Integration
 ```python

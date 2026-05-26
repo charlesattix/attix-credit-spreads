@@ -129,11 +129,11 @@ _API_KEY = os.environ.get("DASHBOARD_API_KEY", _DEFAULT_API_KEY)
 
 **`deploy/macro-api/api/macro_api.py` (lines 68, 77):**
 ```python
-_DEFAULT_DEV_KEY = "dev-pilotai-macro-2026"
+_DEFAULT_DEV_KEY = "dev-attix-macro-2026"
 raw = os.getenv("MACRO_API_KEYS", _DEFAULT_DEV_KEY)
 ```
 
-If `DASHBOARD_API_KEY` or `MACRO_API_KEYS` are not set in the Railway environment, the API silently accepts a well-known public key. Any attacker can authenticate with `dev-attix-2026` or `dev-pilotai-macro-2026`.
+If `DASHBOARD_API_KEY` or `MACRO_API_KEYS` are not set in the Railway environment, the API silently accepts a well-known public key. Any attacker can authenticate with `dev-attix-2026` or `dev-attix-macro-2026`.
 
 The dashboard also logs whether the default is active (line 278–279), leaking this fact to anyone with log access.
 

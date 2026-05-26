@@ -116,7 +116,7 @@ nano configs/paper_exp1220_3x.yaml
 
 2. Restart the scanner LaunchAgent:
 ```bash
-launchctl kickstart -k gui/$(id -u)/com.pilotai.exp1220-3x
+launchctl kickstart -k gui/$(id -u)/com.attix.exp1220-3x
 # Or whatever the LaunchAgent is named
 ```
 

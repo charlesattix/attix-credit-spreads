@@ -1,5 +1,5 @@
 [project]
-name = "pilotai-credit-spreads"
+name = "attix-credit-spreads"
 version = "0.1.0"
 description = "AI-powered credit spread trading system"
 requires-python = ">=3.10"

@@ -945,7 +945,7 @@ class PositionMonitor:
 
 ```bash
 # Run as systemd service (Linux)
-# /etc/systemd/system/pilotai-position-monitor.service
+# /etc/systemd/system/attix-position-monitor.service
 
 [Unit]
 Description=Attix Position Monitor

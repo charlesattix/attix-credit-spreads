@@ -95,7 +95,7 @@ A credit spread is an options strategy where you simultaneously sell a closer-to
 │  • Real-time ticker tape (TradingView)           │
 │  • Performance stats (from real trade data)      │
 │  • Hosted on Railway (permanent URL)             │
-│  https://pilotai-alerts-production.up.railway.app│
+│  https://attix-alerts-production.up.railway.app│
 └─────────────────────────────────────────────────┘
 ```
 
@@ -203,8 +203,8 @@ Alpaca provides a real paper trading environment with:
 
 | Resource | URL |
 |---|---|
-| **Dashboard** | https://pilotai-alerts-production.up.railway.app |
-| **Paper Trading** | https://pilotai-alerts-production.up.railway.app/paper-trading |
+| **Dashboard** | https://attix-alerts-production.up.railway.app |
+| **Paper Trading** | https://attix-alerts-production.up.railway.app/paper-trading |
 | **Alpaca Dashboard** | https://app.alpaca.markets (atlas@attix.com) |
 | **System Files** | Mac Studio: ~/credit-spread-system/ |
 

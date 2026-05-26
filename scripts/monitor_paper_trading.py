@@ -19,7 +19,7 @@ Usage:
     python3 scripts/monitor_paper_trading.py --dry-run        # don't write files
 
 Cron example (daily at 16:05 ET):
-    5 16 * * 1-5  cd /Users/charles/pilotai && source .env && \\
+    5 16 * * 1-5  cd /Users/charles/attix && source .env && \\
                   python3 scripts/monitor_paper_trading.py >> logs/monitor.log 2>&1
 """
 

@@ -756,7 +756,7 @@ def _run_gates_execution(exp_id: str) -> List[GateOutcome]:
         db_path = str(
             _PROJECT_ROOT / "data"
             / exp_id.lower().replace("-", "")
-            / f"pilotai_{exp_id.lower().replace('-', '')}.db"
+            / f"attix_{exp_id.lower().replace('-', '')}.db"
         )
         result = check_execution_gates(exp_id, db_path)
 

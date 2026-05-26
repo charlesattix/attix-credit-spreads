@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""scanner_health.py — deterministic liveness probe for every PilotAI scanner.
+"""scanner_health.py — deterministic liveness probe for every Attix scanner.
 
 Purpose
 -------
@@ -11,12 +11,12 @@ restart loop, or running but unable to reach Alpaca. This script provides the
 Source of truth
 ---------------
 The set of *expected* scanners is derived from ``~/Library/LaunchAgents/
-com.pilotai.*.plist`` — the launchd configuration is what actually gets
+com.attix.*.plist`` — the launchd configuration is what actually gets
 started on boot. ``experiments.yaml`` drifts and is NOT consulted.
 
 Per-scanner probes
 ------------------
-For each ``com.pilotai.expNNN`` label we report:
+For each ``com.attix.expNNN`` label we report:
 
   launchctl       PID + last exit code from ``launchctl list``
   process_alive   Whether the PID is actually running right now
@@ -64,11 +64,11 @@ from typing import Any, Dict, List, Optional
 # ---------------------------------------------------------------------------
 
 LAUNCHAGENTS_DIR = Path.home() / "Library" / "LaunchAgents"
-# Patterns we recognise as "pilotai-managed daemons":
-#   com.pilotai.*    — paper-trading scanners (one per experiment)
+# Patterns we recognise as "attix-managed daemons":
+#   com.attix.*    — paper-trading scanners (one per experiment)
 #   com.attix.sentinel — sentinel watchdog (different prefix, same monitoring need)
 # Each pattern is fed into Path.glob; results are deduplicated by stem.
-PLIST_GLOBS = ("com.pilotai.*.plist", "com.attix.sentinel.plist")
+PLIST_GLOBS = ("com.attix.*.plist", "com.attix.sentinel.plist")
 
 # Beyond this, the log is considered stale during market hours.
 LOG_STALE_SECONDS = 30 * 60
@@ -287,7 +287,7 @@ def probe(plist_path: Path, project_root: Path) -> Dict[str, Any]:
     """Run every check against one scanner's plist and return a result dict."""
     plist = _read_plist(plist_path)
     label = plist.get("Label") or plist_path.stem
-    exp_id = label.replace("com.pilotai.", "").replace("com.attix.", "")
+    exp_id = label.replace("com.attix.", "").replace("com.attix.", "")
 
     # Determine the lifecycle mode of this plist:
     #   keepalive    → process should always be running (KeepAlive=true)

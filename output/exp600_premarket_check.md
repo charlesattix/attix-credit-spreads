@@ -136,7 +136,7 @@ Next slot at 2026-03-23 09:00 ET [pre_market]
 
 ```
 launchctl list | grep exp600
-→ 20549  0  com.pilotai.exp600
+→ 20549  0  com.attix.exp600
 ```
 
 | Check | Value | Status |

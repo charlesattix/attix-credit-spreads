@@ -16,10 +16,10 @@ build:
 	cd web && npm run build
 
 docker-build:
-	docker build -t pilotai-cs .
+	docker build -t attix-cs .
 
 docker-run:
-	docker run --rm -p 8080:8080 --env-file .env pilotai-cs
+	docker run --rm -p 8080:8080 --env-file .env attix-cs
 
 # === TEST ===
 test: test-python test-web

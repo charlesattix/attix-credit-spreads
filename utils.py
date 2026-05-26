@@ -129,12 +129,12 @@ def validate_config(config: AppConfig) -> None:
     # --- Populate defaults for optional sections ---
     config.setdefault('logging', {
         'level': 'INFO',
-        'file': 'logs/pilotai.log',
+        'file': 'logs/attix.log',
         'console': True,
     })
     log_cfg = config['logging']
     log_cfg.setdefault('level', 'INFO')
-    log_cfg.setdefault('file', 'logs/pilotai.log')
+    log_cfg.setdefault('file', 'logs/attix.log')
     log_cfg.setdefault('console', True)
 
     config.setdefault('alerts', {'output_json': True, 'output_text': True})

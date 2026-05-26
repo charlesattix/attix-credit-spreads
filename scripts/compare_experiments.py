@@ -3,7 +3,7 @@
 
 Usage:
     python scripts/compare_experiments.py
-    python scripts/compare_experiments.py data/pilotai_champion.db data/pilotai_exp401.db
+    python scripts/compare_experiments.py data/attix_champion.db data/pilotai_exp401.db
 """
 
 import sqlite3
@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 
 DEFAULT_DBS = {
-    "EXP-400": "data/pilotai_champion.db",
+    "EXP-400": "data/attix_champion.db",
     "EXP-401": "data/pilotai_exp401.db",
 }
 
@@ -93,7 +93,7 @@ def main():
         # Custom DB paths from command line
         dbs = {}
         for i, path in enumerate(sys.argv[1:]):
-            label = Path(path).stem.replace("pilotai_", "").upper()
+            label = Path(path).stem.replace("attix_", "").upper()
             dbs[label] = path
     else:
         dbs = DEFAULT_DBS

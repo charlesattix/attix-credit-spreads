@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────────────────────────
-# PilotAI Signal Service — Cron wrapper
+# Attix Signal Service — Cron wrapper
 #
 # Cron schedule (9:35 AM ET Mon–Fri):
 #   35 9 * * 1-5 /Users/charlesbot/projects/pilotai-credit-spreads/scripts/run_signal_service.sh

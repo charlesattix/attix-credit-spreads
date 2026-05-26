@@ -76,7 +76,7 @@ def _count_trades_today(exp_id: str) -> int:
         numeric = exp_id.removeprefix("EXP-").lower().replace("-", "")
         db_path = _PROJECT_ROOT / f"data/pilotai_exp{numeric}.db"
         if not db_path.exists():
-            db_path = _PROJECT_ROOT / f"data/pilotai_{exp_id.lower().replace('-', '')}.db"
+            db_path = _PROJECT_ROOT / f"data/attix_{exp_id.lower().replace('-', '')}.db"
         if not db_path.exists():
             return 0
 

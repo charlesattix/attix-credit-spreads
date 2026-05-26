@@ -53,7 +53,7 @@ Run these three checks **every time**, no exceptions:
 ps aux | grep main.py
 
 # 2. Check loaded LaunchAgents
-launchctl list | grep pilotai
+launchctl list | grep attix
 
 # 3. Read this file
 cat SCANNER-OWNERSHIP.md
@@ -70,10 +70,10 @@ If unsure whether a process should be running, ask Charles before proceeding.
 
 | Experiment | Name | Ticker | Alpaca Account ID | Executor | Infrastructure |
 |------------|------|--------|-------------------|----------|----------------|
-| EXP-400 | The Champion | SPY | `PA36XFVLG0WE` | Charles | LaunchAgent: `com.pilotai.exp400.plist` |
-| EXP-401 | The Blend | SPY | `PA3Y2XDYB9I3` | Charles | LaunchAgent: `com.pilotai.exp401.plist` |
-| EXP-503 | ML V2 Aggressive | SPY | `PA3Z9PLVYUL5` | Charles | LaunchAgent: `com.pilotai.exp503.plist` |
-| EXP-600 | IBIT Adaptive | IBIT | `PA3O14JAJHJ0` | Charles | LaunchAgent: `com.pilotai.exp600.plist` |
+| EXP-400 | The Champion | SPY | `PA36XFVLG0WE` | Charles | LaunchAgent: `com.attix.exp400.plist` |
+| EXP-401 | The Blend | SPY | `PA3Y2XDYB9I3` | Charles | LaunchAgent: `com.attix.exp401.plist` |
+| EXP-503 | ML V2 Aggressive | SPY | `PA3Z9PLVYUL5` | Charles | LaunchAgent: `com.attix.exp503.plist` |
+| EXP-600 | IBIT Adaptive | IBIT | `PA3O14JAJHJ0` | Charles | LaunchAgent: `com.attix.exp600.plist` |
 | EXP-700 | ML-Filtered Champion | SPY | `PA3D44G9ZYRC` | Charles | scan-cron (no LaunchAgent yet) |
 | EXP-800 | Safe Kelly 4/7/9 | SPY | ⚠️ NOT YET PROVISIONED | Charles | No LaunchAgent, no .env |
 | EXP-307 | Sector ETF Diversification | SPY/XLI/XLF | ⚠️ NOT YET PROVISIONED | Charles | No LaunchAgent, no .env |
@@ -105,7 +105,7 @@ New Alpaca paper accounts come from **Carlos**. The process:
 2. Charles runs `python scripts/pre_deploy_check.py <EXP-ID> <config>`
 3. Carlos reviews results in person and approves (logged to `experiments/approvals.log`)
 4. **Carlos creates a new Alpaca paper account** and provides credentials to Charles
-5. Charles creates `.env.expNNN`, `configs/paper_expNNN.yaml`, `deploy/com.pilotai.expNNN.plist`
+5. Charles creates `.env.expNNN`, `configs/paper_expNNN.yaml`, `deploy/com.attix.expNNN.plist`
 6. Charles loads the LaunchAgent and verifies it's running
 7. Charles updates `experiments/registry.json`: `status`, `account_id`, `live_since`
 8. Commit and push immediately
@@ -119,6 +119,6 @@ New Alpaca paper accounts come from **Carlos**. The process:
 | Gap | Experiment | Action Required |
 |-----|------------|-----------------|
 | Missing `ALPACA_PAPER=true` in `.env.exp700` | EXP-700 | Charles to verify — all other env files have this line |
-| No LaunchAgent plist | EXP-700 | Charles to create `com.pilotai.exp700.plist` |
+| No LaunchAgent plist | EXP-700 | Charles to create `com.attix.exp700.plist` |
 | No account, no .env, no plist | EXP-800 | Charles to provision when ready to deploy |
 | No account, no .env, no plist | EXP-307 | Charles to provision when ready to deploy |

@@ -1040,13 +1040,13 @@ Examples:
 
             # Per-experiment file lock: prevent two overlapping scan processes
             # for the same experiment (e.g. cron fires while previous run is
-            # still executing).  Lock path: /tmp/pilotai_{exp_id}.lock
+            # still executing).  Lock path: /tmp/attix_{exp_id}.lock
             # Lock is held for the lifetime of this process; OS releases it on exit.
             import fcntl as _fcntl
             _db_for_lock = args.db_path or os.environ.get("PILOTAI_DB_PATH", "")
-            _lock_base = os.path.basename(_db_for_lock).replace("pilotai_", "").replace(".db", "")
+            _lock_base = os.path.basename(_db_for_lock).replace("attix_", "").replace(".db", "")
             _exp_id_lock = _lock_base if _lock_base else "unk"
-            _lock_path = f"/tmp/pilotai_{_exp_id_lock}.lock"
+            _lock_path = f"/tmp/attix_{_exp_id_lock}.lock"
             _lock_fh = open(_lock_path, "w")
             try:
                 _fcntl.flock(_lock_fh.fileno(), _fcntl.LOCK_EX | _fcntl.LOCK_NB)
@@ -1131,12 +1131,12 @@ Examples:
                 try:
                     _hb_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
                     os.makedirs(_hb_dir, exist_ok=True)
-                    # Derive experiment_id from db_path (e.g. data/pilotai_champion.db → champion)
+                    # Derive experiment_id from db_path (e.g. data/attix_champion.db → champion)
                     # or fall back to config file name
                     _exp_id = "unknown"
                     _db = args.db_path or os.environ.get("PILOTAI_DB_PATH", "")
                     if _db:
-                        _base = os.path.basename(_db).replace("pilotai_", "").replace(".db", "")
+                        _base = os.path.basename(_db).replace("attix_", "").replace(".db", "")
                         if _base:
                             _exp_id = _base
                     _hb_path = os.path.join(_hb_dir, f".last_scan_{_exp_id}")

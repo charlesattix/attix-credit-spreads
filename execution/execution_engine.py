@@ -115,9 +115,9 @@ class ExecutionEngine:
         # Derive experiment identity from DB path so client_order_ids are
         # namespaced per experiment.  Two experiments scanning the same
         # strike/expiry on the same day must never share a DB key.
-        # e.g. data/pilotai_exp600.db → "exp600", data/pilotai_champion.db → "champion"
+        # e.g. data/pilotai_exp600.db → "exp600", data/attix_champion.db → "champion"
         _db = db_path or ""
-        _base = os.path.basename(_db).replace("pilotai_", "").replace(".db", "")
+        _base = os.path.basename(_db).replace("attix_", "").replace(".db", "")
         self._exp_id = _base if _base else "unk"
         # PARTIAL #8: atomic_ic_execution flag — reserved for future Alpaca 4-leg OTO support
         self._atomic_ic = bool(

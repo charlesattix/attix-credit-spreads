@@ -8,7 +8,7 @@
 
 ## Summary
 
-This PR completes the full-stack integration of straddle/strangle trading into the pilotai system. It unifies the entry path (signal generation → scoring → alert routing), exit path (strategy-dispatched position management), execution layer (single-leg Alpaca orders with dual-leg reconciliation), and alerting/config (Telegram formatters, preflight validation, FOMC calendar corrections).
+This PR completes the full-stack integration of straddle/strangle trading into the attix system. It unifies the entry path (signal generation → scoring → alert routing), exit path (strategy-dispatched position management), execution layer (single-leg Alpaca orders with dual-leg reconciliation), and alerting/config (Telegram formatters, preflight validation, FOMC calendar corrections).
 
 Previously, straddles were partially wired: the `StraddleStrangleStrategy` class existed but wasn't connected to the live trading pipeline. This PR connects every layer end-to-end while preserving all existing credit spread and iron condor functionality.
 

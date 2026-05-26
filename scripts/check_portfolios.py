@@ -249,7 +249,7 @@ def print_full_report(results: list[dict]) -> None:
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     print(f"\n{'═'*W}")
-    print(f"  PILOTAI — PAPER TRADING PORTFOLIO CHECK")
+    print(f"  ATTIX — PAPER TRADING PORTFOLIO CHECK")
     print(f"  {now}")
     print(f"{'═'*W}")
 
@@ -303,7 +303,7 @@ def print_summary_only(results: list[dict]) -> None:
     W = 68
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print(f"\n{'═'*W}")
-    print(f"  PILOTAI — PORTFOLIO SUMMARY  ({now})")
+    print(f"  ATTIX — PORTFOLIO SUMMARY  ({now})")
     print(f"{'═'*W}")
     _print_summary(results, W, standalone=True)
 

@@ -4,7 +4,7 @@
 # Called by crontab at scheduled market hours (ET, weekdays only).
 #
 # Experiments:
-#   champion — configs/paper_champion.yaml  .env.champion  data/pilotai_champion.db
+#   champion — configs/paper_champion.yaml  .env.champion  data/attix_champion.db
 #   exp401   — configs/paper_exp401.yaml    .env.exp401    data/pilotai_exp401.db
 
 set -euo pipefail
