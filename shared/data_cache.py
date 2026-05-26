@@ -71,15 +71,26 @@ class DataCache:
         self._lock = threading.Lock()
         self._ttl = ttl_seconds
         self._api_key = api_key or os.environ.get("POLYGON_API_KEY", "")
+        self._indices_api_key = os.environ.get("POLYGON_INDICES_API_KEY", "")
         self._provider = None  # built lazily on first use
+        self._indices_provider = None  # separate provider for index tickers
 
     # ------------------------------------------------------------------
     # Provider
     # ------------------------------------------------------------------
 
-    def _get_provider(self):
-        """Lazily construct the PolygonProvider so unit tests that mock
-        ``DataCache.get_history`` never need a live key."""
+    def _get_provider(self, polygon_ticker: str = ""):
+        """Lazily construct the PolygonProvider.
+
+        Index tickers (``I:*``) use ``POLYGON_INDICES_API_KEY`` when
+        available, falling back to the default key.
+        """
+        if polygon_ticker.startswith("I:") and self._indices_api_key:
+            if self._indices_provider is None:
+                from strategy.polygon_provider import PolygonProvider
+                self._indices_provider = PolygonProvider(api_key=self._indices_api_key)
+            return self._indices_provider
+
         if self._provider is None:
             if not self._api_key:
                 raise DataFetchError(
@@ -118,7 +129,7 @@ class DataCache:
 
         polygon_ticker = _to_polygon_ticker(ticker)
         try:
-            data = self._get_provider().get_historical(
+            data = self._get_provider(polygon_ticker).get_historical(
                 polygon_ticker, days=_FETCH_CALENDAR_DAYS,
             )
         except DataFetchError:
