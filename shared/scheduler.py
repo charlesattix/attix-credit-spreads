@@ -43,16 +43,15 @@ SLOT_DAILY_REPORT = "daily_report"
 SLOT_RETRAIN = "retrain_check"      # 16:30 ET daily — ModelRetrainer check
 SLOT_MACRO_WEEKLY = "macro_weekly"  # Friday 17:00 ET only
 
-# (hour, minute, slot_type) in ET — 18 slots per day; macro_weekly fires Fridays only
+# (hour, minute, slot_type) in ET — scans every 5 min during market hours
 SCAN_TIMES = [
     (9, 0, SLOT_PRE_MARKET),
-    (9, 15, SLOT_SCAN), (9, 45, SLOT_SCAN),
-    (10, 0, SLOT_SCAN), (10, 30, SLOT_SCAN),
-    (11, 0, SLOT_SCAN), (11, 30, SLOT_SCAN),
-    (12, 0, SLOT_SCAN), (12, 30, SLOT_SCAN),
-    (13, 0, SLOT_SCAN), (13, 30, SLOT_SCAN),
-    (14, 0, SLOT_SCAN), (14, 30, SLOT_SCAN),
-    (15, 0, SLOT_SCAN), (15, 30, SLOT_SCAN),
+] + [
+    (h, m, SLOT_SCAN)
+    for h in range(9, 16)
+    for m in range(0 if h > 9 else 5, 60, 5)
+    if not (h == 15 and m > 55)
+] + [
     (16, 15, SLOT_DAILY_REPORT),
     (16, 30, SLOT_RETRAIN),
     (17, 0, SLOT_MACRO_WEEKLY),   # weekly macro snapshot — skipped on Mon–Thu
