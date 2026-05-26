@@ -6,7 +6,10 @@ from __future__ import annotations
 import html as _html
 import logging
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from .data import STARTING_EQUITY
+
+_NY_TZ = ZoneInfo("America/New_York")
 
 logger = logging.getLogger(__name__)
 
@@ -444,6 +447,19 @@ def _fmt_pnl(v):
 def _fmt_money(v):
     return f"${v:,.0f}"
 
+def _fmt_opened_at(iso_utc):
+    """ISO-8601 UTC timestamp → 'MM-DD HH:MM EDT' in America/New_York. '—' if absent/bad."""
+    if not iso_utc:
+        return "—"
+    try:
+        dt = datetime.fromisoformat(str(iso_utc).replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        local = dt.astimezone(_NY_TZ)
+        return f"{local.strftime('%m-%d %H:%M')} {local.tzname()}"
+    except (ValueError, TypeError):
+        return "—"
+
 def _pnl_cls(v):
     return "up" if v > 0 else ("down" if v < 0 else "neutral")
 
@@ -765,6 +781,7 @@ def _render_exp_card(s: dict) -> str:
   <td style="text-align:right">${_f(p.get('current_price',0)):.2f}</td>
   <td style="text-align:right">{_fmt_money(_f(p.get('market_value',0)))}</td>
   <td style="text-align:right" class="{'up' if unreal >= 0 else 'down'}">{_fmt_pnl(unreal)} ({unreal_pct:+.1f}%)</td>
+  <td style="text-align:right" class="pos-opened">{_html.escape(_fmt_opened_at(p.get('opened_at')))}</td>
 </tr>""")
             pos_section = f"""
 <div class="positions-section">
@@ -775,6 +792,7 @@ def _render_exp_card(s: dict) -> str:
       <th style="text-align:right">Price</th>
       <th style="text-align:right">Mkt Value</th>
       <th style="text-align:right">Unreal P&amp;L</th>
+      <th style="text-align:right">Opened</th>
     </tr></thead>
     <tbody>{"".join(rows)}</tbody>
   </table>

@@ -81,6 +81,56 @@ def _get(api_key: str, api_secret: str, path: str, params: dict | None = None):
 
 
 # ---------------------------------------------------------------------------
+# Opening-fill enrichment
+# ---------------------------------------------------------------------------
+
+def _attach_opened_at(positions: list, orders: list) -> None:
+    """
+    Enrich each open position dict in-place with an ``opened_at`` field: the
+    ISO-8601 UTC timestamp of the order that opened that leg.
+
+    A long position is opened by a ``buy``; a short by a ``sell``. We scan the
+    already-fetched orders list — including the individual legs of multi-leg
+    (MLEG) option orders — for filled fills matching the leg's symbol and
+    opening side, and use the most recent ``filled_at`` among them.
+
+    Always sets the key (to ``None`` when no matching fill is found) so the
+    renderer can rely on its presence.
+    """
+    # {(symbol, side): latest_filled_at_iso}
+    fills: dict[tuple[str, str], str] = {}
+
+    def _record(symbol, side, filled_at) -> None:
+        if not symbol or not side or not filled_at:
+            return
+        key = (symbol, str(side).lower())
+        prev = fills.get(key)
+        # filled_at values are same-format UTC ISO strings → lexical max == latest
+        if prev is None or filled_at > prev:
+            fills[key] = filled_at
+
+    for o in orders or []:
+        if not isinstance(o, dict):
+            continue
+        if o.get("status") == "filled":
+            _record(o.get("symbol"), o.get("side"), o.get("filled_at"))
+        # Legs of multi-leg option orders carry their own symbol/side/fill time.
+        for leg in o.get("legs") or []:
+            if isinstance(leg, dict) and leg.get("status") == "filled":
+                _record(
+                    leg.get("symbol"),
+                    leg.get("side"),
+                    leg.get("filled_at") or o.get("filled_at"),
+                )
+
+    for p in positions or []:
+        if not isinstance(p, dict):
+            continue
+        opening_side = "buy" if p.get("side") == "long" else "sell"
+        p["opened_at"] = fills.get((p.get("symbol"), opening_side))
+
+
+# ---------------------------------------------------------------------------
 # Per-experiment fetch
 # ---------------------------------------------------------------------------
 
@@ -138,6 +188,12 @@ def fetch_live_data(normalized_id: str, api_key: str, api_secret: str) -> dict:
         result["orders"] = orders if isinstance(orders, list) else []
     except Exception as exc:
         logger.warning("[alpaca_live] %s orders error: %s", normalized_id, exc)
+
+    # --- Enrich positions with opening-fill timestamps (non-fatal) -----------
+    try:
+        _attach_opened_at(result["positions"], result["orders"])
+    except Exception as exc:
+        logger.warning("[alpaca_live] %s opened_at enrich error: %s", normalized_id, exc)
 
     return result
 
