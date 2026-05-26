@@ -795,6 +795,27 @@
         "mc_worst_dd_pct": 10.455
       },
       "status_reason": "Railway deployment \u2014 Alpaca keys set, activating for paper trading"
+    },
+    "EXP-V8A": {
+      "id": "EXP-V8A",
+      "name": "Maximus",
+      "created_by": "carlos",
+      "created_date": "2026-05-26",
+      "status": "active",
+      "ticker": "SPY",
+      "account_id": "PA3694QR73C1",
+      "live_since": "2026-05-26",
+      "paper_config": "configs/paper_expv8a.yaml",
+      "backtest_config": null,
+      "description": "V8A \u2014 Maximus. Champion strategy clone.",
+      "notes": "",
+      "config_path": "configs/paper_expv8a.yaml",
+      "alpaca_account_id": "PA3694QR73C1",
+      "env_file": ".env.expv8a",
+      "db_path": "data/pilotai_expv8a.db",
+      "strategy_type": "credit_spread",
+      "created_at": "2026-05-26T19:58:25.529375+00:00",
+      "updated_at": "2026-05-26T19:58:25.529389+00:00"
     }
   }
 }
