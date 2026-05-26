@@ -56,6 +56,14 @@ class OptionsAnalyzer:
                 self.polygon = PolygonProvider(api_key)
                 logger.info("Using Polygon for real-time data")
 
+        # Unusual Whales client (fallback between Polygon and yfinance)
+        self._uw_client = None
+        uw_token = os.environ.get("UW_API_TOKEN", "")
+        if uw_token:
+            from shared.uw_client import UWClient
+            self._uw_client = UWClient(api_token=uw_token)
+            logger.info("UW options chain fallback available")
+
         logger.info("OptionsAnalyzer initialized")
 
     def get_options_chain(self, ticker: str) -> pd.DataFrame:
@@ -68,7 +76,7 @@ class OptionsAnalyzer:
         Returns:
             DataFrame with options chain data
         """
-        # Try providers in order; fall through to yfinance if they return empty
+        # Try providers in order: Tradier → Polygon → UW → yfinance
         if self.tradier:
             result = self._get_chain_from_provider(self.tradier, "Tradier", ticker)
             if not result.empty:
@@ -77,8 +85,17 @@ class OptionsAnalyzer:
             result = self._get_chain_from_provider(self.polygon, "Polygon", ticker)
             if not result.empty:
                 return result
-        # Fallback: yfinance (free, no API key needed)
-        logger.info("Polygon/Tradier returned no data — falling back to yfinance for %s options", ticker)
+        # Unusual Whales fallback
+        if self._uw_client:
+            try:
+                result = self._uw_client.get_options_chain(ticker)
+                if not result.empty:
+                    logger.info("Using UW options chain for %s (%d contracts)", ticker, len(result))
+                    return result
+            except Exception as e:
+                logger.warning("UW options chain failed for %s: %s", ticker, e)
+        # Final fallback: yfinance (free, no API key needed)
+        logger.info("All providers returned no data — falling back to yfinance for %s options", ticker)
         return self._get_chain_yfinance(ticker)
 
     def _get_chain_from_provider(self, provider: DataProvider, provider_name: str, ticker: str) -> pd.DataFrame:

@@ -158,6 +158,61 @@ class UWClient:
         """
         return self._get("/api/earnings/afterhours", params={"date": date})
 
+    def get_options_chain(self, ticker: str) -> "pd.DataFrame":
+        """``GET /api/stock/{ticker}/option-contracts`` — full options chain.
+
+        Returns a DataFrame compatible with the ``OptionsAnalyzer`` pipeline:
+        columns include ``option_type``, ``strike``, ``expiration``, ``bid``,
+        ``ask``, ``iv``, ``volume``, ``open_interest``, ``delta``, ``gamma``,
+        ``theta``, ``vega``.
+        """
+        import re
+        import pandas as pd
+
+        raw = self._get(f"/api/stock/{ticker.upper()}/option-contracts")
+        if not raw:
+            return pd.DataFrame()
+
+        rows = []
+        for c in raw:
+            sym = c.get("option_symbol", "")
+            # Parse OCC symbol: e.g. SPY260620C00600000
+            m = re.match(r"^([A-Z]+)(\d{6})([CP])(\d{8})$", sym)
+            if not m:
+                continue
+            _, date_str, cp, strike_raw = m.groups()
+            exp_date = f"20{date_str[:2]}-{date_str[2:4]}-{date_str[4:6]}"
+            strike = int(strike_raw) / 1000.0
+
+            bid = float(c.get("nbbo_bid", 0) or 0)
+            ask = float(c.get("nbbo_ask", 0) or 0)
+            iv = float(c.get("implied_volatility", 0) or 0)
+
+            rows.append({
+                "option_type": "call" if cp == "C" else "put",
+                "strike": strike,
+                "expiration": exp_date,
+                "bid": bid,
+                "ask": ask,
+                "mid": (bid + ask) / 2 if (bid + ask) > 0 else float(c.get("last_price", 0) or 0),
+                "last": float(c.get("last_price", 0) or 0),
+                "iv": iv,
+                "volume": int(c.get("volume", 0) or 0),
+                "open_interest": int(c.get("open_interest", 0) or 0),
+                "delta": 0.0,   # UW doesn't provide Greeks in this endpoint
+                "gamma": 0.0,
+                "theta": 0.0,
+                "vega": 0.0,
+                "symbol": sym,
+            })
+
+        if not rows:
+            return pd.DataFrame()
+
+        df = pd.DataFrame(rows)
+        logger.info("UW: got %d options for %s", len(df), ticker)
+        return df
+
     def clear_cache(self) -> None:
         """Clear the in-memory response cache (used by tests)."""
         with self._cache_lock:
