@@ -11,7 +11,7 @@ to quantify the impact of feature stationarity fixes.
 
 Data sources (in priority order):
   1. Fresh retroactive backtest via IronVault + options_cache.db
-     (requires data/options_cache.db — run on Charles's Mac Studio)
+     (requires data/options_cache.db)
   2. Existing training CSV at compass/training_data_combined.csv
      (produced by a prior retroactive run — always available in repo)
 
@@ -457,7 +457,7 @@ def main():
         print("  The comparison above uses the existing training CSV.")
         print("  For a full retroactive backtest on real options data:")
         print()
-        print("    1. On the Mac Studio, ensure options_cache.db is populated:")
+        print("    1. Ensure options_cache.db is populated:")
         print("       python scripts/backfill_polygon_cache.py --years 2020-2025")
         print()
         print(f"   2. Copy to this machine:")

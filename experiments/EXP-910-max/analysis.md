@@ -106,4 +106,4 @@ The North Star portfolio demonstrates that combining all proven components
 produces a genuinely institutional-grade strategy: 80% CAGR at 2.8% DD
 with $2B capacity. The 100% CAGR target is achievable by moderately
 increasing leverage within the existing risk budget. This is the
-strongest backtest result in the PilotAI system.
+strongest backtest result in the Attix system.

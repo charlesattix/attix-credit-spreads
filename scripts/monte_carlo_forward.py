@@ -438,7 +438,7 @@ def generate_html(sim_results, bear, kelly):
 </div>
 
 <div class="footer">
-    PilotAI Credit Spreads — Monte Carlo Forward Simulation<br>
+    Attix Credit Spreads — Monte Carlo Forward Simulation<br>
     {N_SIMS:,} block-bootstrap paths (block={BLOCK_SIZE}d) on Ultimate Portfolio v4 daily returns.<br>
     Not a backtest — forward-looking confidence intervals from resampled historical distribution.
 </div>

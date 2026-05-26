@@ -261,7 +261,7 @@ All OOS profitable: <strong style="color:{'#059669' if wf['all_positive'] else '
 <tbody>{yr_rows}</tbody></table>
 
 <div style="color:#94a3b8;font-size:0.68rem;margin-top:28px;border-top:1px solid #e2e8f0;padding-top:8px">
-  PilotAI — Validated Multi-Asset Portfolio v14 | Backtest auditor applied |
+  Attix — Validated Multi-Asset Portfolio v14 | Backtest auditor applied |
   Corrected Sharpe | All IronVault real data | Walk-forward validated
 </div></body></html>"""
 

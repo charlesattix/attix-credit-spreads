@@ -12,7 +12,6 @@ import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'scripts'))
 
 from monitor_exp880 import (
-    BACKTEST_EXPECTATIONS,
     DD_CRIT_PCT,
     DD_WARN_PCT,
     AlpacaReader,
@@ -27,6 +26,9 @@ from monitor_exp880 import (
     send_hedge_alert,
     send_trade_alert,
 )
+from experiments.manager import get_manager
+
+BACKTEST_EXPECTATIONS = (get_manager().get("EXP-880-max") or {}).get("backtest_expectations", {})
 
 
 # ── AlpacaReader ────────────────────────────────────────────────────────────
@@ -70,20 +72,20 @@ class TestTradeHistoryDB:
 class TestDeviations:
     def test_matching_values_ok(self):
         actual = dict(BACKTEST_EXPECTATIONS)
-        devs = compute_deviations(actual)
+        devs = compute_deviations(actual, BACKTEST_EXPECTATIONS)
         for d in devs.values():
             assert d["severity"] == "ok"
 
     def test_worse_sharpe_warns(self):
         actual = dict(BACKTEST_EXPECTATIONS)
         actual["sharpe"] = 3.0  # much lower than 4.97
-        devs = compute_deviations(actual)
+        devs = compute_deviations(actual, BACKTEST_EXPECTATIONS)
         assert devs["sharpe"]["severity"] in ("warning", "critical")
 
     def test_higher_dd_warns(self):
         actual = dict(BACKTEST_EXPECTATIONS)
         actual["max_dd_pct"] = 20.0  # much higher than 10.2
-        devs = compute_deviations(actual)
+        devs = compute_deviations(actual, BACKTEST_EXPECTATIONS)
         assert devs["max_dd_pct"]["severity"] in ("warning", "critical")
 
     def test_deviation_pct_calculated(self):

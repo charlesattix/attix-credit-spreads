@@ -463,7 +463,7 @@ def build_html(baseline, wf, sizing_results, regime_results, freq_results, capac
 <tbody>{cap_rows}</tbody></table>
 
 <div style="color:#94a3b8;font-size:0.68rem;margin-top:28px;border-top:1px solid #e2e8f0;padding-top:8px">
-  PilotAI — XLI Iron Condor Deep Dive v2.0 | IronVault real data | Zero synthetic pricing
+  Attix — XLI Iron Condor Deep Dive v2.0 | IronVault real data | Zero synthetic pricing
 </div></body></html>"""
 
 

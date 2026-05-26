@@ -429,7 +429,7 @@ def generate_html(sweep_results, best, best_full, oos_m, yearly, equity, dates, 
 </table>
 
 <div class="footer">
-    PilotAI Credit Spreads — Ultimate Portfolio Optimization Sweep<br>
+    Attix Credit Spreads — Ultimate Portfolio Optimization Sweep<br>
     {n_total} parameter combinations tested. All results use tail risk hedge overlay.
 </div>
 

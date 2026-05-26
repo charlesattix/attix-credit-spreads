@@ -1,8 +1,8 @@
-# PilotAI Credit Spreads — Backtest Methodology Report
+# Attix Credit Spreads — Backtest Methodology Report
 
 **Version:** 3.0
 **Date:** 2026-02-25
-**System:** PilotAI Credit Spreads (`pilotai-credit-spreads`)
+**System:** Attix Credit Spreads (`pilotai-credit-spreads`)
 **Report Type:** Third-Party Audit Reference
 **Engine Commits:** Upgrades 1–3 (commits `288375b`, `7635771`, `b7fba2b`)
 
@@ -26,7 +26,7 @@
 
 ## 1. Executive Summary
 
-PilotAI is a systematic credit spread trading engine that sells short-dated (30–45 DTE) out-of-the-money put spreads and call spreads on S&P 500 ETF instruments (SPY, QQQ, IWM). The system trades intraday, scanning 14 times per trading day.
+Attix is a systematic credit spread trading engine that sells short-dated (30–45 DTE) out-of-the-money put spreads and call spreads on S&P 500 ETF instruments (SPY, QQQ, IWM). The system trades intraday, scanning 14 times per trading day.
 
 This report documents three architectural upgrades implemented in February 2026 and the full-history backtest results produced with those upgrades active.
 

@@ -19,11 +19,20 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from shared.portfolio_risk import (
-    ACCOUNTS,
     CircuitBreakerLevel,
     PortfolioRiskMonitor,
     _level_from_drawdown,
 )
+
+# Local fixture: mirrors the active experiments used in tests
+ACCOUNTS = {
+    "EXP-400": ".env.exp400",
+    "EXP-401": ".env.exp401",
+    "EXP-503": ".env.exp503",
+    "EXP-600": ".env.exp600",
+    "EXP-700": ".env.exp700",
+    "EXP-800": ".env.exp800",
+}
 
 
 # ---------------------------------------------------------------------------

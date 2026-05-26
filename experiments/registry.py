@@ -64,8 +64,8 @@ VALID_TRANSITIONS: dict[str, set[str]] = {
 VALID_CREATORS = {"maximus", "charles"}
 
 CREATOR_RANGES = {
-    "maximus": (0, 599),
-    "charles": (600, 9999),
+    "maximus": (0, 100000),
+    "charles": (0, 100000),
 }
 
 CREATOR_RANGE_EXCEPTIONS: set[str] = {"EXP-1220"}

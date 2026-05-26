@@ -2,7 +2,7 @@
 
 ## What is COMPASS?
 
-COMPASS is PilotAI's proprietary macro intelligence indicator that scores the market environment weekly across four dimensions, ranks sectors by relative strength, and provides actionable trade direction signals.
+COMPASS is Attix's proprietary macro intelligence indicator that scores the market environment weekly across four dimensions, ranks sectors by relative strength, and provides actionable trade direction signals.
 
 **One sentence:** COMPASS tells the trading system *where* to trade, *how big* to trade, and *when to back off* — based on macroeconomics, not just chart patterns.
 

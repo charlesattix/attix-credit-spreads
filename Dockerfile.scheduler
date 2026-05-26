@@ -19,12 +19,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY --from=builder /install /usr/local
 COPY compass/    ./compass/
+COPY execution/  ./execution/
 COPY scheduler/  ./scheduler/
 COPY sentinel/   ./sentinel/
 COPY shared/     ./shared/
 COPY alerts/     ./alerts/
 COPY backtest/   ./backtest/
 COPY strategy/   ./strategy/
+COPY strategies/ ./strategies/
 COPY tracker/    ./tracker/
 COPY configs/    ./configs/
 COPY scripts/    ./scripts/
@@ -42,6 +44,11 @@ except ImportError:
     print('WARNING: yfinance not available — L3 fallback will be disabled')
 from alpaca.data.historical import StockHistoricalDataClient
 from scheduler.main import build_scheduler
+from execution.execution_engine import ExecutionEngine
+from execution.position_monitor import PositionMonitor
+from strategies.base import MarketSnapshot, PositionAction
+from strategies.credit_spread import CreditSpreadStrategy
+from shared.strategy_factory import build_strategy
 print('All imports OK')
 "
 

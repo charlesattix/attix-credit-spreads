@@ -474,7 +474,7 @@ All OOS profitable: <strong style="color:{'#16a34a' if wf['all_positive'] else '
 </tbody></table>
 
 <div style="color:#94a3b8;font-size:0.68rem;margin-top:28px;border-top:1px solid #e2e8f0;padding-top:8px">
-  PilotAI — Ultimate Portfolio v6 | Dynamic Leverage + Collar Hedge |
+  Attix — Ultimate Portfolio v6 | Dynamic Leverage + Collar Hedge |
   Corrected Sharpe (arithmetic daily returns) | Real IronVault put costs
 </div></body></html>"""
 

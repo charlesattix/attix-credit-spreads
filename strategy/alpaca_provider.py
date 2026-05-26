@@ -273,10 +273,17 @@ class AlpacaProvider:
                 )
                 actual_exp = str(best.expiration_date)
                 actual_dte = (_dt.date.fromisoformat(actual_exp) - today).days
+                dte_drift = abs((_dt.date.fromisoformat(actual_exp) - target_date).days)
+                if dte_drift > 1:
+                    raise ProviderError(
+                        f"find_option_symbol: {ticker} {option_type} ${strike} — target exp {target_exp} "
+                        f"not available and nearest substitute {actual_exp} is {dte_drift} days away "
+                        f"(max drift = 1 day). Refusing to substitute — strategy would diverge from backtest."
+                    )
                 logger.warning(
                     "find_option_symbol: %s %s $%.2f — target exp %s not available; "
-                    "substituting nearest exp %s (DTE=%d)",
-                    ticker, option_type, strike, target_exp, actual_exp, actual_dte,
+                    "substituting nearest exp %s (DTE=%d, drift=%d day)",
+                    ticker, option_type, strike, target_exp, actual_exp, actual_dte, dte_drift,
                 )
                 return best.symbol
 
@@ -324,13 +331,9 @@ class AlpacaProvider:
                 client_order_id=client_id,
             )
         else:
-            from alpaca.trading.requests import MarketOrderRequest
-            order_req = MarketOrderRequest(
-                qty=contracts,
-                order_class=OrderClass.MLEG,
-                time_in_force=TimeInForce.DAY,
-                legs=legs,
-                client_order_id=client_id,
+            raise ValueError(
+                f"Options require limit price — no market orders allowed "
+                f"(MLEG, client_id={client_id})"
             )
 
         return self._circuit_breaker.call(self.client.submit_order, order_req)
@@ -718,14 +721,9 @@ class AlpacaProvider:
                     position_intent=intent,
                 )
             else:
-                from alpaca.trading.requests import MarketOrderRequest
-                order_req = MarketOrderRequest(
-                    symbol=symbol,
-                    qty=contracts,
-                    side=order_side,
-                    time_in_force=TimeInForce.DAY,
-                    client_order_id=client_id,
-                    position_intent=intent,
+                raise ValueError(
+                    f"Options require limit price — no market orders allowed "
+                    f"(symbol={symbol}, client_id={client_id})"
                 )
 
             order = self._circuit_breaker.call(self.client.submit_order, order_req)
@@ -809,14 +807,9 @@ class AlpacaProvider:
                     position_intent=intent,
                 )
             else:
-                from alpaca.trading.requests import MarketOrderRequest
-                order_req = MarketOrderRequest(
-                    symbol=symbol,
-                    qty=contracts,
-                    side=order_side,
-                    time_in_force=TimeInForce.DAY,
-                    client_order_id=client_id,
-                    position_intent=intent,
+                raise ValueError(
+                    f"Options require limit price — no market orders allowed "
+                    f"(symbol={symbol}, client_id={client_id})"
                 )
 
             order = self._circuit_breaker.call(self.client.submit_order, order_req)

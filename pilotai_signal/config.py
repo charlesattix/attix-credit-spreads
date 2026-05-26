@@ -32,7 +32,7 @@ SCORE_WEIGHT_PERSISTENCE = 0.35
 SCORE_WEIGHT_QUALITY = 0.25
 PERSISTENCE_CAP_DAYS = 30  # persistence saturates after 30 days
 
-# QScore weights (applied to PilotAI stock_score 0-5 dimensions)
+# QScore weights (applied to Attix stock_score 0-5 dimensions)
 QSCORE_GROWTH = 0.35
 QSCORE_MOMENTUM = 0.25
 QSCORE_VALUE = 0.20

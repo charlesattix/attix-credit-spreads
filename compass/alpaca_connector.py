@@ -24,12 +24,13 @@ RESPONSIBILITIES
 
 CONFIG
 ------
-Environment variables (set in .env or shell):
-    ALPACA_API_KEY       = "<paper key>"
-    ALPACA_SECRET_KEY    = "<paper secret>"
+Per-experiment env vars (set by scheduler/jobs.py from Railway):
+    ALPACA_API_KEY       = per-experiment key (mapped from ALPACA_API_KEY_EXP400 etc.)
+    ALPACA_API_SECRET    = per-experiment secret (mapped from ALPACA_API_SECRET_EXP400 etc.)
     ALPACA_PAPER         = "true"   (default; "false" for live)
     ALPACA_BASE_URL      = "https://paper-api.alpaca.markets"  (optional override)
 
+NOTE: Generic (non-suffixed) Alpaca key retired 2026-05-23.
 The `paper_mode` flag in `AlpacaConnector.__init__` overrides the env.
 Default endpoint is paper-api.alpaca.markets for safety.
 
@@ -63,8 +64,11 @@ ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_PAPER_URL = "https://paper-api.alpaca.markets"
 DEFAULT_LIVE_URL = "https://api.alpaca.markets"
 
+# NOTE: In production these are set per-experiment by scheduler/jobs.py
+# which maps ALPACA_API_KEY_EXP400 → ALPACA_API_KEY in subprocess env.
+# The generic (non-suffixed) Railway key was retired 2026-05-23.
 ENV_KEY = "ALPACA_API_KEY"
-ENV_SECRET = "ALPACA_SECRET_KEY"
+ENV_SECRET = "ALPACA_API_SECRET"
 ENV_PAPER = "ALPACA_PAPER"
 ENV_BASE_URL = "ALPACA_BASE_URL"
 
@@ -231,7 +235,11 @@ class AlpacaConnector:
         paper = os.environ.get(ENV_PAPER, "true").strip().lower() != "false"
         base = os.environ.get(ENV_BASE_URL) or None
         if not key or not secret:
-            LOG.warning("Alpaca credentials missing (%s / %s unset)", ENV_KEY, ENV_SECRET)
+            raise RuntimeError(
+                f"Alpaca credentials missing ({ENV_KEY} / {ENV_SECRET} unset). "
+                f"Generic key retired 2026-05-23 — ensure scheduler/jobs.py mapped "
+                f"per-experiment keys into subprocess env."
+            )
         return cls(api_key=key, secret_key=secret, paper_mode=paper, base_url=base)
 
     def _init_sdk(self) -> None:
@@ -490,24 +498,21 @@ class AlpacaConnector:
                 LOG.info("submitted MLEG %s -> %s", order.client_order_id, order.broker_order_id)
                 return order
             except ImportError:
-                LOG.info("MLEG not available in alpaca-py; falling back to single-leg")
+                LOG.critical(
+                    "MLEG not available in alpaca-py — cannot submit spread %s. "
+                    "Single-leg fallback removed (account safety). Order REJECTED.",
+                    order.client_order_id,
+                )
+                order.status = "REJECTED"
+                return order
         except Exception as e:
-            LOG.warning("MLEG submission failed (%s) — falling back", e)
-
-        # Fallback: submit each leg as an independent order
-        submitted_any = False
-        first_id: Optional[str] = None
-        for i, leg in enumerate(order.legs):
-            try:
-                leg_id = self._submit_single_leg(leg, f"{order.client_order_id}-L{i}")
-                if leg_id and not first_id:
-                    first_id = leg_id
-                    submitted_any = True
-            except Exception as e:
-                LOG.error("leg %d submission failed: %s", i, e)
-        order.broker_order_id = first_id or ""
-        order.status = "SUBMITTED" if submitted_any else "REJECTED"
-        return order
+            LOG.critical(
+                "MLEG submission failed for %s: %s — single-leg fallback removed "
+                "(would risk naked position). Order REJECTED.",
+                order.client_order_id, e,
+            )
+            order.status = "REJECTED"
+            return order
 
     def _submit_single_leg(self, leg: OptionLeg, client_id: str) -> Optional[str]:
         occ = build_occ_symbol(leg.ticker, leg.expiration, leg.strike, leg.option_type)
@@ -515,24 +520,28 @@ class AlpacaConnector:
             from alpaca.trading.requests import MarketOrderRequest, LimitOrderRequest
             from alpaca.trading.enums import OrderSide, TimeInForce
             side = OrderSide.BUY if leg.side.upper() == "BUY" else OrderSide.SELL
-            if leg.limit_price is not None:
-                req = LimitOrderRequest(
-                    symbol=occ, qty=leg.quantity, side=side,
-                    time_in_force=TimeInForce.DAY, limit_price=leg.limit_price,
-                    client_order_id=client_id,
+            if leg.limit_price is None:
+                raise ValueError(
+                    f"Options require limit price — no market orders allowed "
+                    f"(leg={occ}, client_id={client_id})"
                 )
-            else:
-                req = MarketOrderRequest(
-                    symbol=occ, qty=leg.quantity, side=side,
-                    time_in_force=TimeInForce.DAY, client_order_id=client_id,
-                )
+            req = LimitOrderRequest(
+                symbol=occ, qty=leg.quantity, side=side,
+                time_in_force=TimeInForce.DAY, limit_price=leg.limit_price,
+                client_order_id=client_id,
+            )
             resp = self._trading_client.submit_order(order_data=req)
             return str(getattr(resp, "id", ""))
         if self._sdk == "alpaca-trade-api":
+            if leg.limit_price is None:
+                raise ValueError(
+                    f"Options require limit price — no market orders allowed "
+                    f"(leg={occ}, client_id={client_id})"
+                )
             resp = self._client.submit_order(
                 symbol=occ, qty=leg.quantity,
                 side=leg.side.lower(),
-                type="limit" if leg.limit_price is not None else "market",
+                type="limit",
                 time_in_force="day",
                 limit_price=leg.limit_price,
                 client_order_id=client_id,

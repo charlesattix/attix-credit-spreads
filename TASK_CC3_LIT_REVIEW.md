@@ -19,7 +19,7 @@ Search arXiv, SSRN, and Google Scholar for recent academic papers (2024-2026) on
 
 Create `compass/reports/literature_review_2024_2026.md` with:
 
-1. **Top 5-10 papers** — title, authors, key findings, relevance to PilotAI
+1. **Top 5-10 papers** — title, authors, key findings, relevance to Attix
 2. **New signals identified** — anything we haven't tested yet
 3. **Validation of existing edges** — do recent papers confirm VRP, credit spreads still work?
 4. **Transaction cost benchmarks** — how do our costs compare to academic assumptions?

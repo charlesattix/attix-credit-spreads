@@ -1,11 +1,11 @@
-# PilotAI Strategy Recommendation API — Deep Analysis
+# Attix Strategy Recommendation API — Deep Analysis
 ## All 57 Strategies | 401 Unique Tickers | March 7, 2026
 
 ---
 
 ## EXECUTIVE SUMMARY
 
-**What was done:** All 57 PilotAI investment strategies were pulled from the API, yielding 1,030 ticker appearances across 401 unique stocks and ETFs. Every strategy was analyzed for holdings, weights, quality scores, and cross-strategy overlap.
+**What was done:** All 57 Attix investment strategies were pulled from the API, yielding 1,030 ticker appearances across 401 unique stocks and ETFs. Every strategy was analyzed for holdings, weights, quality scores, and cross-strategy overlap.
 
 **The headline finding — and it is unmistakable:**
 
@@ -13,7 +13,7 @@
 
 Gold-related instruments dominate the consensus signal with a force that is impossible to ignore. DBP (Invesco DB Precious Metals Fund) appears in **20 of 57 strategies**. SGDM (Sprott Gold Miners ETF) and GOEX (Global X Gold Explorers ETF) each appear in **27 strategies** — nearly half of every portfolio in the system. IAU (iShares Gold Trust) appears in 15 strategies. Most remarkably: these gold ETFs are appearing as top holdings in portfolios labeled "AI-Related Companies," "Cloud Computing Boom," "Technology Sector Innovation Fund," and "Semiconductor Supercycle." The model is so bullish on gold that it is overriding thematic classification and injecting gold into every category.
 
-**This is the PilotAI model's current view of the world in one sentence:** *Risk-off, macro stress, gold as the primary hedge — even if you asked me for a tech portfolio.*
+**This is the Attix model's current view of the world in one sentence:** *Risk-off, macro stress, gold as the primary hedge — even if you asked me for a tech portfolio.*
 
 **Three other key findings:**
 1. Value and momentum strategies score highest on composite quality metrics — the model's highest-quality portfolios are defensive and value-oriented, not growth.
@@ -167,7 +167,7 @@ Each strategy has 5 stock-score dimensions (value, growth, health, momentum, pas
 
 ### Consensus Picks (10+ Strategies)
 
-These 12 tickers have the broadest endorsement across PilotAI's strategy universe:
+These 12 tickers have the broadest endorsement across Attix's strategy universe:
 
 | Ticker | Name | # Strategies | Category |
 |--------|------|-------------|----------|
@@ -205,7 +205,7 @@ This is the most important finding in the entire analysis. **Gold instruments ar
 
 **What this means:**
 
-The PilotAI model is not saying "this AI company is good." It is saying: *"In the current macro environment, even within an AI portfolio, the model sees gold as a better risk-adjusted allocation than most AI stocks."*
+The Attix model is not saying "this AI company is good." It is saying: *"In the current macro environment, even within an AI portfolio, the model sees gold as a better risk-adjusted allocation than most AI stocks."*
 
 This is a macro signal, not a stock-picking signal. The AI portfolio holding 42% in gold instruments tells us: **the model has low conviction in most AI stocks at current prices, and high conviction in gold.**
 
@@ -543,7 +543,7 @@ For analytical simplification:
 - Use **ai-related-companies** as proxy for **cloud-computing-boom** and **technology-sector-innovation-fund** (53% overlap)
 - Use **market-disruptors** as proxy for **socially-responsible-investing-sri** (53.8% overlap)
 
-### Signal Service Design: "PilotAI Consensus Portfolio"
+### Signal Service Design: "Attix Consensus Portfolio"
 
 **Top 20 Consensus Picks (equal-weight, rebalanced monthly from API data):**
 
@@ -620,5 +620,5 @@ For analytical simplification:
 
 ---
 
-*Analysis performed: March 7, 2026 | Data source: PilotAI Strategy Recommendation API v2 (staging)*
+*Analysis performed: March 7, 2026 | Data source: Attix Strategy Recommendation API v2 (staging)*
 *Total API response size: 204,444 bytes across 10 sequential batch requests*

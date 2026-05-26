@@ -586,7 +586,7 @@ def generate_html(hedged, unhedged_m, unhedged_eq, dates):
 <div class="enhancements">{enhancements}</div>
 
 <div class="footer">
-    PilotAI Credit Spreads — Ultimate Portfolio Hedged v3<br>
+    Attix Credit Spreads — Ultimate Portfolio Hedged v3<br>
     Enhanced tail risk hedge with DD circuit breaker, amplified crash sizing, and improved convexity payoffs.
 </div>
 

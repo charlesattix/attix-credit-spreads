@@ -1,6 +1,6 @@
 # EXP-031 Audit Review
 
-**Reviewer:** Claude (PilotAI audit)
+**Reviewer:** Claude (Attix audit)
 **Date:** 2026-03-12
 **Subject:** EXP-031 Third-Party Audit Package — SPY Credit Spread (Bull Put) with Compound Sizing
 **Verdict: REJECT as ROBUST. Correct classification: SUSPECT (0.590)**

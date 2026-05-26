@@ -776,7 +776,7 @@ Permanent impact assumed at 50% of temporary (information leakage).</p>
 </div>
 
 <div class="note" style="margin-top:40px;text-align:center;border-top:1px solid #21262d;padding-top:16px">
-  Capacity &amp; Scalability Analysis &bull; Real IronVault data &bull; {now} &bull; PilotAI Compass
+  Capacity &amp; Scalability Analysis &bull; Real IronVault data &bull; {now} &bull; Attix Compass
 </div>
 </body></html>"""
 

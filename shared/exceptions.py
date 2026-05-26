@@ -1,17 +1,17 @@
-"""Custom exception hierarchy for the PilotAI Credit Spreads system."""
+"""Custom exception hierarchy for the Attix Credit Spreads system."""
 
 
-class PilotAIError(Exception):
-    """Base exception for all PilotAI errors."""
+class AttixError(Exception):
+    """Base exception for all Attix errors."""
 
 
-class DataFetchError(PilotAIError):
+class DataFetchError(AttixError):
     """Raised when data fetching (e.g. yfinance download) fails."""
 
 
-class ProviderError(PilotAIError):
+class ProviderError(AttixError):
     """Raised when a provider API call (Tradier, Polygon, Alpaca) fails."""
 
 
-class ModelError(PilotAIError):
+class ModelError(AttixError):
     """Raised on ML model errors (training, prediction, loading)."""

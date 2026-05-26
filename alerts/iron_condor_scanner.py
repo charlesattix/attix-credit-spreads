@@ -10,7 +10,6 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 from alerts.iron_condor_config import ENTRY_DAYS, build_iron_condor_config
-from shared.data_cache import DataCache
 from strategy import CreditSpreadStrategy, OptionsAnalyzer, TechnicalAnalyzer
 
 logger = logging.getLogger(__name__)
@@ -109,9 +108,8 @@ class IronCondorScanner:
 
     def _scan_ticker(self, ticker: str) -> List[Dict]:
         """Scan a single ticker for iron condor opportunities."""
-        # Fetch price data (Polygon via DataCache; no yfinance fallback)
-        cache = self._data_cache or DataCache()
-        price_data = cache.get_history(ticker, period="1y")
+        # Fetch price data (Polygon-backed DataCache; required)
+        price_data = self._data_cache.get_history(ticker, period="1y")
 
         if price_data is None or (hasattr(price_data, "empty") and price_data.empty):
             logger.warning(f"No price data for {ticker}")

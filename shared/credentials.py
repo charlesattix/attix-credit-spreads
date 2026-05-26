@@ -188,7 +188,7 @@ def portfolio_summary(verbose: bool = True) -> str:
     if not portfolios:
         return "No .env.exp* files found — check project root"
 
-    lines = [f"PilotAI Portfolio Summary ({len(portfolios)} experiments)", "=" * 58]
+    lines = [f"Attix Portfolio Summary ({len(portfolios)} experiments)", "=" * 58]
     all_ok = True
 
     for p in portfolios:

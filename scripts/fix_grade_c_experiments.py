@@ -509,7 +509,7 @@ def build_html(results):
 {detail_html}
 
 <div style="color:#94a3b8;font-size:0.68rem;margin-top:28px;border-top:1px solid #e2e8f0;padding-top:8px">
-  PilotAI — OOS Integrity Remediation | All data from IronVault | Zero synthetic
+  Attix — OOS Integrity Remediation | All data from IronVault | Zero synthetic
 </div></body></html>"""
 
 

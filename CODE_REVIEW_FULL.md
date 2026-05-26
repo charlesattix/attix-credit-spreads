@@ -1,4 +1,4 @@
-# PilotAI Credit Spreads — 7-Panel Code Review
+# Attix Credit Spreads — 7-Panel Code Review
 
 **Date:** 2026-02-14
 **Reviewers:** 7 specialized Claude Opus 4.6 agents
@@ -57,7 +57,7 @@
 
 <a id="panel-1-architecture"></a>
 
-# Architecture Review: PilotAI Credit Spreads System
+# Architecture Review: Attix Credit Spreads System
 
 ## Executive Summary
 
@@ -375,7 +375,7 @@ The `Alert` type in `api.ts` (lines 1-20) has `ticker`, `type`, `credit`, `pop`,
 
 <a id="panel-2-code-quality"></a>
 
-# Deep Code Quality Review: PilotAI Credit Spreads
+# Deep Code Quality Review: Attix Credit Spreads
 
 ## Executive Summary
 
@@ -1138,7 +1138,7 @@ While there are many issues, the codebase has notable strengths:
 
 <a id="panel-3-security"></a>
 
-# SECURITY AUDIT REPORT: PilotAI Credit Spreads
+# SECURITY AUDIT REPORT: Attix Credit Spreads
 
 **Auditor:** Senior Security Engineer
 **Date:** 2026-02-13
@@ -1654,7 +1654,7 @@ For a financial application, these issues are unacceptable for production deploy
 
 <a id="panel-4-performance"></a>
 
-# Performance Review: PilotAI Credit Spreads
+# Performance Review: Attix Credit Spreads
 
 ## Executive Summary
 
@@ -2192,7 +2192,7 @@ When estimating delta, the spot price is set to the median of all strike prices 
 
 <a id="panel-5-error-handling"></a>
 
-# Error Handling and Resilience Review: PilotAI Credit Spreads
+# Error Handling and Resilience Review: Attix Credit Spreads
 
 ## Executive Summary
 
@@ -2797,7 +2797,7 @@ The codebase does several things well:
 <a id="panel-6-testing"></a>
 
 # Testing & Test Coverage Review Report
-## PilotAI Credit Spreads
+## Attix Credit Spreads
 
 ---
 
@@ -3082,7 +3082,7 @@ Listed in order of priority (highest first):
 
 <a id="panel-7-production-readiness"></a>
 
-# Production Readiness Review: PilotAI Credit Spreads
+# Production Readiness Review: Attix Credit Spreads
 
 **Review Date:** 2026-02-14
 **Reviewer:** Claude Opus 4.6 (Automated DevOps Review)

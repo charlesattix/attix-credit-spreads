@@ -1,4 +1,4 @@
-# PilotAI Credit Spread Trading System
+# Attix Credit Spread Trading System
 
 **Multi-strategy options portfolio** — 8 alpha streams, 12,607 tests, ~100 experiments across 12 development waves. Targeting 60–80% annual returns with <10% max drawdown via variance risk premium harvesting.
 

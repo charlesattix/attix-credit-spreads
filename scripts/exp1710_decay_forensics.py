@@ -439,7 +439,7 @@ def build_html(crowding, rolling, regime_filters, regime_corr, yearly_traj, verd
 </div>
 
 <div style="color:#94a3b8;font-size:0.68rem;margin-top:28px;border-top:1px solid #e2e8f0;padding-top:8px">
-  PilotAI — EXP-1710 Sharpe Decay Forensics v1.0 | Real IronVault data | Rule Zero compliant
+  Attix — EXP-1710 Sharpe Decay Forensics v1.0 | Real IronVault data | Rule Zero compliant
 </div></body></html>"""
 
 

@@ -67,21 +67,14 @@ class OptionsAnalyzer:
         Returns:
             DataFrame with options chain data
         """
-        # Use Tradier if available (real-time + real Greeks)
         if self.tradier:
             return self._get_chain_from_provider(self.tradier, "Tradier", ticker)
-
-        # Use Polygon if available
         if self.polygon:
             return self._get_chain_from_provider(self.polygon, "Polygon", ticker)
-
-        # No yfinance fallback after the Polygon migration. Callers
-        # must configure either a Tradier or Polygon provider.
-        logger.warning(
-            "No options-chain provider configured for %s; returning empty chain",
-            ticker,
+        raise RuntimeError(
+            f"No options provider configured for {ticker}. "
+            f"Set data.provider to 'tradier' or 'polygon' in config.yaml."
         )
-        return pd.DataFrame()
 
     def _get_chain_from_provider(self, provider: DataProvider, provider_name: str, ticker: str) -> pd.DataFrame:
         """Get options chain from a provider (Tradier or Polygon).
@@ -92,9 +85,8 @@ class OptionsAnalyzer:
             ticker: Stock ticker symbol.
 
         Returns:
-            DataFrame with options chain data, or empty DataFrame on
-            provider failure (no yfinance fallback after the Polygon
-            migration — Rule Zero: fail closed).
+            DataFrame with options chain data. Empty if the provider returns
+            no usable data; the caller is expected to handle that.
         """
         try:
             min_dte = max(self.config['strategy'].get('min_dte', 30) - 5, 0)
@@ -102,18 +94,16 @@ class OptionsAnalyzer:
             chain = provider.get_full_chain(ticker, min_dte=min_dte, max_dte=max_dte)
 
             if chain.empty:
-                logger.warning(f"{provider_name} returned no data for {ticker}; no fallback")
-                return pd.DataFrame()
+                logger.warning(f"{provider_name} returned no data for {ticker}")
+                return chain
 
-            # Check data quality — Polygon contracts endpoint may lack bid/ask pricing.
             if 'bid' in chain.columns and 'ask' in chain.columns:
                 valid_pricing = ((chain['bid'] > 0.05) & (chain['ask'] > 0.05)).sum()
-                if valid_pricing < len(chain) * 0.1:  # Less than 10% have real prices
+                if valid_pricing < len(chain) * 0.1:
                     logger.warning(
-                        f"{provider_name} returned {len(chain)} options but "
-                        f"insufficient pricing data for {ticker}; no fallback"
+                        f"{provider_name} returned {len(chain)} options but insufficient "
+                        f"pricing data for {ticker} (only {valid_pricing} with bid/ask > $0.05)"
                     )
-                    return pd.DataFrame()
 
             logger.info(f"Retrieved {len(chain)} options for {ticker} via {provider_name} (real-time)")
             return chain
@@ -195,11 +185,9 @@ class OptionsAnalyzer:
         Returns:
             Dictionary with IV metrics
         """
+        if self.data_cache is None:
+            raise RuntimeError("DataCache is required for calculate_iv_rank()")
         try:
-            # Get historical data (1 year) — Polygon via DataCache; no yfinance fallback.
-            if self.data_cache is None:
-                from shared.data_cache import DataCache
-                self.data_cache = DataCache()
             hist = self.data_cache.get_history(ticker, period='1y')
 
             if hist.empty:

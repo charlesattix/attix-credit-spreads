@@ -1,5 +1,5 @@
 """
-PilotAI Signal Service
+Attix Signal Service
 
 Evergreen pipeline: collect → score → alert
 """

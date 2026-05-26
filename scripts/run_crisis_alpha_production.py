@@ -184,7 +184,7 @@ Vol lookback: {cfg['vol_lookback_days']} days
 </div>
 
 <div style="color:#94a3b8;font-size:0.68rem;margin-top:28px;border-top:1px solid #e2e8f0;padding-top:8px">
-  PilotAI — EXP-1780 Crisis Alpha Production v1.0 | 13 assets | Real Yahoo data |
+  Attix — EXP-1780 Crisis Alpha Production v1.0 | 13 assets | Real Yahoo data |
   Rule Zero compliant | Selected from v3 grid (40/72 passing configs)
 </div></body></html>"""
 

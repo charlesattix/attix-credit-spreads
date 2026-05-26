@@ -653,7 +653,7 @@ def generate_report(
 
     parts.append("""
 <div class="footer">
-  EXP-1220 Leverage Optimization — PilotAI Credit Spreads<br>
+  EXP-1220 Leverage Optimization — Attix Credit Spreads<br>
   All data from Yahoo Finance (SPY, ^VIX, ^VIX3M). No synthetic data.<br>
   Leverage applied as a simple return multiplier on base protected returns.
 </div></body></html>""")

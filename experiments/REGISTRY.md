@@ -1,4 +1,4 @@
-# Experiment Registry — PilotAI Credit Spreads
+# Experiment Registry — Attix Credit Spreads
 
 **Last Updated:** 2026-04-04
 **Total Experiments:** 100 (directories) | 78 with documented results

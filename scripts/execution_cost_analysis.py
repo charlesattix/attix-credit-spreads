@@ -467,7 +467,7 @@ All costs are annual across all strategies and trades.</p>
 </div>
 
 <div style="color:#94a3b8;font-size:0.68rem;margin-top:28px;border-top:1px solid #e2e8f0;padding-top:8px">
-  PilotAI — Execution Cost Analysis v1.0 | Almgren-Chriss sqrt impact model |
+  Attix — Execution Cost Analysis v1.0 | Almgren-Chriss sqrt impact model |
   SPY ATM ADV: {SPY_ATM_ADV:,}/day | Calibrated from EXP-850, capacity_analysis.json
 </div></body></html>"""
 

@@ -144,7 +144,7 @@ def build_html(results, exp1220_corr, data_note):
 </div>
 
 <div style="color:#94a3b8;font-size:0.68rem;margin-top:28px;border-top:1px solid #e2e8f0;padding-top:8px">
-  PilotAI — EXP-1710 1-3 DTE SPY Iron Condors v1.0 | Rule Zero compliant |
+  Attix — EXP-1710 1-3 DTE SPY Iron Condors v1.0 | Rule Zero compliant |
   Pivoted from 0DTE SPX due to data unavailability
 </div></body></html>"""
 

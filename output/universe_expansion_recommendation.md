@@ -1,7 +1,7 @@
 # ETF Universe Expansion Recommendation
 ## Should We Go Beyond Our Current 15 ETFs?
 
-**Author:** PilotAI Research
+**Author:** Attix Research
 **Date:** 2026-03-07
 **Requested by:** Carlos
 **Status:** Recommendation — Pending Carlos Decision

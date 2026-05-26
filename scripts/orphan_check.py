@@ -12,7 +12,7 @@ This can happen when:
 
 Usage:
     python3 scripts/orphan_check.py           # check all active experiments
-    python3 scripts/orphan_check.py --all     # include stopped/archived too
+    python3 scripts/orphan_check.py --all     # include stopped/retired too
     python3 scripts/orphan_check.py --no-color
 
 Exit codes:
@@ -29,13 +29,10 @@ import urllib.request
 from pathlib import Path
 from typing import Dict, List, Optional
 
-try:
-    import yaml
-except ImportError:
-    sys.exit("ERROR: PyYAML not installed. Run: pip install pyyaml")
-
 ROOT = Path(__file__).resolve().parent.parent
-REGISTRY_PATH = ROOT / "experiments.yaml"
+sys.path.insert(0, str(ROOT))
+from experiments.manager import get_manager  # noqa: E402
+
 ALPACA_BASE = "https://paper-api.alpaca.markets"
 TIMEOUT = 15
 
@@ -58,12 +55,6 @@ def disable_color() -> None:
 
 
 # ── Registry ───────────────────────────────────────────────────────────────────
-def load_registry() -> Dict[str, dict]:
-    if not REGISTRY_PATH.exists():
-        sys.exit(f"ERROR: Registry not found: {REGISTRY_PATH}")
-    with open(REGISTRY_PATH) as f:
-        data = yaml.safe_load(f)
-    return data.get("experiments", {})
 
 
 # ── Env file ───────────────────────────────────────────────────────────────────
@@ -150,7 +141,12 @@ def check_experiment(name: str, cfg: dict) -> CheckResult:
     result.tmux_alive = tmux_running(result.tmux_session)
 
     # Load credentials
-    env_file = ROOT / cfg.get("env_file", "")
+    env_file_str = cfg.get("env_file") or ""
+    if not env_file_str:
+        result.api_error = "env_file not configured"
+        result.verdict = "OFFLINE"
+        return result
+    env_file = ROOT / env_file_str
     creds = read_env(env_file)
     api_key    = creds.get("ALPACA_API_KEY", "")
     api_secret = creds.get("ALPACA_API_SECRET", "")
@@ -178,12 +174,12 @@ def check_experiment(name: str, cfg: dict) -> CheckResult:
         result.option_positions = count_option_positions(positions)
 
     # ── Classify ──
-    if result.status in ("archived", "stopped"):
+    if result.status in ("retired", "stopped"):
         if result.option_positions > 0:
             result.is_orphan = True
-            result.verdict = "ORPHAN"  # stopped/archived but still has positions
+            result.verdict = "ORPHAN"  # stopped/retired but still has positions
         else:
-            result.verdict = "ARCHIVED" if result.status == "archived" else "STOPPED_CLEAN"
+            result.verdict = "RETIRED" if result.status == "retired" else "STOPPED_CLEAN"
         return result
 
     # Active experiment
@@ -210,7 +206,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--all", action="store_true",
-        help="Check ALL experiments including stopped and archived",
+        help="Check ALL experiments including stopped and retired",
     )
     parser.add_argument(
         "--no-color", action="store_true",
@@ -221,7 +217,7 @@ def main() -> int:
     if args.no_color:
         disable_color()
 
-    experiments = load_registry()
+    experiments = get_manager().all()
 
     from datetime import datetime
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -235,7 +231,7 @@ def main() -> int:
 
     for name, cfg in experiments.items():
         status = cfg.get("status", "unknown")
-        if not args.all and status in ("archived", "stopped"):
+        if not args.all and status in ("retired", "stopped"):
             continue
 
         sys.stdout.write(f"  Checking {name}... ")
@@ -251,8 +247,8 @@ def main() -> int:
             label = f"{C.YEL}DOWN{C.NC} (no tmux, no positions)"
         elif r.verdict == "OFFLINE":
             label = f"{C.YEL}OFFLINE{C.NC} ({r.api_error})"
-        elif r.verdict == "ARCHIVED":
-            label = f"{C.DIM}ARCHIVED (clean){C.NC}"
+        elif r.verdict == "RETIRED":
+            label = f"{C.DIM}RETIRED (clean){C.NC}"
         elif r.verdict == "STOPPED_CLEAN":
             label = f"{C.DIM}STOPPED (clean){C.NC}"
         else:

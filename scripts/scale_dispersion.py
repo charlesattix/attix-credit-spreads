@@ -495,7 +495,7 @@ def build_html(cadence, tickers, leverage, wf, optimal_m, optimal_config):
 <tbody>{yr_rows}</tbody></table>
 
 <div style="color:#94a3b8;font-size:0.68rem;margin-top:28px;border-top:1px solid #e2e8f0;padding-top:8px">
-  PilotAI — EXP-1820 Dispersion Scaling v1.0 | Real IronVault + Yahoo data | Rule Zero compliant
+  Attix — EXP-1820 Dispersion Scaling v1.0 | Real IronVault + Yahoo data | Rule Zero compliant
 </div></body></html>"""
 
 

@@ -617,7 +617,7 @@ def generate_html(comp: dict, scenario_results: dict, stress_results: dict) -> s
 {mc_rows}
 
 <div class="footer">
-    PilotAI Credit Spreads — Ultimate Portfolio + Tail Risk Hedge<br>
+    Attix Credit Spreads — Ultimate Portfolio + Tail Risk Hedge<br>
     Dynamic hedge overlay: SPY puts + VIX calls, delta-adaptive, 2%/yr cost budget.<br>
     Leverage scales from 1.6× (normal) to 0.4× (crisis) based on multi-signal crisis score.
 </div>

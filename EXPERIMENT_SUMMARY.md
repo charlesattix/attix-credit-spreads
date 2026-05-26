@@ -1,4 +1,4 @@
-# Experiment Summary — PilotAI Credit Spreads
+# Experiment Summary — Attix Credit Spreads
 
 **Total experiments cataloged:** ~195 (EXP-031 through EXP-2950)
 **Date range:** 2026-02 through 2026-04-24

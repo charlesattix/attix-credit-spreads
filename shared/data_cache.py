@@ -1,149 +1,125 @@
-"""Thread-safe TTL cache for market data backed by Polygon.io.
+"""Thread-safe TTL cache for OHLCV history (Polygon-backed).
 
-Historical migration: previously yfinance-backed. Polygon.io is now the
-single source for index and equity daily bars used by the live pipeline.
-Yahoo-style tickers (``^VIX``, ``^VIX3M`` …) are auto-translated to
-Polygon index tickers (``I:VIX``, ``I:VIX3M`` …) so existing callers do
-not need to change.
-
-Options chains and corporate calendars must NOT be fetched here — use
-``shared.iron_vault`` or ``strategy.polygon_provider`` directly.
+Preserves the public surface of the previous yfinance-backed DataCache so
+existing callers (alerts/, strategy/, compass/) work unchanged.
 """
-from __future__ import annotations
-
 import logging
-import os
 import threading
 import time
-from typing import List, Optional
+from datetime import datetime, timedelta, timezone
+from typing import List
 
 import pandas as pd
 
 from shared.exceptions import DataFetchError
 from shared.metrics import metrics
+from shared.polygon_client import PolygonClient
 
 logger = logging.getLogger(__name__)
 
-# Yahoo-style → Polygon index ticker translation. Anything not in this map
-# is passed through unchanged (equities like SPY, TLT, …).
-_INDEX_TICKER_MAP = {
-    "^VIX":   "I:VIX",
-    "^VIX3M": "I:VIX3M",
-    "^VVIX":  "I:VVIX",
-    "^SKEW":  "I:SKEW",
-    "^GSPC":  "I:SPX",
-    "^DJI":   "I:DJI",
-    "^IXIC":  "I:NDX",
-    "^RUT":   "I:RUT",
-}
-
-# Mapping of period strings to approximate trading days.
+# Mapping of period strings to approximate trading days
 _PERIOD_DAYS = {
-    "5d":  5,
-    "1mo": 21,
-    "3mo": 63,
-    "6mo": 126,
-    "1y":  252,
-    "2y":  504,
+    '5d': 5,
+    '1mo': 21,
+    '3mo': 63,
+    '6mo': 126,
+    '1y': 252,
 }
 
-# Calendar days we fetch from Polygon. 2 years of trading-day coverage is
-# enough for any caller-requested period (longest is "2y" = 504 trading
-# days ≈ 730 calendar days).
-_FETCH_CALENDAR_DAYS = 760
+# yfinance/Yahoo index symbols → Polygon index tickers
+_SYMBOL_MAP = {
+    '^VIX':   'I:VIX',
+    '^VIX3M': 'I:VIX3M',
+    '^GSPC':  'I:SPX',
+    '^DJI':   'I:DJI',
+    '^IXIC':  'I:NDX',
+}
 
 
-def _to_polygon_ticker(ticker: str) -> str:
-    """Translate Yahoo-style index tickers to Polygon equivalents."""
-    return _INDEX_TICKER_MAP.get(ticker.upper(), ticker.upper())
+def _polygon_to_dataframe(results: list) -> pd.DataFrame:
+    """Convert Polygon aggregate results to a yfinance-shaped DataFrame.
+
+    Output columns: Open, High, Low, Close, Volume.
+    Index: timezone-naive DatetimeIndex (date-only), sorted ascending.
+    """
+    if not results:
+        return pd.DataFrame(
+            columns=['Open', 'High', 'Low', 'Close', 'Volume'],
+            index=pd.DatetimeIndex([], name='Date'),
+        )
+
+    # Polygon 't' is epoch milliseconds (UTC, market-day timestamp)
+    df = pd.DataFrame(results)
+    # Index tickers may omit volume — fill with 0
+    if 'v' not in df.columns:
+        df['v'] = 0
+    df['Date'] = pd.to_datetime(df['t'], unit='ms', utc=True).dt.tz_convert(None).dt.normalize()
+    df = df.rename(columns={'o': 'Open', 'h': 'High', 'l': 'Low', 'c': 'Close', 'v': 'Volume'})
+    df = df[['Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
+    df = df.set_index('Date').sort_index()
+    return df
 
 
 class DataCache:
-    """In-memory TTL cache for Polygon daily-bar history.
+    """Download each ticker's data once (1y period), slice to requested period."""
 
-    Each ticker is fetched once for the full ``_FETCH_CALENDAR_DAYS``
-    window and cached. Callers requesting shorter periods get a slice
-    of the cached frame; no extra network calls.
-    """
-
-    def __init__(self, ttl_seconds: int = 900, api_key: Optional[str] = None):
+    def __init__(self, ttl_seconds: int = 900, polygon_client: PolygonClient = None):
         self._cache: dict = {}
         self._lock = threading.Lock()
         self._ttl = ttl_seconds
-        self._api_key = api_key or os.environ.get("POLYGON_API_KEY", "")
-        self._provider = None  # built lazily on first use
+        self._client = polygon_client or PolygonClient()
 
-    # ------------------------------------------------------------------
-    # Provider
-    # ------------------------------------------------------------------
+    def get_history(self, ticker: str, period: str = '1y') -> pd.DataFrame:
+        """Get historical data, using cache if fresh.
 
-    def _get_provider(self):
-        """Lazily construct the PolygonProvider so unit tests that mock
-        ``DataCache.get_history`` never need a live key."""
-        if self._provider is None:
-            if not self._api_key:
-                raise DataFetchError(
-                    "POLYGON_API_KEY is not set — DataCache cannot fetch "
-                    "market data."
-                )
-            # Imported lazily to avoid a circular import at module load.
-            from strategy.polygon_provider import PolygonProvider
-            self._provider = PolygonProvider(api_key=self._api_key)
-        return self._provider
-
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
-
-    def get_history(self, ticker: str, period: str = "1y") -> pd.DataFrame:
-        """Return cached daily bars for ``ticker`` over ``period``.
-
-        ``period`` accepts the same strings as the old yfinance-backed
-        cache (``"5d"``, ``"1mo"``, ``"3mo"``, ``"6mo"``, ``"1y"``,
-        ``"2y"``). The returned DataFrame has the same columns and
-        ``DatetimeIndex`` shape callers used to receive previously:
-        ``Open``, ``High``, ``Low``, ``Close``, ``Volume``.
+        Always downloads the full 1y period and caches by ticker only.
+        Shorter periods are sliced locally to avoid redundant downloads.
         """
         key = ticker.upper()
-
+        cached = None
         with self._lock:
-            entry = self._cache.get(key)
-            if entry is not None:
-                data, ts = entry
+            if key in self._cache:
+                data, ts = self._cache[key]
                 if time.time() - ts < self._ttl:
-                    metrics.inc("cache_hits")
-                    return self._slice_to_period(data, period).copy()
+                    logger.debug(f"Cache hit for {key}")
+                    metrics.inc('cache_hits')
+                    cached = data
 
-        metrics.inc("cache_misses")
+        if cached is not None:
+            return self._slice_to_period(cached, period).copy()
 
-        polygon_ticker = _to_polygon_ticker(ticker)
+        metrics.inc('cache_misses')
+
+        polygon_ticker = _SYMBOL_MAP.get(ticker, _SYMBOL_MAP.get(key, ticker))
+        # Fetch ~1y of daily aggregates. Add buffer for weekends/holidays so
+        # we reliably receive ~252 trading days.
+        today = datetime.now(timezone.utc).date()
+        from_date = (today - timedelta(days=400)).isoformat()
+        to_date = today.isoformat()
+
         try:
-            data = self._get_provider().get_historical(
-                polygon_ticker, days=_FETCH_CALENDAR_DAYS,
+            results = self._client.aggregates(
+                ticker=polygon_ticker,
+                multiplier=1,
+                timespan='day',
+                from_date=from_date,
+                to_date=to_date,
             )
+            data = _polygon_to_dataframe(results)
+            if data.empty:
+                raise DataFetchError(f"Polygon returned 0 bars for {ticker} ({polygon_ticker})")
+            with self._lock:
+                self._cache[key] = (data, time.time())
+            return self._slice_to_period(data, period).copy()
         except DataFetchError:
             raise
-        except Exception as exc:
-            logger.error(
-                "Failed Polygon fetch for %s (%s): %s",
-                ticker, polygon_ticker, exc, exc_info=True,
-            )
-            raise DataFetchError(
-                f"Failed to download data for {ticker}: {exc}"
-            ) from exc
-
-        if data is None or data.empty:
-            raise DataFetchError(
-                f"Polygon returned no data for {ticker} ({polygon_ticker})"
-            )
-
-        with self._lock:
-            self._cache[key] = (data, time.time())
-        return self._slice_to_period(data, period).copy()
+        except Exception as e:
+            logger.error(f"Failed to download {ticker}: {e}", exc_info=True)
+            raise DataFetchError(f"Failed to download data for {ticker}: {e}") from e
 
     @staticmethod
     def _slice_to_period(data: pd.DataFrame, period: str) -> pd.DataFrame:
-        """Slice the cached full-window DataFrame to the requested period."""
+        """Slice a full-year DataFrame to the requested period."""
         days = _PERIOD_DAYS.get(period)
         if days is None or days >= len(data):
             return data
@@ -158,11 +134,22 @@ class DataCache:
         for ticker in tickers:
             try:
                 self.get_history(ticker)
-                logger.info("Pre-warmed cache for %s", ticker)
-            except Exception as exc:
-                logger.warning("Pre-warm failed for %s: %s", ticker, exc)
+                logger.info(f"Pre-warmed cache for {ticker}")
+            except Exception as e:
+                logger.warning(f"Pre-warm failed for {ticker}: {e}")
 
-    def clear(self) -> None:
+    def get_ticker_obj(self, ticker: str):
+        """Deprecated: yfinance Ticker objects are no longer supported.
+
+        Callers needing option chains must use ``PolygonOptionsClient``
+        directly. Callers needing OHLCV history should use ``get_history``.
+        """
+        raise NotImplementedError(
+            "get_ticker_obj is no longer supported after the Polygon migration. "
+            "Use PolygonOptionsClient for option chains or get_history for OHLCV."
+        )
+
+    def clear(self):
         """Clear all cached data."""
         with self._lock:
             self._cache.clear()

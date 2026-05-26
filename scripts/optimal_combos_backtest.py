@@ -637,7 +637,7 @@ is more capital-efficient here than in the concentrated Ultimate Portfolio.</p>
 </div>
 
 <div class="footer">
-  Optimal Strategy Combinations Backtest &bull; {ts} &bull; PilotAI Compass
+  Optimal Strategy Combinations Backtest &bull; {ts} &bull; Attix Compass
 </div>
 </body></html>"""
 

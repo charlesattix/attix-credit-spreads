@@ -23,6 +23,8 @@ from typing import Dict, List, Optional
 
 import yaml
 
+from experiments.manager import get_manager
+
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -75,13 +77,6 @@ def get_alpaca_for_exp(exp_id: str, pushed: Optional[dict]) -> Optional[dict]:
                 return alp
     return None
 
-BACKTEST_EXPECTATIONS: dict[str, dict] = {
-    "EXP-400": {"avg_return": 32.7,  "max_dd": -12.1, "robust": 0.870},
-    "EXP-401": {"avg_return": 40.7,  "max_dd": -7.0,  "robust": None},
-    "EXP-503": {"avg_return": None,  "max_dd": None,   "robust": None},
-    "EXP-600": {"avg_return": 139.2, "max_dd": -19.4,  "robust": 0.950},
-}
-
 CLOSED_STATUSES = (
     "closed_profit", "closed_loss", "closed_manual",
     "closed_expiry", "closed_external",
@@ -91,26 +86,23 @@ CLOSED_STATUSES = (
 # Registry
 # ---------------------------------------------------------------------------
 
-def load_registry() -> dict:
-    if not REGISTRY_PATH.exists():
-        return {"experiments": {}}
-    with open(REGISTRY_PATH) as f:
-        return json.load(f)
-
-
 def get_live_experiments(registry: dict | None = None) -> list[dict]:
     if registry is None:
-        registry = load_registry()
-    exps = [
-        e for e in registry["experiments"].values()
-        if e.get("status") in ("active", "paper_trading")
-    ]
+        exps = [
+            e for e in get_manager().all().values()
+            if e.get("status") in ("active", "paper_trading")
+        ]
+    else:
+        exps = [
+            e for e in registry["experiments"].values()
+            if e.get("status") in ("active", "paper_trading")
+        ]
     return sorted(exps, key=lambda e: e["id"])
 
 
 def get_all_experiments(registry: dict | None = None) -> list[dict]:
     if registry is None:
-        registry = load_registry()
+        return sorted(get_manager().all().values(), key=lambda e: e["id"])
     return sorted(registry["experiments"].values(), key=lambda e: e["id"])
 
 
@@ -312,10 +304,9 @@ def query_experiment(exp: dict, report_date: Optional[str] = None) -> dict:
 
 
 def query_all_live(report_date: Optional[str] = None) -> List[dict]:
-    registry = load_registry()
     results = [
         query_experiment(exp, report_date)
-        for exp in get_live_experiments(registry)
+        for exp in get_live_experiments()
     ]
 
     # Build stats from local DB or fall back to pushed data

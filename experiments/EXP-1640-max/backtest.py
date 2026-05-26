@@ -638,7 +638,7 @@ mean-reversion risk in weak sectors. Bi-weekly rebalancing captures regime shift
 
     parts.append(f"""
 <div class="footer">
-  EXP-1640: Sector Momentum with Options Overlay — PilotAI Credit Spreads<br>
+  EXP-1640: Sector Momentum with Options Overlay — Attix Credit Spreads<br>
   All prices from IronVault options_cache.db + Yahoo Finance. Zero synthetic data.<br>
   Bi-weekly rebalance, VIX&lt;30 filter, 5% OTM, 30-35 DTE put credit spreads.
 </div></body></html>""")

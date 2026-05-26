@@ -1,0 +1,1487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Attix Credit Spreads — Architecture for Humans</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: #ffffff;
+    color: #1a1a1a;
+    line-height: 1.7;
+    font-size: 16px;
+  }
+  /* ── Layout ── */
+  .page { max-width: 960px; margin: 0 auto; padding: 48px 32px; }
+  /* ── TOC sidebar on large screens ── */
+  @media (min-width: 1200px) {
+    body { display: flex; }
+    .toc-sidebar {
+      display: block;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      width: 240px;
+      min-width: 240px;
+      padding: 40px 16px;
+      border-right: 1px solid #e8e8e8;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .toc-sidebar h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 12px; }
+    .toc-sidebar a { display: block; color: #444; text-decoration: none; padding: 3px 0; }
+    .toc-sidebar a:hover { color: #0055cc; }
+    .toc-sidebar .toc-num { color: #aaa; margin-right: 4px; }
+    .page { flex: 1; max-width: 900px; }
+  }
+  @media (max-width: 1199px) { .toc-sidebar { display: none; } }
+  /* ── Typography ── */
+  h1 { font-size: 2.2em; font-weight: 800; line-height: 1.2; margin-bottom: 8px; color: #0a0a0a; }
+  h1 .subtitle { font-size: 0.5em; font-weight: 400; color: #666; display: block; margin-top: 6px; }
+  h2 { font-size: 1.5em; font-weight: 700; margin: 52px 0 16px; padding-top: 16px;
+       border-top: 2px solid #e0e0e0; color: #0a0a0a; }
+  h2 .section-num { color: #0055cc; margin-right: 8px; font-size: 0.85em; }
+  h3 { font-size: 1.1em; font-weight: 600; margin: 28px 0 10px; color: #222; }
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 10px 0 16px 24px; }
+  li { margin-bottom: 6px; }
+  strong { color: #0a0a0a; }
+  a { color: #0055cc; }
+  /* ── Code ── */
+  code {
+    font-family: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas, monospace;
+    font-size: 0.84em;
+    background: #f3f4f6;
+    color: #c7254e;
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+  pre {
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 20px;
+    overflow-x: auto;
+    margin: 16px 0 24px;
+    font-family: "SF Mono", "Fira Code", Menlo, Consolas, monospace;
+    font-size: 0.82em;
+    line-height: 1.55;
+    color: #1a1a1a;
+  }
+  pre .hl { color: #0055cc; font-weight: bold; }
+  pre .comment { color: #777; font-style: italic; }
+  pre .kw { color: #a626a4; }
+  pre .str { color: #50a14f; }
+  /* ── Callout boxes ── */
+  .callout {
+    border-left: 4px solid #0055cc;
+    background: #f0f6ff;
+    padding: 14px 18px;
+    border-radius: 0 6px 6px 0;
+    margin: 20px 0;
+  }
+  .callout.warn  { border-color: #d97706; background: #fffbeb; }
+  .callout.green { border-color: #059669; background: #f0fdf4; }
+  .callout.red   { border-color: #dc2626; background: #fef2f2; }
+  .callout-title { font-weight: 700; margin-bottom: 4px; }
+  /* ── Tables ── */
+  table { width: 100%; border-collapse: collapse; margin: 20px 0 28px; font-size: 0.9em; }
+  th { background: #f0f2f5; text-align: left; padding: 10px 14px; font-weight: 600; border: 1px solid #d0d5dd; }
+  td { padding: 9px 14px; border: 1px solid #d0d5dd; vertical-align: top; }
+  tr:nth-child(even) td { background: #fafafa; }
+  /* ── Flow steps ── */
+  .flow-step {
+    display: flex;
+    gap: 16px;
+    margin: 12px 0;
+    align-items: flex-start;
+  }
+  .step-num {
+    min-width: 32px;
+    height: 32px;
+    background: #0055cc;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85em;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .step-body { flex: 1; }
+  .step-body strong { display: block; margin-bottom: 2px; }
+  /* ── Experiment cards ── */
+  .exp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin: 20px 0; }
+  .exp-card {
+    border: 1px solid #d0d5dd;
+    border-radius: 8px;
+    padding: 16px;
+    background: #fff;
+  }
+  .exp-card .exp-id { font-size: 0.75em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #0055cc; margin-bottom: 4px; }
+  .exp-card .exp-name { font-size: 1em; font-weight: 700; margin-bottom: 6px; }
+  .exp-card .exp-desc { font-size: 0.88em; color: #444; line-height: 1.5; }
+  .exp-card .exp-ticker { display: inline-block; background: #f0f2f5; border-radius: 4px; padding: 2px 8px; font-size: 0.75em; font-weight: 600; margin-top: 8px; }
+  /* ── Safety table colors ── */
+  .level-normal { background: #d1fae5; color: #065f46; font-weight: 700; padding: 3px 8px; border-radius: 4px; }
+  .level-yellow { background: #fef3c7; color: #92400e; font-weight: 700; padding: 3px 8px; border-radius: 4px; }
+  .level-red    { background: #fee2e2; color: #991b1b; font-weight: 700; padding: 3px 8px; border-radius: 4px; }
+  .level-hard   { background: #1a1a1a; color: #fff; font-weight: 700; padding: 3px 8px; border-radius: 4px; }
+  /* ── Header ── */
+  .page-header { padding-bottom: 32px; border-bottom: 2px solid #e0e0e0; margin-bottom: 8px; }
+  .meta-line { font-size: 0.88em; color: #666; margin-top: 12px; }
+  .meta-line span { margin-right: 24px; }
+  /* ── File map ── */
+  .file-entry { display: flex; gap: 12px; margin: 8px 0; align-items: flex-start; }
+  .file-path { font-family: "SF Mono", Menlo, monospace; font-size: 0.83em; color: #c7254e; min-width: 320px; }
+  .file-desc { font-size: 0.9em; color: #333; }
+  /* ── Diagram ── */
+  .diagram-wrap { overflow-x: auto; background: #0f1117; border-radius: 8px; padding: 24px; margin: 20px 0; }
+  .diagram-wrap pre { background: transparent; border: none; color: #d6d9e0; margin: 0; padding: 0; font-size: 0.83em; }
+  .diagram-wrap pre .hl { color: #61afef; }
+  .diagram-wrap pre .grn { color: #98c379; }
+  .diagram-wrap pre .ylw { color: #e5c07b; }
+  .diagram-wrap pre .red { color: #e06c75; }
+  .diagram-wrap pre .mag { color: #c678dd; }
+</style>
+</head>
+<body>
+
+<!-- ── Sidebar TOC ── -->
+<nav class="toc-sidebar">
+  <h3>Contents</h3>
+  <a href="#s1"><span class="toc-num">1</span> The Big Picture</a>
+  <a href="#s2"><span class="toc-num">2</span> How It Starts</a>
+  <a href="#s3"><span class="toc-num">3</span> The Scan</a>
+  <a href="#s4"><span class="toc-num">4</span> Signal Generation</a>
+  <a href="#s5"><span class="toc-num">5</span> Trade Selection</a>
+  <a href="#s6"><span class="toc-num">6</span> Position Sizing</a>
+  <a href="#s7"><span class="toc-num">7</span> Order Execution</a>
+  <a href="#s8"><span class="toc-num">8</span> Position Management</a>
+  <a href="#s9"><span class="toc-num">9</span> The Experiments</a>
+  <a href="#s10"><span class="toc-num">10</span> Safety Systems</a>
+  <a href="#s11"><span class="toc-num">11</span> Data Flow Diagram</a>
+  <a href="#s12"><span class="toc-num">12</span> Infrastructure</a>
+  <a href="#s13"><span class="toc-num">13</span> Key Files Map</a>
+</nav>
+
+<!-- ── Main page ── -->
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <h1>
+      Attix Credit Spreads
+      <span class="subtitle">A Complete Architectural Overview — Written for Everyone</span>
+    </h1>
+    <p class="meta-line">
+      <span>Last updated: 2026-05-24</span>
+      <span>9 active experiments</span>
+      <span>12,607 tests</span>
+      <span>~440 modules</span>
+    </p>
+  </div>
+
+  <!-- ───────────────────────────────────────── -->
+  <!-- SECTION 1: BIG PICTURE -->
+  <!-- ───────────────────────────────────────── -->
+  <h2 id="s1"><span class="section-num">1</span> The Big Picture — What Is This?</h2>
+
+  <p>
+    Attix Credit Spreads is an <strong>automated stock-options trading robot</strong> that runs 24/7 on a cloud server.
+    Its job is simple: find good moments to sell options contracts and collect cash (called a "credit"), then manage
+    those positions until they expire profitably or need to be closed early.
+  </p>
+
+  <h3>What is a Credit Spread? (2-minute explanation)</h3>
+
+  <p>
+    Imagine you're a bookmaker. Someone wants to bet that SPY (the S&amp;P 500 index fund) will crash below $500
+    in the next 30 days. You think that's very unlikely, so you take the other side of that bet and collect money upfront.
+  </p>
+
+  <p>
+    In options terms:
+  </p>
+
+  <ul>
+    <li>You <strong>sell</strong> a put option at $505 (the "short strike") — you collect cash for this</li>
+    <li>You <strong>buy</strong> a put option at $495 (the "long strike") — you pay a little cash for this insurance</li>
+    <li>The difference is your <strong>credit</strong> — the money you keep if SPY stays above $505</li>
+    <li>Your maximum loss is capped at $10 per share (the spread width) minus the credit you collected</li>
+  </ul>
+
+  <p>
+    This structure is called a <strong>bull put spread</strong>. There's also a <strong>bear call spread</strong>
+    (you bet the stock won't rise too much) and an <strong>iron condor</strong> (you combine both sides —
+    betting the stock stays inside a range). The system trades all three, picking the right one based on
+    what the market is doing.
+  </p>
+
+  <div class="callout green">
+    <div class="callout-title">Why options selling works statistically</div>
+    The market consistently overprices the cost of insurance (implied volatility is usually higher than
+    realized volatility). Options sellers collect this "volatility risk premium." Over thousands of trades,
+    this edge compounds. The system targets a backtest Sharpe ratio of 6.39 (elite-level), with an expected
+    live Sharpe of 3.2–4.5 after accounting for real-world slippage and execution costs.
+  </div>
+
+  <h3>The System's Goal</h3>
+  <p>
+    Run 9 simultaneous <strong>experiments</strong> (strategy variations) in parallel paper-trading accounts
+    on <strong>Alpaca's brokerage platform</strong>, track every trade, manage risk automatically, and generate
+    daily performance reports — all without any human clicking buttons.
+  </p>
+
+  <!-- ───────────────────────────────────────── -->
+  <!-- SECTION 2: HOW IT STARTS -->
+  <!-- ───────────────────────────────────────── -->
+  <h2 id="s2"><span class="section-num">2</span> How It Starts — From Server On to First Scan</h2>
+
+  <p>
+    The system runs on <strong>Railway</strong>, a cloud hosting platform (think of it like renting a computer
+    that runs your code forever). When Railway starts the application, here's the exact chain of events:
+  </p>
+
+  <div class="flow-step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <strong>Railway reads the Procfile</strong>
+      <br/>
+      The file <code>Procfile</code> at the project root tells Railway what processes to start:
+      <pre>web: uvicorn web_dashboard.app:app --host 0.0.0.0 --port $PORT
+worker: python railway_worker.py
+watchdog: python railway_watchdog.py</pre>
+      Three processes launch simultaneously: a web dashboard, the main trading worker, and a health watchdog.
+    </div>
+  </div>
+
+  <div class="flow-step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <strong>railway_worker.py boots up</strong>
+      <br/>
+      File: <code>railway_worker.py</code>. This is the master conductor.
+      It reads the <strong>experiment registry</strong> (<code>experiments/registry.json</code>) to find all
+      experiments with <code>"status": "active"</code>. Currently there are 9 active experiments.
+      <pre>from experiments.manager import get_manager
+active = get_manager().active()
+<span class="comment"># Returns 9 experiments: EXP-400, EXP-401, EXP-503,
+# EXP-600, EXP-800, EXP-1220, EXP-3303b, EXP-3309, EXP-3311</span></pre>
+    </div>
+  </div>
+
+  <div class="flow-step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <strong>One subprocess per experiment</strong>
+      <br/>
+      For each active experiment, the worker spawns a separate Python process, staggered 2 seconds apart
+      to avoid log collisions:
+      <pre>for p in procs.values():
+    p.start()
+    time.sleep(2)  <span class="comment"># stagger so logs don't collide</span></pre>
+      Each subprocess runs: <code>python main.py scheduler --config configs/paper_expNNN.yaml --db data/pilotai_expNNN.db</code>
+      <br/><br/>
+      Each experiment gets its own Alpaca API credentials (injected as environment variables like
+      <code>ALPACA_API_KEY_EXP400</code>) and its own separate database file — so they're completely isolated.
+    </div>
+  </div>
+
+  <div class="flow-step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <strong>main.py initializes the trading system</strong>
+      <br/>
+      Inside each subprocess, <code>main.py</code> calls <code>create_system(config_file)</code>
+      which:
+      <ul>
+        <li>Loads and validates the YAML config for this experiment</li>
+        <li>Checks paper-mode safety (refuses to accidentally trade with real money)</li>
+        <li>Connects to Alpaca's paper-trading API</li>
+        <li>Runs a startup reconciliation (checks if any trades from last session are still open)</li>
+        <li>Pre-warms the data cache with SPY, ^VIX, TLT price history</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="flow-step">
+    <div class="step-num">5</div>
+    <div class="step-body">
+      <strong>The ScanScheduler starts and the PositionMonitor launches as a background thread</strong>
+      <br/>
+      Two things start simultaneously:
+      <ul>
+        <li>
+          <strong>ScanScheduler</strong> (<code>shared/scheduler.py</code>): Like an alarm clock with 18 alarms per trading day.
+          It sleeps between scheduled times and wakes up to run scans.
+        </li>
+        <li>
+          <strong>PositionMonitor</strong> (<code>execution/position_monitor.py</code>): A background daemon that
+          checks every 60 seconds whether any open positions need to be closed (stop loss hit, profit target reached, etc.)
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="flow-step">
+    <div class="step-num">6</div>
+    <div class="step-body">
+      <strong>First scan fires</strong>
+      <br/>
+      The scheduler waits until the next scheduled slot, then calls <code>system.scan_opportunities()</code>.
+      The first slot each day is at 9:00 AM ET (a pre-market status check), followed by the first real
+      scan at 9:15 AM ET.
+    </div>
+  </div>
+
+  <h3>The Daily Schedule (18 slots per trading day)</h3>
+
+  <table>
+    <thead>
+      <tr><th>Time (ET)</th><th>Type</th><th>What Happens</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>9:00 AM</td><td>Pre-market check</td><td>Status check, no new trades</td></tr>
+      <tr><td>9:15 AM</td><td>Scan</td><td>First full scan of the day — high activity window</td></tr>
+      <tr><td>9:45 AM</td><td>Scan</td><td>Regular scan</td></tr>
+      <tr><td>10:00–15:30</td><td>Scan every 30 min</td><td>12 regular scans through the trading day</td></tr>
+      <tr><td>4:15 PM</td><td>Daily report</td><td>Generates P&amp;L summary, sends Telegram notification</td></tr>
+      <tr><td>4:30 PM</td><td>Retrain check</td><td>Checks if ML models need retraining (needs 30+ closed trades)</td></tr>
+      <tr><td>5:00 PM Friday</td><td>Macro weekly</td><td>Updates macro market snapshot (only fires on Fridays)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <div class="callout-title">Supervisor loop: crash protection</div>
+    The railway_worker checks every 5 seconds whether each experiment's subprocess is still running.
+    If one crashes, it waits 15 seconds and restarts it automatically. The watchdog process (<code>railway_watchdog.py</code>)
+    independently checks that heartbeats are being written — if a scan hasn't run in 45 minutes during
+    market hours, it sends a Telegram alert.
+  </div>
+
+  <!-- ───────────────────────────────────────── -->
+  <!-- SECTION 3: THE SCAN -->
+  <!-- ───────────────────────────────────────── -->
+  <h2 id="s3"><span class="section-num">3</span> The Scan — What Happens Every 30 Minutes</h2>
+
+  <p>
+    When the scheduler fires a scan slot, it calls <code>system.scan_opportunities()</code> in <code>main.py</code>.
+    Think of this as the system's brain doing a complete market check.
+  </p>
+
+  <h3>Step 1: Entry gates — should we even scan right now?</h3>
+  <p>
+    Before touching any market data, the scan checks a series of gates that might block it entirely:
+  </p>
+  <ul>
+    <li>
+      <strong>NFP filter (EXP-3311)</strong>: If today is the day before a Non-Farm Payrolls jobs report
+      (the biggest monthly economic announcement), skip all new entries. The jobs report creates violent
+      market moves.
+    </li>
+    <li>
+      <strong>Execution window gate (EXP-3309)</strong>: If configured, only allow trades during the
+      15:30–16:00 ET window (the final 30 minutes before close), when options liquidity is highest.
+      All scans outside this window return zero opportunities.
+    </li>
+  </ul>
+
+  <h3>Step 2: Build the scan universe — which tickers to scan?</h3>
+  <p>
+    The system determines which stocks/ETFs to scan. Most experiments scan a fixed list from their config
+    (usually just SPY). The COMPASS system optionally ranks sector ETFs (XLF, XLI, GLD, SLV, etc.) by
+    their momentum quadrant and adds them dynamically.
+  </p>
+
+  <h3>Step 3: Parallel ticker analysis</h3>
+  <p>
+    The system analyzes up to 4 tickers simultaneously using a thread pool. For each ticker, it runs
+    <code>_analyze_ticker()</code>:
+  </p>
+
+  <pre>with ThreadPoolExecutor(max_workers=4) as executor:
+    futures = {
+        executor.submit(self._analyze_ticker, ticker, direction_override, rrg_quadrant): ticker
+        for ticker, direction_override, rrg_quadrant in ticker_universe
+    }</pre>
+
+  <h3>Step 4: Per-ticker analysis pipeline</h3>
+  <p>For each ticker, the following chain runs in order:</p>
+
+  <ol>
+    <li><strong>Fetch 2 years of daily price data</strong> — needed for moving average calculations (MA200 requires 200 days of warmup)</li>
+    <li><strong>Fetch the live options chain</strong> — all available strike prices and expirations</li>
+    <li><strong>Technical analysis</strong> — calculates RSI, moving averages, support/resistance levels</li>
+    <li><strong>Regime detection</strong> — determines if the market is bull, bear, neutral, or transitioning (see Section 4)</li>
+    <li><strong>Regime gate check</strong> — for SPY/QQQ, blocks entries during "transition" or "high_stress" regimes</li>
+    <li><strong>IV rank calculation</strong> — measures current volatility vs. the last year (high IV rank = expensive options = good time to sell)</li>
+    <li><strong>Signal generation</strong> — strategy classes generate specific trade proposals (see Section 4)</li>
+    <li><strong>Scoring</strong> — each signal scored 0–100 using 5-component system</li>
+    <li><strong>Re-pricing</strong> — signals priced against real options chain data (no synthetic prices ever)</li>
+    <li><strong>Return opportunities</strong> — the list of viable trades for this ticker</li>
+  </ol>
+
+  <h3>Step 5: Sort, alert, and route</h3>
+  <p>
+    All opportunities from all tickers are merged and sorted by score (highest first).
+    The top 5 are logged. Any opportunity scoring ≥ 60 gets sent as a Telegram notification.
+    All opportunities are then pushed through the <strong>AlertRouter</strong>, which applies the
+    final risk gate and submits approved trades to Alpaca.
+  </p>
+
+  <!-- ───────────────────────────────────────── -->
+  <!-- SECTION 4: SIGNAL GENERATION -->
+  <!-- ───────────────────────────────────────── -->
+  <h2 id="s4"><span class="section-num">4</span> Signal Generation — How the System Reads the Market</h2>
+
+  <h3>Regime Detection: Is the market bullish, bearish, or uncertain?</h3>
+
+  <p>
+    The most critical decision the system makes before any trade is: <em>what mood is the market in right now?</em>
+    This is called <strong>regime detection</strong>. The system uses the <strong>ComboRegimeDetector</strong>,
+    which combines three independent signals:
+  </p>
+
+  <table>
+    <thead>
+      <tr><th>Signal</th><th>What it measures</th><th>Bull condition</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Moving Average (MA80)</strong></td>
+        <td>Is SPY's price above or below its 80-day average price?</td>
+        <td>Price &gt; MA80 (trending up)</td>
+      </tr>
+      <tr>
+        <td><strong>RSI (Relative Strength Index)</strong></td>
+        <td>Is buying momentum strong or is the market oversold?</td>
+        <td>RSI &gt; 50 (buyers winning)</td>
+      </tr>
+      <tr>
+        <td><strong>VIX Structure</strong></td>
+        <td>Is the market more scared of near-term or far-term risk? (VIX vs VIX3M ratio)</td>
+        <td>VIX &lt; VIX3M (normal, calm structure)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>The three signals vote and the regime label is assigned:</p>
+
+  <table>
+    <thead>
+      <tr><th>Regime</th><th>Meaning</th><th>Trading action</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>bull</strong></td><td>All signs point up — trend is healthy, fear is low</td><td>Sell bull put spreads (bet market stays up)</td></tr>
+      <tr><td><strong>bear</strong></td><td>Trend is down, fear is elevated</td><td>Sell bear call spreads (bet market stays down)</td></tr>
+      <tr><td><strong>neutral</strong></td><td>Mixed signals — no clear direction</td><td>Sell iron condors (bet market stays flat)</td></tr>
+      <tr><td><strong>transition</strong></td><td>Regime is changing, high uncertainty</td><td>Skip all entries (EXP-3303b gate blocks SPY/QQQ)</td></tr>
+      <tr><td><strong>high_stress</strong></td><td>Extreme market fear or dislocation</td><td>Skip all entries for SPX-sensitive tickers</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout warn">
+    <div class="callout-title">Critical safety rule</div>
+    If regime detection fails (returns <code>None</code>), the system does <strong>not</strong> default to
+    any regime. Instead, it logs an error and skips all entries for that ticker entirely.
+    Missing regime data must block trading, not allow it.
+    <br/><br/>
+    <code>if regime is None and combo_mode_active: return []  # Hard block</code>
+  </div>
+
+  <h3>VIX Check: How scared is the market?</h3>
+  <p>
+    VIX is the "fear index" — it measures how much the market is paying for crash insurance.
+    The system checks VIX at multiple points:
+  </p>
+  <ul>
+    <li><strong>VIX &gt; 40</strong>: Hard block — no new entries at all (EXP-800). Market is panicking.</li>
+    <li><strong>VIX term structure</strong>: When short-term VIX exceeds long-term VIX3M (inverted), that's a
+    warning sign used in regime detection above.</li>
+  </ul>
+
+  <h3>The 5-Component Signal Score (0–100)</h3>
+  <p>
+    Once a candidate trade is generated, it gets scored by <code>shared/signal_scorer.py</code>
+    using five criteria:
+  </p>
+
+  <table>
+    <thead>
+      <tr><th>Component</th><th>Max Points</th><th>What it rewards</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Credit quality</td><td>25</td><td>High credit collected relative to spread width</td></tr>
+      <tr><td>Risk/reward ratio</td><td>25</td><td>Credit received vs. maximum possible loss</td></tr>
+      <tr><td>Probability of profit</td><td>25</td><td>How far OTM (out-of-the-money) the short strike is</td></tr>
+      <tr><td>Technical alignment</td><td>15</td><td>Does the trade direction match the trend?</td></tr>
+      <tr><td>IV rank</td><td>10</td><td>Is implied volatility historically high? (Good time to sell)</td></tr>
+    </tbody>
+  </table>
+
+  <p>Only signals scoring ≥ 60 get Telegram alerts. The AlertRouter applies additional risk gates before placing any actual order.</p>
+
+  <!-- ───────────────────────────────────────── -->
+  <!-- SECTION 5: TRADE SELECTION -->
+  <!-- ───────────────────────────────────────── -->
+  <h2 id="s5"><span class="section-num">5</span> Trade Selection — Picking the Exact Contracts</h2>
+
+  <p>
+    Once the system decides "yes, sell a bull put spread on SPY," it needs to pick the exact option contracts.
+    This requires choosing three things: <strong>expiration date</strong>, <strong>strike price</strong>,
+    and <strong>spread width</strong>.
+  </p>
+
+  <h3>DTE — Days to Expiration</h3>
+  <p>
+    Each experiment is configured with a target DTE (how many days until the options expire).
+    For example, EXP-800 uses DTE=15. The system scans available expirations and picks the one
+    closest to the target. Shorter DTE = faster theta decay (time value erodes faster) but
+    less time to recover if the trade goes against you.
+  </p>
+
+  <table>
+    <thead>
+      <tr><th>Experiment</th><th>DTE</th><th>Rationale</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>EXP-400 (Champion)</td><td>15</td><td>Sweet spot for SPY — fast decay, manageable risk</td></tr>
+      <tr><td>EXP-401 (Blend)</td><td>15–28</td><td>Straddles need slightly more time</td></tr>
+      <tr><td>EXP-600 (IBIT Bitcoin)</td><td>14</td><td>Bitcoin moves fast — shorter DTE to limit exposure</td></tr>
+      <tr><td>EXP-1220 (Leverage 3x)</td><td>Configured in YAML</td><td>Follows EXP-400 signal generation</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Strike Selection — How Far OTM?</h3>
+  <p>
+    "OTM%" (out-of-the-money percentage) controls how far the short strike is from the current price.
+    A 2% OTM means if SPY is at $500, the short strike would be around $490 (2% below current price).
+  </p>
+  <p>
+    The system uses two methods to find the right strike:
+  </p>
+  <ul>
+    <li>
+      <strong>Fixed OTM%</strong>: Simple — calculate the target price from a percentage offset.
+      EXP-400 uses 2% OTM for its put spreads.
+    </li>
+    <li>
+      <strong>Delta targeting</strong>: More sophisticated — finds the strike where the option has a
+      specific delta (probability of expiring in-the-money). This is done in <code>shared/strike_selector.py</code>
+      using Black-Scholes mathematics (pure Python, no external dependencies):
+      <pre><span class="comment"># Find the strike closest to delta=0.20 (20% chance of loss)</span>
+target_delta = 0.20
+best_strike = min(available_strikes,
+    key=lambda k: abs(bs_delta(k, S, T, r, sigma) - target_delta))</pre>
+    </li>
+  </ul>
+
+  <h3>Spread Width</h3>
+  <p>
+    The spread width is the dollar distance between the two strikes (e.g., $5, $10, $12).
+    Wider = more credit collected but also more max loss. EXP-400's champion config uses $12-wide spreads.
+    The width is configured per experiment and fixed — the system doesn't dynamically adjust it.
+  </p>
+
+  <!-- ───────────────────────────────────────── -->
+  <!-- SECTION 6: POSITION SIZING -->
+  <!-- ───────────────────────────────────────── -->
+  <h2 id="s6"><span class="section-num">6</span> Position Sizing — How Much Money per Trade?</h2>
+
+  <p>
+    Even a great trade can be ruined by betting too much on it. The system uses several layers of
+    sizing logic to determine how many contracts to trade.
+  </p>
+
+  <h3>Kelly Criterion — The Mathematical Bet-Sizing Formula</h3>
+  <p>
+    The Kelly Criterion is a mathematical formula originally developed for gambling that answers:
+    "Given your edge and win rate, what fraction of your bankroll should you bet?"
+    Betting too much → ruin. Betting too little → leaving money on the table.
+  </p>
+  <p>
+    EXP-800 ("Safe Kelly 4/7/9") implements regime-adjusted Kelly fractions:
+  </p>
+
+  <table>
+    <thead>
+      <tr><th>Regime</th><th>Kelly Fraction</th><th>Meaning</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Bull</td><td>9%</td><td>Confident environment — risk 9% of account per trade</td></tr>
+      <tr><td>Neutral</td><td>7%</td><td>Mixed signals — be more conservative</td></tr>
+      <tr><td>Bear</td><td>4%</td><td>Risky environment — minimum sizing</td></tr>
+    </tbody>
+  </table>
+
+  <p>
+    The system calculates: <em>contracts = floor((account_value × kelly_fraction) / max_loss_per_contract)</em>
+  </p>
+
+  <h3>Risk Percentage Cap</h3>
+  <p>
+    Most experiments also enforce a simple "never risk more than X% on a single trade" rule.
+    EXP-400 uses <code>risk_pct = 8.5%</code>. This acts as a maximum regardless of what
+    Kelly says.
+  </p>
+
+  <h3>Maximum Positions Limit</h3>
+  <p>
+    Even if sizing math says "trade 10 contracts," the system won't open a new position if
+    it already has too many open. EXP-600 (IBIT) caps at 5 open positions simultaneously.
+  </p>
+
+  <h3>Portfolio-Level Drawdown Circuit Breakers</h3>
+  <p>
+    The <code>shared/portfolio_risk.py</code> module tracks the <strong>combined equity</strong>
+    across all Alpaca accounts and enforces portfolio-wide sizing limits:
+  </p>
+
+  <table>
+    <thead>
+      <tr><th>Level</th><th>Drawdown from Peak</th><th>Action</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="level-normal">NORMAL</span></td>
+        <td>&gt; −8%</td>
+        <td>Full sizing, business as usual</td>
+      </tr>
+      <tr>
+        <td><span class="level-yellow">YELLOW</span></td>
+        <td>−8% to −10%</td>
+        <td>Reduce all new trade sizes by 50%</td>
+      </tr>
+      <tr>
+        <td><span class="level-red">RED</span></td>
+        <td>−10% to −12%</td>
+        <td>Pause all new entries entirely</td>
+      </tr>
+      <tr>
+        <td><span class="level-hard">HARD STOP</span></td>
+        <td>&gt; −12%</td>
+        <td>Flatten all positions immediately (in paper mode: log only)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ───────────────────────────────────────── -->
+  <!-- SECTION 7: ORDER EXECUTION -->
+  <!-- ───────────────────────────────────────── -->
+  <h2 id="s7"><span class="section-num">7</span> Order Execution — Submitting to Alpaca</h2>
+
+  <p>
+    The execution layer is in <code>execution/execution_engine.py</code> (756 lines).
+    It takes an approved opportunity and converts it into real brokerage orders.
+  </p>
+
+  <h3>The Execution Pipeline</h3>
+
+  <div class="flow-step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <strong>Drawdown circuit breaker check</strong>
+      <br/>
+      Before doing anything, the engine checks whether the account's drawdown has hit a circuit breaker
+      level. If so, the order is rejected immediately with no API calls.
+    </div>
+  </div>
+
+  <div class="flow-step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <strong>Duplicate check</strong>
+      <br/>
+      Has the system already opened a similar position recently? Checks the database for existing
+      "pending_open" records. Stale pending orders older than 60 minutes are automatically
+      marked as failed so they don't block new trades indefinitely.
+    </div>
+  </div>
+
+  <div class="flow-step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <strong>Market hours guard</strong>
+      <br/>
+      Queries the Alpaca clock API to confirm the market is actually open. No orders on weekends
+      or outside 9:30 AM – 4:00 PM ET.
+    </div>
+  </div>
+
+  <div class="flow-step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <strong>Write to database FIRST (crash-safe design)</strong>
+      <br/>
+      The trade record is written to SQLite in <code>pending_open</code> status <em>before</em>
+      sending the order to Alpaca. This is crucial: if the system crashes after sending but
+      before recording, the position would be "orphaned" — open with no record. By writing first,
+      the reconciliation system can detect and recover it.
+    </div>
+  </div>
+
+  <div class="flow-step">
+    <div class="step-num">5</div>
+    <div class="step-body">
+      <strong>Build OCC option symbols</strong>
+      <br/>
+      The system constructs the standardized option symbol format (called "OCC symbol"):
+      <pre><span class="comment"># Format: TICKER + YYMMDD + C/P + 8-digit-strike-padded</span>
+<span class="comment"># Example: SPY selling the $490 put expiring 2026-06-06</span>
+symbol = "SPY260606P00490000"
+<span class="comment"># Ticker + 260606 (Jun 6, 2026) + P (put) + 00490000 ($490 × 1000)</span></pre>
+    </div>
+  </div>
+
+  <div class="flow-step">
+    <div class="step-num">6</div>
+    <div class="step-body">
+      <strong>Submit the multi-leg order to Alpaca</strong>
+      <br/>
+      Credit spreads are submitted as a single "MLEG" (multi-leg) order — both legs execute simultaneously
+      at the net credit price. This prevents "leg risk" (one leg fills but the other doesn't).
+      Iron condors are submitted as two MLEG orders (put wing + call wing separately).
+      <pre><span class="comment"># Submit as one multi-leg order — both legs fill at once</span>
+order = alpaca.submit_mleg_order(
+    legs=[
+        {"symbol": "SPY260606P00490000", "side": "sell", "qty": 2},
+        {"symbol": "SPY260606P00478000", "side": "buy",  "qty": 2},
+    ],
+    order_type="limit",
+    limit_price=net_credit,   <span class="comment"># mid-point of bid/ask</span>
+    time_in_force="day",
+)</pre>
+      All orders are <strong>limit orders at the mid-price</strong> (halfway between bid and ask)
+      to avoid overpaying the spread.
+    </div>
+  </div>
+
+  <div class="flow-step">
+    <div class="step-num">7</div>
+    <div class="step-body">
+      <strong>Deterministic order ID for idempotency</strong>
+      <br/>
+      Each order gets a unique <code>client_order_id</code> derived from the trade's properties
+      (ticker + strikes + expiration + millisecond timestamp). If the same order is accidentally
+      submitted twice (e.g., due to a crash/restart), Alpaca will recognize the duplicate and
+      reject the second one safely.
+    </div>
+  </div>
+
+  <div class="flow-step">
+    <div class="step-num">8</div>
+    <div class="step-body">
+      <strong>Error handling: never raises exceptions</strong>
+      <br/>
+      The execution engine is designed to return a result dict instead of raising exceptions.
+      Callers decide how to handle errors. If Alpaca rejects the order, the database record is
+      updated to <code>failed_open</code> and the scan continues normally.
+    </div>
+  </div>
+
+  <!-- ───────────────────────────────────────── -->
+  <!-- SECTION 8: POSITION MANAGEMENT -->
+  <!-- ───────────────────────────────────────── -->
+  <h2 id="s8"><span class="section-num">8</span> Position Management — Watching Trades After Entry</h2>
+
+  <p>
+    Getting into a trade is only half the battle. The <strong>PositionMonitor</strong>
+    (<code>execution/position_monitor.py</code>, 1996 lines) is a background daemon that runs
+    around the clock, watching every open position for exit signals.
+  </p>
+
+  <h3>The Three-Tier Reconciliation System</h3>
+
+  <p>
+    The monitor runs on three different cadences, each doing progressively more expensive checks:
+  </p>
+
+  <table>
+    <thead>
+      <tr><th>Tier</th><th>Frequency</th><th>What it does</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Tier 1</strong></td>
+        <td>Every 60 seconds</td>
+        <td>Check for pending fills, detect external closes (did something close outside the system?)</td>
+      </tr>
+      <tr>
+        <td><strong>Tier 2</strong></td>
+        <td>Every 5 minutes (market hours only)</td>
+        <td>Full exit condition evaluation: stop loss, profit target, DTE management</td>
+      </tr>
+      <tr>
+        <td><strong>Tier 3 EOD</strong></td>
+        <td>Once daily at 4:15 PM ET</td>
+        <td>Process expiring positions, full reconciliation pass</td>
+      </tr>
+      <tr>
+        <td><strong>Tier 3b Morning</strong></td>
+        <td>Once daily at 9:35 AM ET</td>
+        <td>Catch overnight settlement activity (assignments, exercises)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Exit Conditions — When Does a Trade Close?</h3>
+
+  <p>
+    For each open position, the monitor evaluates these conditions in order:
+  </p>
+
+  <div class="flow-step">
+    <div class="step-num">A</div>
+    <div class="step-body">
+      <strong>DTE Management</strong>
+      <br/>
+      If <code>manage_dte</code> is configured (e.g., close when ≤ 2 DTE), close the position before
+      expiration to avoid gamma risk (options become very volatile in their final days).
+    </div>
+  </div>
+
+  <div class="flow-step">
+    <div class="step-num">B</div>
+    <div class="step-body">
+      <strong>Profit Target</strong>
+      <br/>
+      Close when the position has gained a configured percentage of the maximum possible profit.
+      EXP-400 closes at 55% of max profit. Example: collected $1.00 credit → close when the
+      spread is worth $0.45 (you've kept 55% of the credit, locking in the win).
+    </div>
+  </div>
+
+  <div class="flow-step">
+    <div class="step-num">C</div>
+    <div class="step-body">
+      <strong>Stop Loss</strong>
+      <br/>
+      Close when the spread has grown to a multiple of the original credit (the trade is losing).
+      EXP-400 uses a 1.25× stop loss: if you collected $1.00 credit and the spread is now worth
+      $2.25 (1.25× more than the $1.00 credit + the $1.00 credit itself = $2.25 cost to close),
+      exit to limit the damage.
+    </div>
+  </div>
+
+  <div class="flow-step">
+    <div class="step-num">D</div>
+    <div class="step-body">
+      <strong>External close detection</strong>
+      <br/>
+      If all legs of a position have disappeared from Alpaca (but the system still shows it as
+      "open"), the monitor marks it as <code>closed_external</code> and estimates the P&amp;L.
+      This handles cases like early assignment, manual intervention, or API glitches.
+    </div>
+  </div>
+
+  <h3>Stale Close Order Protection</h3>
+  <p>
+    If the system tries to close a position but the close order is "stale" (submitted but not filled
+    for too long), it automatically cancels and resubmits the order. It tries up to 3 times before
+    flagging for manual review.
+  </p>
+
+  <h3>Early Assignment Detection</h3>
+  <p>
+    If unexpected stock positions appear in the Alpaca account (which can happen when short options are
+    exercised early), the monitor detects these "equity ghost positions" and sends an alert.
+  </p>
+
+  <!-- ───────────────────────────────────────── -->
+  <!-- SECTION 9: THE EXPERIMENTS -->
+  <!-- ───────────────────────────────────────── -->
+  <h2 id="s9"><span class="section-num">9</span> The Experiments — 9 Parallel Strategy Tests</h2>
+
+  <p>
+    An <strong>experiment</strong> is one complete, isolated deployment of the trading system with a
+    specific strategy configuration. Each experiment has:
+  </p>
+  <ul>
+    <li>Its own Alpaca paper trading account (isolated money)</li>
+    <li>Its own database file (<code>data/pilotai_expNNN.db</code>)</li>
+    <li>Its own config YAML (<code>configs/paper_expNNN.yaml</code>)</li>
+    <li>Its own subprocess running <code>main.py scheduler</code></li>
+  </ul>
+
+  <p>
+    Think of it like running 9 different fund managers simultaneously, each with the same starting capital
+    but different rules. The experiment protocol (defined in <code>EXPERIMENT_PROTOCOL.md</code>) requires
+    a minimum 8-week paper trading window before any experiment is promoted to real money.
+  </p>
+
+  <h3>Why 9 Experiments?</h3>
+  <p>
+    Science requires controls. You can't know if a tweak (e.g., "what if we skip trades before NFP?")
+    actually helps unless you run it in parallel with the original. The system is designed so new ideas
+    are layered on top of the champion strategy, each tested independently, and only proven improvements
+    get promoted.
+  </p>
+
+  <h3>The 9 Currently Active Experiments</h3>
+
+  <div class="exp-grid">
+
+    <div class="exp-card">
+      <div class="exp-id">EXP-400</div>
+      <div class="exp-name">The Champion</div>
+      <div class="exp-desc">
+        The reference experiment — regime-adaptive credit spreads and iron condors on SPY.
+        Uses MA crossovers to switch between bull puts, bear calls, and iron condors.
+        No machine learning. Robustness score: 0.870. This is the baseline every other
+        experiment is compared against.
+        <br/><br/>
+        Key params: DTE=15, OTM=2%, Width=$12, Stop Loss=1.25×, Profit Target=55%, Risk=8.5%
+      </div>
+      <span class="exp-ticker">SPY</span>
+    </div>
+
+    <div class="exp-card">
+      <div class="exp-id">EXP-401</div>
+      <div class="exp-name">The Blend</div>
+      <div class="exp-desc">
+        Same signals as EXP-400, but adds straddles and strangles during high-volatility
+        regimes. A straddle is a bet that a stock will move <em>a lot</em> in either direction —
+        the opposite of a credit spread. Blending both structures diversifies income sources.
+        Walk-forward validated: 3/3 out-of-sample periods profitable.
+      </div>
+      <span class="exp-ticker">SPY</span>
+    </div>
+
+    <div class="exp-card">
+      <div class="exp-id">EXP-503</div>
+      <div class="exp-name">ML V2 Aggressive</div>
+      <div class="exp-desc">
+        Machine learning upgrade of EXP-400. An XGBoost classifier (the same type of ML used
+        by top hedge funds) routes trades through a regime model and adjusts position sizing
+        based on model confidence. More aggressive Kelly fraction. Tests whether ML adds edge
+        over pure rules.
+      </div>
+      <span class="exp-ticker">SPY</span>
+    </div>
+
+    <div class="exp-card">
+      <div class="exp-id">EXP-600</div>
+      <div class="exp-name">IBIT Adaptive</div>
+      <div class="exp-desc">
+        The Bitcoin experiment. Trades credit spreads on IBIT (the BlackRock Bitcoin ETF).
+        Bitcoin is much more volatile than SPY, so the system uses shorter DTE (14 days),
+        wider OTM% (10%), and tighter stop losses. An MA50 trend filter adapts direction.
+        Backtest: 139% avg annual return, −19.4% max drawdown.
+      </div>
+      <span class="exp-ticker">IBIT</span>
+    </div>
+
+    <div class="exp-card">
+      <div class="exp-id">EXP-800</div>
+      <div class="exp-name">Safe Kelly 4/7/9</div>
+      <div class="exp-desc">
+        EXP-400's signal generation (same entries as The Champion) but with a sophisticated
+        Kelly Criterion position sizing engine and a 3-tier portfolio drawdown circuit breaker
+        built in. Tests whether smarter sizing improves risk-adjusted returns without changing
+        when to enter trades.
+      </div>
+      <span class="exp-ticker">SPY</span>
+    </div>
+
+    <div class="exp-card">
+      <div class="exp-id">EXP-1220</div>
+      <div class="exp-name">Leverage 3× (1.5× Active)</div>
+      <div class="exp-desc">
+        EXP-400's strategy with 1.5× static leverage applied. If the champion makes 32.7%
+        per year, does 1.5× leverage give you ~49% without proportionally increasing risk?
+        Validated with VIX-based tail risk protection. Walk-forward: all 4 out-of-sample
+        years profitable. Backtest: 99.2% CAGR, Sharpe 3.83, Max DD 11.2%.
+      </div>
+      <span class="exp-ticker">SPY</span>
+    </div>
+
+    <div class="exp-card">
+      <div class="exp-id">EXP-3311</div>
+      <div class="exp-name">NFP Entry Filter</div>
+      <div class="exp-desc">
+        Adds one specific gate to EXP-400: skip all new entries on the day BEFORE the
+        monthly Non-Farm Payrolls jobs report (released first Friday of each month).
+        The jobs report causes violent market moves. The question: does avoiding that
+        single day of risk improve the overall Sharpe?
+        Backtest expectation: Sharpe 4.984, Max DD 5.89%.
+      </div>
+      <span class="exp-ticker">SPY</span>
+    </div>
+
+    <div class="exp-card">
+      <div class="exp-id">EXP-3309</div>
+      <div class="exp-name">Pre-Close Execution Window</div>
+      <div class="exp-desc">
+        Restricts all new entries to the 15:30–16:00 ET window (final 30 minutes before
+        market close). During this period, options liquidity spikes as market makers
+        adjust hedges. The theory: filling at better prices during the liquidity surge
+        saves an estimated 343 basis points per year in execution costs.
+        All scans outside this window are skipped.
+      </div>
+      <span class="exp-ticker">SPY</span>
+    </div>
+
+    <div class="exp-card">
+      <div class="exp-id">EXP-3303b</div>
+      <div class="exp-name">Per-Stream Regime Gate</div>
+      <div class="exp-desc">
+        When the ComboRegimeDetector detects a "transition" or "high_stress" regime for
+        SPY or QQQ, this experiment skips all entries for those tickers entirely — while
+        letting sector ETFs (XLF, XLI, GLD, SLV) continue trading normally.
+        The insight: SPX-correlated tickers behave erratically during regime transitions
+        but sector ETFs may still offer clean setups.
+      </div>
+      <span class="exp-ticker">SPY / QQQ</span>
+    </div>
+
+  </div>
+
+  <h3>Experiment Lifecycle</h3>
+  <p>
+    Every experiment follows this lifecycle, managed in <code>experiments/registry.json</code>:
+  </p>
+  <pre>registered → configuring → validating → active → paused/stopped → retired</pre>
+  <p>
+    Status transitions are enforced by code — you can't skip steps. An experiment must have
+    a config path, account ID, and env file before it can go active.
+  </p>
+
+  <!-- ───────────────────────────────────────── -->
+  <!-- SECTION 10: SAFETY SYSTEMS -->
+  <!-- ───────────────────────────────────────── -->
+  <h2 id="s10"><span class="section-num">10</span> Safety Systems — What Prevents Catastrophic Losses?</h2>
+
+  <p>
+    The system has multiple independent layers of protection. Each layer is designed to stop a
+    different type of failure. They are intentionally redundant — if one fails, the next catches it.
+  </p>
+
+  <h3>Layer 1: Paper Mode Safety Lock</h3>
+  <p>
+    The function <code>_validate_paper_mode_safety()</code> in <code>main.py</code> runs every time
+    the system starts. If <code>paper_mode=true</code> in the config but <code>alpaca.paper=false</code>,
+    it raises an immediate fatal error and refuses to start. This prevents accidentally trading real money.
+  </p>
+
+  <h3>Layer 2: Regime Gate (EXP-3303b)</h3>
+  <p>
+    When the market is in "transition" or "high_stress" regime, SPY and QQQ entries are blocked entirely.
+    This is a hard skip — not a size reduction. Implemented in <code>shared/regime_gate.py</code>.
+  </p>
+
+  <h3>Layer 3: VIX Hard Block</h3>
+  <p>
+    When VIX exceeds the configured maximum (e.g., VIX &gt; 40 for EXP-800), the risk gate blocks all
+    new entries. The market is in panic mode and options pricing is unreliable.
+  </p>
+
+  <h3>Layer 4: NFP Entry Filter (EXP-3311)</h3>
+  <p>
+    Skips all entries the day before Non-Farm Payrolls. The blacklist of NFP dates is published by
+    the Bureau of Labor Statistics months in advance and stored in <code>configs/event_blacklist.json</code>.
+  </p>
+
+  <h3>Layer 5: Per-Trade Drawdown Circuit Breaker (Execution Engine)</h3>
+  <p>
+    The execution engine checks per-account drawdown before each order. If the account has fallen
+    more than 40% from its peak equity, all new orders are blocked.
+  </p>
+
+  <h3>Layer 6: Portfolio-Level Circuit Breaker (4 tiers)</h3>
+  <p>
+    <code>shared/portfolio_risk.py</code> monitors combined equity across all accounts:
+    −8% → halve sizing, −10% → pause entries, −12% → flatten all (in paper mode: log only).
+    A 60-second cache prevents hammering the Alpaca API.
+  </p>
+
+  <h3>Layer 7: SENTINEL Guard (pre-scan check)</h3>
+  <p>
+    Before every scan, <code>sentinel/guards.py</code> runs a <code>pre_scan_check()</code> that
+    verifies the experiment is in a valid state to trade. It checks experiment status, account
+    health, and other preconditions. This is the system's "bouncer" — it can block a scan
+    from even starting.
+  </p>
+
+  <h3>Layer 8: Write-Ahead Log (WAL) for Database Safety</h3>
+  <p>
+    SQLite runs in WAL (Write-Ahead Log) mode. This means database writes are extremely crash-safe —
+    if the process crashes mid-write, the database is never left in a corrupted state.
+    The <code>shared/wal.py</code> module provides additional recovery for DB write failures.
+  </p>
+
+  <h3>Layer 9: Watchdog Health Monitoring</h3>
+  <p>
+    <code>railway_watchdog.py</code> runs as a completely separate process on Railway. It:
+  </p>
+  <ul>
+    <li>Reads the <code>.worker_status.json</code> file every 300 seconds</li>
+    <li>Checks heartbeat files — if any experiment hasn't scanned in 45 minutes during market hours, it's suspicious</li>
+    <li>Tests Alpaca API connectivity</li>
+    <li>Checks database write recency</li>
+    <li>Sends Telegram alerts on any anomaly</li>
+  </ul>
+
+  <h3>Layer 10: Orphan Detection</h3>
+  <p>
+    The PositionMonitor runs daily orphan detection: it scans Alpaca for option positions that
+    exist in the brokerage but have no corresponding record in the local database. These
+    "orphaned" positions get synthetic records created so they can be managed properly.
+  </p>
+
+  <h3>The "No Synthetic Data" Absolute Rule</h3>
+  <div class="callout red">
+    <div class="callout-title">Rule Zero — Carlos Directive</div>
+    All option pricing must come from IronVault (<code>shared/iron_vault.py</code>), which provides
+    real historical option prices from a 276,000 contract database. Any code path that falls back to
+    synthetic pricing — fixed credit fractions, Black-Scholes estimates used as prices, or
+    <code>BACKTEST_CREDIT_FRACTION</code> — is classified as a <strong>critical bug</strong>.
+    <br/><br/>
+    IronVault hard-fails on startup if the <code>options_cache.db</code> database is missing or empty.
+    There is no silent fallback. This ensures backtest results are based on prices that actually
+    existed in the market, not mathematical approximations.
+  </div>
+
+  <!-- ───────────────────────────────────────── -->
+  <!-- SECTION 11: DATA FLOW DIAGRAM -->
+  <!-- ───────────────────────────────────────── -->
+  <h2 id="s11"><span class="section-num">11</span> Data Flow Diagram</h2>
+
+  <p>This ASCII diagram shows the complete path from market data to a trade being placed and managed:</p>
+
+  <div class="diagram-wrap">
+<pre>
+┌─────────────────────────────── INPUTS ─────────────────────────────────────┐
+│                                                                              │
+│  <span class="grn">Yahoo Finance / DataCache</span>     <span class="grn">IronVault options_cache.db</span>    <span class="ylw">Alpaca API</span>  │
+│  • SPY, QQQ, IBIT daily bars   • 276K contracts, 6.3M option-days  • Live   │
+│  • ^VIX, ^VIX3M history        • Real historical option prices      • chain  │
+│  • Sector ETF OHLCV             • NEVER synthetic / estimated        • price  │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+                                     │
+                     ┌───────────────▼───────────────┐
+                     │   <span class="hl">railway_worker.py</span>             │
+                     │   Reads registry.json          │
+                     │   Spawns 9 subprocesses        │
+                     │   (one per active experiment)  │
+                     │   Supervises + restarts        │
+                     └───────────────┬───────────────┘
+                                     │  × 9 subprocesses
+                     ┌───────────────▼───────────────┐
+                     │   <span class="hl">main.py scheduler</span>           │
+                     │   ScanScheduler: 18 slots/day  │
+                     │   9:00 pre-market              │
+                     │   9:15, 9:45 open              │
+                     │   10:00–15:30 every 30 min     │
+                     │   16:15 daily report           │
+                     │   16:30 retrain check          │
+                     │   17:00 Fri macro snapshot     │
+                     └───────────────┬───────────────┘
+                                     │  on each scan slot
+                     ┌───────────────▼───────────────┐
+                     │  <span class="hl">scan_opportunities()</span>          │
+                     │                               │
+                     │  ── Entry gates ─────────────  │
+                     │  NFP filter (EXP-3311)?       │
+                     │  Execution window (EXP-3309)? │
+                     │                               │
+                     │  ── Build universe ───────────  │
+                     │  Static tickers from config   │
+                     │  or COMPASS RRG dynamic list  │
+                     └───────────────┬───────────────┘
+                                     │  up to 4 tickers parallel
+                     ┌───────────────▼───────────────┐
+                     │   <span class="hl">_analyze_ticker(SPY…)</span>        │
+                     │                               │
+                     │  1. Price history (2y)        │
+                     │  2. Options chain (live)      │
+                     │  3. Technical analysis        │
+                     │     RSI, MAs, S/R             │
+                     │  4. ComboRegimeDetector       │
+                     │     MA80 + RSI + VIX term     │
+                     │     → bull/bear/neutral/      │
+                     │       transition/high_stress  │
+                     │  5. Regime gate check         │
+                     │     (block if transition)     │
+                     │  6. IV rank calculation       │
+                     │  7. Generate signals          │
+                     │     CreditSpreadStrategy      │
+                     │     StradgleStrategy etc.     │
+                     │  8. Score 0–100               │
+                     │  9. Reprice from real chain   │
+                     └───────────────┬───────────────┘
+                                     │  signal list
+                     ┌───────────────▼───────────────┐
+                     │    <span class="hl">AlertRouter</span>                  │
+                     │                               │
+                     │  RiskGate checks:             │
+                     │  • Max positions?             │
+                     │  • Daily loss limit?          │
+                     │  • VIX above max?             │
+                     │  • Circuit breaker active?    │
+                     │                               │
+                     │  AlertPositionSizer:          │
+                     │  • Kelly fraction × regime    │
+                     │  • Risk% cap                  │
+                     │  • Contracts = floor(…)       │
+                     └───────────────┬───────────────┘
+                                     │  approved opportunity
+                     ┌───────────────▼───────────────┐
+                     │   <span class="hl">ExecutionEngine</span>              │
+                     │                               │
+                     │  1. Drawdown CB check         │
+                     │  2. Duplicate check           │
+                     │  3. Market hours guard        │
+                     │  4. Write DB (pending_open)   │
+                     │  5. Build OCC symbols         │
+                     │  6. Submit MLEG limit order   │
+                     │     @ mid-price               │
+                     │  7. Log feature data          │
+                     └───────────────┬───────────────┘
+                                     │  order submitted
+              ┌──────────────────────▼────────────────────────┐
+              │  <span class="ylw">Alpaca Paper Brokerage API</span>                      │
+              │  • Order fills at limit price                   │
+              │  • Position appears in account                  │
+              └──────────────────────┬────────────────────────┘
+                                     │
+              ┌──────────────────────▼────────────────────────┐
+              │  <span class="hl">PositionMonitor</span> (background thread)            │
+              │                                                 │
+              │  Tier 1 (60s):                                  │
+              │  • Promote pending_open → open on fill          │
+              │  • Detect external closes                       │
+              │                                                 │
+              │  Tier 2 (5 min, market hours):                  │
+              │  • Get current spread value from Alpaca         │
+              │  • DTE <= manage_dte? → close                   │
+              │  • P&L >= profit_target%? → close               │
+              │  • Spread value >= stop_loss_mult × credit?     │
+              │    → close (stop loss)                          │
+              │  • Submit close MLEG order                      │
+              │  • Update DB: pending_close → closed_profit     │
+              │                              or closed_loss     │
+              │                                                 │
+              │  Tier 3 EOD (4:15 PM): expiration processing    │
+              │  Tier 3b Morning (9:35 AM): settlement check    │
+              └─────────────────────────────────────────────────┘
+                                     │
+              ┌──────────────────────▼────────────────────────┐
+              │  <span class="mag">Outputs</span>                                         │
+              │  • SQLite DB: trade record with P&L            │
+              │  • Telegram alert: daily P&L summary           │
+              │  • Heartbeat file: watchdog health check       │
+              │  • Feature log: ML training data               │
+              │  • Web dashboard: live P&L view                │
+              └─────────────────────────────────────────────────┘
+</pre>
+  </div>
+
+  <!-- ───────────────────────────────────────── -->
+  <!-- SECTION 12: INFRASTRUCTURE -->
+  <!-- ───────────────────────────────────────── -->
+  <h2 id="s12"><span class="section-num">12</span> Infrastructure — Railway, Services, and Deployment</h2>
+
+  <h3>Railway Cloud Hosting</h3>
+  <p>
+    The system runs on <strong>Railway</strong> (railway.app), a Platform-as-a-Service that runs Docker
+    containers from a Git repository. When code is pushed to the <code>main</code> branch,
+    Railway automatically rebuilds and redeploys the application.
+  </p>
+
+  <h3>The Three Railway Services (from Procfile)</h3>
+
+  <table>
+    <thead>
+      <tr><th>Service name</th><th>Process</th><th>Purpose</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>worker</strong></td>
+        <td><code>python railway_worker.py</code></td>
+        <td>The master orchestrator. Reads the registry, spawns one scheduler subprocess per active experiment, and supervises them. Restarts crashed processes after 15 seconds.</td>
+      </tr>
+      <tr>
+        <td><strong>watchdog</strong></td>
+        <td><code>python railway_watchdog.py</code></td>
+        <td>Independent health monitor. Checks heartbeats, Alpaca connectivity, and database recency every 5 minutes. Sends Telegram alerts if anything looks wrong.</td>
+      </tr>
+      <tr>
+        <td><strong>web</strong></td>
+        <td><code>uvicorn web_dashboard.app:app</code></td>
+        <td>FastAPI web dashboard showing live P&amp;L, open positions, and trade history. Accessible via a Railway-provided URL.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Persistent Volume</h3>
+  <p>
+    Railway provides a persistent disk volume mounted at a configurable path (set via the env var
+    <code>RAILWAY_VOLUME_MOUNT_PATH</code>, e.g., <code>/app/data</code>). All SQLite databases
+    live here. Without persistence, databases would be wiped on every deployment.
+  </p>
+  <p>
+    Each experiment writes to its own database file:
+  </p>
+  <ul>
+    <li><code>/app/data/pilotai_exp400.db</code> — EXP-400 trades, positions, states</li>
+    <li><code>/app/data/exp503/pilotai_exp503.db</code> — EXP-503 (in subdirectory)</li>
+    <li><code>/app/data/.worker_status.json</code> — Shared status file between worker and watchdog</li>
+    <li><code>/app/data/heartbeat.json</code> — Last scan heartbeat per experiment</li>
+  </ul>
+
+  <h3>Key Environment Variables</h3>
+
+  <table>
+    <thead>
+      <tr><th>Variable</th><th>Purpose</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>ALPACA_API_KEY_EXP400</code></td><td>Alpaca credentials for EXP-400 (one set per experiment)</td></tr>
+      <tr><td><code>ALPACA_API_SECRET_EXP400</code></td><td>Alpaca secret for EXP-400</td></tr>
+      <tr><td><code>RAILWAY_VOLUME_MOUNT_PATH</code></td><td>Where the persistent disk is mounted (e.g., <code>/app/data</code>)</td></tr>
+      <tr><td><code>TELEGRAM_BOT_TOKEN</code></td><td>Telegram bot token for sending alerts</td></tr>
+      <tr><td><code>TELEGRAM_CHAT_ID</code></td><td>Telegram chat to send alerts to</td></tr>
+      <tr><td><code>EXPERIMENT_ID</code></td><td>Set per-subprocess (e.g., <code>EXP-400</code>) — used for heartbeats and SENTINEL</td></tr>
+      <tr><td><code>PILOTAI_DB_PATH</code></td><td>Path to this experiment's SQLite database</td></tr>
+      <tr><td><code>SENTRY_DSN</code></td><td>Optional Sentry error tracking endpoint</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Deployment Process</h3>
+  <ol>
+    <li>Developer pushes code to <code>main</code> branch on GitHub</li>
+    <li>Railway detects the push and starts a new build (Docker container)</li>
+    <li>New container is deployed, Railway sends SIGTERM to the old one (graceful shutdown)</li>
+    <li>The worker receives SIGTERM, terminates all experiment subprocesses cleanly, and exits</li>
+    <li>New container starts: Procfile launches worker, watchdog, and web processes</li>
+    <li>Worker reads registry.json, spawns experiment processes, and the system is live again</li>
+  </ol>
+
+  <div class="callout">
+    <div class="callout-title">Zero-downtime during market hours</div>
+    Deployments during market hours will briefly interrupt any in-flight scans, but the PositionMonitor
+    state is recovered from the SQLite database on startup. Open positions are never lost — the startup
+    reconciliation re-discovers them from Alpaca on the next boot.
+  </div>
+
+  <!-- ───────────────────────────────────────── -->
+  <!-- SECTION 13: KEY FILES MAP -->
+  <!-- ───────────────────────────────────────── -->
+  <h2 id="s13"><span class="section-num">13</span> Key Files Map — Top 20 Most Important Files</h2>
+
+  <p>
+    Out of ~440 modules, these 20 files form the core of the live trading system.
+    Everything else either supports them or is archived research.
+  </p>
+
+  <h3>Entry Points &amp; Orchestration</h3>
+
+  <div class="file-entry">
+    <div class="file-path">railway_worker.py</div>
+    <div class="file-desc">Railway deployment entry point. Reads the registry, spawns one <code>main.py scheduler</code> subprocess per active experiment, supervises and restarts crashes. 338 lines.</div>
+  </div>
+  <div class="file-entry">
+    <div class="file-path">railway_watchdog.py</div>
+    <div class="file-desc">Health monitoring daemon. Checks heartbeats, Alpaca API, and DB recency. Sends Telegram alerts. Completely independent of the worker. 367 lines.</div>
+  </div>
+  <div class="file-entry">
+    <div class="file-path">main.py</div>
+    <div class="file-desc">The trading system entry point. Contains <code>CreditSpreadSystem</code>, <code>scan_opportunities()</code>, <code>_analyze_ticker()</code>, and the <code>scheduler</code> command wiring. 1,251 lines.</div>
+  </div>
+  <div class="file-entry">
+    <div class="file-path">Procfile</div>
+    <div class="file-desc">Railway process manifest. Defines the three services: worker, watchdog, web. 3 lines — deceptively important.</div>
+  </div>
+
+  <h3>Scheduling &amp; Strategy</h3>
+
+  <div class="file-entry">
+    <div class="file-path">shared/scheduler.py</div>
+    <div class="file-desc">The scan schedule clock. Defines 18 slots per trading day (ET timezone), sleeps between them, runs scans with 10-minute timeout protection, writes heartbeat files. 187 lines.</div>
+  </div>
+  <div class="file-entry">
+    <div class="file-path">strategy/spread_strategy.py</div>
+    <div class="file-desc">Core credit spread strategy engine. Evaluates bull put spreads, bear call spreads, and iron condors. Contains the combo-regime scoring logic. 700 lines.</div>
+  </div>
+  <div class="file-entry">
+    <div class="file_path">strategy/alpaca_provider.py</div>
+    <div class="file-desc">Alpaca brokerage API integration. Submits multi-leg option orders, handles rate limits, retries with exponential backoff, circuit breaker pattern. 929 lines.</div>
+  </div>
+
+  <h3>Execution &amp; Monitoring</h3>
+
+  <div class="file-entry">
+    <div class="file-path">execution/execution_engine.py</div>
+    <div class="file-desc">Order submission pipeline. Write-DB-first crash safety, duplicate detection, drawdown CB, OCC symbol building, MLEG order submission, feature logging. 756 lines.</div>
+  </div>
+  <div class="file-entry">
+    <div class="file-path">execution/position_monitor.py</div>
+    <div class="file-desc">Background daemon managing all open positions. 3-tier reconciliation (60s / 5min / EOD). Stop loss, profit target, DTE management, external close detection, P&amp;L recording. 1,996 lines.</div>
+  </div>
+
+  <h3>Shared Infrastructure</h3>
+
+  <div class="file-entry">
+    <div class="file-path">shared/iron_vault.py</div>
+    <div class="file-desc">The one true source of option prices. Singleton wrapping <code>HistoricalOptionsData</code>. Hard-fails if database missing. Never returns synthetic data. Rule Zero enforcer.</div>
+  </div>
+  <div class="file-entry">
+    <div class="file-path">shared/portfolio_risk.py</div>
+    <div class="file-desc">Portfolio-level drawdown circuit breaker. Fetches combined equity across all 6 Alpaca accounts. Enforces NORMAL / YELLOW / RED / HARD_STOP levels. Thread-safe singleton. 464 lines.</div>
+  </div>
+  <div class="file-entry">
+    <div class="file-path">shared/regime_gate.py</div>
+    <div class="file-desc">EXP-3303b selective regime gate. Skips SPY/QQQ entries during "transition" or "high_stress" regimes while leaving sector ETFs running. Pure function, no I/O. 85 lines.</div>
+  </div>
+  <div class="file-entry">
+    <div class="file-path">shared/entry_gate.py</div>
+    <div class="file-desc">EXP-3311 NFP entry filter. Reads <code>configs/event_blacklist.json</code> (BLS-published dates), skips entries on the day before Non-Farm Payrolls releases.</div>
+  </div>
+  <div class="file-entry">
+    <div class="file-path">shared/strike_selector.py</div>
+    <div class="file-desc">Delta-based strike selection. Black-Scholes delta calculation in pure Python (no scipy). Finds the strike closest to a target delta for both live scanner and backtester.</div>
+  </div>
+  <div class="file-entry">
+    <div class="file-path">shared/signal_scorer.py</div>
+    <div class="file-desc">5-component signal scoring (0–100): credit quality, risk/reward, probability of profit, technical alignment, IV rank. Used for ranking and alerting thresholds.</div>
+  </div>
+  <div class="file-entry">
+    <div class="file-path">shared/database.py</div>
+    <div class="file-desc">SQLite trade storage in WAL mode. Functions: <code>get_trades()</code>, <code>insert_alert()</code>, <code>upsert_trade_legs()</code>, <code>save_scanner_state()</code>. All writes are atomic.</div>
+  </div>
+
+  <h3>Configuration &amp; Registry</h3>
+
+  <div class="file-entry">
+    <div class="file-path">experiments/registry.json</div>
+    <div class="file-desc">The master registry of all experiments. Every experiment's status, config path, Alpaca account ID, database path, backtest baseline, and lifecycle history. The single source of truth for what's running.</div>
+  </div>
+  <div class="file-entry">
+    <div class="file-path">experiments/manager.py</div>
+    <div class="file-desc">High-level API over registry.json. Provides <code>active()</code>, <code>get()</code>, <code>transition()</code>, <code>register()</code> methods. Used by the railway worker to discover what to run.</div>
+  </div>
+  <div class="file-entry">
+    <div class="file-path">configs/paper_exp400.yaml</div>
+    <div class="file-desc">Champion strategy config. Defines DTE=15, OTM=2%, Width=$12, SL=1.25×, PT=55%, Risk=8.5%, Alpaca credentials references, and all other tuneable parameters for EXP-400.</div>
+  </div>
+  <div class="file-entry">
+    <div class="file-path">configs/event_blacklist.json</div>
+    <div class="file-desc">JSON list of economic event dates (NFP release days) that trigger the entry gate in EXP-3311. Maintained manually from BLS calendar. Used by <code>shared/entry_gate.py</code>.</div>
+  </div>
+
+  <hr style="margin-top: 56px; border: none; border-top: 1px solid #e0e0e0;" />
+  <p style="font-size: 0.85em; color: #888; margin-top: 20px; padding-bottom: 48px;">
+    Generated from source code on 2026-05-24. All code paths verified against actual files.
+    No synthetic data was used in the production of this document.
+  </p>
+
+</div><!-- /page -->
+</body>
+</html>

@@ -1,4 +1,4 @@
-# PilotAI Consolidated Signal Service — Analysis & Product Spec
+# Attix Consolidated Signal Service — Analysis & Product Spec
 
 **Date:** 2026-03-07
 **Data Range:** 2025-01-31 → 2026-03-06 (275 trading days)
@@ -10,7 +10,7 @@
 
 ## 1. Executive Summary
 
-We pulled all 57 PilotAI strategy portfolios, computed multi-period performance on real price data, built a conviction scoring engine, and implemented a production cron service. Key findings:
+We pulled all 57 Attix strategy portfolios, computed multi-period performance on real price data, built a conviction scoring engine, and implemented a production cron service. Key findings:
 
 | Metric | Value |
 |--------|-------|
@@ -129,7 +129,7 @@ Price data covers 2025-01-31 to 2026-03-06 (275 days). All 57 strategies compute
 
 ### 3.2 Key Performance Observations
 
-**All 56 strategies outperformed SPY (+18.8% 1yr)** — the worst performer (buffett-bargains, +26.8%) still beat SPY by +8%. This likely reflects both PilotAI's selection quality and a favorable period for active management relative to cap-weighted passive.
+**All 56 strategies outperformed SPY (+18.8% 1yr)** — the worst performer (buffett-bargains, +26.8%) still beat SPY by +8%. This likely reflects both Attix's selection quality and a favorable period for active management relative to cap-weighted passive.
 
 **Momentum dominates on risk-adjusted basis:** The top two strategies (momentum-investing, growth-investing) produced Sharpe ratios of 10.49 and 7.98 respectively — extraordinary for equity portfolios. These concentrated on high-momentum small/mid-cap names (NESR, UVE, EHAB, PLOW) that experienced regime-specific tailwinds.
 
@@ -191,7 +191,7 @@ These 16 strategies form the **signal generation cohort** — their holdings dri
 
 ### 5.1 Discovery
 
-In the previous analysis we documented a structural finding: PilotAI is applying a **gold/precious metals macro overlay** across virtually all strategies, regardless of sector focus.
+In the previous analysis we documented a structural finding: Attix is applying a **gold/precious metals macro overlay** across virtually all strategies, regardless of sector focus.
 
 | Metric | Value |
 |--------|-------|
@@ -205,7 +205,7 @@ This is **not a coincidence** — these allocations appear in "Technology Sector
 
 ### 5.2 Interpretation
 
-The most likely explanation: PilotAI's portfolio optimizer responds to current (March 2026) macro signals — elevated geopolitical risk, dollar weakness, and risk-off sentiment — by allocating to gold instruments as a portfolio-level hedge. The optimizer runs fresh each day, so holdings change with macro regime.
+The most likely explanation: Attix's portfolio optimizer responds to current (March 2026) macro signals — elevated geopolitical risk, dollar weakness, and risk-off sentiment — by allocating to gold instruments as a portfolio-level hedge. The optimizer runs fresh each day, so holdings change with macro regime.
 
 ### 5.3 Signal Implications
 
@@ -417,7 +417,7 @@ python3 -m pilotai_signal rebuild  # recompute all historical signals
 |-------|-------------|------------|
 | `strategy_snapshots` | One row per strategy per day | snapshot_date, strategy_slug |
 | `snapshot_holdings` | Per-ticker holdings per snapshot | ticker, weight, price |
-| `snapshot_scores` | PilotAI quality scores | value/growth/health/momentum/past |
+| `snapshot_scores` | Attix quality scores | value/growth/health/momentum/past |
 | `ticker_signals` | Daily conviction scores | signal_date, ticker, conviction, days_in_signal |
 | `alerts` | Alert history with Telegram status | alert_type, sent_at |
 | `collection_log` | Run audit log | status, duration_sec, strategies_ok/fail |
@@ -487,7 +487,7 @@ Since the API has no historical endpoint, the service starts accumulating from t
 3. **Value-investing cohort (VSAT, IRWD, FYC)** — deep value plays that require longer hold horizons
 
 ### 10.2 For Risk Management
-1. **Gold conviction at maximum** (SGDM/GOEX at 1.0) — PilotAI is telling you this is a risk-off environment. Run tighter stops on directional equity positions.
+1. **Gold conviction at maximum** (SGDM/GOEX at 1.0) — Attix is telling you this is a risk-off environment. Run tighter stops on directional equity positions.
 2. **When gold conviction drops below 0.50** (SGDM/GOEX frequency falls to <14/57): regime shift signal. Increase directional equity exposure.
 3. **The STRONG alert threshold (0.70 conviction)** is calibrated for post-30-day maturation. In the first month, use 0.50+ as a proxy for strong signals.
 
@@ -502,11 +502,11 @@ Since the API has no historical endpoint, the service starts accumulating from t
 ## 11. Limitations & Caveats
 
 1. **Snapshot API only:** Holdings are point-in-time. We don't know entry prices, holding duration, or turnover rate.
-2. **Backfill not possible:** All historical analysis uses yfinance price data applied to current holdings. This is ahistorical — we're measuring "what if you held today's portfolio for the past year," not actual PilotAI strategy returns.
+2. **Backfill not possible:** All historical analysis uses yfinance price data applied to current holdings. This is ahistorical — we're measuring "what if you held today's portfolio for the past year," not actual Attix strategy returns.
 3. **1-year performance period includes SNDK anomaly:** The value-investing strategy's +216.5% is driven by a single stock's +1,034% move. This is not representative of expected future returns.
 4. **All strategies beat SPY during analysis period:** The 13-month window (Feb 2025–Mar 2026) was particularly favorable for active management relative to SPY. Future periods may show more dispersion.
-5. **Gold overlay may not persist:** If macro regime shifts (dollar strengthens, geopolitical risk declines), PilotAI's optimizer will likely reduce gold allocations. Monitor SGDM/GOEX conviction as a real-time macro barometer.
-6. **Staging API only:** `ai-stag.pilotai.com` — production endpoint may differ. Confirm with PilotAI team before relying on production data.
+5. **Gold overlay may not persist:** If macro regime shifts (dollar strengthens, geopolitical risk declines), Attix's optimizer will likely reduce gold allocations. Monitor SGDM/GOEX conviction as a real-time macro barometer.
+6. **Staging API only:** `ai-stag.pilotai.com` — production endpoint may differ. Confirm with Attix team before relying on production data.
 
 ---
 

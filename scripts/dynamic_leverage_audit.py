@@ -528,7 +528,7 @@ Avg improvement vs static: <strong style="color:{clr(wf.get('avg_vs_static',0))}
 </div>
 
 <div style="color:#94a3b8;font-size:0.68rem;margin-top:28px;border-top:1px solid #e2e8f0;padding-top:8px">
-  PilotAI — Dynamic Leverage Audit v1.0 | Independent code review + standalone test |
+  Attix — Dynamic Leverage Audit v1.0 | Independent code review + standalone test |
   Corrected Sharpe throughout | Real Yahoo Finance data (SPY, VIX, VIX3M)
 </div></body></html>"""
 

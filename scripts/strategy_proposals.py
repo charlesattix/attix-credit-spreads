@@ -92,7 +92,7 @@ def build_html(coverage: Dict[str, Any]) -> str:
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<title>Next Strategy Proposals — PilotAI Credit Spreads</title>
+<title>Next Strategy Proposals — Attix Credit Spreads</title>
 <style>
   * {{ box-sizing: border-box; }}
   body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;

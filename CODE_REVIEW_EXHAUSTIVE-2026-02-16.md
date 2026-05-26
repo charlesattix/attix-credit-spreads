@@ -1,4 +1,4 @@
-# PilotAI Credit Spreads - Exhaustive Code Review
+# Attix Credit Spreads - Exhaustive Code Review
 
 **Date:** 2026-02-16
 **Review Method:** 28 specialized Opus 4.6 agents (4 per category)
@@ -405,7 +405,7 @@ The most impactful issues to address first would be:
 
 ### Architecture Review: Frontend
 
-#### Codebase: PilotAI Credit Spreads - Next.js Frontend
+#### Codebase: Attix Credit Spreads - Next.js Frontend
 #### Reviewer: Architecture Audit
 #### Date: 2026-02-16
 
@@ -808,7 +808,7 @@ const res = await fetch(`/api/paper-trades?id=${tradeId}&reason=${reason}&userId
 
 **Description:** Only the root `layout.tsx` exports `metadata`. None of the sub-pages export their own `metadata` object. Since all pages are client components (`'use client'`), they cannot export `metadata` anyway.
 
-**Why it matters:** All pages share the same browser tab title "Alerts by PilotAI - Smart Options Trading Alerts" regardless of which page the user is on. This makes tab switching difficult when multiple pages are open, and provides no page-specific SEO signals.
+**Why it matters:** All pages share the same browser tab title "Alerts by Attix - Smart Options Trading Alerts" regardless of which page the user is on. This makes tab switching difficult when multiple pages are open, and provides no page-specific SEO signals.
 
 ---
 
@@ -1397,7 +1397,7 @@ The recommended priority order for remediation:
 ### Architecture Review: Integration & Deployment
 
 #### Scope
-Exhaustive audit of all integration, deployment, build, and cross-runtime coordination patterns in the PilotAI Credit Spreads codebase.
+Exhaustive audit of all integration, deployment, build, and cross-runtime coordination patterns in the Attix Credit Spreads codebase.
 
 ---
 
@@ -1864,7 +1864,7 @@ There is no file locking between Python and Node.js processes. The Node.js paper
 
 ### Code Quality Review: Python Backend
 
-**Codebase:** PilotAI Credit Spreads  
+**Codebase:** Attix Credit Spreads  
 **Scope:** All Python files in `main.py`, `paper_trader.py`, `utils.py`, `constants.py`, `demo.py`, `strategy/`, `shared/`, `tracker/`, `alerts/`, `backtest/`  
 **Files Reviewed:** 24 Python files  
 **Date:** 2026-02-16
@@ -3305,7 +3305,7 @@ When rebalancing an existing position, the `current_positions` list still contai
 
 #### Summary
 
-Exhaustive audit of all frontend pages (`web/app/`) and components (`web/components/`) in the PilotAI Credit Spreads codebase. **42 findings** identified across severity levels.
+Exhaustive audit of all frontend pages (`web/app/`) and components (`web/components/`) in the Attix Credit Spreads codebase. **42 findings** identified across severity levels.
 
 ---
 
@@ -3643,7 +3643,7 @@ These should be a single shared component.
 
 ### Security Audit: Authentication & Access Control
 
-**Application:** PilotAI Credit Spreads (Next.js Web Dashboard)
+**Application:** Attix Credit Spreads (Next.js Web Dashboard)
 **Date:** 2026-02-16
 **Auditor:** Security Review - Claude Opus 4.6
 **Scope:** Authentication, authorization, access control, session management, and related patterns across the entire web application.
@@ -4109,7 +4109,7 @@ The application uses a single static Bearer token (`API_AUTH_TOKEN`) for all API
 
 ### Security Audit: Input Validation & Injection
 
-**Project:** PilotAI Credit Spreads  
+**Project:** Attix Credit Spreads  
 **Audit Date:** 2026-02-16  
 **Scope:** Input validation, injection, and sanitization across all API routes, middleware, Python utilities, and frontend components  
 **Auditor:** Security Review (Automated)
@@ -4569,7 +4569,7 @@ This could cause type confusion in `generateLocalResponse()` (line 131) where `.
 
 ### Security Audit: Infrastructure Security
 
-**Project:** PilotAI Credit Spreads  
+**Project:** Attix Credit Spreads  
 **Audit Date:** 2026-02-16  
 **Auditor:** Infrastructure Security Review  
 **Scope:** Docker, CI/CD, dependencies, security headers, supply chain, serialization, secrets management  
@@ -4579,7 +4579,7 @@ This could cause type confusion in `generateLocalResponse()` (line 131) where `.
 
 #### Executive Summary
 
-This audit identified **27 infrastructure security findings** across the PilotAI Credit Spreads codebase. The most critical issues involve insecure deserialization of a git-tracked pickle file (RCE risk), a weakened Content Security Policy that effectively negates XSS protections, shell-pipe installation of Node.js in the Docker build, and a third-party script embedded without integrity verification. The application is a financial trading system, which elevates the impact of many findings due to the potential for monetary loss.
+This audit identified **27 infrastructure security findings** across the Attix Credit Spreads codebase. The most critical issues involve insecure deserialization of a git-tracked pickle file (RCE risk), a weakened Content Security Policy that effectively negates XSS protections, shell-pipe installation of Node.js in the Docker build, and a third-party script embedded without integrity verification. The application is a financial trading system, which elevates the impact of many findings due to the potential for monetary loss.
 
 ---
 
@@ -5202,7 +5202,7 @@ ml/models/
 
 ### Security Audit: Data Security & Secrets Management
 
-**Project:** PilotAI Credit Spreads  
+**Project:** Attix Credit Spreads  
 **Audit Date:** 2026-02-16  
 **Auditor:** Security Audit Agent  
 **Scope:** Data security, secrets management, data leakage, encryption, PII/financial data exposure  
@@ -5212,7 +5212,7 @@ ml/models/
 
 #### Executive Summary
 
-The PilotAI Credit Spreads codebase demonstrates some security awareness (secret stripping in config API, timing-safe token comparison, security headers) but contains significant data security gaps. The most critical issues are: API authentication token exposed in browser-side JavaScript, API keys passed as query parameters in URLs, unsafe deserialization of ML model files, financial data stored unencrypted on disk, and error messages that can leak internal system details. This audit identified **25 findings** ranging from Critical to Low severity.
+The Attix Credit Spreads codebase demonstrates some security awareness (secret stripping in config API, timing-safe token comparison, security headers) but contains significant data security gaps. The most critical issues are: API authentication token exposed in browser-side JavaScript, API keys passed as query parameters in URLs, unsafe deserialization of ML model files, financial data stored unencrypted on disk, and error messages that can leak internal system details. This audit identified **25 findings** ranging from Critical to Low severity.
 
 ---
 
@@ -5815,7 +5815,7 @@ These errors propagate through `exc_info=True` logging calls throughout the code
 
 #### Executive Summary
 
-This audit examines all network-calling and caching code across the PilotAI Credit Spreads codebase. The system makes extensive use of external APIs (yfinance, Tradier, Polygon.io, Alpaca, OpenAI, Telegram) and has both in-memory caching (`DataCache`) and ad-hoc caching in individual modules. The analysis reveals **28 findings** spanning redundant API calls, missing/broken caching, cache stampede risks, N+1 patterns, sequential requests that should be parallelized, and excessive data transfer.
+This audit examines all network-calling and caching code across the Attix Credit Spreads codebase. The system makes extensive use of external APIs (yfinance, Tradier, Polygon.io, Alpaca, OpenAI, Telegram) and has both in-memory caching (`DataCache`) and ad-hoc caching in individual modules. The analysis reveals **28 findings** spanning redundant API calls, missing/broken caching, cache stampede risks, N+1 patterns, sequential requests that should be parallelized, and excessive data transfer.
 
 ---
 
@@ -6128,7 +6128,7 @@ This audit examines all network-calling and caching code across the PilotAI Cred
 
 ### Performance Review: Data Processing & Algorithms
 
-**Project:** PilotAI Credit Spreads
+**Project:** Attix Credit Spreads
 **Auditor:** Performance Review Agent
 **Date:** 2026-02-16
 **Scope:** All data processing and algorithm files (15 files reviewed)
@@ -6417,7 +6417,7 @@ The codebase exhibits **31 distinct performance findings** across data processin
 
 #### Summary
 
-Exhaustive audit of the PilotAI Credit Spreads application covering all frontend pages, components, hooks, utility libraries, API routes, and Python backend file I/O. **28 findings identified** across severity levels.
+Exhaustive audit of the Attix Credit Spreads application covering all frontend pages, components, hooks, utility libraries, API routes, and Python backend file I/O. **28 findings identified** across severity levels.
 
 ---
 
@@ -6681,7 +6681,7 @@ Exhaustive audit of the PilotAI Credit Spreads application covering all frontend
 
 #### Executive Summary
 
-The PilotAI Credit Spreads system uses a **fork-per-request architecture** where the Next.js web frontend spawns a fresh Python subprocess (`python3 main.py scan` or `python3 main.py backtest`) for every API call. Each subprocess re-imports the entire Python dependency tree, re-initializes all components, re-trains ML models, and re-downloads market data before performing any work. This architecture has severe cold start penalties and no process reuse.
+The Attix Credit Spreads system uses a **fork-per-request architecture** where the Next.js web frontend spawns a fresh Python subprocess (`python3 main.py scan` or `python3 main.py backtest`) for every API call. Each subprocess re-imports the entire Python dependency tree, re-initializes all components, re-trains ML models, and re-downloads market data before performing any work. This architecture has severe cold start penalties and no process reuse.
 
 ---
 
@@ -8130,7 +8130,7 @@ function getUserId(request: Request): string {
 
 #### Executive Summary
 
-This audit examines the PilotAI Credit Spreads codebase for resilience and recovery gaps across Python backend services, ML pipeline, data providers, and the Next.js web frontend. The system has foundational resilience patterns (circuit breakers on Tradier/Polygon, retry-with-backoff on Alpaca, atomic JSON writes), but significant gaps remain that could lead to cascading failures, data loss, or silent degradation in production.
+This audit examines the Attix Credit Spreads codebase for resilience and recovery gaps across Python backend services, ML pipeline, data providers, and the Next.js web frontend. The system has foundational resilience patterns (circuit breakers on Tradier/Polygon, retry-with-backoff on Alpaca, atomic JSON writes), but significant gaps remain that could lead to cascading failures, data loss, or silent degradation in production.
 
 **Total Findings: 27**
 - CRITICAL: 6
@@ -8828,7 +8828,7 @@ The test suite contains **178 test functions across 19 test files**, covering th
 ##### TEST-PY-06: `custom exceptions` Module Has Zero Test Coverage
 - **Severity:** LOW
 - **File:** `/home/pmcerlean/projects/pilotai-credit-spreads/shared/exceptions.py` (all 26 lines)
-- **Issue:** `PilotAIError`, `DataFetchError`, `ProviderError`, `StrategyError`, `ModelError`, and `ConfigError` are defined but never raised or caught in any test. The exception hierarchy is never validated.
+- **Issue:** `AttixError`, `DataFetchError`, `ProviderError`, `StrategyError`, `ModelError`, and `ConfigError` are defined but never raised or caught in any test. The exception hierarchy is never validated.
 - **Impact:** Exception catch blocks throughout the codebase reference these types but are never tested to confirm they work correctly.
 
 ##### TEST-PY-07: `.coveragerc` Omits 6 Major Source Files From Coverage Reporting
@@ -9556,7 +9556,7 @@ The test for `shouldAutoClose` only tests the "normal open" and "expired" cases.
 
 #### Summary
 
-This is an exhaustive audit of the PilotAI Credit Spreads test infrastructure and CI/CD pipeline. The project has a functional but minimal CI pipeline that leaves significant gaps in security scanning, type checking, linting, coverage reporting, and deployment verification. Below are 28 findings organized by severity.
+This is an exhaustive audit of the Attix Credit Spreads test infrastructure and CI/CD pipeline. The project has a functional but minimal CI pipeline that leaves significant gaps in security scanning, type checking, linting, coverage reporting, and deployment verification. Below are 28 findings organized by severity.
 
 ---
 
@@ -10577,7 +10577,7 @@ COPY web/package.json web/package-lock.json* ./
 
 #### Executive Summary
 
-The PilotAI Credit Spreads system has **fundamental observability gaps** across both the Python trading engine and the Next.js web tier. There is no APM, no metrics collection, no distributed tracing, no correlation IDs, no audit logging, and Sentry coverage is limited to the Python side only. The existing logging is inconsistent between the two tiers (Python uses `logging` with colorlog; TypeScript uses a minimal custom JSON logger). For a system that manages financial positions, these gaps represent significant operational risk.
+The Attix Credit Spreads system has **fundamental observability gaps** across both the Python trading engine and the Next.js web tier. There is no APM, no metrics collection, no distributed tracing, no correlation IDs, no audit logging, and Sentry coverage is limited to the Python side only. The existing logging is inconsistent between the two tiers (Python uses `logging` with colorlog; TypeScript uses a minimal custom JSON logger). For a system that manages financial positions, these gaps represent significant operational risk.
 
 ---
 
@@ -11062,7 +11062,7 @@ ML pipeline critical warnings (`logger.critical(...)`) go to the log file only.
 
 #### Executive Summary
 
-The PilotAI Credit Spreads system uses **exclusively flat-file JSON persistence** (no database) deployed on **Railway's ephemeral filesystem**. This means every deployment, restart, or infrastructure event destroys all trade data, P&L history, model artifacts, and configuration changes. For a financial application tracking real (even simulated) trading positions, this represents the most severe class of production risk.
+The Attix Credit Spreads system uses **exclusively flat-file JSON persistence** (no database) deployed on **Railway's ephemeral filesystem**. This means every deployment, restart, or infrastructure event destroys all trade data, P&L history, model artifacts, and configuration changes. For a financial application tracking real (even simulated) trading positions, this represents the most severe class of production risk.
 
 The system has **five independent JSON file stores**, **two independent Python persistence managers** writing overlapping data, **zero backup mechanisms**, **zero data migration tooling**, and **zero encryption at rest**. There are 28 findings documented below.
 
@@ -11378,7 +11378,7 @@ The system has **five independent JSON file stores**, **two independent Python p
 
 #### Executive Summary
 
-This audit identified **28 findings** across the PilotAI Credit Spreads codebase related to dependency management and scaling. The system has a fundamentally single-instance architecture with pervasive in-memory state, unpinned dependencies on both Python and Node.js sides, no automated vulnerability scanning, and several design decisions that prevent horizontal scaling. For a trading system handling financial positions, these are material risks.
+This audit identified **28 findings** across the Attix Credit Spreads codebase related to dependency management and scaling. The system has a fundamentally single-instance architecture with pervasive in-memory state, unpinned dependencies on both Python and Node.js sides, no automated vulnerability scanning, and several design decisions that prevent horizontal scaling. For a trading system handling financial positions, these are material risks.
 
 ---
 

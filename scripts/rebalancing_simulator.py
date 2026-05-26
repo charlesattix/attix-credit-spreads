@@ -642,7 +642,7 @@ def build_html(freq_results, cost_results, svd_results, base_weights, best_confi
 </div>
 
 <div style="color:#475569;font-size:0.7rem;margin-top:32px;border-top:1px solid #334155;padding-top:8px">
-  PilotAI Credit Spreads — Rebalancing Simulator v1.0<br>
+  Attix Credit Spreads — Rebalancing Simulator v1.0<br>
   4 strategies: EXP-1220 Dynamic, Cross-Asset Pairs, Vol Term Structure, TLT Iron Condors<br>
   Strategy returns from real IronVault-validated experiments. Regime detection via VIX proxy.
 </div>

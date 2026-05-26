@@ -191,6 +191,7 @@ class TestSubmitSingleLeg(unittest.TestCase):
             option_type="put",
             side="sell",
             contracts=2,
+            limit_price=1.50,
         )
 
         assert result["status"] == "submitted"
@@ -231,6 +232,7 @@ class TestSubmitSingleLeg(unittest.TestCase):
         result = provider.close_single_leg(
             ticker="SPY", strike=500.0, expiration="2026-04-17",
             option_type="call", side="buy", contracts=1,
+            limit_price=2.00,
         )
 
         assert result["status"] == "submitted"
@@ -257,7 +259,7 @@ class TestSubmitSingleLeg(unittest.TestCase):
 
         result = provider.submit_single_leg(
             ticker="SPY", strike=682.9999999, expiration="2026-04-17",
-            option_type="call", side="buy",
+            option_type="call", side="buy", limit_price=3.00,
         )
 
         # Should have rounded to 683.0

@@ -42,7 +42,6 @@ if str(ROOT) not in sys.path:
 
 from experiments.registry import (  # noqa: E402
     CREATOR_RANGES,
-    REGISTRY_PATH,
     VALID_CREATORS,
     VALID_STATUSES,
     VALID_TRANSITIONS,
@@ -50,15 +49,10 @@ from experiments.registry import (  # noqa: E402
     find_orphan_dbs,
     find_orphan_env_files,
     find_orphan_processes,
-    get_active_experiments,
-    get_experiment,
-    get_experiments_by_status,
     is_research_entry,
-    load_registry,
-    save_registry,
-    transition_status,
     validate,
 )
+from experiments.manager import get_manager  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -103,9 +97,9 @@ def _trunc(s: str, maxlen: int = 50) -> str:
 
 
 def cmd_list(args: argparse.Namespace) -> int:
-    registry = load_registry()
+    mgr = get_manager()
     all_exps = sorted(
-        registry["experiments"].values(),
+        mgr.all().values(),
         key=lambda e: (e.get("status", ""), e.get("id", "")),
     )
 
@@ -185,7 +179,7 @@ def cmd_list(args: argparse.Namespace) -> int:
 
 
 def cmd_status(args: argparse.Namespace) -> int:
-    exp = get_experiment(args.exp_id)
+    exp = get_manager().get(args.exp_id)
     if not exp:
         print(f"ERROR: {args.exp_id} not found in registry.", file=sys.stderr)
         return 1
@@ -245,8 +239,8 @@ def cmd_status(args: argparse.Namespace) -> int:
 
 
 def cmd_register(args: argparse.Namespace) -> int:
-    registry = load_registry()
-    experiments = registry.get("experiments", {})
+    mgr = get_manager()
+    experiments = mgr.all()
 
     # Validate
     exp_id = args.id.strip().upper()
@@ -306,8 +300,7 @@ def cmd_register(args: argparse.Namespace) -> int:
     # Clean None values
     entry = {k: v for k, v in entry.items() if v is not None}
 
-    experiments[exp_id] = entry
-    save_registry(registry)
+    mgr.register(entry)
     print(f"Registered {exp_id} — '{args.name}' (status: registered)")
     return 0
 
@@ -315,7 +308,7 @@ def cmd_register(args: argparse.Namespace) -> int:
 def cmd_transition(args: argparse.Namespace) -> int:
     """Handle activate/pause/stop/retire commands."""
     try:
-        exp = transition_status(
+        exp = get_manager().transition(
             args.exp_id,
             args.target_status,
             reason=getattr(args, "reason", "") or "",
@@ -328,7 +321,8 @@ def cmd_transition(args: argparse.Namespace) -> int:
 
 
 def cmd_validate(args: argparse.Namespace) -> int:
-    registry = load_registry()
+    mgr = get_manager()
+    registry = mgr._registry
     errors = validate(registry, strict=args.strict)
 
     exp_count = len(registry.get("experiments", {}))
@@ -345,7 +339,8 @@ def cmd_validate(args: argparse.Namespace) -> int:
 
 
 def cmd_sync(args: argparse.Namespace) -> int:
-    registry = load_registry()
+    mgr = get_manager()
+    registry = mgr._registry
     issues = 0
 
     # Orphan .env files

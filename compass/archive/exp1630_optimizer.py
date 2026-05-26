@@ -955,7 +955,7 @@ strengthened as GLD/TLT divergence patterns became more pronounced post-COVID.</
 </div>
 
 <p class="note" style="margin-top:40px;text-align:center">
-  EXP-1630 Deep Optimization &bull; IronVault real data &bull; PilotAI Compass &bull; {datetime.now().strftime('%Y-%m-%d')}
+  EXP-1630 Deep Optimization &bull; IronVault real data &bull; Attix Compass &bull; {datetime.now().strftime('%Y-%m-%d')}
 </p>
 </body></html>"""
 

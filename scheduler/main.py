@@ -48,7 +48,6 @@ from scheduler.jobs import (
     job_post_market,
     job_pre_market_check,
     job_run_experiment,
-    job_signal_generator,
     job_weekly_summary,
 )
 
@@ -114,15 +113,9 @@ def build_scheduler() -> BackgroundScheduler:
         misfire_grace_time=120,
     )
 
-    # ── Signal generator: 09:25 ET Mon-Fri ─────────────────────────────────
-    scheduler.add_job(
-        job_signal_generator,
-        CronTrigger(day_of_week="mon-fri", hour=9, minute=25, timezone=ET),
-        id="signal_generator",
-        name="EXP-2830 signal generator",
-        misfire_grace_time=300,
-        max_instances=1,
-    )
+    # ── EXP-2830 signal generator DISABLED (P0-4 cleanup) ─────────────────
+    # Removed 2026-05-23: EXP-2830 submitted orders via dead generic ALPACA_API_KEY
+    # (Alpaca returns 401). Per-experiment scanners below replace it.
 
     # ── Circuit breaker: every 30 min 09:00-15:30 ET Mon-Fri ───────────────
     scheduler.add_job(

@@ -184,12 +184,11 @@ def _check_registry_status(experiment_id: str) -> None:
     experiment is not found (scanners work before registry enrollment).
     """
     try:
-        from experiments.registry import load_registry
-        registry = load_registry()
+        from experiments.manager import get_manager
+        exp = get_manager().get(experiment_id)
     except Exception:
         return  # registry unavailable — pass silently
 
-    exp = registry.get("experiments", {}).get(experiment_id)
     if exp is None:
         return  # not in registry — graceful degradation
 

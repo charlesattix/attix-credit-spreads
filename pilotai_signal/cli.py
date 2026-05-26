@@ -1,5 +1,5 @@
 """
-CLI entry point for the PilotAI Signal Service.
+CLI entry point for the Attix Signal Service.
 
 Usage:
     python -m pilotai_signal <command> [options]
@@ -77,7 +77,7 @@ def cmd_run(args) -> int:
     """Full pipeline: collect → score → alerts."""
     snap_date = date.fromisoformat(args.date) if args.date else date.today()
 
-    print(f"─── PilotAI Signal Service — {snap_date} ───")
+    print(f"─── Attix Signal Service — {snap_date} ───")
 
     # 1. Collect
     print("1/3 Collecting strategy snapshots...")
@@ -134,7 +134,7 @@ def cmd_show(args) -> int:
     equity = [s for s in signals if s["ticker"] not in config.GOLD_TICKERS]
     gold = [s for s in signals if s["ticker"] in config.GOLD_TICKERS]
 
-    print(f"\n── PilotAI Conviction Signal — {today} ──")
+    print(f"\n── Attix Conviction Signal — {today} ──")
     print(f"{'Rank':<5} {'Ticker':<8} {'Conv':>7} {'Freq':>6} {'FreqPct':>8} {'AvgW%':>7} {'Days':>6}")
     print("-" * 58)
     for i, s in enumerate(equity[:n], 1):
@@ -206,7 +206,7 @@ def cmd_rebuild(args) -> int:
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(
         prog="python -m pilotai_signal",
-        description="PilotAI Signal Service",
+        description="Attix Signal Service",
     )
     parser.add_argument("-v", "--verbose", action="store_true")
     sub = parser.add_subparsers(dest="command", required=True)

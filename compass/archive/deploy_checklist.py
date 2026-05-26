@@ -52,7 +52,7 @@ class DeployResult:
 
 
 class DeployChecklist:
-    """Pre-deploy verification checklist for PilotAI credit-spreads."""
+    """Pre-deploy verification checklist for Attix credit-spreads."""
 
     # Default key files that must exist in the project root.
     DEFAULT_KEY_FILES: List[str] = [

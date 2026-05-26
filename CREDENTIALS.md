@@ -4,16 +4,16 @@
 
 ---
 
-## Source of Truth: experiments.yaml
+## Source of Truth: registry.json
 
-**`experiments.yaml` at the project root is the authoritative registry** for the
+**`experiments/registry.json` is the authoritative registry** (managed via `ExperimentManager`) for the
 mapping between experiment names, env files, configs, Alpaca accounts, tmux sessions,
 SQLite databases, and status. This file replaces the table below as the single place
 to look up any experiment dimension.
 
 ```bash
 # Quick-look at the registry:
-cat experiments.yaml
+cat experiments/registry.json
 
 # Live dashboard (equity + positions for all accounts):
 python3 scripts/portfolio_status.py
@@ -86,7 +86,7 @@ POLYGON_API_KEY=y3y07kPIE0VkS6M3erj7uNsJ3dpLYDCH
 ## Status Dashboard
 
 ```bash
-# Full dashboard — reads experiments.yaml, checks tmux, pings all Alpaca accounts:
+# Full dashboard — reads experiments/registry.json, checks tmux, pings all Alpaca accounts:
 python3 scripts/portfolio_status.py
 
 # Legacy shell version (still works, but doesn't read the registry):
@@ -115,10 +115,10 @@ python main.py scheduler --config configs/paper_exp401.yaml --env-file .env.exp4
 tmux kill-session -t exp400
 ```
 
-After starting or stopping an experiment, update `experiments.yaml`:
-- Change `status:` to `active` or `stopped`
-- Update `tmux_session:` to the session name (or `null` if stopped)
-- Update `start_date:` to today's date if restarting
+After starting or stopping an experiment, update `experiments/registry.json` via `ExperimentManager`:
+- Change `status` to `active` or `stopped`
+- Update `tmux_session` to the session name (or `""` if stopped)
+- Update `start_date` to today's date if restarting
 
 ---
 
@@ -137,7 +137,7 @@ After starting or stopping an experiment, update `experiments.yaml`:
 1. Create an Alpaca paper account and get the API key/secret
 2. Create `.env.expNNN` with the credentials
 3. Create or copy a config file in `configs/`
-4. Add an entry to `experiments.yaml` (copy an existing block, update all fields)
+4. Add an entry to `experiments/registry.json` via `ExperimentManager` (copy an existing block, update all fields)
 5. Verify: `python3 scripts/portfolio_status.py expNNN`
 
 ---

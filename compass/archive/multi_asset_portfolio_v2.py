@@ -613,7 +613,7 @@ Corrected Sharpe (arithmetic daily mean)</div>
 </div>
 
 <div style="color:#94a3b8;font-size:0.68rem;margin-top:28px;border-top:1px solid #e2e8f0;padding-top:8px">
-  PilotAI — Multi-Asset Portfolio v2 | Honest rebuild with backfilled data |
+  Attix — Multi-Asset Portfolio v2 | Honest rebuild with backfilled data |
   All IronVault real data, corrected Sharpe, walk-forward validated
 </div></body></html>"""
 

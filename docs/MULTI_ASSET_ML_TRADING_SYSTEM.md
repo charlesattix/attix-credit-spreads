@@ -1,10 +1,10 @@
 # Multi-Asset ML Trading System Architecture
 
-## PilotAI v2.0 — Expansion from Options to Futures, Crypto & Prediction Markets
+## Attix v2.0 — Expansion from Options to Futures, Crypto & Prediction Markets
 
 **Date**: 2026-02-18
 **Status**: Architecture Plan
-**Author**: PilotAI Engineering
+**Author**: Attix Engineering
 
 ---
 
@@ -32,7 +32,7 @@
 
 ## 1. Executive Summary
 
-This document architects the expansion of PilotAI from a single-asset-class credit spread system into a multi-asset ML-powered trading platform spanning four asset classes:
+This document architects the expansion of Attix from a single-asset-class credit spread system into a multi-asset ML-powered trading platform spanning four asset classes:
 
 | Asset Class | Instruments | Leverage | Market Hours | Edge Source |
 |---|---|---|---|---|
@@ -2357,7 +2357,7 @@ py-clob-client>=0.10.0         # Polymarket CLOB SDK
 
 ## Summary
 
-This architecture extends PilotAI from a single-asset options system into a four-asset-class ML-powered trading platform while:
+This architecture extends Attix from a single-asset options system into a four-asset-class ML-powered trading platform while:
 
 1. **Preserving** the production options system (zero-downtime migration)
 2. **Reusing** existing patterns (DataProvider protocol, MLPipeline, FeatureEngine, SQLite WAL, circuit breaker)

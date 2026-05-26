@@ -184,7 +184,7 @@ def build_html(results, no_hedge, pareto, old_cost):
 </div>
 
 <div style="color:#94a3b8;font-size:0.68rem;margin-top:28px;border-top:1px solid #e2e8f0;padding-top:8px">
-  PilotAI — Smart Hedge v1.0 | Real IronVault put costs (4.36%/yr) |
+  Attix — Smart Hedge v1.0 | Real IronVault put costs (4.36%/yr) |
   Pareto-optimal: min cost for COVID DD &lt; 15%
 </div></body></html>"""
 

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<title>PilotAI Daily Report — 2026-04-23</title>
+<title>Attix Daily Report — 2026-04-23</title>
 <style>
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 1100px; margin: 0 auto; padding: 24px 32px; background: #fff; color: #1a1a1a; line-height: 1.6; }
 h1 { font-size: 1.8em; border-bottom: 3px solid #1a1a1a; padding-bottom: 12px; margin-top: 0; }
@@ -36,7 +36,7 @@ code { background: #f3f4f6; padding: 1px 5px; border-radius: 3px; font-size: 0.9
 </head>
 <body>
 
-<h1>PilotAI Daily Report &mdash; 2026-04-23</h1>
+<h1>Attix Daily Report &mdash; 2026-04-23</h1>
 <p><strong>Operator:</strong> Maximus (AI Trading Strategist) &nbsp;|&nbsp; <strong>Owner:</strong> Carlos Cruz &nbsp;|&nbsp; <strong>Phase:</strong> 8 (Paper Trading Deployment) &nbsp;|&nbsp; <strong>MASTERPLAN:</strong> v12</p>
 
 <!-- ============================================================ -->

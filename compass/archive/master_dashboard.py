@@ -413,7 +413,7 @@ code{{font-family:monospace;background:#f1f5f9;padding:1px 5px;border-radius:3px
 <body>
 
 <h1>COMPASS Master Dashboard</h1>
-<p class="subtitle">PilotAI Credit Spreads &mdash; Generated {now}</p>
+<p class="subtitle">Attix Credit Spreads &mdash; Generated {now}</p>
 
 <div class="cards">{cards}</div>
 

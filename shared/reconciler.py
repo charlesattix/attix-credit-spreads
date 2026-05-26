@@ -1,5 +1,5 @@
 """
-Position reconciler for PilotAI paper trading.
+Position reconciler for Attix paper trading.
 
 Compares SQLite state against Alpaca order/position reality and heals
 discrepancies that can arise from crashes, network failures, or process

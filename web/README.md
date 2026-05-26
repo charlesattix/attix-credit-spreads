@@ -1,4 +1,4 @@
-# Alerts by PilotAI - Credit Spread Trading Dashboard
+# Alerts by Attix - Credit Spread Trading Dashboard
 
 AI-powered credit spread trading alerts with high probability of profit.
 
@@ -172,4 +172,4 @@ npm run dev -- -p 3001
 
 ## License
 
-Part of the Credit Spread Trading System by PilotAI.
+Part of the Credit Spread Trading System by Attix.

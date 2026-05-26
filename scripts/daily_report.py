@@ -463,7 +463,7 @@ def generate_html(data: dict) -> str:
 
     # -- Footer --
     now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    parts.append(f'<div class="footer">Generated {now_str} &bull; PilotAI Credit Spreads</div>')
+    parts.append(f'<div class="footer">Generated {now_str} &bull; Attix Credit Spreads</div>')
     parts.append('</body></html>')
 
     return "\n".join(parts)
@@ -519,7 +519,7 @@ def send_html_report_telegram(html: str, report_date: str, experiment_id: str) -
 # ---------------------------------------------------------------------------
 
 def main():
-    parser = argparse.ArgumentParser(description="PilotAI Daily Report Generator")
+    parser = argparse.ArgumentParser(description="Attix Daily Report Generator")
     parser.add_argument("--config", required=True, help="Path to YAML config file")
     parser.add_argument("--env-file", help="Path to .env file")
     parser.add_argument("--date", help="Report date (YYYY-MM-DD), default: today UTC")

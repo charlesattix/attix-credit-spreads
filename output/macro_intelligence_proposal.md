@@ -1,6 +1,6 @@
 # Macro Thematic Intelligence Layer — Design Proposal
 
-**Author:** PilotAI Research
+**Author:** Attix Research
 **Date:** 2026-03-07
 **Status:** Proposal — Pending Carlos Review
 **Request:** Direct from Carlos — full macro intelligence integration design
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-The current PilotAI credit spread engine is purely technical-mechanical: it uses price-vs-MA200, RSI momentum, VIX structure, and a circuit breaker to classify the regime as BULL/BEAR/NEUTRAL and select SPY/QQQ/IWM as the underlying. It has no awareness of which macro regime is operating, which sectors are in favor, or whether a scheduled catalyst (FOMC, CPI, NFP) is two days away.
+The current Attix credit spread engine is purely technical-mechanical: it uses price-vs-MA200, RSI momentum, VIX structure, and a circuit breaker to classify the regime as BULL/BEAR/NEUTRAL and select SPY/QQQ/IWM as the underlying. It has no awareness of which macro regime is operating, which sectors are in favor, or whether a scheduled catalyst (FOMC, CPI, NFP) is two days away.
 
 The 2020–2025 period demonstrates that **macro regime transitions drive sector returns by 30–85 percentage points per year** vs the broad index. Energy outperformed SPY by 84pp in 2022. AI semis outperformed SPY by 45pp in the 5.5 months following the ChatGPT launch. Clean energy outperformed SPY by 72pp in the eight months following Biden's election. These are not edge cases — they are the primary source of alpha in modern equity markets.
 

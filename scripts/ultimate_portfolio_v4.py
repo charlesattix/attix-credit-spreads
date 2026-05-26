@@ -500,7 +500,7 @@ def generate_html(result, scenarios):
 <tbody>{sc_rows}</tbody></table>
 
 <div class="footer">
-    PilotAI Credit Spreads — Ultimate Portfolio v4<br>
+    Attix Credit Spreads — Ultimate Portfolio v4<br>
     Dynamic sizing (DynamicSizer) + tail risk hedge (EnhancedHedgeEngine v3).<br>
     Leverage adapts from 0.1× to 2.2× based on VIX, trend, rvol, and drawdown signals.
 </div>

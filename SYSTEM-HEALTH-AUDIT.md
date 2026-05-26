@@ -1,4 +1,4 @@
-# SYSTEM HEALTH AUDIT — PilotAI Credit Spreads
+# SYSTEM HEALTH AUDIT — Attix Credit Spreads
 **Date**: 2026-05-22
 **Auditor**: Claude Sonnet 4.6 (automated)
 **Trigger**: EXP-400 crash loop, EXP-800/Sentinel offline, zero trades today across all 8 experiments

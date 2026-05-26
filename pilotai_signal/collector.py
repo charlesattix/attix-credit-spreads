@@ -1,5 +1,5 @@
 """
-Collector — fetches all 57 PilotAI strategies and archives to SQLite.
+Collector — fetches all 57 Attix strategies and archives to SQLite.
 
 Sequential batching (6 slugs per request) to avoid staging server timeouts.
 Idempotent: re-running on the same date updates existing rows.
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 def fetch_batch(slugs: List[str], retries: int = 2) -> Tuple[List[dict], List[str]]:
     """
-    POST a batch of slugs to the PilotAI API.
+    POST a batch of slugs to the Attix API.
 
     Returns:
         (strategies, failed_slugs)
@@ -102,7 +102,7 @@ def fetch_all_strategies() -> Tuple[List[dict], List[str]]:
 # ── QScore computation ────────────────────────────────────────────────────────
 
 def compute_qscore(stock_score: dict) -> float:
-    """Weighted composite quality score from PilotAI stock_score (0-5 scale each)."""
+    """Weighted composite quality score from Attix stock_score (0-5 scale each)."""
     return (
         config.QSCORE_GROWTH    * stock_score.get("growth", 0)
         + config.QSCORE_MOMENTUM  * stock_score.get("momentum", 0)

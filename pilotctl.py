@@ -13,14 +13,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-import yaml
-
-EXPERIMENTS_FILE = Path(__file__).parent / "experiments.yaml"
-
-
-def load_experiments() -> dict:
-    with open(EXPERIMENTS_FILE) as f:
-        return yaml.safe_load(f)
+from experiments.manager import get_manager
 
 
 def _resolve_targets(experiments: dict, target: str) -> list:
@@ -65,19 +58,21 @@ def cmd_start(experiments: dict, target: str) -> None:
         if _tmux_session_exists(session):
             print(f"[{name}] already running in tmux session '{session}'")
             continue
-        if not _run_preflight(cfg["config_file"]):
+        if not _run_preflight(cfg.get("config_path", "")):
             print(f"[{name}] preflight FAILED — not starting")
             continue
         # SECURITY AUDIT #5: use list args to prevent shell injection via
         # config_file/env_file values containing shell metacharacters.
-        config_path = Path(cfg["config_file"])
-        env_path    = Path(cfg["env_file"])
-        if not config_path.exists():
-            print(f"[{name}] config file not found: {config_path}")
+        cp = cfg.get("config_path") or ""
+        if not cp or not Path(cp).exists():
+            print(f"[{name}] config file not found: {cp!r}")
             continue
-        if not env_path.exists():
-            print(f"[{name}] env file not found: {env_path}")
+        ep = cfg.get("env_file") or ""
+        if not ep or not Path(ep).exists():
+            print(f"[{name}] env file not found: {ep!r}")
             continue
+        config_path = Path(cp)
+        env_path    = Path(ep)
         subprocess.run(
             [
                 "tmux", "new-session", "-d", "-s", session,
@@ -109,7 +104,8 @@ def cmd_status(experiments: dict, target: str) -> None:
     for name, cfg in _resolve_targets(experiments, target):
         session = cfg["tmux_session"]
         running = _tmux_session_exists(session)
-        db_exists = Path(cfg["db_path"]).exists()
+        db_path = cfg.get("db_path", "")
+        db_exists = bool(db_path) and Path(db_path).exists()
         status = "RUNNING" if running else "STOPPED"
         db_status = "exists" if db_exists else "missing"
         print(f"[{name}] {status}  (session: {session}, db: {db_status})")
@@ -136,7 +132,7 @@ def main():
     command = sys.argv[1]
     target = sys.argv[2] if len(sys.argv) > 2 else "all"
 
-    experiments = load_experiments()
+    experiments = get_manager().live()
 
     commands = {
         "start": cmd_start,

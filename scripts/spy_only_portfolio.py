@@ -560,7 +560,7 @@ def build_html(strategies, weights, results_100m, results_500m, wf_100m, wf_500m
 </table>
 
 <div style="color:#64748b;font-size:0.7rem;margin-top:32px;border-top:1px solid #e2e8f0;padding-top:8px">
-  PilotAI Credit Spreads — SPY-Only High-Capacity Portfolio v1.0<br>
+  Attix Credit Spreads — SPY-Only High-Capacity Portfolio v1.0<br>
   All strategies validated on real data (IronVault / Yahoo Finance).<br>
   Slippage model: fixed spread + commission + sqrt impact. SPY ADV: 3.1M contracts/day.
 </div>

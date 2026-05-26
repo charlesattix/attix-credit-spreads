@@ -53,6 +53,9 @@ _PROJECT_ROOT = Path(__file__).parent.parent
 # Load .env only if values aren't already in the environment
 load_dotenv(_PROJECT_ROOT / ".env", override=False)
 
+# NOTE: In production, scheduler/jobs.py maps per-experiment keys
+# (ALPACA_API_KEY_EXP400 → ALPACA_API_KEY) into subprocess env.
+# Generic (non-suffixed) Railway key retired 2026-05-23.
 ALPACA_API_KEY: str = (
     os.environ.get("ALPACA_API_KEY") or os.environ.get("APCA_API_KEY_ID", "")
 )

@@ -1,4 +1,4 @@
-# PilotAI Macro Intelligence API
+# Attix Macro Intelligence API
 
 REST API for macro snapshot data — sector RS rankings, macro scores, event calendars, and eligible underlyings.
 

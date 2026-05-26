@@ -1,6 +1,6 @@
 # 7-Panel Code Review — MASTERPLAN
 
-**Service:** PilotAI Credit Spreads
+**Service:** Attix Credit Spreads
 **Path:** `/Users/charlesbot/projects/pilotai-credit-spreads`
 **Status:** 🟢 REVIEW DONE
 **Started:** 2026-02-14
@@ -1717,22 +1717,22 @@ except Exception as e:
 
 **Fix:** Create a minimal exception hierarchy in `shared/exceptions.py`:
 ```python
-class PilotAIError(Exception):
-    """Base exception for all PilotAI errors."""
+class AttixError(Exception):
+    """Base exception for all Attix errors."""
 
-class DataProviderError(PilotAIError):
+class DataProviderError(AttixError):
     """Error fetching data from external provider (retryable)."""
 
-class OrderSubmissionError(PilotAIError):
+class OrderSubmissionError(AttixError):
     """Error submitting an order to broker."""
 
 class InsufficientFundsError(OrderSubmissionError):
     """Broker rejected order due to insufficient funds (non-retryable)."""
 
-class ConfigurationError(PilotAIError):
+class ConfigurationError(AttixError):
     """Invalid or missing configuration (non-retryable)."""
 
-class ModelError(PilotAIError):
+class ModelError(AttixError):
     """Error in ML model training or prediction."""
 ```
 
@@ -2124,7 +2124,7 @@ I searched for: `hypothesis`, `@given`, `from hypothesis` -- found nothing.
 
 ## Executive Summary
 
-PilotAI Credit Spreads is a credit spread options trading platform comprising ~8,046 lines of Python backend code (strategy analysis, ML pipeline, alerting, paper trading, backtesting) and a Next.js 15 web dashboard. The system integrates with yfinance, Tradier, Polygon, and Alpaca APIs for market data and trade execution, with Telegram for alert delivery.
+Attix Credit Spreads is a credit spread options trading platform comprising ~8,046 lines of Python backend code (strategy analysis, ML pipeline, alerting, paper trading, backtesting) and a Next.js 15 web dashboard. The system integrates with yfinance, Tradier, Polygon, and Alpaca APIs for market data and trade execution, with Telegram for alert delivery.
 
 **Overall Assessment: 9/10 across all 7 panels.**
 

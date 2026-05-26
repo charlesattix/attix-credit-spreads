@@ -524,7 +524,7 @@ def generate_html(data):
 {heatmap_svg}
 
 <div class="footer">
-    PilotAI Credit Spreads — Hedged Walk-Forward Validation<br>
+    Attix Credit Spreads — Hedged Walk-Forward Validation<br>
     All OOS returns strictly out-of-sample. Hedge overlay: SPY puts + VIX calls, 2%/yr budget.<br>
     Dynamic leverage 1.6×→0.25× based on multi-signal crisis score.
 </div>

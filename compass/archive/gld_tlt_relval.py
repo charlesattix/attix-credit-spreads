@@ -688,6 +688,6 @@ built-in diversification — if one leg loses, the other may gain.</p>
 
 <p class="note" style="margin-top:40px;text-align:center">
   EXP-1630 &middot; GLD/TLT Relative Value &middot; IronVault real data &middot;
-  GLD ends {r.data_end_gld}, TLT ends {r.data_end_tlt} &middot; PilotAI Compass
+  GLD ends {r.data_end_gld}, TLT ends {r.data_end_tlt} &middot; Attix Compass
 </p>
 </body></html>"""

@@ -1,5 +1,5 @@
 # Portfolio Manager Framework — Design Document
-**PilotAI Credit Spreads Trading System**  
+**Attix Credit Spreads Trading System**  
 **Version 1.0**  
 **Last Updated:** March 6, 2026  
 **Status:** Architecture Design
@@ -25,7 +25,7 @@
 
 ### Problem Statement
 
-The PilotAI credit spreads trading system currently operates three live paper-trading portfolios:
+The Attix credit spreads trading system currently operates three live paper-trading portfolios:
 
 - **exp_036** (Alpaca account `PA3QQDNADQU9`) — `.env.exp036`
 - **exp_059** (Alpaca account `PA35U64WQBWM`) — `.env` (main)
@@ -61,7 +61,7 @@ Core principles:
 
 ### Goal
 
-Transform PilotAI from a research prototype into a robust, production-grade multi-portfolio system capable of managing dozens of concurrent strategies with institutional-level risk management and operational discipline.
+Transform Attix from a research prototype into a robust, production-grade multi-portfolio system capable of managing dozens of concurrent strategies with institutional-level risk management and operational discipline.
 
 ---
 
@@ -948,7 +948,7 @@ class PositionMonitor:
 # /etc/systemd/system/pilotai-position-monitor.service
 
 [Unit]
-Description=PilotAI Position Monitor
+Description=Attix Position Monitor
 After=network.target
 
 [Service]
@@ -1473,7 +1473,7 @@ def send_daily_summary(portfolio_id: str):
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  PilotAI Portfolio Manager Dashboard                         │
+│  Attix Portfolio Manager Dashboard                         │
 ├─────────────────────────────────────────────────────────────┤
 │  Portfolio       Status      Open Pos   P&L Today   Uptime  │
 │  exp_036         ● Running   8          +$412       4h 32m  │

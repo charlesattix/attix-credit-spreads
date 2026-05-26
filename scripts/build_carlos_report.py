@@ -289,7 +289,7 @@ def build_report():
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>PilotAI Experiment Report — {date_str}</title>
+<title>Attix Experiment Report — {date_str}</title>
 <style>
   * {{ box-sizing: border-box; }}
   body {{
@@ -380,7 +380,7 @@ def build_report():
 <body>
 
 <div class="header">
-  <h1>PilotAI Experiment Report</h1>
+  <h1>Attix Experiment Report</h1>
   <div class="subtitle">Comprehensive strategy evaluation — {date_str}</div>
   <div class="meta">Generated {ts} | For Carlos | All data from real market sources</div>
 </div>
@@ -512,7 +512,7 @@ def build_report():
 </div>
 
 <div class="footer">
-  PilotAI Multi-Strategy Research | Real IronVault + Yahoo Finance data |
+  Attix Multi-Strategy Research | Real IronVault + Yahoo Finance data |
   Corrected Sharpe formula throughout | {date_str}
 </div>
 

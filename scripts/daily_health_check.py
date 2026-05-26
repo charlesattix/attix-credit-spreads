@@ -208,7 +208,7 @@ def send_health_check_result(issues: List[str], experiment_id: str) -> bool:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="PilotAI Daily Health Check (RC monitoring)")
+    parser = argparse.ArgumentParser(description="Attix Daily Health Check (RC monitoring)")
     parser.add_argument("--config", required=True, help="Path to YAML config file")
     parser.add_argument("--env-file", help="Path to .env file for credentials")
     parser.add_argument(

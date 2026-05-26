@@ -611,7 +611,7 @@ def generate_html(data, weights):
 {hm_svg}
 
 <div class="footer">
-    PilotAI Credit Spreads — Ultimate Portfolio v2<br>
+    Attix Credit Spreads — Ultimate Portfolio v2<br>
     6 strategies (XLI ICs added), tail risk hedge overlay, expanding walk-forward.<br>
     All OOS returns strictly out-of-sample with no lookahead bias.
 </div>

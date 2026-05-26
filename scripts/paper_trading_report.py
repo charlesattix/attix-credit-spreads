@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Paper Trading Weekly Report — PilotAI Credit Spreads
+Paper Trading Weekly Report — Attix Credit Spreads
 =====================================================
 Generates a side-by-side HTML comparison of all live paper trading experiments.
 
@@ -25,16 +25,11 @@ from typing import Optional
 # ---------------------------------------------------------------------------
 
 PROJECT_ROOT = Path(__file__).parent.parent
-REGISTRY_PATH = PROJECT_ROOT / "experiments" / "registry.json"
 DEFAULT_OUTPUT = PROJECT_ROOT / "output" / "paper_trading_report.html"
 
-# Backtest expectations pulled from MASTERPLAN / registry notes
-BACKTEST_EXPECTATIONS = {
-    "EXP-400": {"avg_return": 32.7, "max_dd": -12.1, "robust": 0.870, "years": 6},
-    "EXP-401": {"avg_return": 40.7, "max_dd": -7.0,  "robust": None,  "years": 6},
-    "EXP-503": {"avg_return": None,  "max_dd": None,  "robust": None,  "years": None},
-    "EXP-600": {"avg_return": 139.2, "max_dd": -19.4, "robust": 0.950, "years": None},
-}
+sys.path.insert(0, str(PROJECT_ROOT))
+
+from experiments.manager import get_manager  # noqa: E402
 
 # Victory conditions (per MASTERPLAN)
 VICTORY_WIN_RATE    = 70.0   # >70%
@@ -44,19 +39,6 @@ STARTING_EQUITY     = 100_000.0
 # ---------------------------------------------------------------------------
 # Registry
 # ---------------------------------------------------------------------------
-
-def load_registry() -> dict:
-    with open(REGISTRY_PATH) as f:
-        return json.load(f)
-
-
-def get_live_experiments(registry: dict) -> list[dict]:
-    """Return experiments with status=paper_trading, sorted by ID."""
-    exps = [
-        exp for exp in registry["experiments"].values()
-        if exp.get("status") == "paper_trading"
-    ]
-    return sorted(exps, key=lambda e: e["id"])
 
 
 # ---------------------------------------------------------------------------
@@ -501,7 +483,7 @@ def _ticker_badge(ticker: str) -> str:
 
 
 def _backtest_panel(exp_id: str) -> str:
-    bt = BACKTEST_EXPECTATIONS.get(exp_id, {})
+    bt = (get_manager().get(exp_id) or {}).get("backtest_expectations", {})
     if not bt or all(v is None for v in bt.values()):
         return '<p style="color:#94a3b8;font-size:12px;">Backtest expectations: TBD</p>'
 
@@ -636,7 +618,7 @@ def _comparison_table(all_stats: list[dict]) -> str:
             avg_cls  = _pnl_cls(s["avg_pnl"])
             avg_html = f'<span class="pnl-{avg_cls if avg_cls in ("up","down") else "up"}">{_fmt_pnl(s["avg_pnl"])}</span>'
 
-        bt = BACKTEST_EXPECTATIONS.get(s["id"], {})
+        bt = (get_manager().get(s["id"]) or {}).get("backtest_expectations", {})
         bt_ret = f'+{bt["avg_return"]:.1f}%' if bt.get("avg_return") else "TBD"
 
         status_txt, status_cls = _victory_status(s)
@@ -830,7 +812,7 @@ def generate_html(all_stats: list[dict], report_date: str) -> str:
   <div class="header">
     <h1>Paper Trading Report</h1>
     <p class="subtitle">
-      <b>PilotAI Credit Spreads</b>
+      <b>Attix Credit Spreads</b>
       &bull; Week of {week_start}
       &bull; {total_exp} experiments live
       &bull; {exp_with_trades} with trades
@@ -916,7 +898,7 @@ def generate_html(all_stats: list[dict], report_date: str) -> str:
 
   <!-- ── Footer ── -->
   <div class="footer">
-    <span>PilotAI Credit Spreads &bull; Paper Trading Dashboard</span>
+    <span>Attix Credit Spreads &bull; Paper Trading Dashboard</span>
     <span>Generated {now_str}</span>
   </div>
 
@@ -930,7 +912,7 @@ def generate_html(all_stats: list[dict], report_date: str) -> str:
 # ---------------------------------------------------------------------------
 
 def main():
-    parser = argparse.ArgumentParser(description="PilotAI Paper Trading Weekly Report")
+    parser = argparse.ArgumentParser(description="Attix Paper Trading Weekly Report")
     parser.add_argument(
         "--output", default=str(DEFAULT_OUTPUT),
         help="Output HTML path (default: output/paper_trading_report.html)"
@@ -941,21 +923,22 @@ def main():
         help="Report date YYYY-MM-DD (default: today UTC)"
     )
     parser.add_argument(
-        "--registry", default=str(REGISTRY_PATH),
-        help="Path to experiments/registry.json"
+        "--registry", default=None,
+        help="Path to experiments/registry.json (default: auto)"
     )
     args = parser.parse_args()
 
     # Load registry
-    registry_path = Path(args.registry)
-    if not registry_path.exists():
-        print(f"ERROR: registry not found at {registry_path}", file=sys.stderr)
-        sys.exit(1)
+    if args.registry:
+        from experiments.manager import ExperimentManager
+        mgr = ExperimentManager(registry_path=args.registry)
+    else:
+        mgr = get_manager()
 
-    with open(registry_path) as f:
-        registry = json.load(f)
-
-    live_exps = get_live_experiments(registry)
+    live_exps = sorted(
+        mgr.by_status("paper_trading"),
+        key=lambda e: e["id"],
+    )
     if not live_exps:
         print("No live experiments found in registry.", file=sys.stderr)
         sys.exit(1)

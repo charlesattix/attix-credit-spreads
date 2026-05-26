@@ -514,7 +514,7 @@ def build_html(
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<title>Master Strategy Dashboard — PilotAI Credit Spreads</title>
+<title>Master Strategy Dashboard — Attix Credit Spreads</title>
 <style>
   * {{ box-sizing: border-box; }}
   body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -616,7 +616,7 @@ document.addEventListener('DOMContentLoaded', () => {{
 <body>
 
 <h1>Master Strategy Dashboard</h1>
-<p class="meta">PilotAI Credit Spreads &middot; All strategies ranked &middot; Generated {now}</p>
+<p class="meta">Attix Credit Spreads &middot; All strategies ranked &middot; Generated {now}</p>
 
 <div class="kpi-row">
   <div class="kpi"><div class="value">{len(experiments)}</div><div class="label">Total Strategies</div></div>

@@ -11,13 +11,15 @@ Usage:
 Run this before any commit that touches registry.json, or in CI.
 """
 
-import json
 import re
 import sys
 from pathlib import Path
 from typing import Optional
 
-REGISTRY_PATH = Path(__file__).resolve().parent.parent / "experiments" / "registry.json"
+_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(_ROOT))
+
+from experiments.manager import get_manager  # noqa: E402
 
 VALID_CREATORS = {"maximus", "charles"}
 VALID_STATUSES = {
@@ -156,12 +158,11 @@ def validate(registry: dict, strict: bool = False) -> "list[str]":
 def main() -> None:
     strict = "--strict" in sys.argv[1:]
 
-    if not REGISTRY_PATH.exists():
-        print(f"ERROR: registry not found at {REGISTRY_PATH}", file=sys.stderr)
+    try:
+        registry = get_manager()._registry
+    except Exception as e:
+        print(f"ERROR: could not load registry: {e}", file=sys.stderr)
         sys.exit(1)
-
-    with open(REGISTRY_PATH) as f:
-        registry = json.load(f)
 
     errors = validate(registry, strict=strict)
 

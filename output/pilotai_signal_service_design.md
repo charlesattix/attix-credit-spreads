@@ -1,4 +1,4 @@
-# PilotAI Signal Service — System Design
+# Attix Signal Service — System Design
 
 **Version:** 1.0
 **Date:** 2026-03-07
@@ -8,9 +8,9 @@
 
 ## Executive Summary
 
-The PilotAI Signal Service is a cron-driven data pipeline that:
+The Attix Signal Service is a cron-driven data pipeline that:
 
-1. **Collects** daily snapshots of all 57 PilotAI strategy portfolios
+1. **Collects** daily snapshots of all 57 Attix strategy portfolios
 2. **Scores** every ticker using a multi-factor conviction model (frequency × persistence × quality)
 3. **Generates alerts** for NEW entries, STRONG conviction, EXIT signals, and notable MOVERS
 4. **Delivers** alerts to Telegram with structured, actionable formatting
@@ -95,7 +95,7 @@ CREATE TABLE snapshot_holdings (
     name        TEXT,
     price       REAL,
     quantity    INTEGER,
-    weight      REAL,     -- 0.0–1.0 (PilotAI weights field)
+    weight      REAL,     -- 0.0–1.0 (Attix weights field)
     cost        REAL
 );
 CREATE INDEX idx_holdings_snapshot ON snapshot_holdings(snapshot_id);
@@ -180,7 +180,7 @@ The persistence component means a ticker that has been held for 30+ consecutive 
 **QScore formula (portfolio quality):**
 ```
 qscore = 0.35×growth + 0.25×momentum + 0.20×value + 0.15×health + 0.05×past_performance
-         (all on 0-5 scale from PilotAI stock_score)
+         (all on 0-5 scale from Attix stock_score)
 ```
 
 ---
@@ -204,7 +204,7 @@ qscore = 0.35×growth + 0.25×momentum + 0.20×value + 0.15×health + 0.05×past
 ### NEW Entry
 ```
 🆕 NEW SIGNAL — $ATI
-Strategy: PilotAI Consensus
+Strategy: Attix Consensus
 Conviction: 0.62 | Freq: 9/57 (15.8%)
 Portfolios: momentum-investing, growth-investing +7 more
 Quality weighted: 0.44
@@ -231,7 +231,7 @@ Action: Consider reducing/closing position
 
 ### Daily Digest
 ```
-📊 PilotAI Signal Digest — 2026-03-07
+📊 Attix Signal Digest — 2026-03-07
 
 EQUITY SIGNAL (Top 10):
  1. $ATI   Conv: 0.94 | F: 9/57 | Day: 45
@@ -284,14 +284,14 @@ pilotai-credit-spreads/
 
 ## Backfill Strategy (API Limitation)
 
-The PilotAI staging API has no historical endpoint — all 22 alternative paths return 404. Historical backfill is therefore **not possible via API**.
+The Attix staging API has no historical endpoint — all 22 alternative paths return 404. Historical backfill is therefore **not possible via API**.
 
 **What we do instead:**
 
 1. **Archive immediately from Day 1.** Every collection run creates a permanent record.
 2. **Synthetic bootstrap:** The initial collection run loads the snapshot from today into the DB. `days_in_signal = 0` for all tickers on Day 1.
 3. **Persistence score matures over 30 days.** The first month has a "training wheels" period where frequency and quality drive conviction; persistence adds weight progressively.
-4. **One-time historical import** (optional): If the team can export historical strategy weights from the PilotAI database directly, the schema supports bulk import via `snapshot_date` override.
+4. **One-time historical import** (optional): If the team can export historical strategy weights from the Attix database directly, the schema supports bulk import via `snapshot_date` override.
 
 ---
 

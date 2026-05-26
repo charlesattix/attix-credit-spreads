@@ -213,7 +213,7 @@ def build_html(result):
 </div>
 
 <div style="color:#94a3b8;font-size:0.68rem;margin-top:28px;border-top:1px solid #e2e8f0;padding-top:8px">
-  PilotAI — EXP-1220 @ 3x + Crisis Alpha v4 | Real Yahoo data | Rule Zero compliant
+  Attix — EXP-1220 @ 3x + Crisis Alpha v4 | Real Yahoo data | Rule Zero compliant
 </div></body></html>"""
 
 

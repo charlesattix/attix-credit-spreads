@@ -36,22 +36,10 @@ from typing import Dict, Optional, Tuple
 
 from dotenv import dotenv_values
 
+from experiments.manager import get_manager
 from shared.constants import DATA_DIR, PROJECT_ROOT
 
 logger = logging.getLogger(__name__)
-
-# ---------------------------------------------------------------------------
-# Account map: experiment ID → .env file (relative to project root)
-# ---------------------------------------------------------------------------
-
-ACCOUNTS: Dict[str, str] = {
-    "EXP-400": ".env.exp400",
-    "EXP-401": ".env.exp401",
-    "EXP-503": ".env.exp503",
-    "EXP-600": ".env.exp600",
-    "EXP-700": ".env.exp700",
-    "EXP-800": ".env.exp800",
-}
 
 # ---------------------------------------------------------------------------
 # Circuit breaker thresholds (drawdown = negative percentage from HWM)
@@ -249,9 +237,10 @@ class PortfolioRiskMonitor:
         except Exception:
             total_positions = -1  # unknown
 
+        accounts = {e['id']: e.get('env_file') for e in get_manager().live() if e.get('env_file')}
         msg = (
             f"HARD_STOP TRIGGERED: would flatten {total_positions} option "
-            f"position(s) across {len(ACCOUNTS)} accounts. "
+            f"position(s) across {len(accounts)} accounts. "
             f"drawdown <= {_HARD_STOP_THRESHOLD}%. "
             f"Paper mode — no orders submitted. Manual review required."
         )
@@ -279,8 +268,9 @@ class PortfolioRiskMonitor:
         """Fetch equity from each Alpaca account.  Returns {exp_id: equity}."""
         from alpaca.trading.client import TradingClient
 
+        accounts = {e['id']: e.get('env_file') for e in get_manager().live() if e.get('env_file')}
         results: Dict[str, float] = {}
-        for exp_id, env_file in ACCOUNTS.items():
+        for exp_id, env_file in accounts.items():
             env_path = self._root / env_file
             try:
                 creds = dotenv_values(str(env_path))
@@ -405,8 +395,9 @@ class PortfolioRiskMonitor:
         """Approximate total open option positions across all accounts."""
         from alpaca.trading.client import TradingClient
 
+        accounts = {e['id']: e.get('env_file') for e in get_manager().live() if e.get('env_file')}
         total = 0
-        for exp_id, env_file in ACCOUNTS.items():
+        for exp_id, env_file in accounts.items():
             env_path = self._root / env_file
             try:
                 creds = dotenv_values(str(env_path))

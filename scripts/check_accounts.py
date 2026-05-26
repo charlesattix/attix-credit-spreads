@@ -165,7 +165,7 @@ def check_all_accounts() -> dict:
 
 
 def _print_summary(results: dict) -> None:
-    print("\n=== PilotAI Portfolio Status ===")
+    print("\n=== Attix Portfolio Status ===")
     header = f"{'EXP':<8} {'ACCOUNT':<14} {'STATUS':<8} {'EQUITY':>13} {'BUYING PWR':>13} {'POSITIONS':>9}"
     separator = f"{'----':<8} {'-----------':<14} {'------':<8} {'-----------':>13} {'-----------':>13} {'---------':>9}"
     print(header)

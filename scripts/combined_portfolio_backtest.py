@@ -594,7 +594,7 @@ def generate_report(
 
     parts.append("""
 <div class="footer">
-  Combined Portfolio Backtest — PilotAI Credit Spreads<br>
+  Combined Portfolio Backtest — Attix Credit Spreads<br>
   EXP-1220 Tail Risk 1.2x (Yahoo Finance) + TLT Iron Condors + XLI→SPY Pairs (IronVault)<br>
   Allocation via compass/portfolio_optimizer.py. No synthetic data.
 </div></body></html>""")

@@ -125,7 +125,7 @@ def generate_report(snap):
 <table><tr><th>Indicator</th><th>Value</th></tr>{ind_rows}</table>
 
 <div style="margin-top:30px;padding:16px;background:#f8fafc;border-radius:8px;text-align:center;color:#6b7280;font-size:13px">
-PilotAI Macro Intelligence · Week of {d}
+Attix Macro Intelligence · Week of {d}
 </div>
 </body></html>"""
     return html

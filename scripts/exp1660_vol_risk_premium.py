@@ -615,7 +615,7 @@ Regime filter blocks entry during crash/high_vol. All prices from IronVault real
 </div>
 
 <div class="footer">
-  EXP-1660 Vol Risk Premium Harvesting &bull; {ts} &bull; PilotAI Compass
+  EXP-1660 Vol Risk Premium Harvesting &bull; {ts} &bull; Attix Compass
 </div>
 </body></html>"""
 

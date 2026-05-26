@@ -1,5 +1,5 @@
 <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>PilotAI Performance Report</title>
+<title>Attix Performance Report</title>
 <style>
 :root{--bg:#fafafa;--card:#fff;--border:#e8e8e8;--text:#1a1a2e;--text2:#6b7280;--accent:#f85149;--accent2:#ff6b6b;--green:#22c55e;--red:#ef4444;--blue:#6366f1;--heading:#1a1a2e}
 body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;max-width:920px;margin:0 auto;padding:32px 20px;background:var(--bg);color:var(--text);line-height:1.7}
@@ -21,15 +21,15 @@ ul,ol{padding-left:24px}li{margin-bottom:6px}strong{color:var(--heading)}p{margi
 </style></head><body>
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
 <svg width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="20" fill="#ff6b6b"/><path d="M12 20l6 6 10-12" stroke="white" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-<div><span style="font-size:1.4em;font-weight:700;color:#1a1a2e">PilotAI</span><br><span style="font-size:0.8em;color:#6b7280">Credit Spread Intelligence</span></div>
+<div><span style="font-size:1.4em;font-weight:700;color:#1a1a2e">Attix</span><br><span style="font-size:0.8em;color:#6b7280">Credit Spread Intelligence</span></div>
 </div>
-<h1>PilotAI Credit Spreads — Performance Report</h1>
+<h1>Attix Credit Spreads — Performance Report</h1>
 <p><strong>Generated:</strong> February 25, 2026
 <strong>Strategy:</strong> SPY/QQQ/IWM credit spreads (bull put, bear call, iron condor)
 <strong>Data source:</strong> Polygon.io real options data + Alpaca paper trading (live Feb 23, 2026)</p>
 <hr />
 <h2>Executive Summary</h2>
-<p>PilotAI is a systematic options credit-spread strategy trading SPY, QQQ, and IWM. The system scans 14 intraday times per day (9:30–15:30 ET), enters 30–45 DTE spreads at 3% OTM with $5-wide strikes, collects minimum 10% credit ($0.50 on a $5 spread), and exits at 50% profit or 2.5× credit stop-loss. Position sizing is fixed at 2% account risk per trade (≤5 contracts).</p>
+<p>Attix is a systematic options credit-spread strategy trading SPY, QQQ, and IWM. The system scans 14 intraday times per day (9:30–15:30 ET), enters 30–45 DTE spreads at 3% OTM with $5-wide strikes, collects minimum 10% credit ($0.50 on a $5 spread), and exits at 50% profit or 2.5× credit stop-loss. Position sizing is fixed at 2% account risk per trade (≤5 contracts).</p>
 <p><strong>Production config validated via 54-combo parameter sweep on 2024 real Polygon data.</strong></p>
 <h3>Backtest Highlights (2020–2026 YTD, production config, real Polygon data)</h3>
 <table>

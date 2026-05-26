@@ -903,7 +903,7 @@ def generate_html_report(
     # ── Footer ──
     html_parts.append("""
 <div class="footer">
-  EXP-1220 Robustness Analysis — PilotAI Credit Spreads<br>
+  EXP-1220 Robustness Analysis — Attix Credit Spreads<br>
   All data from Yahoo Finance (SPY, ^VIX, ^VIX3M). No synthetic data used.<br>
   Analysis methodology: walk-forward expanding window, regime classification,
   parameter sensitivity sweep, paired t-test for significance.

@@ -620,7 +620,7 @@ def build_html(
 
 <!-- ── Footer ─────────────────────────────────────────────── -->
 <div style="color:#475569;font-size:0.72rem;margin-top:36px;border-top:1px solid #334155;padding-top:10px">
-  PilotAI Credit Spreads — Diversified Portfolio Analysis v2.0<br>
+  Attix Credit Spreads — Diversified Portfolio Analysis v2.0<br>
   4 strategies (EXP-1220, EXP-1090, EXP-1080, EXP-870-TLT) |
   Walk-forward validated | 10% floor / 60% cap enforced<br>
   Strategy data: EXP-1220-real (Yahoo), EXP-870-max (IronVault), EXP-1090 (34 tests), EXP-1080 (39 tests)

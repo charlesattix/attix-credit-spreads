@@ -526,7 +526,7 @@ because they hedge the dominant EXP-1220 exposure.
 </div>
 
 <div class="footer">
-  Deep Correlation Analysis &bull; {n} strategies &bull; {ts} &bull; PilotAI Compass
+  Deep Correlation Analysis &bull; {n} strategies &bull; {ts} &bull; Attix Compass
 </div>
 </body></html>"""
 

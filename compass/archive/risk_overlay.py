@@ -839,7 +839,7 @@ Budget scales up to 3x in crisis (crisis_score=1.0). Hedge ratio: 30% normal, 80
 </div>
 
 <p class="note" style="margin-top:40px;text-align:center">
-  Unified Risk Overlay &bull; compass/risk_overlay.py &bull; PilotAI &bull; {datetime.now().strftime('%Y-%m-%d')}
+  Unified Risk Overlay &bull; compass/risk_overlay.py &bull; Attix &bull; {datetime.now().strftime('%Y-%m-%d')}
 </p>
 </body></html>"""
 

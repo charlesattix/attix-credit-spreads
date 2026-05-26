@@ -10,7 +10,6 @@ from pathlib import Path
 from unittest import mock
 
 import pytest
-import yaml
 
 # Ensure project root is importable
 import sys
@@ -28,29 +27,23 @@ ET = timezone(timedelta(hours=-4))
 
 
 @pytest.fixture
-def sample_experiments_yaml(tmp_path):
-    """Create a minimal experiments.yaml in a temp dir."""
-    data = {
-        "experiments": {
-            "exp400": {
-                "description": "Champion",
-                "status": "active",
-                "env_file": ".env.champion",
-                "config_file": "configs/paper_champion.yaml",
-                "tmux_session": "exp400",
-                "db_path": "data/pilotai_champion.db",
-            },
-            "exp036": {
-                "description": "Old experiment",
-                "status": "stopped",
-                "tmux_session": None,
-                "db_path": "data/pilotai_exp036.db",
-            },
-        }
-    }
-    config_path = tmp_path / "experiments.yaml"
-    config_path.write_text(yaml.dump(data))
-    return str(config_path)
+def mock_manager():
+    """Patch get_manager() to return a mock with two test experiments."""
+    live_exps = [
+        {
+            "id": "exp400",
+            "description": "Champion",
+            "status": "active",
+            "env_file": ".env.champion",
+            "config_path": "configs/paper_champion.yaml",
+            "tmux_session": "exp400",
+            "db_path": "data/pilotai_champion.db",
+        },
+    ]
+    mgr = mock.Mock()
+    mgr.live.return_value = live_exps
+    with mock.patch("watchdog.get_manager", return_value=mgr):
+        yield mgr
 
 
 @pytest.fixture
@@ -192,19 +185,18 @@ class TestRunWatchdog:
     @mock.patch.object(wd, "check_alpaca_api", return_value=True)
     @mock.patch.object(wd, "restart_tmux_session", return_value=True)
     @mock.patch.object(wd, "tmux_session_alive", return_value=True)
-    def test_all_healthy(self, mock_tmux, mock_restart, mock_alpaca, mock_tg, sample_experiments_yaml):
-        results = wd.run_watchdog(sample_experiments_yaml)
+    def test_all_healthy(self, mock_tmux, mock_restart, mock_alpaca, mock_tg, mock_manager):
+        results = wd.run_watchdog()
         assert "experiments" in results
         assert results["experiments"]["exp400"]["tmux_alive"] is True
-        assert results["experiments"]["exp036"]["monitored"] is False
         assert len(results["restarts"]) == 0
 
     @mock.patch.object(wd, "send_telegram_alert", return_value=True)
     @mock.patch.object(wd, "check_alpaca_api", return_value=True)
     @mock.patch.object(wd, "restart_tmux_session", return_value=True)
     @mock.patch.object(wd, "tmux_session_alive", return_value=False)
-    def test_dead_session_restarted(self, mock_tmux, mock_restart, mock_alpaca, mock_tg, sample_experiments_yaml):
-        results = wd.run_watchdog(sample_experiments_yaml)
+    def test_dead_session_restarted(self, mock_tmux, mock_restart, mock_alpaca, mock_tg, mock_manager):
+        results = wd.run_watchdog()
         assert results["experiments"]["exp400"]["restarted"] is True
         assert "exp400" in results["restarts"]
         assert mock_tg.called
@@ -212,22 +204,10 @@ class TestRunWatchdog:
     @mock.patch.object(wd, "send_telegram_alert", return_value=True)
     @mock.patch.object(wd, "check_alpaca_api", return_value=False)
     @mock.patch.object(wd, "tmux_session_alive", return_value=True)
-    def test_alpaca_down_alert(self, mock_tmux, mock_alpaca, mock_tg, sample_experiments_yaml):
-        results = wd.run_watchdog(sample_experiments_yaml)
+    def test_alpaca_down_alert(self, mock_tmux, mock_alpaca, mock_tg, mock_manager):
+        results = wd.run_watchdog()
         assert results["experiments"]["exp400"]["alpaca_api_ok"] is False
         assert any("Alpaca" in a for a in results["alerts"])
-
-
-# ---------------------------------------------------------------------------
-# Tests: load experiments
-# ---------------------------------------------------------------------------
-
-
-class TestLoadExperiments:
-    def test_load(self, sample_experiments_yaml):
-        exps = wd.load_experiments(sample_experiments_yaml)
-        assert "exp400" in exps
-        assert exps["exp400"]["status"] == "active"
 
 
 # ---------------------------------------------------------------------------

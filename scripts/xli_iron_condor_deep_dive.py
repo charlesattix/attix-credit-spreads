@@ -732,7 +732,7 @@ def build_html(
 
 <!-- ── Footer ─────────────────────────────────────────────── -->
 <div style="color:#475569;font-size:0.7rem;margin-top:32px;border-top:1px solid #334155;padding-top:8px">
-  PilotAI Credit Spreads — XLI Iron Condor Deep Dive v1.0<br>
+  Attix Credit Spreads — XLI Iron Condor Deep Dive v1.0<br>
   All option prices from IronVault (Polygon API real data). Zero synthetic pricing.<br>
   Walk-forward validated | Parameter sensitivity tested | Multi-ticker expanded
 </div>

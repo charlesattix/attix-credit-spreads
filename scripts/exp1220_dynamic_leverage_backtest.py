@@ -477,7 +477,7 @@ def generate_report(bt, wf) -> str:
 
     parts.append("""
 <div class="footer">
-  EXP-1220 Dynamic Leverage Manager — PilotAI Credit Spreads<br>
+  EXP-1220 Dynamic Leverage Manager — Attix Credit Spreads<br>
   All data: Yahoo Finance (SPY, ^VIX, ^VIX3M). No synthetic data.<br>
   Leverage scales via VIX level, VIX/VIX3M term structure, 20-day realized vol.
 </div></body></html>""")

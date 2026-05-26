@@ -160,7 +160,7 @@ def build_html(static_m, adaptive_m, regimes, wf, combined_info, combined_daily,
 </div>
 
 <div style="color:#94a3b8;font-size:0.68rem;margin-top:28px;border-top:1px solid #e2e8f0;padding-top:8px">
-  PilotAI — EXP-1710 Adaptive | 1DTE IC + rolling Sharpe monitor + portfolio combo |
+  Attix — EXP-1710 Adaptive | 1DTE IC + rolling Sharpe monitor + portfolio combo |
   Real IronVault + Yahoo data | Rule Zero compliant
 </div></body></html>"""
 

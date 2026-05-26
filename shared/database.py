@@ -1,5 +1,5 @@
 """
-Shared SQLite database module for PilotAI.
+Shared SQLite database module for Attix.
 Single source of truth for trades, alerts, and regime snapshots.
 Uses WAL mode for concurrent read access from Python and Node.js.
 """
@@ -17,12 +17,15 @@ logger = logging.getLogger(__name__)
 
 import os as _os
 
-DB_PATH = Path(_os.environ.get('PILOTAI_DB_PATH', str(Path(DATA_DIR) / "pilotai.db")))
+
+def get_db_path() -> Path:
+    """Return the DB path, reading PILOTAI_DB_PATH at call time (not import time)."""
+    return Path(_os.environ.get('PILOTAI_DB_PATH', str(Path(DATA_DIR) / "pilotai.db")))
 
 
 def get_db(path: Optional[str] = None) -> sqlite3.Connection:
     """Get a SQLite connection with WAL mode enabled."""
-    db_path = Path(path) if path else DB_PATH
+    db_path = Path(path) if path else get_db_path()
     db_path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(str(db_path))
     conn.execute("PRAGMA journal_mode=WAL")
@@ -193,7 +196,7 @@ def init_db(path: Optional[str] = None) -> None:
             except sqlite3.OperationalError:
                 pass  # column already exists
 
-        logger.info(f"Database initialized at {path or DB_PATH}")
+        logger.info(f"Database initialized at {path or get_db_path()}")
     finally:
         conn.close()
 

@@ -1,4 +1,4 @@
-# Experiment Log — PilotAI Credit Spreads
+# Experiment Log — Attix Credit Spreads
 
 ## Summary Statistics
 - **Total experiments:** 29 (12 legacy + 17 new from cc5 session)

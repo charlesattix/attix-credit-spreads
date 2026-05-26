@@ -1,5 +1,5 @@
 """
-PilotAI Macro Intelligence REST API
+Attix Macro Intelligence REST API
 =====================================
 FastAPI server exposing macro snapshot data for external consumers.
 
@@ -339,7 +339,7 @@ def _build_snapshot_response(data: Dict) -> SnapshotResponse:
 # ─────────────────────────────────────────────────────────────────────────────
 
 app = FastAPI(
-    title="PilotAI Macro Intelligence API",
+    title="Attix Macro Intelligence API",
     description=(
         "Weekly macro snapshots, sector relative strength rankings, "
         "RRG quadrant classifications, 4-dimension macro scores, "
@@ -756,13 +756,13 @@ def get_history(
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="PilotAI Macro Intelligence API")
+    parser = argparse.ArgumentParser(description="Attix Macro Intelligence API")
     parser.add_argument("--port",   type=int,  default=DEFAULT_PORT, help="Port (default: 8420)")
     parser.add_argument("--host",   type=str,  default="0.0.0.0",    help="Bind host (default: 0.0.0.0)")
     parser.add_argument("--reload", action="store_true",             help="Auto-reload on file changes (dev only)")
     args = parser.parse_args()
 
-    logger.info("Starting PilotAI Macro API v%s on %s:%d", API_VERSION, args.host, args.port)
+    logger.info("Starting Attix Macro API v%s on %s:%d", API_VERSION, args.host, args.port)
     logger.info("Swagger UI: http://localhost:%d/docs", args.port)
     logger.info("ReDoc:      http://localhost:%d/redoc", args.port)
     logger.info(

@@ -508,7 +508,7 @@ def generate_html(result, scenarios):
 <tbody>{sc_rows}</tbody></table>
 
 <div class="footer">
-    PilotAI Credit Spreads — Ultimate Portfolio v5 Sharpe Optimized<br>
+    Attix Credit Spreads — Ultimate Portfolio v5 Sharpe Optimized<br>
     Vol targeting + regime confidence + conviction weighting + signal rebalancing.
 </div>
 

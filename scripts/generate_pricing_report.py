@@ -223,7 +223,7 @@ def build_html(credit_data, slip_data):
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Pricing Sensitivity Report — PilotAI Credit Spreads</title>
+  <title>Pricing Sensitivity Report — Attix Credit Spreads</title>
   <style>
     body {{
       background: #ffffff;

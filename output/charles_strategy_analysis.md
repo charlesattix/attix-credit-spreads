@@ -109,7 +109,7 @@ Credit spreads harvest the **variance risk premium** (VRP) — implied vol > rea
 
 **To consistently hit 100%+, we need MULTIPLE edges stacked together:**
 
-### The "PilotAI Alpha Stack":
+### The "Attix Alpha Stack":
 
 1. **VIX Regime Filter** (kill switch when VIX > 25)
    - Eliminates COVID, Aug 2024, etc.

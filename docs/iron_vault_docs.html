@@ -35,7 +35,7 @@
 
 <div class="banner">
   <h1>🔒 Iron Vault</h1>
-  <p>Centralized Data Architecture for PilotAI Credit Spreads</p>
+  <p>Centralized Data Architecture for Attix Credit Spreads</p>
   <p style="font-size: 0.85em; opacity: 0.8;">Generated: March 16, 2026 — Operation Iron Vault</p>
 </div>
 
@@ -44,7 +44,7 @@
 </div>
 
 <h2>📋 What Is Iron Vault?</h2>
-<p>Iron Vault is a <strong>singleton data provider</strong> (<code>shared/iron_vault.py</code>) that serves as the single access point for all options and market data in the PilotAI system. It wraps <code>HistoricalOptionsData</code> in offline mode — meaning it only reads from the local SQLite cache, never makes live Polygon API calls during backtests.</p>
+<p>Iron Vault is a <strong>singleton data provider</strong> (<code>shared/iron_vault.py</code>) that serves as the single access point for all options and market data in the Attix system. It wraps <code>HistoricalOptionsData</code> in offline mode — meaning it only reads from the local SQLite cache, never makes live Polygon API calls during backtests.</p>
 
 <div class="ok-box">
   <strong>Key Principle:</strong> Cache miss → skip trade (return <code>None</code>). Cache miss → fabricate price = <span class="badge badge-red">CRITICAL BUG</span>

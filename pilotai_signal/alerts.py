@@ -326,7 +326,7 @@ def build_digest(
     gold = [s for s in signals if s["ticker"] in config.GOLD_TICKERS]
 
     lines = [
-        f"📊 <b>PilotAI Signal Digest — {today.isoformat()}</b>",
+        f"📊 <b>Attix Signal Digest — {today.isoformat()}</b>",
         "",
         f"<b>EQUITY SIGNAL (Top {config.ALERT_DIGEST_TOP_N}):</b>",
     ]

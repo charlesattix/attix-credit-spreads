@@ -726,7 +726,7 @@ def generate_report(
     # Footer
     parts.append("""
 <div class="footer">
-  Portfolio Combination Backtest — PilotAI Credit Spreads<br>
+  Portfolio Combination Backtest — Attix Credit Spreads<br>
   EXP-1220 (Tail Risk), EXP-400 (Champion), EXP-401 (Blend), XLF Iron Condors<br>
   All data from Yahoo Finance + IronVault options_cache.db. No synthetic data.
 </div></body></html>""")

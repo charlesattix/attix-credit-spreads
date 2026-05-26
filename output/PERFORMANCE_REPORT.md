@@ -1,4 +1,4 @@
-# PilotAI Credit Spreads — Performance Report
+# Attix Credit Spreads — Performance Report
 
 **Generated:** February 25, 2026
 **Strategy:** SPY/QQQ/IWM credit spreads (bull put, bear call, iron condor)
@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-PilotAI is a systematic options credit-spread strategy trading SPY, QQQ, and IWM. The system scans 14 intraday times per day (9:30–15:30 ET), enters 30–45 DTE spreads at 3% OTM with $5-wide strikes, collects minimum 10% credit ($0.50 on a $5 spread), and exits at 50% profit or 2.5× credit stop-loss. Position sizing is fixed at 2% account risk per trade (≤5 contracts).
+Attix is a systematic options credit-spread strategy trading SPY, QQQ, and IWM. The system scans 14 intraday times per day (9:30–15:30 ET), enters 30–45 DTE spreads at 3% OTM with $5-wide strikes, collects minimum 10% credit ($0.50 on a $5 spread), and exits at 50% profit or 2.5× credit stop-loss. Position sizing is fixed at 2% account risk per trade (≤5 contracts).
 
 **Production config validated via 54-combo parameter sweep on 2024 real Polygon data.**
 

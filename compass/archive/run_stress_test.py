@@ -544,7 +544,7 @@ def _generate_html(
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Phase 6 Stress Test Report — PilotAI Credit Spreads</title>
+<title>Phase 6 Stress Test Report — Attix Credit Spreads</title>
 <style>
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
   body {{
@@ -580,7 +580,7 @@ def _generate_html(
 
 <h1>Phase 6 Stress Test Report</h1>
 <p class="subtitle">
-  PilotAI Credit Spreads — EXP-400 vs EXP-401 vs Blended Portfolio<br>
+  Attix Credit Spreads — EXP-400 vs EXP-401 vs Blended Portfolio<br>
   Data: 2020-01-01 → 2025-12-31 &nbsp;|&nbsp;
   MC: {all_results[0]['monte_carlo']['n_simulations']:,} block-bootstrap paths &nbsp;|&nbsp;
   Starting capital: $100,000

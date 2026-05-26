@@ -58,13 +58,13 @@ from .data import (
     get_all_experiments,
     get_positions,
     get_trades,
-    load_registry,
     query_all_live,
     query_experiment,
     summary_all,
     PUSHED_DATA_PATH,
     load_pushed_data,
 )
+from experiments.manager import get_manager
 from .html import (
     render_dashboard,
     render_login_page,
@@ -364,15 +364,13 @@ async def trades_page(request: Request, _: None = Depends(require_session)):
 async def health():
     """Health check — no auth required."""
     try:
-        registry = load_registry()
-        live_count = sum(
-            1 for e in registry["experiments"].values()
-            if e.get("status") in ("active", "paper_trading")
-        )
+        mgr = get_manager()
+        mgr.reload()
+        live_count = len(mgr.by_status("active", "paper_trading"))
         return {
             "status":           "ok",
             "live_experiments": live_count,
-            "registry_version": registry.get("schema_version"),
+            "registry_version": mgr._registry.get("schema_version"),
             "timestamp":        datetime.now(timezone.utc).isoformat(),
         }
     except Exception as e:
@@ -389,9 +387,10 @@ async def health():
 @app.get("/api/v1/experiments")
 async def list_experiments(_key: str = Depends(require_api_key)):
     """All experiments from registry, augmented with live Alpaca equity."""
-    registry = _cached("registry", 30.0, load_registry)
+    mgr = get_manager()
+    mgr.reload()
     # Deep-copy so we don't mutate the cached registry dicts
-    exps = [dict(e) for e in get_all_experiments(registry)]
+    exps = [dict(e) for e in get_all_experiments()]
 
     try:
         from .alpaca_live import get_all_live_alpaca
@@ -408,8 +407,8 @@ async def list_experiments(_key: str = Depends(require_api_key)):
         logger.warning("[api] /experiments Alpaca augment failed: %s", exc)
 
     return {
-        "schema_version": registry.get("schema_version"),
-        "last_updated":   registry.get("last_updated"),
+        "schema_version": mgr._registry.get("schema_version"),
+        "last_updated":   mgr._registry.get("last_updated"),
         "count":          len(exps),
         "experiments":    exps,
     }
@@ -426,8 +425,7 @@ async def experiment_trades(
     Returns local DB closed trades when available, merged with Alpaca order
     history (last 30 days) in a separate field for API consumers.
     """
-    registry = _cached("registry", 30.0, load_registry)
-    exp = registry["experiments"].get(exp_id.upper())
+    exp = get_manager().get(exp_id.upper())
     if not exp:
         raise HTTPException(status_code=404, detail=f"{exp_id} not found in registry")
     # SECURITY AUDIT #8: restrict access to paper_trading experiments only to prevent IDOR.
@@ -461,8 +459,7 @@ async def experiment_positions(
     _key: str = Depends(require_api_key),
 ):
     """Open positions for one experiment (live from Alpaca when keys available)."""
-    registry = _cached("registry", 30.0, load_registry)
-    exp = registry["experiments"].get(exp_id.upper())
+    exp = get_manager().get(exp_id.upper())
     if not exp:
         raise HTTPException(status_code=404, detail=f"{exp_id} not found in registry")
     # SECURITY AUDIT #8: restrict access to paper_trading experiments only to prevent IDOR.
@@ -511,8 +508,10 @@ async def registry_page(request: Request, _: None = Depends(require_session)):
         _proj = Path(__file__).resolve().parent.parent
         if str(_proj) not in sys.path:
             sys.path.insert(0, str(_proj))
-        from experiments.registry import load_registry as load_exp_registry, validate
-        registry = load_exp_registry()
+        from experiments.registry import validate
+        mgr = get_manager()
+        mgr.reload()
+        registry = mgr._registry
         errors = validate(registry)
         validation = {
             "valid": len(errors) == 0,
@@ -536,20 +535,13 @@ async def registry_transition(
     _key: str = Depends(require_api_key),
 ):
     """Transition an experiment to a new status."""
-    import sys
-    from pathlib import Path
-    _proj = Path(__file__).resolve().parent.parent
-    if str(_proj) not in sys.path:
-        sys.path.insert(0, str(_proj))
-    from experiments.registry import load_registry as load_exp_registry, transition_status
     body = await request.json()
     new_status = body.get("status")
     reason = body.get("reason")
     if not new_status:
         raise HTTPException(status_code=400, detail="Missing 'status' in request body")
     try:
-        registry = load_exp_registry()
-        exp = transition_status(exp_id, new_status, reason=reason, registry=registry)
+        exp = get_manager().transition(exp_id, new_status, reason=reason or "")
         _cache.clear()
         return {"status": "ok", "experiment": exp}
     except ValueError as e:
@@ -564,9 +556,10 @@ async def registry_validate(_key: str = Depends(require_api_key)):
     _proj = Path(__file__).resolve().parent.parent
     if str(_proj) not in sys.path:
         sys.path.insert(0, str(_proj))
-    from experiments.registry import load_registry as load_exp_registry, validate
-    registry = load_exp_registry()
-    errors = validate(registry)
+    from experiments.registry import validate
+    mgr = get_manager()
+    mgr.reload()
+    errors = validate(mgr._registry)
     return {
         "status": "ok" if not errors else "errors",
         "error_count": len(errors),
@@ -583,12 +576,13 @@ async def registry_sync(_key: str = Depends(require_api_key)):
     if str(_proj) not in sys.path:
         sys.path.insert(0, str(_proj))
     from experiments.registry import (
-        load_registry as load_exp_registry,
         find_orphan_env_files,
         find_orphan_dbs,
         find_active_not_running,
     )
-    registry = load_exp_registry()
+    mgr = get_manager()
+    mgr.reload()
+    registry = mgr._registry
     return {
         "status": "ok",
         "orphan_env_files": find_orphan_env_files(registry),
@@ -806,9 +800,9 @@ async def _on_startup():
 
     if REGISTRY_PATH.exists():
         try:
-            registry = load_registry()
-            live = [e for e in registry["experiments"].values()
-                    if e.get("status") in ("active", "paper_trading")]
+            mgr = get_manager()
+            mgr.reload()
+            live = mgr.by_status("active", "paper_trading")
             logger.info(f"  Live experiments: {[e['id'] for e in live]}")
         except Exception as e:
             logger.warning(f"  Could not load registry: {e}")

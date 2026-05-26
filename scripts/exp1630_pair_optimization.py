@@ -760,7 +760,7 @@ benefit. At 2x leverage this portfolio targets ~{port_cagr*2:.0%} CAGR with ~{po
 </div>
 
 <div class="note" style="margin-top:40px;text-align:center;border-top:1px solid #21262d;padding-top:16px">
-  EXP-1630 Cross-Asset Pair Optimization &bull; All data from IronVault &bull; {now} &bull; PilotAI Compass
+  EXP-1630 Cross-Asset Pair Optimization &bull; All data from IronVault &bull; {now} &bull; Attix Compass
 </div>
 </body></html>"""
 

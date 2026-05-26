@@ -1,4 +1,4 @@
-# PilotAI Strategy Recommendation API
+# Attix Strategy Recommendation API
 
 Retrieve portfolio weightage and stock allocations for investment strategies.
 

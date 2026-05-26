@@ -659,7 +659,7 @@ def generate_html(data: dict) -> str:
 {heatmap_svg}
 
 <div class="footer">
-    PilotAI Credit Spreads — Production Walk-Forward Validation<br>
+    Attix Credit Spreads — Production Walk-Forward Validation<br>
     No lookahead bias. All OOS returns computed strictly out-of-sample with expanding training windows.<br>
     Transaction costs: ${costs['spread_per_contract']:.2f} spread + ${costs['commission_per_contract']:.3f} commission per contract, {costs['turnover_penalty_pct']:.0f}% turnover penalty on monthly rebalances.
 </div>
