@@ -4,6 +4,7 @@ Handles options chain data, Greeks calculation, and IV analysis.
 """
 
 import logging
+import os
 from datetime import datetime, timezone
 from typing import Dict, Optional
 
@@ -49,7 +50,7 @@ class OptionsAnalyzer:
                 logger.info("Using Tradier for real-time data")
         elif provider == 'polygon':
             polygon_config = data_config.get('polygon', {})
-            api_key = polygon_config.get('api_key', '')
+            api_key = polygon_config.get('api_key', '') or os.environ.get('POLYGON_API_KEY', '')
             if api_key:
                 from strategy.polygon_provider import PolygonProvider
                 self.polygon = PolygonProvider(api_key)

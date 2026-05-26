@@ -166,6 +166,8 @@ logging:
 data:
   provider: polygon
   cache_dir: "data/options_cache"
+  polygon:
+    api_key: "${POLYGON_API_KEY}"
 
 # ============================================================================
 # Backtester Reference
