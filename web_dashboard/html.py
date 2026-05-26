@@ -747,18 +747,22 @@ def _render_exp_card(s: dict) -> str:
   </div>
 </div>"""
         if positions:
+            # Alpaca's /v2/positions API returns numeric fields (qty, current_price,
+            # market_value, unrealized_pl, unrealized_plpc) as STRINGS. Coerce to float
+            # before any arithmetic/formatting.
+            _f = lambda v: float(v or 0)
             rows = []
             for p in positions:
                 side_cls = "pos-side-short" if p.get("side") == "short" else "pos-side-long"
                 side_label = "SHORT" if p.get("side") == "short" else "LONG"
-                unreal = p.get("unrealized_pl", 0)
-                unreal_pct = p.get("unrealized_plpc", 0)
+                unreal = _f(p.get("unrealized_pl", 0))
+                unreal_pct = _f(p.get("unrealized_plpc", 0))
                 rows.append(f"""<tr>
   <td class="pos-sym">{_html.escape(str(p.get('symbol', '')))}</td>
   <td class="{side_cls}">{side_label}</td>
-  <td style="text-align:right">{abs(p.get('qty',0)):.0f}</td>
-  <td style="text-align:right">${p.get('current_price',0):.2f}</td>
-  <td style="text-align:right">{_fmt_money(p.get('market_value',0))}</td>
+  <td style="text-align:right">{abs(_f(p.get('qty',0))):.0f}</td>
+  <td style="text-align:right">${_f(p.get('current_price',0)):.2f}</td>
+  <td style="text-align:right">{_fmt_money(_f(p.get('market_value',0)))}</td>
   <td style="text-align:right" class="{'up' if unreal >= 0 else 'down'}">{_fmt_pnl(unreal)} ({unreal_pct:+.1f}%)</td>
 </tr>""")
             pos_section = f"""
