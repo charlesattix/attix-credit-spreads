@@ -66,17 +66,17 @@ class TechnicalAnalyzer:
         }
 
         # Calculate moving averages
-        if self.tech_params['use_trend_filter']:
+        if self.tech_params.get('use_trend_filter', True):
             trend_signals = self._analyze_trend(price_data)
             signals.update(trend_signals)
 
         # Calculate RSI
-        if self.tech_params['use_rsi_filter']:
+        if self.tech_params.get('use_rsi_filter', True):
             rsi_signals = self._analyze_rsi(price_data)
             signals.update(rsi_signals)
 
         # Support and resistance
-        if self.tech_params['use_support_resistance']:
+        if self.tech_params.get('use_support_resistance', True):
             sr_signals = self._analyze_support_resistance(price_data)
             signals.update(sr_signals)
 

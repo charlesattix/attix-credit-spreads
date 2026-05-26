@@ -239,11 +239,11 @@ class CreditSpreadStrategy:
 
         bullish = True
 
-        if tech_params['use_trend_filter']:
+        if tech_params.get('use_trend_filter', True):
             # Price above moving averages or uptrend
             bullish = bullish and technical_signals.get('trend', '') in ['bullish', 'neutral']
 
-        if tech_params['use_rsi_filter']:
+        if tech_params.get('use_rsi_filter', True):
             # RSI not overbought
             rsi = technical_signals.get('rsi')
             if rsi is None:
@@ -275,10 +275,10 @@ class CreditSpreadStrategy:
 
         bearish = True
 
-        if tech_params['use_trend_filter']:
+        if tech_params.get('use_trend_filter', True):
             bearish = bearish and technical_signals.get('trend', '') in ['bearish', 'neutral']
 
-        if tech_params['use_rsi_filter']:
+        if tech_params.get('use_rsi_filter', True):
             rsi = technical_signals.get('rsi')
             if rsi is None:
                 logger.warning("RSI missing from technical_signals — blocking bear entry")
