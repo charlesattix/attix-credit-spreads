@@ -197,7 +197,11 @@
         "avg_return": 139.2,
         "max_dd": -19.4,
         "robust": 0.95
-      }
+      },
+      "retired_date": "2026-05-26",
+      "retired_reason": "Closed by Carlos 2026-05-26 — no trades for 32 days, IV environment unsuitable",
+      "superseded_by": null,
+      "lessons_learned": "IBIT IV compressed below entry thresholds for extended period (last trade 2026-04-24, IV Rank 25.9% on 2026-05-26). Strategy structurally healthy but unable to find setups in low-vol regime."
     },
     "EXP-601": {
       "id": "EXP-601",

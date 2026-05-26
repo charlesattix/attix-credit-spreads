@@ -88,13 +88,7 @@ STREAM_CADENCE: dict[str, CadenceSpec] = {
         zero_trade_alert_market_days=10,
         alpaca_env_file=".env.exp401",
     ),
-    "EXP-600": CadenceSpec(
-        exp_id="EXP-600", display_name="EXP-600",
-        frequency="weekly", expected_entry_weekday=0,
-        min_trades_per_period=1, lookback_periods=2,
-        zero_trade_alert_market_days=10,
-        alpaca_env_file=".env.exp600",
-    ),
+    # EXP-600 (IBIT Adaptive) retired 2026-05-26 — closed by Carlos. See registry.json.
     "EXP-1220": CadenceSpec(
         exp_id="EXP-1220", display_name="EXP-1220",
         frequency="weekly", expected_entry_weekday=0,

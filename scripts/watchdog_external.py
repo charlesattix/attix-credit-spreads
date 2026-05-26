@@ -66,7 +66,7 @@ ALPACA_ACCOUNTS: dict[str, dict[str, str]] = {
     "EXP-400":  {"key": "PKHZBPRHIZ4FRRLNZZSEAPJJ23",  "secret": "FLnnxYnU3KcnNM9fMYqFPiFJ6ADq3nN6ipsQTn5ExYNo"},
     "EXP-401":  {"key": "PK7KLFZNLQA22Y6OMEGS2XJGJ4",  "secret": "DHkWajJrtXkNty8MWbU7v7WKm256r2CiMnJ3KiYeGKwb"},
     "EXP-503":  {"key": "PKSKGSOLW6SX7VKR2YIWXNB6MW",  "secret": "DfUwfZ59UrBBuXSTKyfoCnKCTJ4zBcLYk113XNWSefby"},
-    "EXP-600":  {"key": "PKKDUYN7A4ZARVDSNHI4PANEMK",  "secret": "BQG8gBD4ZEmYSBWt3YLT4bbBdxYhYygUtRDQkV7Meor7"},
+    # EXP-600 (IBIT Adaptive) retired 2026-05-26 — closed by Carlos. Account no longer monitored.
     "EXP-800":  {"key": "PKWAX5X42WPNHXNSOJM63C3BWI",  "secret": "8witcXD6DfCVPgDpPAB1vxfpMLpA6xs9uNG7Ttbii2AU"},
     "EXP-1220": {"key": "PKN545QBNANEWHYD3OEINFLYAB",  "secret": "EeGuu28ii2AZvS9aQLMwdvtZtoWSg3bWbnpwY8ZU6D7C"},
     "EXP-3309": {"key": "PKMLJBHZRFHZBKGK4YN6DO5IOO",  "secret": "8AtNSEM47dJFjhk8D9nMd1sPcAViCLXEqkj9Np9hZde3"},
