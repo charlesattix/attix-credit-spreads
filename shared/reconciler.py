@@ -1159,7 +1159,7 @@ class PositionReconciler:
         self, result: ReconciliationResult, alpaca_positions: Dict
     ) -> None:
         """Promote ``needs_investigation`` trades to ``open`` when Alpaca confirms
-        both legs still exist.
+        matching option positions still exist.
 
         This handles the common case where the DB was lost during a redeploy
         and the reconciler created records but couldn't determine credit/PnL.
@@ -1168,26 +1168,41 @@ class PositionReconciler:
         if not inv_trades:
             return
 
-        alpaca_symbols = {p.get("symbol", "") for p in alpaca_positions.values()} if isinstance(alpaca_positions, dict) else set()
-        if not alpaca_symbols:
-            # Try list format
-            if isinstance(alpaca_positions, list):
-                alpaca_symbols = {p.get("symbol", "") for p in alpaca_positions}
+        alpaca_symbols = set(alpaca_positions.keys()) if isinstance(alpaca_positions, dict) else set()
 
         for trade in inv_trades:
-            trade_id = trade.get("trade_id", "")
-            short_leg = trade.get("short_leg", "")
-            long_leg = trade.get("long_leg", "")
+            trade_id = trade.get("trade_id", trade.get("id", ""))
+            ticker = trade.get("ticker", "")
 
-            # Check if at least the short leg is in Alpaca (confirms position is real)
-            has_short = short_leg in alpaca_symbols if short_leg else False
-            has_long = long_leg in alpaca_symbols if long_leg else False
+            # Check if Alpaca has ANY option position matching this trade's ticker
+            has_matching = any(
+                sym.startswith(ticker) and len(sym) > len(ticker)
+                for sym in alpaca_symbols
+            ) if ticker else False
 
-            if has_short or has_long:
+            # Also check explicit leg fields if present
+            for leg_field in ("short_leg", "long_leg"):
+                leg = trade.get(leg_field, "")
+                if leg and leg in alpaca_symbols:
+                    has_matching = True
+
+            # Check expected symbols from strikes
+            try:
+                expected = self._expected_symbols(
+                    trade, ticker,
+                    str(trade.get("expiration", "")).split(" ")[0],
+                    str(trade.get("strategy_type", trade.get("type", ""))).lower(),
+                )
+                if any(sym in alpaca_symbols for sym in expected):
+                    has_matching = True
+            except Exception:
+                pass
+
+            if has_matching:
                 logger.info(
                     "Reconciler: promoting %s from needs_investigation → open "
-                    "(Alpaca confirms legs: short=%s long=%s)",
-                    trade_id, has_short, has_long,
+                    "(Alpaca confirms matching positions for %s)",
+                    trade_id, ticker,
                 )
                 try:
                     trade["status"] = "open"
