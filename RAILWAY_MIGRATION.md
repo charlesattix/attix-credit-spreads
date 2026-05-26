@@ -9,14 +9,14 @@
 
 ## Step 1: Login to Railway CLI
 ```bash
-cd /Users/charlesbot/projects/pilotai-credit-spreads
+cd /Users/charlesbot/projects/attix-credit-spreads
 railway login
 ```
 
 ## Step 2: Link to Your Project
 ```bash
 railway link
-# Select: pilotai-credit-spreads-production
+# Select: attix-credit-spreads-production
 ```
 
 ## Step 3: Upload Database to Railway Volume
@@ -26,13 +26,13 @@ railway run --service=web cp data/pilotai.db /app/data/pilotai.db
 ```
 
 OR manually via Railway Dashboard:
-1. Go to Railway Dashboard → pilotai-credit-spreads-production
+1. Go to Railway Dashboard → attix-credit-spreads-production
 2. Go to Volumes → attix-data
 3. Upload `data/pilotai.db` to `/app/data/pilotai.db`
 
 ## Step 4: Verify Upload
 ```bash
-curl https://pilotai-credit-spreads-production.up.railway.app/api/paper-trades | python3 -c "import sys, json; d=json.load(sys.stdin); print('Trades:', d['stats']['total_trades'], '| Balance:', d['stats']['balance'])"
+curl https://attix-production.up.railway.app/api/paper-trades | python3 -c "import sys, json; d=json.load(sys.stdin); print('Trades:', d['stats']['total_trades'], '| Balance:', d['stats']['balance'])"
 ```
 
 Should show: `Trades: 10 | Balance: 89790.8`
@@ -60,7 +60,7 @@ jobs:
     steps:
       - name: Trigger Railway Scan
         run: |
-          curl -X POST https://pilotai-credit-spreads-production.up.railway.app/api/scan \
+          curl -X POST https://attix-production.up.railway.app/api/scan \
             -H "Authorization: Bearer ${{ secrets.API_AUTH_TOKEN }}"
 ```
 
@@ -69,7 +69,7 @@ jobs:
 ### Disable Local Cron Jobs
 ```bash
 # If using crontab
-crontab -l | grep -v "pilotai-credit-spreads" | crontab -
+crontab -l | grep -v "attix-credit-spreads" | crontab -
 
 # If using launchd (macOS)
 launchctl list | grep attix
@@ -102,9 +102,9 @@ cp data/attix_backup_20260219_143853.db data/pilotai.db
 ```
 
 ## URLs
-- **Railway Dashboard:** https://pilotai-credit-spreads-production.up.railway.app
-- **My Trades:** https://pilotai-credit-spreads-production.up.railway.app/my-trades
-- **Health Check:** https://pilotai-credit-spreads-production.up.railway.app/api/health
+- **Railway Dashboard:** https://attix-production.up.railway.app
+- **My Trades:** https://attix-production.up.railway.app/my-trades
+- **Health Check:** https://attix-production.up.railway.app/api/health
 
 ## Notes
 - Railway volume is persistent across deploys

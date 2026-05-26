@@ -1,7 +1,7 @@
 {
   "timestamp": "2026-03-21T02:16:18.337082",
   "description": "Walk-forward with calibration fix (Platt + isotonic, CV and prefit methods)",
-  "data_source": "/home/node/openclaw/workspace/pilotai-credit-spreads/compass/training_data_combined.csv",
+  "data_source": "/home/node/openclaw/workspace/attix-credit-spreads/compass/training_data_combined.csv",
   "n_trades": 430,
   "features_used": [
     "dte_at_entry",

@@ -277,7 +277,7 @@ The backtester should model daily loss limit, weekly loss limit, and correlation
 - No real-time DB writes during simulation
 
 **Live Scanner:**
-- Primary DB: `data/pilotai.db` (or `PILOTAI_DB_PATH` env var, isolated per experiment)
+- Primary DB: `data/pilotai.db` (or `ATTIX_DB_PATH` env var, isolated per experiment)
 - `AlertGenerator.generate_alerts()` → `insert_alert()` → alerts table
 - `ExecutionEngine.submit_opportunity()` → `upsert_trade()` → trades table (pending_open)
 - `PositionMonitor._record_close_pnl()` → `close_trade()` → trades table
@@ -390,7 +390,7 @@ The DTE management exit (`manage_dte=21`) is the biggest structural difference. 
 - Loaded from YAML via `utils.load_config()` → `config.yaml` by default
 - Paper experiment configs in `configs/paper_expXXX.yaml`
 - Env var substitution for `${ALPACA_API_KEY}` etc.
-- `PILOTAI_DB_PATH` env var for isolated DB path
+- `ATTIX_DB_PATH` env var for isolated DB path
 
 **Discrepancy (MEDIUM):**
 Backtester uses JSON configs; live uses YAML. The JSON experiment configs do not always have a 1:1 mapping to YAML paper configs. For example, exp_090 JSON has `drawdown_cb_pct=20` while paper_exp305.yaml has `drawdown_cb_pct=30`. There is no automated validation that a paper config matches its corresponding backtest config.

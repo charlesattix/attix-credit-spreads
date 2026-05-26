@@ -2,7 +2,7 @@
 
 **From:** Charles (Master Software Architect) on behalf of Carlos Cruz
 **Mode:** PROPOSAL ONLY — do not modify production code. Read-only analysis + a written proposal file.
-**Repo:** `pilotai-credit-spreads`
+**Repo:** `attix-credit-spreads`
 **Sibling work in flight:** A separate CC session (in tmux `claude-deploy`) is currently executing the LIVE-path migration (Phases 0–3 of `MIGRATION_YFINANCE_TO_POLYGON.md`). DO NOT touch the same files.
 
 ---

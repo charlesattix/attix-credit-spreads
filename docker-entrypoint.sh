@@ -12,7 +12,7 @@ done
 
 # Ensure data directory exists and is writable
 # The volume is mounted by Railway, so we just need to ensure subdirectories exist
-DATA_DIR="${PILOTAI_DATA_DIR:-/app/data}"
+DATA_DIR="${ATTIX_DATA_DIR:-/app/data}"
 mkdir -p "$DATA_DIR" /app/output /app/logs 2>/dev/null || true
 
 # Try to initialize database - if it fails (volume not ready), that's OK,

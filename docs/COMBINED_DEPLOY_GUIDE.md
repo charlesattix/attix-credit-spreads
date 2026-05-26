@@ -36,7 +36,7 @@ strategies based on the current market regime (BULL / NEUTRAL / BEAR / HIGH_VOL)
 ## Deployment Package Contents
 
 ```
-pilotai-credit-spreads/
+attix-credit-spreads/
 ├── configs/
 │   ├── combined_portfolio.yaml       ← combined portfolio config (NEW)
 │   └── deploy_exp1220_1.5x.yaml      ← EXP-1220's own config

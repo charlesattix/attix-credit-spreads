@@ -55,7 +55,7 @@ scan-cron.sh line 61:
       --env-file .env.exp305 \
       --db data/pilotai_exp305.db
 
-main.py line 847: os.environ['PILOTAI_DB_PATH'] = args.db_path   ("data/pilotai_exp305.db")
+main.py line 847: os.environ['ATTIX_DB_PATH'] = args.db_path   ("data/pilotai_exp305.db")
 main.py line 860: system = create_system(config_file=args.config, env_file=args.env_file)
   → utils.load_config("configs/paper_exp305.yaml", env_file=".env.exp305")
     → load_dotenv(".env.exp305")        ← injects ALPACA_API_KEY, POLYGON_API_KEY into os.environ
@@ -251,7 +251,7 @@ if args.command == 'scan':
         _pm = PositionMonitor(
             alpaca_provider=system.alpaca_provider,
             config=system.config,
-            db_path=os.environ.get('PILOTAI_DB_PATH'),
+            db_path=os.environ.get('ATTIX_DB_PATH'),
         )
         _pm._check_positions()    # ← runs every cron scan
 ```
@@ -373,9 +373,9 @@ scan-cron.sh line 61:
 ```
 `--db data/pilotai_exp305.db` is passed as CLI arg.
 
-`main.py` line 847: `os.environ['PILOTAI_DB_PATH'] = args.db_path`
+`main.py` line 847: `os.environ['ATTIX_DB_PATH'] = args.db_path`
 
-Every DB read/write (get_trades, upsert_trade, save_scanner_state, etc.) reads `os.environ.get('PILOTAI_DB_PATH')`. All four experiments use different DB files:
+Every DB read/write (get_trades, upsert_trade, save_scanner_state, etc.) reads `os.environ.get('ATTIX_DB_PATH')`. All four experiments use different DB files:
 - `data/pilotai_exp036.db`
 - `data/pilotai_exp059.db`
 - `data/pilotai_exp154.db`
@@ -407,7 +407,7 @@ scan-cron.sh
 **09:15–09:30 ET — System init**
 ```python
 load_dotenv(".env.exp305")          # ALPACA_API_KEY, POLYGON_API_KEY loaded
-os.environ['PILOTAI_DB_PATH'] = "data/pilotai_exp305.db"
+os.environ['ATTIX_DB_PATH'] = "data/pilotai_exp305.db"
 init_db("data/pilotai_exp305.db")   # Auto-creates all tables if first run
 load_scanner_state("peak_equity")   # Returns None on fresh DB → uses $100K
 AlpacaProvider(api_key=..., paper=True)  # Connects to paper-api.alpaca.markets
@@ -541,14 +541,14 @@ PositionMonitor._check_positions()
 
 ### ❌ CRITICAL — Add crontab entry
 ```bash
-crontab -l | grep -q scan-cron || (crontab -l 2>/dev/null; echo "*/30 9-15 * * 1-5 cd /Users/charlesbot/projects/pilotai-credit-spreads && bash scripts/scan-cron.sh") | crontab -
+crontab -l | grep -q scan-cron || (crontab -l 2>/dev/null; echo "*/30 9-15 * * 1-5 cd /Users/charlesbot/projects/attix-credit-spreads && bash scripts/scan-cron.sh") | crontab -
 ```
 Verify with: `crontab -l`
 
 Or, for the standard 14-scan schedule (matching SCAN_TIMES in scheduler.py):
 ```
-15 9,10,11,12,13,14,15 * * 1-5 cd /Users/charlesbot/projects/pilotai-credit-spreads && bash scripts/scan-cron.sh
-45 9,10,11,12,13,14,15 * * 1-5 cd /Users/charlesbot/projects/pilotai-credit-spreads && bash scripts/scan-cron.sh
+15 9,10,11,12,13,14,15 * * 1-5 cd /Users/charlesbot/projects/attix-credit-spreads && bash scripts/scan-cron.sh
+45 9,10,11,12,13,14,15 * * 1-5 cd /Users/charlesbot/projects/attix-credit-spreads && bash scripts/scan-cron.sh
 ```
 
 ### ⚠️ MEDIUM — Verify active_sectors matches COMPASS rankings

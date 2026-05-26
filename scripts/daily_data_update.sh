@@ -16,7 +16,7 @@
 #   7. Rotate logs if > 10 MB
 #
 # Crontab entry (6 PM ET = 22:00 UTC on trading days):
-#   0 22 * * 1-5 /path/to/pilotai-credit-spreads/scripts/daily_data_update.sh
+#   0 22 * * 1-5 /path/to/attix-credit-spreads/scripts/daily_data_update.sh
 #
 # Usage:
 #   ./scripts/daily_data_update.sh              # normal run

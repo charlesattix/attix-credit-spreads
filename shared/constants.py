@@ -10,13 +10,13 @@ from datetime import datetime, timezone
 
 # ---------------------------------------------------------------------------
 # Standardized project paths (ARCH-PY-09)
-# Override DATA_DIR via PILOTAI_DATA_DIR env var for persistent volumes
+# Override DATA_DIR via ATTIX_DATA_DIR env var for persistent volumes
 # (e.g. Railway volume mount at /app/data).
 # ---------------------------------------------------------------------------
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA_DIR = os.environ.get('PILOTAI_DATA_DIR', os.path.join(PROJECT_ROOT, 'data'))
-OUTPUT_DIR = os.environ.get('PILOTAI_OUTPUT_DIR', os.path.join(PROJECT_ROOT, 'output'))
-LOGS_DIR = os.environ.get('PILOTAI_LOGS_DIR', os.path.join(PROJECT_ROOT, 'logs'))
+DATA_DIR = os.environ.get('ATTIX_DATA_DIR', os.path.join(PROJECT_ROOT, 'data'))
+OUTPUT_DIR = os.environ.get('ATTIX_OUTPUT_DIR', os.path.join(PROJECT_ROOT, 'output'))
+LOGS_DIR = os.environ.get('ATTIX_LOGS_DIR', os.path.join(PROJECT_ROOT, 'logs'))
 MODELS_DIR = os.path.join(PROJECT_ROOT, 'ml', 'models')
 CONFIG_PATH = os.path.join(PROJECT_ROOT, 'config.yaml')
 
@@ -62,7 +62,7 @@ MAX_ABS_DELTA = 50.0
 # ---------------------------------------------------------------------------
 # Options pricing
 # ---------------------------------------------------------------------------
-DEFAULT_RISK_FREE_RATE = float(os.environ.get('PILOTAI_RISK_FREE_RATE', '0.045'))
+DEFAULT_RISK_FREE_RATE = float(os.environ.get('ATTIX_RISK_FREE_RATE', '0.045'))
 
 # Historical average Fed Funds effective rate by year (for dynamic BS pricing).
 # Source: FRED (DFF series) — annual averages rounded to 3 decimal places.

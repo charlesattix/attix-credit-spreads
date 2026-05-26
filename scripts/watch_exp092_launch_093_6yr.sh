@@ -2,7 +2,7 @@
 # Watch for exp_092 6yr completion; then launch exp_093 MA50 full 6yr run
 
 set -euo pipefail
-cd /Users/charlesbot/projects/pilotai-credit-spreads
+cd /Users/charlesbot/projects/attix-credit-spreads
 
 PID_092=97920
 LOG=output/exp_093_6yr_watcher.log

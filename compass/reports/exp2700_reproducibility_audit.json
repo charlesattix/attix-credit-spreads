@@ -4,7 +4,7 @@
   "description": "Reproducibility audit of EXP-2200/2280/2450/2600",
   "methodology": {
     "reference_dir": "/tmp/exp2700_reference",
-    "fresh_dir": "/home/node/.openclaw/workspace/pilotai-credit-spreads/compass/reports",
+    "fresh_dir": "/home/node/.openclaw/workspace/attix-credit-spreads/compass/reports",
     "tolerances": {
       "sharpe": 0.01,
       "cagr_pct": 0.1,
@@ -17,7 +17,7 @@
   "experiments": {
     "exp2200_north_star_v6": {
       "reference_path": "/tmp/exp2700_reference/exp2200_north_star_v6.json",
-      "fresh_path": "/home/node/.openclaw/workspace/pilotai-credit-spreads/compass/reports/exp2200_north_star_v6.json",
+      "fresh_path": "/home/node/.openclaw/workspace/attix-credit-spreads/compass/reports/exp2200_north_star_v6.json",
       "n_pass": 6,
       "n_fail": 0,
       "checks": [
@@ -79,7 +79,7 @@
     },
     "exp2280_wf_robustness": {
       "reference_path": "/tmp/exp2700_reference/exp2280_wf_robustness.json",
-      "fresh_path": "/home/node/.openclaw/workspace/pilotai-credit-spreads/compass/reports/exp2280_wf_robustness.json",
+      "fresh_path": "/home/node/.openclaw/workspace/attix-credit-spreads/compass/reports/exp2280_wf_robustness.json",
       "n_pass": 16,
       "n_fail": 0,
       "checks": [
@@ -231,7 +231,7 @@
     },
     "exp2450_sparse_combined_honest": {
       "reference_path": "/tmp/exp2700_reference/exp2450_sparse_combined_honest.json",
-      "fresh_path": "/home/node/.openclaw/workspace/pilotai-credit-spreads/compass/reports/exp2450_sparse_combined_honest.json",
+      "fresh_path": "/home/node/.openclaw/workspace/attix-credit-spreads/compass/reports/exp2450_sparse_combined_honest.json",
       "n_pass": 28,
       "n_fail": 0,
       "checks": [
@@ -491,7 +491,7 @@
     },
     "exp2600_north_star_v8": {
       "reference_path": "/tmp/exp2700_reference/exp2600_north_star_v8.json",
-      "fresh_path": "/home/node/.openclaw/workspace/pilotai-credit-spreads/compass/reports/exp2600_north_star_v8.json",
+      "fresh_path": "/home/node/.openclaw/workspace/attix-credit-spreads/compass/reports/exp2600_north_star_v8.json",
       "n_pass": 30,
       "n_fail": 0,
       "checks": [

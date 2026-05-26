@@ -2,7 +2,7 @@
 # Watch for exp_100 completion; then launch exp_101 full 6yr walkforward
 
 set -euo pipefail
-cd /Users/charlesbot/projects/pilotai-credit-spreads
+cd /Users/charlesbot/projects/attix-credit-spreads
 
 LOG=output/exp_101_watcher.log
 

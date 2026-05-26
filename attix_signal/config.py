@@ -10,16 +10,16 @@ PROJECT_ROOT = Path(__file__).parent.parent
 
 # ── API ───────────────────────────────────────────────────────────────────────
 API_URL = os.environ.get(
-    "PILOTAI_API_URL",
+    "ATTIX_API_URL",
     "https://ai-stag.attix.com/v2/strategy_recommendation",
 )
-API_KEY = os.environ.get("PILOTAI_API_KEY", "cZZP6he1Qez8Lb6njh6w5vUe")
-API_BATCH_SIZE = int(os.environ.get("PILOTAI_BATCH_SIZE", "6"))
-API_TIMEOUT = int(os.environ.get("PILOTAI_REQUEST_TIMEOUT", "90"))
+API_KEY = os.environ.get("ATTIX_API_KEY", "cZZP6he1Qez8Lb6njh6w5vUe")
+API_BATCH_SIZE = int(os.environ.get("ATTIX_BATCH_SIZE", "6"))
+API_TIMEOUT = int(os.environ.get("ATTIX_REQUEST_TIMEOUT", "90"))
 
 # ── Database ──────────────────────────────────────────────────────────────────
 DB_PATH = Path(
-    os.environ.get("PILOTAI_DB_PATH", str(PROJECT_ROOT / "data" / "pilotai_signal.db"))
+    os.environ.get("ATTIX_DB_PATH", str(PROJECT_ROOT / "data" / "pilotai_signal.db"))
 )
 
 # ── Telegram ──────────────────────────────────────────────────────────────────

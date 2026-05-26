@@ -2,7 +2,7 @@
 CLI entry point for the Attix Signal Service.
 
 Usage:
-    python -m pilotai_signal <command> [options]
+    python -m attix_signal <command> [options]
 
 Commands:
     init          Create DB schema
@@ -205,7 +205,7 @@ def cmd_rebuild(args) -> int:
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(
-        prog="python -m pilotai_signal",
+        prog="python -m attix_signal",
         description="Attix Signal Service",
     )
     parser.add_argument("-v", "--verbose", action="store_true")

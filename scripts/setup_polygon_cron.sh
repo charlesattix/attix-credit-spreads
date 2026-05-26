@@ -24,7 +24,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
-MARKER="# pilotai-credit-spreads"
+MARKER="# attix-credit-spreads"
 DATA_UPDATE="$SCRIPT_DIR/daily_data_update.sh"
 SCAN_SCRIPT="$SCRIPT_DIR/scan-cron-portable.sh"
 DATA_LOG="$PROJECT_DIR/data/daily_update_cron.log"

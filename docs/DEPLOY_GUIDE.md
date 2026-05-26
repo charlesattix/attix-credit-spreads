@@ -60,8 +60,8 @@ source ~/.zshrc
 ### Clone the Repo
 ```bash
 cd ~/Projects
-git clone <repo-url> pilotai-credit-spreads
-cd pilotai-credit-spreads
+git clone <repo-url> attix-credit-spreads
+cd attix-credit-spreads
 ```
 
 ### Verify Setup
@@ -111,7 +111,7 @@ cat > ~/Library/LaunchAgents/com.attix.paper-trading.plist << 'PLIST'
     <array>
         <string>/bin/bash</string>
         <string>-c</string>
-        <string>cd ~/Projects/pilotai-credit-spreads && ./scripts/deploy_paper.sh start</string>
+        <string>cd ~/Projects/attix-credit-spreads && ./scripts/deploy_paper.sh start</string>
     </array>
     <key>RunAtLoad</key>
     <true/>

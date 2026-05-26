@@ -1,7 +1,7 @@
 # Code Archaeology Audit — compass/
 
 **Generated:** 2026-04-28
-**Scope:** `/home/node/.openclaw/workspace/pilotai-credit-spreads/compass/`
+**Scope:** `/home/node/.openclaw/workspace/attix-credit-spreads/compass/`
 **Mode:** Read-only analysis (no deletions, no moves)
 **Authoritative sources:**
 - `compass/PRODUCTION_MANIFEST.md` (2026-04-23)

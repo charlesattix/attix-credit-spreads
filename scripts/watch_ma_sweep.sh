@@ -2,7 +2,7 @@
 # Watch exp_095 (MA100) and exp_096 (MA150) 2023+2024 tests
 # When both complete, analyze and launch full 6yr with the winner
 set -euo pipefail
-cd /Users/charlesbot/projects/pilotai-credit-spreads
+cd /Users/charlesbot/projects/attix-credit-spreads
 LOG=output/ma_sweep_watcher.log
 
 echo "[$(date)] MA sweep watcher started. Monitoring exp_095 (MA100) and exp_096 (MA150)" | tee -a "$LOG"

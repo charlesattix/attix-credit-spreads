@@ -8,7 +8,7 @@ Uses the production Backtester class with IronVault as historical_data provider.
 Config is derived from configs/paper_exp880.yaml with backtest-specific overrides.
 
 Usage:
-    cd pilotai-credit-spreads
+    cd attix-credit-spreads
     python experiments/EXP-880-real/backtest.py
 """
 

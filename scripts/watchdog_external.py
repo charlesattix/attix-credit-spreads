@@ -10,7 +10,7 @@ Runs on a VPS cron (NOT on Railway). Every 30 minutes it:
   5. POSTs the status JSON to the dashboard API
 
 Usage (add to crontab):
-    */30 * * * * cd /path/to/pilotai-credit-spreads && python scripts/watchdog_external.py
+    */30 * * * * cd /path/to/attix-credit-spreads && python scripts/watchdog_external.py
 
 Dependencies: requests (pip install requests)
 """

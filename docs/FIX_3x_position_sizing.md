@@ -109,7 +109,7 @@ Fix the config now for immediate effect, then fix the code to prevent this class
 
 1. Edit the config:
 ```bash
-cd /path/to/pilotai-credit-spreads
+cd /path/to/attix-credit-spreads
 nano configs/paper_exp1220_3x.yaml
 # Add max_risk_per_trade and max_contracts to the risk: section (see Option A above)
 ```

@@ -2,7 +2,7 @@
 
 **Version:** 3.0
 **Date:** 2026-02-25
-**System:** Attix Credit Spreads (`pilotai-credit-spreads`)
+**System:** Attix Credit Spreads (`attix-credit-spreads`)
 **Report Type:** Third-Party Audit Reference
 **Engine Commits:** Upgrades 1–3 (commits `288375b`, `7635771`, `b7fba2b`)
 

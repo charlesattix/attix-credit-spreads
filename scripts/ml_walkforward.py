@@ -18,7 +18,7 @@ Gates:
 Output: results/ml_walkforward_results.json
 
 Usage:
-    cd /home/node/openclaw/workspace/pilotai-credit-spreads
+    cd /home/node/openclaw/workspace/attix-credit-spreads
     PYTHONPATH=. python3 scripts/ml_walkforward.py
 """
 

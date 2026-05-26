@@ -12,7 +12,7 @@ Output:
   compass/harvest_quality_report.md     — Quality report
 
 Usage:
-    cd /home/node/openclaw/workspace/pilotai-credit-spreads
+    cd /home/node/openclaw/workspace/attix-credit-spreads
     PYTHONPATH=. python3 compass/harvest_trades_v2.py --dry-run      # verify configs
     PYTHONPATH=. python3 compass/harvest_trades_v2.py                # full run
     PYTHONPATH=. python3 compass/harvest_trades_v2.py --strategies cs ic  # subset

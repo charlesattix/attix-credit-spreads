@@ -2,7 +2,7 @@
 
 **Author:** Charles (Master Software Architect)
 **For:** Carlos Cruz
-**Repo:** `pilotai-credit-spreads`
+**Repo:** `attix-credit-spreads`
 **Goal:** Replace yfinance with Polygon.io as the single source of truth for OHLCV history on the live trade-decision path. Keep `DataCache` public interface identical.
 
 ---

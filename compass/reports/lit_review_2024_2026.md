@@ -3,7 +3,7 @@
 **Generated:** 2026-04-29
 **Mandate:** Top 10-15 papers across (1) VRP strategies, (2) credit spread optimization, (3) volatility surface arbitrage, (4) execution cost models. Tradeable insights for the v8a 8-stream portfolio.
 **Provenance:** All claims from web-search snippets retrieved 2026-04-29. **No PDFs were fetched and read end-to-end.** Numerical claims are headline-level until verified.
-**Path note:** Requested `~/pilotai-credit-spreads/...` — that path does not exist. Saved to actual workspace at `/home/node/.openclaw/workspace/pilotai-credit-spreads/compass/reports/lit_review_2024_2026.md`.
+**Path note:** Requested `~/attix-credit-spreads/...` — that path does not exist. Saved to actual workspace at `/home/node/.openclaw/workspace/attix-credit-spreads/compass/reports/lit_review_2024_2026.md`.
 **Companion docs (overlapping content):** `compass/reports/literature_review_2024_2026.md` · `compass/research_apr29_literature_review.md` · `research/lit_review_2024_2026.md`. This report is the **focused top-15 cut**.
 
 ---
@@ -170,7 +170,7 @@ A 4th-tier: **EXP-3030 — OFI-aware entry timing** (paper #11), targeting ≥ 5
 3. **MASTERPLAN Bug 6** ("parameter sweeps require OOS validation") and **Bug 8** ("smeared inputs are synthetic inputs") are the dominant failure modes for any ML-flavoured experiment derived from these papers. Pre-register OOS windows.
 4. **MASTERPLAN Rule 9** — every overlay must be re-tested at the 8-stream portfolio level. Stream-level Sharpe lift ≠ portfolio Sharpe lift.
 5. **Author and venue verification** required for several entries (especially #4 Patel — search returned slightly inconsistent year/version metadata) before any external citation.
-6. **Path note repeated:** the user's `~/pilotai-credit-spreads/...` path does not exist on this filesystem; this report was saved to the actual workspace location.
+6. **Path note repeated:** the user's `~/attix-credit-spreads/...` path does not exist on this filesystem; this report was saved to the actual workspace location.
 
 ---
 

@@ -327,7 +327,7 @@ Verdict: Niche diversifier at 1-3% allocation, not core position.
 | `REGISTRY.md` | 100 experiments scored, 13 real-data validated |
 
 ### GitHub
-- Repo: `charlesattix/pilotai-credit-spreads`
+- Repo: `charlesattix/attix-credit-spreads`
 - Branch: `maximus/clean-features` (active development)
 - Main: production + alignment
 

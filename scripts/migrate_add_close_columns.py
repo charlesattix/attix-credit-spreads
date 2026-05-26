@@ -3,7 +3,7 @@
 Migration: add close_source and alpaca_close_activity_id columns to trades table.
 
 Discovers DB paths from:
-  - .env.exp* files (PILOTAI_DB_PATH)
+  - .env.exp* files (ATTIX_DB_PATH)
   - config*.yaml files (db_path key)
   - glob scan of data/**/*.db for attix*.db files
 
@@ -33,7 +33,7 @@ def collect_db_paths() -> set[Path]:
         if env_file.suffix in (".example",) or env_file.name.endswith(".example"):
             continue
         for line in env_file.read_text().splitlines():
-            m = re.match(r"PILOTAI_DB_PATH\s*=\s*(.+)", line.strip())
+            m = re.match(r"ATTIX_DB_PATH\s*=\s*(.+)", line.strip())
             if m:
                 db_val = m.group(1).strip().strip('"').strip("'")
                 p = Path(db_val) if Path(db_val).is_absolute() else PROJECT_ROOT / db_val

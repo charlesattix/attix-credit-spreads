@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Pre-flight key validator for pilotai-credit-spreads.
+Pre-flight key validator for attix-credit-spreads.
 
 Reads .env.exp* files, hits Alpaca paper API, reports status.
 Cross-references experiments/registry.json — only validates active/paused experiments.

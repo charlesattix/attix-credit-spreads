@@ -19,8 +19,8 @@ import os as _os
 
 
 def get_db_path() -> Path:
-    """Return the DB path, reading PILOTAI_DB_PATH at call time (not import time)."""
-    return Path(_os.environ.get('PILOTAI_DB_PATH', str(Path(DATA_DIR) / "pilotai.db")))
+    """Return the DB path, reading ATTIX_DB_PATH at call time (not import time)."""
+    return Path(_os.environ.get('ATTIX_DB_PATH', str(Path(DATA_DIR) / "pilotai.db")))
 
 
 def get_db(path: Optional[str] = None) -> sqlite3.Connection:

@@ -1,6 +1,6 @@
 {
   "generated": "2026-03-25T05:24:13.771652",
-  "data_source": "/home/node/.openclaw/workspace/pilotai-credit-spreads/compass/training_data_combined.csv",
+  "data_source": "/home/node/.openclaw/workspace/attix-credit-spreads/compass/training_data_combined.csv",
   "filter": "strategy_type == CS",
   "cs_data_summary": {
     "n_trades": 233,

@@ -69,7 +69,7 @@ update the import in `main.py:1111` to `from compass.online_retrain import Retra
 #### P0-2: Launchd Plists Are Dead — Mac Paths, No Railway Equivalent
 **Files**: `deploy/com.attix.exp400.plist`, `com.attix.exp401.plist`,
 `com.attix.exp503.plist`, `com.attix.exp600.plist`, `com.attix.exp1220.plist`
-**Root Cause**: Every plist hardcodes `WorkingDirectory = /Users/charlesbot/projects/pilotai-credit-spreads`
+**Root Cause**: Every plist hardcodes `WorkingDirectory = /Users/charlesbot/projects/attix-credit-spreads`
 and uses `/usr/bin/python3` with a Mac-only environment. These have not been loaded into launchctl
 since migration to Railway.
 
@@ -408,7 +408,7 @@ package==6.90.0`. The shell interpreted `=6.90.0` as a command and created a fil
 is mounted at that path, `macro_state.db` is in the ephemeral container filesystem and is lost
 on every restart. All macro scores and sector rankings reset to empty on every deploy.
 
-**Fix**: Mount a Railway persistent volume at `/app/data` and set `PILOTAI_DATA_DIR=/app/data`.
+**Fix**: Mount a Railway persistent volume at `/app/data` and set `ATTIX_DATA_DIR=/app/data`.
 
 ---
 
@@ -467,7 +467,7 @@ version should not bring down all 6 experiments simultaneously.
 
 ### 5. Database Persistence on Railway
 Railway containers are ephemeral. Without a persistent volume for `data/`, every deployment
-loses all DBs (trades, macro state, sentinel history). Mount a volume and set `PILOTAI_DATA_DIR`.
+loses all DBs (trades, macro state, sentinel history). Mount a volume and set `ATTIX_DATA_DIR`.
 
 ### 6. Instrument the Deployment Gap
 Add a Telegram alert when an experiment has not emitted a heartbeat in > 4 hours during market

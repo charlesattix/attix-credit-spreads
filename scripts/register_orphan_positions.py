@@ -51,7 +51,7 @@ TIMEOUT  = 20
 ACCOUNTS: Dict[str, dict] = {
     "exp400": {
         "env":   ".env.exp400",
-        "db":    ROOT / "data" / "pilotai_exp400.db",   # no PILOTAI_DB_PATH in .env
+        "db":    ROOT / "data" / "pilotai_exp400.db",   # no ATTIX_DB_PATH in .env
         "label": "EXP-400 The Champion",
     },
     "exp401": {
@@ -85,7 +85,7 @@ def resolve_db(name: str, cfg: dict, env: dict) -> Path:
     """Return the canonical DB path for this account."""
     if "db" in cfg:
         return cfg["db"]
-    db_str = env.get("PILOTAI_DB_PATH", "")
+    db_str = env.get("ATTIX_DB_PATH", "")
     if db_str:
         p = ROOT / db_str
         return p

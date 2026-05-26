@@ -5,7 +5,7 @@
 set -e
 
 DB_FILE="data/pilotai.db"
-RAILWAY_URL="https://pilotai-credit-spreads-production.up.railway.app"
+RAILWAY_URL="https://attix-production.up.railway.app"
 UPLOAD_ENDPOINT="${RAILWAY_URL}/api/admin/upload-db"
 
 # Check if database exists

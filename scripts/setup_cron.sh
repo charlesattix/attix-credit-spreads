@@ -21,7 +21,7 @@ UPDATE_SCRIPT="$PROJECT_DIR/scripts/daily_data_update.sh"
 
 # Cron schedule: 22:00 UTC Mon-Fri (= 6 PM ET / 5 PM CT)
 CRON_SCHEDULE="0 22 * * 1-5"
-CRON_COMMENT="# pilotai-credit-spreads: daily SPY options data update"
+CRON_COMMENT="# attix-credit-spreads: daily SPY options data update"
 CRON_ENTRY="$CRON_SCHEDULE $UPDATE_SCRIPT >> $PROJECT_DIR/data/daily_update_cron.log 2>&1"
 
 ACTION="${1:-install}"

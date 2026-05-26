@@ -2,7 +2,7 @@
 
 **Author:** Claude Code (planning session)
 **For:** Charles (Master Software Architect) / Carlos Cruz
-**Repo:** `pilotai-credit-spreads`
+**Repo:** `attix-credit-spreads`
 **Date:** 2026-05-22
 **Status:** **EXECUTED 2026-05-23** — Phases 6, 7, 8, 10 landed on branch `feature/migrate-backtest-to-polygon`. Phase 9 (compass/experiments/scripts bulk migration) deferred to a follow-up wave; see *Execution Stamp* below.
 **Extends:** [`MIGRATION_YFINANCE_TO_POLYGON.md`](MIGRATION_YFINANCE_TO_POLYGON.md) (live-path Phases 0–5).

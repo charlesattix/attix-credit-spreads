@@ -148,7 +148,7 @@ class TestHelpers:
 class TestCollectReportData:
     @patch("scripts.daily_report.get_alpaca_equity", return_value=None)
     def test_collect_data(self, mock_eq, sample_config):
-        os.environ["PILOTAI_DB_PATH"] = sample_config["db_path"]
+        os.environ["ATTIX_DB_PATH"] = sample_config["db_path"]
         data = collect_report_data(sample_config, report_date="2026-03-15")
 
         assert data["experiment_id"] == "EXP-TEST"
@@ -159,7 +159,7 @@ class TestCollectReportData:
 
     @patch("scripts.daily_report.get_alpaca_equity", return_value=None)
     def test_rolling_aggregates(self, mock_eq, sample_config):
-        os.environ["PILOTAI_DB_PATH"] = sample_config["db_path"]
+        os.environ["ATTIX_DB_PATH"] = sample_config["db_path"]
         data = collect_report_data(sample_config, report_date="2026-03-15")
 
         # 7-day: t2, t3 (closed on 3/15), t4 closed 3/8 (within 7 days of 3/15)
@@ -171,7 +171,7 @@ class TestCollectReportData:
 class TestGenerateHTML:
     @patch("scripts.daily_report.get_alpaca_equity", return_value=105_000.0)
     def test_html_contains_sections(self, mock_eq, sample_config):
-        os.environ["PILOTAI_DB_PATH"] = sample_config["db_path"]
+        os.environ["ATTIX_DB_PATH"] = sample_config["db_path"]
         data = collect_report_data(sample_config, report_date="2026-03-15")
         html = generate_html(data)
 
@@ -255,7 +255,7 @@ class TestLoadEnvFile:
 
 class TestLegacyMetrics:
     def test_get_daily_summary_metrics(self, sample_config):
-        os.environ["PILOTAI_DB_PATH"] = sample_config["db_path"]
+        os.environ["ATTIX_DB_PATH"] = sample_config["db_path"]
         metrics = get_daily_summary_metrics(report_date="2026-03-15", account_size=100_000)
 
         assert metrics["date"] == "2026-03-15"

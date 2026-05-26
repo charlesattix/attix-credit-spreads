@@ -1,6 +1,6 @@
 {
   "timestamp": "2026-03-21T01:19:08.151427",
-  "data_source": "/home/node/openclaw/workspace/pilotai-credit-spreads/compass/training_data_combined.csv",
+  "data_source": "/home/node/openclaw/workspace/attix-credit-spreads/compass/training_data_combined.csv",
   "n_trades": 430,
   "features_used": [
     "dte_at_entry",

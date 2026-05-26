@@ -46,7 +46,7 @@ echo "Alpaca key prefix: ${ALPACA_API_KEY_PAPER:0:4}"
 ### 1.3 Software Dependencies
 
 ```bash
-cd /home/node/.openclaw/workspace/pilotai-credit-spreads
+cd /home/node/.openclaw/workspace/attix-credit-spreads
 
 # Python 3.11+ required
 python3 --version
@@ -189,11 +189,11 @@ crontab -e
 
 # Add these lines (all times ET):
 # 09:25 ET — generate daily signals
-25 13 * * 1-5 cd /home/node/.openclaw/workspace/pilotai-credit-spreads && \
+25 13 * * 1-5 cd /home/node/.openclaw/workspace/attix-credit-spreads && \
   python3 -m compass.exp2830_paper_signal_generator >> logs/exp2300/signals.log 2>&1
 
 # 16:35 ET — end-of-day reconciliation (future: paper_monitor_dashboard)
-35 20 * * 1-5 cd /home/node/.openclaw/workspace/pilotai-credit-spreads && \
+35 20 * * 1-5 cd /home/node/.openclaw/workspace/attix-credit-spreads && \
   python3 -m compass.paper_monitor_dashboard >> logs/exp2300/monitor.log 2>&1
 ```
 

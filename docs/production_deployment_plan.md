@@ -575,22 +575,22 @@ DD_RECOVERY_THRESHOLD=0.05
 
 ```crontab
 # Data update (6:00 AM ET)
-0 10 * * 1-5 cd /path/to/pilotai-credit-spreads && ./scripts/daily_data_update.sh >> logs/data.log 2>&1
+0 10 * * 1-5 cd /path/to/attix-credit-spreads && ./scripts/daily_data_update.sh >> logs/data.log 2>&1
 
 # Morning signal run (9:31 AM ET)
-31 13 * * 1-5 cd /path/to/pilotai-credit-spreads && python3 -m compass.live_bridge --config .env.ultimate >> logs/signals.log 2>&1
+31 13 * * 1-5 cd /path/to/attix-credit-spreads && python3 -m compass.live_bridge --config .env.ultimate >> logs/signals.log 2>&1
 
 # Intraday monitor (every 5 min, market hours)
-*/5 13-20 * * 1-5 cd /path/to/pilotai-credit-spreads && python3 -m compass.prod_monitor --config .env.ultimate >> logs/monitor.log 2>&1
+*/5 13-20 * * 1-5 cd /path/to/attix-credit-spreads && python3 -m compass.prod_monitor --config .env.ultimate >> logs/monitor.log 2>&1
 
 # Afternoon close run (3:50 PM ET)
-50 19 * * 1-5 cd /path/to/pilotai-credit-spreads && python3 -m compass.live_bridge --mode close --config .env.ultimate >> logs/close.log 2>&1
+50 19 * * 1-5 cd /path/to/attix-credit-spreads && python3 -m compass.live_bridge --mode close --config .env.ultimate >> logs/close.log 2>&1
 
 # Daily reconciliation (4:15 PM ET)
-15 20 * * 1-5 cd /path/to/pilotai-credit-spreads && python3 -m compass.paper_reconciler --config .env.ultimate >> logs/reconcile.log 2>&1
+15 20 * * 1-5 cd /path/to/attix-credit-spreads && python3 -m compass.paper_reconciler --config .env.ultimate >> logs/reconcile.log 2>&1
 
 # Weekly health report (Sunday 6 PM ET)
-0 22 * * 0 cd /path/to/pilotai-credit-spreads && python3 -m compass.prod_monitor --weekly-report >> logs/weekly.log 2>&1
+0 22 * * 0 cd /path/to/attix-credit-spreads && python3 -m compass.prod_monitor --weekly-report >> logs/weekly.log 2>&1
 ```
 
 ### A.3 Risk Overlay Config

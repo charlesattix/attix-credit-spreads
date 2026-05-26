@@ -1,7 +1,7 @@
 # 7-Panel Code Review — MASTERPLAN
 
 **Service:** Attix Credit Spreads
-**Path:** `/Users/charlesbot/projects/pilotai-credit-spreads`
+**Path:** `/Users/charlesbot/projects/attix-credit-spreads`
 **Status:** 🟢 REVIEW DONE
 **Started:** 2026-02-14
 
@@ -1204,8 +1204,8 @@ Searched for IaC across all standard patterns:
 - `cdk.json` (CDK) -- not found
 - `k8s/`, `kubernetes/` -- not found
 - `docker-compose.yml` -- not found
-- `Dockerfile` -- FOUND at `/Users/charlesbot/projects/pilotai-credit-spreads/Dockerfile`
-- `railway.toml` -- FOUND at `/Users/charlesbot/projects/pilotai-credit-spreads/railway.toml`
+- `Dockerfile` -- FOUND at `/Users/charlesbot/projects/attix-credit-spreads/Dockerfile`
+- `railway.toml` -- FOUND at `/Users/charlesbot/projects/attix-credit-spreads/railway.toml`
 
 **Conclusion:** Infrastructure is Railway-only with a Dockerfile. No IaC, no multi-environment configuration, no infrastructure reproducibility beyond the Docker image definition.
 
@@ -1323,7 +1323,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: docker build -t pilotai-credit-spreads .
+      - run: docker build -t attix-credit-spreads .
 ```
 
 **Evidence (from `railway.toml:1-9`):**
@@ -1359,7 +1359,7 @@ restartPolicyMaxRetries = 3
         uses: bervProject/railway-deploy@main
         with:
           railway_token: ${{ secrets.RAILWAY_TOKEN }}
-          service: pilotai-credit-spreads
+          service: attix-credit-spreads
       - name: Post-deploy health check
         run: |
           sleep 30

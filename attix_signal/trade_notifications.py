@@ -3,10 +3,10 @@ Trade notification module — polls Alpaca for real order activity and sends
 Telegram notifications for fills, closings, rejections, and daily P&L summaries.
 
 Usage (cron every 5 min during market hours):
-    python -m pilotai_signal.trade_notifications
+    python -m attix_signal.trade_notifications
 
 Daily summary (cron at 4:15 PM ET):
-    python -m pilotai_signal.trade_notifications --daily-summary
+    python -m attix_signal.trade_notifications --daily-summary
 
 Notifications sent:
   📥 ORDER FILLED     — credit spread opened

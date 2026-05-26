@@ -1,4 +1,4 @@
-# Code Quality Audit — pilotai-credit-spreads
+# Code Quality Audit — attix-credit-spreads
 
 **Date:** 2026-04-23
 **Auditor:** Maximus (AI Trading Strategist)

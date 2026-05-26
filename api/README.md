@@ -26,7 +26,7 @@ uvicorn api.macro_api:app --port 8420 --reload
 |----------|----------|---------|-------------|
 | `MACRO_API_KEYS` | No | `dev-attix-macro-2026` | Comma-separated valid API keys |
 | `POLYGON_API_KEY` | Yes (weekly job) | — | Polygon.io API key |
-| `PILOTAI_DATA_DIR` | No | `./data` | Override data directory path |
+| `ATTIX_DATA_DIR` | No | `./data` | Override data directory path |
 
 ```bash
 # .env example
@@ -345,7 +345,7 @@ Create `~/Library/LaunchAgents/com.attix.macro-api.plist`:
   <key>ProgramArguments</key>
   <array>
     <string>/usr/bin/python3</string>
-    <string>/path/to/pilotai-credit-spreads/api/macro_api.py</string>
+    <string>/path/to/attix-credit-spreads/api/macro_api.py</string>
     <string>--port</string><string>8420</string>
   </array>
   <key>RunAtLoad</key><true/>

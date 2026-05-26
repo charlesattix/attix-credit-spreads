@@ -4,7 +4,7 @@ LIVE-READINESS CHECKLIST — 2026-03-19 10:46
 1. CONFIG FILES
 ---------------
   [PASS] Champion config exists
-        /home/node/openclaw/workspace/pilotai-credit-spreads/configs/champion.json
+        /home/node/openclaw/workspace/attix-credit-spreads/configs/champion.json
   [PASS] Champion config valid JSON
         Parsed successfully
   [PASS] Champion config has strategies
@@ -12,7 +12,7 @@ LIVE-READINESS CHECKLIST — 2026-03-19 10:46
   [PASS] Champion config validated (ROBUST)
         robustness_score=0.772 (ROBUST)
   [FAIL] Main config exists
-        Not found: /home/node/openclaw/workspace/pilotai-credit-spreads/config.yaml
+        Not found: /home/node/openclaw/workspace/attix-credit-spreads/config.yaml
   [FAIL] Env: ALPACA_API_KEY
         Alpaca trading API key — NOT SET
   [FAIL] Env: ALPACA_API_SECRET
@@ -27,7 +27,7 @@ LIVE-READINESS CHECKLIST — 2026-03-19 10:46
 2. DATABASE
 -----------
   [PASS] Database file exists
-        /home/node/openclaw/workspace/pilotai-credit-spreads/data/pilotai.db
+        /home/node/openclaw/workspace/attix-credit-spreads/data/pilotai.db
   [PASS] Database connectable
         SQLite connection OK
   [PASS] Database WAL mode
@@ -115,7 +115,7 @@ TOTAL: 35 passed, 9 failed (4 required, 5 recommended)
 STATUS: NOT READY (4 required check(s) failing)
 
 ACTION ITEMS (required failures):
-  - [1. CONFIG FILES] Main config exists: Not found: /home/node/openclaw/workspace/pilotai-credit-spreads/config.yaml
+  - [1. CONFIG FILES] Main config exists: Not found: /home/node/openclaw/workspace/attix-credit-spreads/config.yaml
   - [1. CONFIG FILES] Env: ALPACA_API_KEY: Alpaca trading API key — NOT SET
   - [1. CONFIG FILES] Env: ALPACA_API_SECRET: Alpaca trading API secret — NOT SET
   - [5. ALERTING (Telegram)] Telegram credentials configured: Missing TELEGRAM_BOT_TOKEN and/or TELEGRAM_CHAT_ID env vars

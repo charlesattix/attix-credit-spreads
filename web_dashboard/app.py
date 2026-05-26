@@ -26,7 +26,7 @@ Environment variables:
   STARTING_EQUITY    — account size for % calculations (default: 100000)
 
 Run locally:
-  cd ~/projects/pilotai-credit-spreads
+  cd ~/projects/attix-credit-spreads
   uvicorn web_dashboard.app:app --reload --port 8000
 """
 

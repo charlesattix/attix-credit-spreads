@@ -1,5 +1,5 @@
 # ML Improvement Analysis: From Technical Signals to Intelligent Alpha
-## pilotai-credit-spreads | Research Document | March 2026
+## attix-credit-spreads | Research Document | March 2026
 
 ---
 

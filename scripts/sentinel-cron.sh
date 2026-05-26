@@ -12,7 +12,7 @@
 #   3. exit with the worst exit code at the end, so launchd metadata still
 #      reflects reality.
 set -uo pipefail
-cd /Users/charlesbot/projects/pilotai-credit-spreads
+cd /Users/charlesbot/projects/attix-credit-spreads
 
 PYTHON=/usr/bin/python3
 DAILY_EXIT=0

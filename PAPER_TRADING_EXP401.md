@@ -52,8 +52,8 @@ Key insight: SS **increases** exposure in high-vol regimes (when IV crush is lar
 ### Step 1: Clone and checkout
 
 ```bash
-git clone https://github.com/charlesattix/pilotai-credit-spreads.git
-cd pilotai-credit-spreads
+git clone https://github.com/charlesattix/attix-credit-spreads.git
+cd attix-credit-spreads
 git checkout maximus/champion-config
 ```
 

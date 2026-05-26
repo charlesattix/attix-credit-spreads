@@ -15,7 +15,7 @@ New features (commit 05c533c):
   opening_gap_pct       (today_open - prev_close) / prev_close × 100
 
 Usage:
-    cd /home/node/openclaw/workspace/pilotai-credit-spreads
+    cd /home/node/openclaw/workspace/attix-credit-spreads
     PYTHONPATH=. python3 compass/benchmark_tier1_features.py
 
 Outputs:

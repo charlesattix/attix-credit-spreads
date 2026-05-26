@@ -1,4 +1,4 @@
-# Security Audit Report: pilotai-credit-spreads
+# Security Audit Report: attix-credit-spreads
 
 **Date:** 2026-03-24
 **Auditor:** Claude Code (automated static analysis)

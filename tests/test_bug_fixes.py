@@ -303,7 +303,7 @@ class TestDedupPersistence:
             now_iso = datetime.now(timezone.utc).isoformat()
             upsert_dedup_entry("XLE", "bearish", "credit_spread", now_iso, path=db_path)
 
-            with patch.dict(os.environ, {"PILOTAI_DB_PATH": db_path}):
+            with patch.dict(os.environ, {"ATTIX_DB_PATH": db_path}):
                 router = AlertRouter(
                     risk_gate=MagicMock(),
                     position_sizer=MagicMock(),

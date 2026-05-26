@@ -14,7 +14,7 @@ Output:
   compass/feature_analysis_{config}.md — Feature distributions and patterns
 
 Usage:
-    cd /home/node/openclaw/workspace/pilotai-credit-spreads
+    cd /home/node/openclaw/workspace/attix-credit-spreads
     PYTHONPATH=. python3 compass/collect_training_data.py               # exp401 (default)
     PYTHONPATH=. python3 compass/collect_training_data.py --config exp400
 """

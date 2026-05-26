@@ -35,7 +35,7 @@ ET = ZoneInfo("America/New_York")
 # Config from env vars
 # ---------------------------------------------------------------------------
 
-_DASHBOARD_URL = os.environ.get("RAILWAY_SERVICE_PILOTAI_CREDIT_SPREADS_URL", "")
+_DASHBOARD_URL = os.environ.get("RAILWAY_SERVICE_ATTIX_CREDIT_SPREADS_URL", "")
 _DASHBOARD_API_KEY = os.environ.get("DASHBOARD_API_KEY", "")
 _REQUEST_TIMEOUT = 10  # seconds per HTTP call
 
@@ -99,7 +99,7 @@ def _get_active_experiments() -> list[dict]:
     """Fetch active experiments from dashboard API."""
     base = _dashboard_base()
     if not base or not _DASHBOARD_API_KEY:
-        LOG.warning("RAILWAY_SERVICE_PILOTAI_CREDIT_SPREADS_URL or DASHBOARD_API_KEY not set")
+        LOG.warning("RAILWAY_SERVICE_ATTIX_CREDIT_SPREADS_URL or DASHBOARD_API_KEY not set")
         return []
     try:
         resp = _requests.get(
@@ -420,7 +420,7 @@ def main() -> None:
     if not _DASHBOARD_API_KEY:
         LOG.warning("DASHBOARD_API_KEY not set — sentinel cannot reach dashboard API")
     if not _DASHBOARD_URL:
-        LOG.warning("RAILWAY_SERVICE_PILOTAI_CREDIT_SPREADS_URL not set — sentinel cannot reach dashboard")
+        LOG.warning("RAILWAY_SERVICE_ATTIX_CREDIT_SPREADS_URL not set — sentinel cannot reach dashboard")
 
     scheduler = build_scheduler()
     scheduler.start()

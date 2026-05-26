@@ -3,8 +3,8 @@ import json
 import os
 from datetime import datetime
 
-SNAPSHOT_DIR = "/Users/charlesbot/projects/pilotai-credit-spreads/output/historical_snapshots"
-OUTPUT_DIR = "/Users/charlesbot/projects/pilotai-credit-spreads/output/html_reports"
+SNAPSHOT_DIR = "/Users/charlesbot/projects/attix-credit-spreads/output/historical_snapshots"
+OUTPUT_DIR = "/Users/charlesbot/projects/attix-credit-spreads/output/html_reports"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 CSS = """

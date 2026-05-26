@@ -25,7 +25,7 @@ Metrics per experiment:
   - Yearly breakdown (return, trades, wins, max DD)
 
 Usage:
-    cd /home/node/openclaw/workspace/pilotai-credit-spreads
+    cd /home/node/openclaw/workspace/attix-credit-spreads
     PYTHONPATH=. python3 scripts/phase4_ml_sweep.py
 """
 

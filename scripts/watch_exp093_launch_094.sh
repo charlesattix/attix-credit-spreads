@@ -2,10 +2,10 @@
 # Watch for exp_093 completion; parse 2023 result; auto-launch exp_094 if 2023 still negative
 
 set -euo pipefail
-cd /Users/charlesbot/projects/pilotai-credit-spreads
+cd /Users/charlesbot/projects/attix-credit-spreads
 
 PID_093=97966
-LOG=/Users/charlesbot/projects/pilotai-credit-spreads/output/exp_093_watcher.log
+LOG=/Users/charlesbot/projects/attix-credit-spreads/output/exp_093_watcher.log
 
 echo "[$(date)] Watcher started. Monitoring PID $PID_093 (exp_093 MA50 2023-only)" | tee -a "$LOG"
 

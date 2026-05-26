@@ -404,4 +404,4 @@ The paper trading account will show the truth. If the paper account is returning
 
 ---
 
-*Written by Claude acting as independent auditor. All git blame citations refer to commits in `/Users/charlesbot/projects/pilotai-credit-spreads`. Commission fix is in uncommitted working tree as of 2026-03-13.*
+*Written by Claude acting as independent auditor. All git blame citations refer to commits in `/Users/charlesbot/projects/attix-credit-spreads`. Commission fix is in uncommitted working tree as of 2026-03-13.*

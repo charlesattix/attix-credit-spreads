@@ -146,7 +146,7 @@ launchctl list | grep exp600
 | Last exit code | 0 | ✅ |
 | KeepAlive | true | ✅ auto-restarts on crash/reboot |
 | ThrottleInterval | 10s | ✅ prevents rapid crash loops |
-| WorkingDirectory | /Users/charlesbot/projects/pilotai-credit-spreads | ✅ |
+| WorkingDirectory | /Users/charlesbot/projects/attix-credit-spreads | ✅ |
 | Log path | ~/logs/exp600.log | ✅ |
 | plist in LaunchAgents | ✓ | ✅ will load on boot |
 

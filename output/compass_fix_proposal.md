@@ -694,7 +694,7 @@ logger.info(
 - Read-only (no writes through the API)
 - Stateless responses with explicit freshness metadata
 - Fail-open for non-critical paths (stale data returned with warning vs hard failure)
-- Auth via `x-api-key` header (consistent with `docs/PILOTAI_STRATEGY_API.md` pattern)
+- Auth via `x-api-key` header (consistent with `docs/ATTIX_STRATEGY_API.md` pattern)
 
 **Endpoints specification**:
 

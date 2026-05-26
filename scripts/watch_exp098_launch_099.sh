@@ -3,7 +3,7 @@
 # Usage: bash scripts/watch_exp098_launch_099.sh <PID_098>
 
 set -euo pipefail
-cd /Users/charlesbot/projects/pilotai-credit-spreads
+cd /Users/charlesbot/projects/attix-credit-spreads
 
 LOG=output/exp_099_watcher.log
 

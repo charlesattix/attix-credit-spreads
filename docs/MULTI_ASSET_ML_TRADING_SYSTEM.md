@@ -140,7 +140,7 @@ Existing Architecture (15,637 lines Python + Next.js web layer):
 ### New Directory Structure
 
 ```
-pilotai-credit-spreads/
+attix-credit-spreads/
 ├── main.py                          # Extended: multi-asset CLI
 ├── config.yaml                      # Extended: per-asset-class config
 ├── orchestrator.py                  # NEW: Multi-asset scan coordinator

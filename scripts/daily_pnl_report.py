@@ -147,7 +147,7 @@ def load_experiment_metrics(exp_id: str, account_size: float = 100_000) -> Dict:
     Only includes trades opened after the most recent account reset date.
     """
     cfg = EXPECTATIONS[exp_id]
-    db_path = os.environ.get(f"PILOTAI_DB_PATH_{exp_id.replace('-', '_')}", cfg["db_path"])
+    db_path = os.environ.get(f"ATTIX_DB_PATH_{exp_id.replace('-', '_')}", cfg["db_path"])
     reset_date = _get_reset_date(exp_id)
     try:
         trades = get_trades(source="execution", path=db_path, since=reset_date)

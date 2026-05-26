@@ -24,7 +24,7 @@ ROOT = Path(__file__).parent
 DATA_CANDIDATES = [
     ROOT.parent.parent / "compass" / "training_data_combined.csv",
     Path("/home/node/.openclaw/workspace/attix-compass/experiments/training_data_combined.csv"),
-    Path("/home/node/.openclaw/workspace/pilotai-credit-spreads/compass/training_data_combined.csv"),
+    Path("/home/node/.openclaw/workspace/attix-credit-spreads/compass/training_data_combined.csv"),
 ]
 RESULTS_DIR = ROOT / "results"
 INITIAL_CAPITAL = 100_000.0

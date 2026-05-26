@@ -57,7 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: docker build -t pilotai-credit-spreads .
+      - run: docker build -t attix-credit-spreads .
 
   deploy-gate:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'

@@ -310,7 +310,7 @@ class AlertRouter:
     def _load_dedup_from_db(self) -> None:
         """Load recent dedup entries from SQLite on startup."""
         try:
-            db_path = os.environ.get("PILOTAI_DB_PATH")
+            db_path = os.environ.get("ATTIX_DB_PATH")
             delete_old_dedup_entries(window_seconds=_DEDUP_WINDOW, path=db_path)
             entries = load_dedup_entries(window_seconds=_DEDUP_WINDOW, path=db_path)
             for entry in entries:
@@ -332,7 +332,7 @@ class AlertRouter:
         key = (ticker, direction, alert_type)
         self._dedup_ledger[key] = ts
         try:
-            db_path = os.environ.get("PILOTAI_DB_PATH")
+            db_path = os.environ.get("ATTIX_DB_PATH")
             upsert_dedup_entry(ticker, direction, alert_type, ts.isoformat(), path=db_path)
         except Exception as e:
             logger.warning("AlertRouter: could not persist dedup entry (non-fatal): %s", e)

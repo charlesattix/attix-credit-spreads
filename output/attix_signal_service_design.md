@@ -252,15 +252,15 @@ Data: 2026-03-07 | 57/57 strategies OK
 ## File Structure
 
 ```
-pilotai-credit-spreads/
-├── pilotai_signal/
+attix-credit-spreads/
+├── attix_signal/
 │   ├── __init__.py
 │   ├── config.py          # API keys, DB path, thresholds (env-based)
 │   ├── db.py              # Schema creation, connection, helpers
 │   ├── collector.py       # Fetches all 57 strategies → DB
 │   ├── scorer.py          # Builds ticker_signals from snapshots
 │   ├── alerts.py          # Alert classification + Telegram delivery
-│   └── cli.py             # Entry point: `python -m pilotai_signal`
+│   └── cli.py             # Entry point: `python -m attix_signal`
 ├── scripts/
 │   └── run_signal_service.sh   # Cron wrapper
 └── data/
@@ -272,12 +272,12 @@ pilotai-credit-spreads/
 ## Cron Schedule
 
 ```bash
-# pilotai_signal cron (add via: crontab -e)
+# attix_signal cron (add via: crontab -e)
 # Runs at 9:35 AM ET Mon–Fri (market open + 5 min for price settling)
-35 9 * * 1-5 /path/to/pilotai-credit-spreads/scripts/run_signal_service.sh >> /path/to/logs/signal_service.log 2>&1
+35 9 * * 1-5 /path/to/attix-credit-spreads/scripts/run_signal_service.sh >> /path/to/logs/signal_service.log 2>&1
 
 # Optional: 4:00 PM ET digest after close
-0 16 * * 1-5 /path/to/pilotai-credit-spreads/scripts/run_signal_service.sh --digest-only >> /path/to/logs/signal_service.log 2>&1
+0 16 * * 1-5 /path/to/attix-credit-spreads/scripts/run_signal_service.sh --digest-only >> /path/to/logs/signal_service.log 2>&1
 ```
 
 ---
@@ -299,26 +299,26 @@ The Attix staging API has no historical endpoint — all 22 alternative paths re
 
 ```bash
 # First-time setup
-cd /Users/charlesbot/projects/pilotai-credit-spreads
-python -m pilotai_signal init          # Create DB schema
+cd /Users/charlesbot/projects/attix-credit-spreads
+python -m attix_signal init          # Create DB schema
 
 # Run collection (also runs scorer + alerts)
-python -m pilotai_signal collect       # Full run
+python -m attix_signal collect       # Full run
 
 # Rebuild signal scores only (no API calls)
-python -m pilotai_signal score         # Recompute ticker_signals from existing snapshots
+python -m attix_signal score         # Recompute ticker_signals from existing snapshots
 
 # Send digest manually
-python -m pilotai_signal digest        # Post daily digest to Telegram
+python -m attix_signal digest        # Post daily digest to Telegram
 
 # View current top signals
-python -m pilotai_signal show          # Print top-20 tickers by conviction
+python -m attix_signal show          # Print top-20 tickers by conviction
 
 # Check collection history
-python -m pilotai_signal status        # Show last N collection runs
+python -m attix_signal status        # Show last N collection runs
 
 # Dry run (no DB writes, no Telegram)
-python -m pilotai_signal collect --dry-run
+python -m attix_signal collect --dry-run
 ```
 
 ---
@@ -338,13 +338,13 @@ Optional (not required):
 
 ```bash
 # Required
-PILOTAI_API_KEY=cZZP6he1Qez8Lb6njh6w5vUe
+ATTIX_API_KEY=cZZP6he1Qez8Lb6njh6w5vUe
 TELEGRAM_BOT_TOKEN=<your-bot-token>
 TELEGRAM_CHAT_ID=<your-chat-id>
 
 # Optional overrides
-PILOTAI_DB_PATH=/path/to/pilotai_signal.db   # default: data/pilotai_signal.db
-PILOTAI_API_URL=https://ai-stag.attix.com/v2/strategy_recommendation
-PILOTAI_BATCH_SIZE=6                           # slugs per API request
-PILOTAI_REQUEST_TIMEOUT=90                     # seconds per batch
+ATTIX_DB_PATH=/path/to/pilotai_signal.db   # default: data/pilotai_signal.db
+ATTIX_API_URL=https://ai-stag.attix.com/v2/strategy_recommendation
+ATTIX_BATCH_SIZE=6                           # slugs per API request
+ATTIX_REQUEST_TIMEOUT=90                     # seconds per batch
 ```

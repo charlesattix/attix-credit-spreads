@@ -150,7 +150,7 @@ def run_health_check(config: dict) -> List[str]:
     """
     from shared.database import get_db
 
-    db_path = config.get("db_path") or os.environ.get("PILOTAI_DB_PATH")
+    db_path = config.get("db_path") or os.environ.get("ATTIX_DB_PATH")
     max_positions = config.get("risk", {}).get("max_positions", 0)
     max_same_expiration = (
         config.get("risk", {})
@@ -225,7 +225,7 @@ def main() -> int:
 
     db_path = config.get("db_path")
     if db_path:
-        os.environ["PILOTAI_DB_PATH"] = db_path
+        os.environ["ATTIX_DB_PATH"] = db_path
 
     experiment_id = config.get("experiment_id", "UNKNOWN")
     os.environ.setdefault("EXPERIMENT_ID", experiment_id)

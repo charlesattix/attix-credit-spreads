@@ -766,7 +766,7 @@ def main():
     if not db_path:
         from shared.constants import DATA_DIR
         candidates = [
-            os.environ.get("PILOTAI_DB_PATH", ""),
+            os.environ.get("ATTIX_DB_PATH", ""),
             os.path.join(DATA_DIR, "attix_champion.db"),
             os.path.join(DATA_DIR, "pilotai.db"),
         ]

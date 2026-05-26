@@ -71,8 +71,8 @@ This is a full-stack options trading system combining a Python strategy/ML backe
 
 ### Strengths
 - Clean separation between Python modules: `strategy/`, `ml/`, `alerts/`, `backtest/`, `tracker/` each own a distinct concern.
-- Graceful ML fallback: If the ML pipeline fails, the system falls back to rules-based scoring (`/home/pmcerlean/projects/pilotai-credit-spreads/main.py:67-75`).
-- Multi-provider data architecture: Options data can come from yfinance, Tradier, or Polygon with automatic fallback (`/home/pmcerlean/projects/pilotai-credit-spreads/strategy/options_analyzer.py:33-51`).
+- Graceful ML fallback: If the ML pipeline fails, the system falls back to rules-based scoring (`/home/pmcerlean/projects/attix-credit-spreads/main.py:67-75`).
+- Multi-provider data architecture: Options data can come from yfinance, Tradier, or Polygon with automatic fallback (`/home/pmcerlean/projects/attix-credit-spreads/strategy/options_analyzer.py:33-51`).
 
 ### Issues
 
@@ -389,9 +389,9 @@ This is a well-structured, purpose-built credit spread trading system. The archi
 
 **Severity:** Critical
 **Files:**
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/lib/api.ts:1-20`
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/lib/types.ts:51-82`
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/types/alert.ts:11-31`
+- `/home/pmcerlean/projects/attix-credit-spreads/web/lib/api.ts:1-20`
+- `/home/pmcerlean/projects/attix-credit-spreads/web/lib/types.ts:51-82`
+- `/home/pmcerlean/projects/attix-credit-spreads/web/types/alert.ts:11-31`
 
 There are **three separate `Alert` interface definitions** with divergent shapes. `web/lib/api.ts` has a flat options-data `Alert` (with `credit`, `pop`, `score` as required fields). `web/types/alert.ts` has a UI-oriented `Alert` (with `legs`, `reasoning`, `aiConfidence` as strings). `web/lib/types.ts` has yet another with a superset of optional fields from both.
 
@@ -424,9 +424,9 @@ export interface Alert {
 
 **Severity:** Critical
 **Files:**
-- `/home/pmcerlean/projects/pilotai-credit-spreads/main.py:123`
-- `/home/pmcerlean/projects/pilotai-credit-spreads/paper_trader.py:259,262`
-- `/home/pmcerlean/projects/pilotai-credit-spreads/ml/feature_engine.py:332`
+- `/home/pmcerlean/projects/attix-credit-spreads/main.py:123`
+- `/home/pmcerlean/projects/attix-credit-spreads/paper_trader.py:259,262`
+- `/home/pmcerlean/projects/attix-credit-spreads/ml/feature_engine.py:332`
 
 ```python
 # main.py:121-124
@@ -458,9 +458,9 @@ except:
 
 **Severity:** Critical
 **Files:**
-- `/home/pmcerlean/projects/pilotai-credit-spreads/paper_trader.py:80-84`
-- `/home/pmcerlean/projects/pilotai-credit-spreads/tracker/trade_tracker.py:57-65`
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/paper-trades/route.ts:71-74`
+- `/home/pmcerlean/projects/attix-credit-spreads/paper_trader.py:80-84`
+- `/home/pmcerlean/projects/attix-credit-spreads/tracker/trade_tracker.py:57-65`
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/paper-trades/route.ts:71-74`
 
 ```python
 # paper_trader.py:80-84
@@ -487,7 +487,7 @@ def _save_trades(self):
 ### CQ-04: Command Injection via `exec` in Backtest API Route
 
 **Severity:** Critical
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/backtest/run/route.ts:22`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/backtest/run/route.ts:22`
 
 ```typescript
 const { stdout, stderr } = await execPromise('python3 main.py backtest', {
@@ -508,9 +508,9 @@ While the command itself is hardcoded (no user input in the string), executing s
 
 **Severity:** High (DRY violation)
 **Files:**
-- `/home/pmcerlean/projects/pilotai-credit-spreads/strategy/technical_analysis.py:120-124`
-- `/home/pmcerlean/projects/pilotai-credit-spreads/ml/feature_engine.py:475-482`
-- `/home/pmcerlean/projects/pilotai-credit-spreads/ml/regime_detector.py:343-354`
+- `/home/pmcerlean/projects/attix-credit-spreads/strategy/technical_analysis.py:120-124`
+- `/home/pmcerlean/projects/attix-credit-spreads/ml/feature_engine.py:475-482`
+- `/home/pmcerlean/projects/attix-credit-spreads/ml/regime_detector.py:343-354`
 
 All three files implement an identical RSI calculation:
 ```python
@@ -531,9 +531,9 @@ def _calculate_rsi(self, prices: pd.Series, period: int = 14) -> pd.Series:
 
 **Severity:** High (DRY violation)
 **Files:**
-- `/home/pmcerlean/projects/pilotai-credit-spreads/strategy/options_analyzer.py:212-266`
-- `/home/pmcerlean/projects/pilotai-credit-spreads/strategy/polygon_provider.py:244-272`
-- `/home/pmcerlean/projects/pilotai-credit-spreads/ml/iv_analyzer.py:243-294`
+- `/home/pmcerlean/projects/attix-credit-spreads/strategy/options_analyzer.py:212-266`
+- `/home/pmcerlean/projects/attix-credit-spreads/strategy/polygon_provider.py:244-272`
+- `/home/pmcerlean/projects/attix-credit-spreads/ml/iv_analyzer.py:243-294`
 
 The same IV rank formula `(current - min) / (max - min) * 100` is implemented three times with slightly different fallback behaviors and return shapes.
 
@@ -545,8 +545,8 @@ The same IV rank formula `(current - min) / (max - min) * 100` is implemented th
 
 **Severity:** High (DRY violation / Data inconsistency risk)
 **Files:**
-- `/home/pmcerlean/projects/pilotai-credit-spreads/ml/sentiment_scanner.py:38-56`
-- `/home/pmcerlean/projects/pilotai-credit-spreads/ml/feature_engine.py:44-57`
+- `/home/pmcerlean/projects/attix-credit-spreads/ml/sentiment_scanner.py:38-56`
+- `/home/pmcerlean/projects/attix-credit-spreads/ml/feature_engine.py:44-57`
 
 ```python
 # sentiment_scanner.py has 17 dates (2025-2026) including datetime(2026, 1, 28)
@@ -563,9 +563,9 @@ The two lists are already inconsistent: `sentiment_scanner.py` includes `datetim
 
 **Severity:** High (DRY violation)
 **Files:**
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/lib/paper-trades.ts:50-78` (function `calculatePortfolioStats`)
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/paper-trades/route.ts:94-116` (inline in GET handler)
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/positions/route.ts:39-72` (inline in GET handler)
+- `/home/pmcerlean/projects/attix-credit-spreads/web/lib/paper-trades.ts:50-78` (function `calculatePortfolioStats`)
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/paper-trades/route.ts:94-116` (inline in GET handler)
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/positions/route.ts:39-72` (inline in GET handler)
 
 All three compute the same metrics: filter open/closed trades, count winners/losers, sum realized/unrealized PnL, calculate win rate. Any bug fix must be applied three times.
 
@@ -576,7 +576,7 @@ All three compute the same metrics: filter open/closed trades, count winners/los
 ### CQ-09: Multiple yfinance Downloads for Same Ticker Per Feature Build
 
 **Severity:** High (Performance)
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/ml/feature_engine.py`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/ml/feature_engine.py`
 
 ```python
 # _compute_technical_features downloads ticker data (6mo, line 139)
@@ -601,7 +601,7 @@ The `feature_cache` attribute (line 40) is initialized but never used.
 ### CQ-10: `_estimate_delta` Uses Median Strike as Spot Price
 
 **Severity:** High (Logic Error)
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/strategy/options_analyzer.py:194`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/strategy/options_analyzer.py:194`
 
 ```python
 def _estimate_delta(self, df: pd.DataFrame) -> pd.Series:
@@ -617,7 +617,7 @@ The spot price should be the current underlying price, not the median of availab
 ### CQ-11: `_estimate_delta` Returns Absolute Values for All Options
 
 **Severity:** High (Logic Error)
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/strategy/options_analyzer.py:210`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/strategy/options_analyzer.py:210`
 
 ```python
 return pd.Series(np.round(np.abs(delta), 4), index=df.index)
@@ -641,8 +641,8 @@ This expects **negative** deltas for puts. The absolute value transform means th
 
 **Severity:** High (Code Smell)
 **Files:**
-- `/home/pmcerlean/projects/pilotai-credit-spreads/main.py:20`
-- `/home/pmcerlean/projects/pilotai-credit-spreads/demo.py:12`
+- `/home/pmcerlean/projects/attix-credit-spreads/main.py:20`
+- `/home/pmcerlean/projects/attix-credit-spreads/demo.py:12`
 
 ```python
 sys.path.insert(0, str(Path(__file__).parent))
@@ -655,7 +655,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 ### CQ-13: P&L Calculation Dead Code in `_evaluate_position`
 
 **Severity:** High (Dead Code / Logic Error)
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/paper_trader.py:317-321`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/paper_trader.py:317-321`
 
 ```python
 # ITM — losing money
@@ -676,8 +676,8 @@ Line 319 computes a P&L value that is immediately overwritten on line 321. The c
 
 **Severity:** High (DRY violation)
 **Files:**
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/lib/types.ts:41-49`
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/types/alert.ts:1-9`
+- `/home/pmcerlean/projects/attix-credit-spreads/web/lib/types.ts:41-49`
+- `/home/pmcerlean/projects/attix-credit-spreads/web/types/alert.ts:1-9`
 
 Identical `TradeLeg` interface defined in both files. `mockData.ts` imports from `@/types/alert` while `types.ts` defines its own.
 
@@ -688,7 +688,7 @@ Identical `TradeLeg` interface defined in both files. `mockData.ts` imports from
 ### CQ-15: In-Memory Rate Limiter in Chat Route Resets on Deployment
 
 **Severity:** High (Design Flaw)
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/chat/route.ts:16`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/chat/route.ts:16`
 
 ```typescript
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -732,7 +732,7 @@ expected_loss = -1.0    # Magic: -100%
 ### CQ-17: `_check_bullish_conditions` and `_check_bearish_conditions` are Near-Duplicates
 
 **Severity:** Medium (DRY violation)
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/strategy/spread_strategy.py:96-162`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/strategy/spread_strategy.py:96-162`
 
 These two methods share ~80% of their logic. The only difference is which trend is checked and which RSI bound is used.
 
@@ -743,7 +743,7 @@ These two methods share ~80% of their logic. The only difference is which trend 
 ### CQ-18: `_find_bull_put_spreads` and `_find_bear_call_spreads` are Near-Duplicates
 
 **Severity:** Medium (DRY violation)
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/strategy/spread_strategy.py:164-324`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/strategy/spread_strategy.py:164-324`
 
 These two 80-line methods differ only in:
 1. Filtering puts vs calls
@@ -757,7 +757,7 @@ These two 80-line methods differ only in:
 ### CQ-19: `get_options_chain` and `get_full_chain` Have Massive Code Duplication in Polygon Provider
 
 **Severity:** Medium (DRY violation)
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/strategy/polygon_provider.py:81-223`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/strategy/polygon_provider.py:81-223`
 
 Lines 106-141 (inside `get_options_chain`) and lines 185-213 (inside `get_full_chain`) contain nearly identical row-building logic for parsing Polygon API response items into DataFrames.
 
@@ -768,7 +768,7 @@ Lines 106-141 (inside `get_options_chain`) and lines 185-213 (inside `get_full_c
 ### CQ-20: `_analyze_trend` Mutates the Input DataFrame
 
 **Severity:** Medium (Side Effect)
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/strategy/technical_analysis.py:84-85`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/strategy/technical_analysis.py:84-85`
 
 ```python
 def _analyze_trend(self, price_data: pd.DataFrame) -> Dict:
@@ -785,7 +785,7 @@ Adding columns to the input DataFrame is a side effect. If `analyze()` is called
 ### CQ-21: `recent_data` Variable Assigned but Never Used
 
 **Severity:** Medium (Dead Code)
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/strategy/technical_analysis.py:149`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/strategy/technical_analysis.py:149`
 
 ```python
 def _analyze_support_resistance(self, price_data: pd.DataFrame) -> Dict:
@@ -801,7 +801,7 @@ def _analyze_support_resistance(self, price_data: pd.DataFrame) -> Dict:
 ### CQ-22: Synthetic Training Data Hard-Wires Feature Logic That Should Come from the Model
 
 **Severity:** Medium (Design Smell)
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/ml/signal_model.py:454-607`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/ml/signal_model.py:454-607`
 
 The `generate_synthetic_training_data` method creates 2000 samples with hardcoded logic determining labels (e.g., "if IV rank > 70, add 30 to win score"). The model is then trained on this synthetic data, which means it will only ever learn the rules the developer hardcoded.
 
@@ -812,7 +812,7 @@ The `generate_synthetic_training_data` method creates 2000 samples with hardcode
 ### CQ-23: `position_sizer.rebalance_positions` Uses `win_prob` Parameter Name Inconsistently
 
 **Severity:** Medium (API inconsistency)
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/ml/position_sizer.py:337`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/ml/position_sizer.py:337`
 
 ```python
 sizing = self.calculate_position_size(
@@ -838,7 +838,7 @@ This will cause a `TypeError` at runtime if `rebalance_positions` is ever called
 ### CQ-24: `rebalance_positions` Divides by `current_size` Without Zero-Check
 
 **Severity:** Medium (Runtime Error)
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/ml/position_sizer.py:349`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/ml/position_sizer.py:349`
 
 ```python
 if abs(recommended_size - current_size) / current_size > 0.20:  # ZeroDivisionError if current_size == 0
@@ -851,7 +851,7 @@ if abs(recommended_size - current_size) / current_size > 0.20:  # ZeroDivisionEr
 ### CQ-25: Missing `ticker` Field in SentimentScanner Default Scan
 
 **Severity:** Medium (Data inconsistency)
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/ml/sentiment_scanner.py:502-514`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/ml/sentiment_scanner.py:502-514`
 
 ```python
 def _get_default_scan(self) -> Dict:
@@ -871,9 +871,9 @@ def _get_default_scan(self) -> Dict:
 
 **Severity:** Medium (Operational)
 **Files:**
-- `/home/pmcerlean/projects/pilotai-credit-spreads/ml/ml_pipeline.py:74,106,414,462`
-- `/home/pmcerlean/projects/pilotai-credit-spreads/ml/signal_model.py:165,314,392`
-- `/home/pmcerlean/projects/pilotai-credit-spreads/paper_trader.py:429` (emoji in print, not log)
+- `/home/pmcerlean/projects/attix-credit-spreads/ml/ml_pipeline.py:74,106,414,462`
+- `/home/pmcerlean/projects/attix-credit-spreads/ml/signal_model.py:165,314,392`
+- `/home/pmcerlean/projects/attix-credit-spreads/paper_trader.py:429` (emoji in print, not log)
 
 ```python
 logger.info("✓ ML pipeline initialized")
@@ -887,7 +887,7 @@ logger.info("✓ Model training complete")
 ### CQ-27: `_compute_term_structure` Mutates Options Chain Input
 
 **Severity:** Medium (Side Effect)
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/ml/iv_analyzer.py:194`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/ml/iv_analyzer.py:194`
 
 ```python
 options_chain['dte'] = (options_chain['expiration'] - now).dt.days
@@ -902,7 +902,7 @@ This modifies the caller's DataFrame. Other code downstream may not expect the `
 ### CQ-28: `close_spread` Uses `ratio_qty=contracts` Instead of `ratio_qty=1`
 
 **Severity:** Medium (Potential Logic Error)
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/strategy/alpaca_provider.py:261-271`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/strategy/alpaca_provider.py:261-271`
 
 In `submit_credit_spread`, legs use `ratio_qty=1` and `qty=contracts` on the order. In `close_spread`, legs use `ratio_qty=contracts` and no `qty` on the order:
 
@@ -923,7 +923,7 @@ OptionLegRequest(symbol=short_sym, ratio_qty=contracts, side=OrderSide.BUY, ...)
 ### CQ-29: Double Balance Accounting in Backtester
 
 **Severity:** Medium (Logic Error)
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/backtest/backtester.py:206,322`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/backtest/backtester.py:206,322`
 
 ```python
 # When opening: credit added to capital (line 206)
@@ -943,7 +943,7 @@ The credit is received at entry (added to capital), and then on close the "profi
 ### CQ-30: `_consolidate_levels` Divides by `consolidated[-1]` Without Zero-Check
 
 **Severity:** Medium
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/strategy/technical_analysis.py:227`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/strategy/technical_analysis.py:227`
 
 ```python
 if abs(level - consolidated[-1]) / consolidated[-1] > threshold:
@@ -956,7 +956,7 @@ If `consolidated[-1]` is 0 (very unlikely for stock prices but possible for deri
 ### CQ-31: Stale Data Risk: `lookback_days` Parameter Name is Misleading in `SentimentScanner.scan()`
 
 **Severity:** Medium (Naming)
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/ml/sentiment_scanner.py:75`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/ml/sentiment_scanner.py:75`
 
 ```python
 def scan(self, ticker, expiration_date=None, lookback_days=7):
@@ -971,7 +971,7 @@ def scan(self, ticker, expiration_date=None, lookback_days=7):
 ### CQ-32: `_build_occ_symbol` Has Redundant `.replace(" ", " ")`
 
 **Severity:** Medium (Code Smell)
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/strategy/alpaca_provider.py:95`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/strategy/alpaca_provider.py:95`
 
 ```python
 return f"{ticker.upper():<6}{date_str}{cp}{strike_int:08d}".replace(" ", " ").strip()
@@ -986,7 +986,7 @@ return f"{ticker.upper():<6}{date_str}{cp}{strike_int:08d}".replace(" ", " ").st
 ### CQ-33: Date Parsing Loop in `_build_occ_symbol` Tries Same Format Twice
 
 **Severity:** Medium (Code Smell)
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/strategy/alpaca_provider.py:83-89`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/strategy/alpaca_provider.py:83-89`
 
 ```python
 for fmt in ("%Y-%m-%d", "%Y-%m-%d %H:%M:%S"):
@@ -1013,49 +1013,49 @@ Both iterations of the loop parse with `"%Y-%m-%d"` (the `split(" ")[0]` strips 
 ### CQ-35: `unused import os` in polygon_provider.py
 
 **Severity:** Low
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/strategy/polygon_provider.py:8`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/strategy/polygon_provider.py:8`
 
 `os` is only used in the `__main__` block for `os.environ.get()`, not in the class itself.
 
 ### CQ-36: `Tuple` Import Unused in Several Files
 
 **Severity:** Low
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/strategy/spread_strategy.py:8`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/strategy/spread_strategy.py:8`
 
 `Tuple` is imported but never used.
 
 ### CQ-37: No Input Length Validation on Chat Messages
 
 **Severity:** Low (Security)
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/chat/route.ts:67`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/chat/route.ts:67`
 
 Messages array length and individual message content length are not validated before being sent to the OpenAI API, potentially allowing abuse (large payloads).
 
 ### CQ-38: `scipy.stats` Import Unused in feature_engine.py
 
 **Severity:** Low
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/ml/feature_engine.py:19`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/ml/feature_engine.py:19`
 
 `from scipy import stats` is imported but never used in the module.
 
 ### CQ-39: `scipy.stats.norm` Import Unused in iv_analyzer.py
 
 **Severity:** Low
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/ml/iv_analyzer.py:17`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/ml/iv_analyzer.py:17`
 
 `from scipy.stats import norm` is imported but never used.
 
 ### CQ-40: `scipy.interpolate` Import Unused in iv_analyzer.py
 
 **Severity:** Low
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/ml/iv_analyzer.py:16`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/ml/iv_analyzer.py:16`
 
 `from scipy import interpolate` is imported but never used.
 
 ### CQ-41: `_compute_skew_metrics` Filters by `volume > 10` Using Potentially Missing Column
 
 **Severity:** Low
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/ml/iv_analyzer.py:112`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/ml/iv_analyzer.py:112`
 
 If the options chain from yfinance doesn't have a `volume` column (which is possible), this will raise a `KeyError`.
 
@@ -1069,7 +1069,7 @@ While less critical in test files, using `any` reduces type safety.
 ### CQ-43: `console.log` Used Instead of Logger in Alerts Route
 
 **Severity:** Low (Inconsistency)
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/alerts/route.ts:32`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/alerts/route.ts:32`
 
 ```typescript
 console.log("Failed to read alerts:", error);
@@ -1080,14 +1080,14 @@ Other routes use the structured `logger`. This one uses `console.log`.
 ### CQ-44: `uuid` Import in alpaca_provider.py When Only Used for Random String
 
 **Severity:** Low
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/strategy/alpaca_provider.py:8`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/strategy/alpaca_provider.py:8`
 
 The full `uuid` module is imported but only `uuid.uuid4().hex[:8]` is used. This is fine functionally but could use `secrets.token_hex(4)` for a lighter alternative.
 
 ### CQ-45: `generate_alerts_only` Calls `scan_opportunities` Which Does Everything
 
 **Severity:** Low (Design Smell)
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/main.py:279-289`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/main.py:279-289`
 
 The docstring says "Generate alerts from recent scans without new scanning" but the implementation calls `self.scan_opportunities()` which does a full scan. The method name and docstring are misleading.
 
@@ -1167,10 +1167,10 @@ This application has several **critical** and **high**-severity security vulnera
 ### CRITICAL-1: Authentication Completely Broken -- Frontend Never Sends Auth Tokens (CVSS 9.8)
 
 **Files:**
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/middleware.ts` (lines 16-26)
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/lib/hooks.ts` (lines 3, 6, 13, 20)
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/lib/api.ts` (lines 141-197)
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/settings/page.tsx` (lines 16, 35)
+- `/home/pmcerlean/projects/attix-credit-spreads/web/middleware.ts` (lines 16-26)
+- `/home/pmcerlean/projects/attix-credit-spreads/web/lib/hooks.ts` (lines 3, 6, 13, 20)
+- `/home/pmcerlean/projects/attix-credit-spreads/web/lib/api.ts` (lines 141-197)
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/settings/page.tsx` (lines 16, 35)
 
 **Description:** The middleware at `middleware.ts` checks for a `Bearer` token in the `Authorization` header and blocks requests without it (returning 401). However, **no client-side code ever sends an authorization header**. The `hooks.ts` SWR fetcher is a plain `fetch(url).then(res => res.json())` with no auth headers. The `api.ts` functions use `fetch(url, { cache: 'no-store' })` with no auth. The settings page calls `fetch('/api/config')` with no auth.
 
@@ -1192,8 +1192,8 @@ If `API_AUTH_TOKEN` is unset and the middleware returns 503, the frontend is com
 ### CRITICAL-2: Remote Code Execution via `child_process.exec` (CVSS 9.1)
 
 **Files:**
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/scan/route.ts` (lines 2, 21)
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/backtest/run/route.ts` (lines 3, 22)
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/scan/route.ts` (lines 2, 21)
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/backtest/run/route.ts` (lines 3, 22)
 
 **Description:** Both the `/api/scan` (POST) and `/api/backtest/run` (POST) endpoints execute shell commands via `child_process.exec`:
 
@@ -1224,7 +1224,7 @@ Additionally, the scan endpoint returns `err.message`, `err.stdout`, and `err.st
 ### CRITICAL-3: Arbitrary Configuration Write via `/api/config` POST -- System Takeover (CVSS 9.0)
 
 **Files:**
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/config/route.ts` (lines 92, 106-120)
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/config/route.ts` (lines 92, 106-120)
 
 **Description:** The POST handler for `/api/config` accepts a JSON body, validates it with Zod, and writes it to `../config.yaml`. Two critical problems:
 
@@ -1252,7 +1252,7 @@ Additionally, the scan endpoint returns `err.message`, `err.stdout`, and `err.st
 
 ### HIGH-1: Token Comparison Vulnerable to Timing Attack (CVSS 7.5)
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/web/middleware.ts` (line 24)
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/web/middleware.ts` (line 24)
 
 **Description:** The authentication token comparison uses direct string equality:
 
@@ -1278,8 +1278,8 @@ if (tokenBuffer.length !== expectedBuffer.length || !timingSafeEqual(tokenBuffer
 ### HIGH-2: User ID Derivable from Token -- Broken User Isolation (CVSS 7.5)
 
 **Files:**
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/middleware.ts` (lines 29-33, 36-44)
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/paper-trades/route.ts` (lines 31-33)
+- `/home/pmcerlean/projects/attix-credit-spreads/web/middleware.ts` (lines 29-33, 36-44)
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/paper-trades/route.ts` (lines 31-33)
 
 **Description:** The userId is derived from the auth token using a trivially weak hash (DJB2-style, line 36-44):
 
@@ -1307,10 +1307,10 @@ Since there is only one `API_AUTH_TOKEN`, **all users share the same userId** (`
 ### HIGH-3: No Rate Limiting on Critical Endpoints (CVSS 7.0)
 
 **Files:**
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/scan/route.ts`
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/backtest/run/route.ts`
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/paper-trades/route.ts`
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/config/route.ts`
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/scan/route.ts`
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/backtest/run/route.ts`
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/paper-trades/route.ts`
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/config/route.ts`
 
 **Description:** Only the `/api/chat` endpoint has rate limiting. The `/api/scan` and `/api/backtest/run` endpoints have a concurrency guard (only one at a time) but no rate limit -- an attacker can trigger scans/backtests continuously, consuming server resources and making excessive calls to third-party APIs (Polygon, Tradier, Alpaca), potentially exhausting API quotas or incurring costs.
 
@@ -1328,7 +1328,7 @@ The paper-trades endpoint has no rate limiting, allowing rapid creation/deletion
 ### HIGH-4: Secrets Stored in config.yaml Instead of Environment Variables (CVSS 7.0)
 
 **Files:**
-- `/home/pmcerlean/projects/pilotai-credit-spreads/config.yaml` (lines 82-83, 88-89, 99, 103)
+- `/home/pmcerlean/projects/attix-credit-spreads/config.yaml` (lines 82-83, 88-89, 99, 103)
 
 **Description:** While environment variable substitution is supported (`${ALPACA_API_KEY}`), the config file contains placeholder secrets as defaults:
 
@@ -1350,7 +1350,7 @@ The `config.yaml` file is tracked in git (it is not in `.gitignore`). If a devel
 
 ### HIGH-5: No Security Headers (CVSS 6.5)
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/web/next.config.js`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/web/next.config.js`
 
 **Description:** The Next.js configuration has no security headers configured. Missing headers include:
 
@@ -1387,10 +1387,10 @@ const nextConfig = {
 ### HIGH-6: Error Messages Expose Internal State (CVSS 6.0)
 
 **Files:**
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/scan/route.ts` (lines 33-39)
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/backtest/run/route.ts` (line 51)
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/error.tsx` (line 14)
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/global-error.tsx` (line 9)
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/scan/route.ts` (lines 33-39)
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/backtest/run/route.ts` (line 51)
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/error.tsx` (line 14)
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/global-error.tsx` (line 9)
 
 **Description:** The scan endpoint returns raw error messages, stdout, and stderr in the API response:
 
@@ -1415,7 +1415,7 @@ The error boundary components also display `error.message` directly to the user 
 
 ### MEDIUM-1: Third-Party Script Injection via TradingView Widget (CVSS 6.0)
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/web/components/layout/ticker.tsx` (lines 10-36)
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/web/components/layout/ticker.tsx` (lines 10-36)
 
 **Description:** The component directly sets `innerHTML` and injects an external script from `s3.tradingview.com`:
 
@@ -1438,7 +1438,7 @@ This loads and executes third-party JavaScript from TradingView's CDN. If Tradin
 
 ### MEDIUM-2: Config POST Enables Path Traversal via File Paths (CVSS 5.5)
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/config/route.ts` (lines 57-59, 83-84, 91-92)
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/config/route.ts` (lines 57-59, 83-84, 91-92)
 
 **Description:** The config schema accepts `json_file`, `text_file`, `csv_file`, `report_dir`, and `logging.file` as writable string fields without path validation. Combined with `.passthrough()`, an attacker can set these to arbitrary paths:
 
@@ -1461,7 +1461,7 @@ When the Python backend reads this config and writes alert files or logs, it wri
 
 ### MEDIUM-3: In-Memory Rate Limiter Bypass (CVSS 5.0)
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/chat/route.ts` (lines 16-36, 60)
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/chat/route.ts` (lines 16-36, 60)
 
 **Description:** The rate limiter uses `x-forwarded-for` header for IP identification (line 60):
 
@@ -1483,7 +1483,7 @@ Problems:
 
 ### MEDIUM-4: Client-Side User ID Forgeable (CVSS 5.0)
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/web/lib/user-id.ts` (lines 10-18)
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/web/lib/user-id.ts` (lines 10-18)
 
 **Description:** The client-side `getUserId()` generates a random UUID stored in `localStorage`. This ID is used for paper trading. An attacker can:
 
@@ -1501,7 +1501,7 @@ Note: This client-side user ID system is separate from the middleware-based `x-u
 
 ### MEDIUM-5: Prompt Injection in Chat Endpoint (CVSS 5.0)
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/chat/route.ts` (lines 65, 73-78, 100)
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/chat/route.ts` (lines 65, 73-78, 100)
 
 **Description:** User messages are forwarded directly to the OpenAI API without sanitization:
 
@@ -1526,7 +1526,7 @@ An attacker can inject prompt instructions to override the system prompt, extrac
 
 ### MEDIUM-6: ESLint Disabled During Builds (CVSS 4.0)
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/web/next.config.js` (lines 4-6)
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/web/next.config.js` (lines 4-6)
 
 **Description:**
 
@@ -1546,7 +1546,7 @@ ESLint catches security issues (e.g., `dangerouslySetInnerHTML`, missing `rel="n
 
 ### LOW-1: CORS Not Explicitly Configured (CVSS 3.5)
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/web/next.config.js`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/web/next.config.js`
 
 **Description:** No CORS configuration is set. Next.js API routes default to same-origin, which is generally safe, but there is no explicit deny policy for cross-origin requests.
 
@@ -1556,7 +1556,7 @@ ESLint catches security issues (e.g., `dangerouslySetInnerHTML`, missing `rel="n
 
 ### LOW-2: Weak Trade ID Generation (CVSS 3.0)
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/paper-trades/route.ts` (line 158)
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/paper-trades/route.ts` (line 158)
 
 **Description:**
 
@@ -1572,7 +1572,7 @@ id: `PT-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
 
 ### LOW-3: Alpaca Account Number Logged (CVSS 2.5)
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/strategy/alpaca_provider.py` (lines 43-47)
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/strategy/alpaca_provider.py` (lines 43-47)
 
 **Description:**
 
@@ -1592,7 +1592,7 @@ The account number and cash balance are logged to the rotating log file. If log 
 
 ### LOW-4: Telegram Bot Token in Example Code (CVSS 2.0)
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/alerts/telegram_bot.py` (line 159)
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/alerts/telegram_bot.py` (line 159)
 
 **Description:**
 
@@ -1610,7 +1610,7 @@ While this is a placeholder in documentation, it demonstrates the exact format o
 
 ### Dependency Concerns
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/web/package.json`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/web/package.json`
 
 - `next: ^14.2.0` -- Next.js 14.2.x has had several security patches. Ensure the latest 14.2.x patch is installed.
 - `react: ^19.2.4` / `react-dom: ^19.2.4` -- React 19 with Next.js 14 may have compatibility issues.
@@ -1669,12 +1669,12 @@ The system is a Python + Next.js 14 trading platform. The Python backend handles
 
 During a single `analyze_trade()` call for one ticker, the system downloads historical price data from yfinance **at least 5 separate times**:
 
-1. `/home/pmcerlean/projects/pilotai-credit-spreads/ml/feature_engine.py:139` -- `yf.download(ticker, period='6mo')` in `_compute_technical_features`
-2. `/home/pmcerlean/projects/pilotai-credit-spreads/ml/feature_engine.py:207` -- `yf.download(ticker, period='3mo')` in `_compute_volatility_features`
-3. `/home/pmcerlean/projects/pilotai-credit-spreads/ml/feature_engine.py:271` -- `yf.download('^VIX', period='5d')` in `_compute_market_features`
-4. `/home/pmcerlean/projects/pilotai-credit-spreads/ml/feature_engine.py:284` -- `yf.download('SPY', period='3mo')` in `_compute_market_features`
-5. `/home/pmcerlean/projects/pilotai-credit-spreads/ml/regime_detector.py:266-268` -- Downloads `SPY`, `^VIX`, AND `TLT` in `_get_current_features`
-6. `/home/pmcerlean/projects/pilotai-credit-spreads/ml/iv_analyzer.py:313` -- `yf.download(ticker, ...)` in `_get_iv_history`
+1. `/home/pmcerlean/projects/attix-credit-spreads/ml/feature_engine.py:139` -- `yf.download(ticker, period='6mo')` in `_compute_technical_features`
+2. `/home/pmcerlean/projects/attix-credit-spreads/ml/feature_engine.py:207` -- `yf.download(ticker, period='3mo')` in `_compute_volatility_features`
+3. `/home/pmcerlean/projects/attix-credit-spreads/ml/feature_engine.py:271` -- `yf.download('^VIX', period='5d')` in `_compute_market_features`
+4. `/home/pmcerlean/projects/attix-credit-spreads/ml/feature_engine.py:284` -- `yf.download('SPY', period='3mo')` in `_compute_market_features`
+5. `/home/pmcerlean/projects/attix-credit-spreads/ml/regime_detector.py:266-268` -- Downloads `SPY`, `^VIX`, AND `TLT` in `_get_current_features`
+6. `/home/pmcerlean/projects/attix-credit-spreads/ml/iv_analyzer.py:313` -- `yf.download(ticker, ...)` in `_get_iv_history`
 
 Then at the `main.py` level (line 148), `stock.history(period='3mo')` is called **again**, and `calculate_iv_rank` at line 168 calls `stock.history(period='1y')` yet **again**.
 
@@ -1702,7 +1702,7 @@ Pass this cache through the entire pipeline.
 **Severity: Critical**
 **Estimated Impact: 3x slower than necessary for the default 3-ticker scan**
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/main.py:87-91`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/main.py:87-91`
 
 ```python
 for ticker in self.config['tickers']:
@@ -1736,7 +1736,7 @@ all_opportunities = [opp for result in results for opp in result]
 **Severity: High**
 **Estimated Impact: Doubles API call time for options chain retrieval (~2-5s wasted per ticker)**
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/strategy/polygon_provider.py:81-149` and `:151-223`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/strategy/polygon_provider.py:81-149` and `:151-223`
 
 The `get_options_chain()` method fetches the **entire** options snapshot for a ticker (all expirations), then filters for one expiration. The `get_full_chain()` method does the **exact same full fetch** but filters by DTE range. If `get_full_chain()` is used (which is the normal path via `options_analyzer.py:94`), the data is fetched correctly -- but `get_options_chain()` is wasteful when called directly because it fetches everything and throws most of it away.
 
@@ -1752,8 +1752,8 @@ More importantly, the Polygon snapshot uses pagination (`next_url` loop), and ea
 **Estimated Impact: Blocks thread during every external API call; adds cumulative seconds per scan**
 
 **Files:**
-- `/home/pmcerlean/projects/pilotai-credit-spreads/strategy/tradier_provider.py:37,47,76` -- all use `requests.get` (synchronous)
-- `/home/pmcerlean/projects/pilotai-credit-spreads/strategy/polygon_provider.py:33` -- `requests.get` (synchronous)
+- `/home/pmcerlean/projects/attix-credit-spreads/strategy/tradier_provider.py:37,47,76` -- all use `requests.get` (synchronous)
+- `/home/pmcerlean/projects/attix-credit-spreads/strategy/polygon_provider.py:33` -- `requests.get` (synchronous)
 - All `yf.download()` and `yf.Ticker()` calls across the codebase
 
 The entire backend uses synchronous `requests` library. For a system that makes 18+ HTTP calls per scan cycle, this is a significant bottleneck.
@@ -1767,7 +1767,7 @@ The entire backend uses synchronous `requests` library. For a system that makes 
 **Severity: High**
 **Estimated Impact: Downloads 10-20x more data than needed, adding 3-8 seconds per ticker**
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/strategy/options_analyzer.py:116-133`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/strategy/options_analyzer.py:116-133`
 
 ```python
 for exp_date_str in expirations:  # ALL expirations
@@ -1794,7 +1794,7 @@ for exp_date_str in expirations:
 **Severity: High**
 **Estimated Impact: Negligible for current data sizes (~250 bars), but poor algorithmic design**
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/strategy/technical_analysis.py:190-198`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/strategy/technical_analysis.py:190-198`
 
 ```python
 for i in range(window, len(lows) - window):
@@ -1813,7 +1813,7 @@ The inner `min()` call creates a slice and scans it each iteration, making this 
 **Severity: High**
 **Estimated Impact: Extra unnecessary API request on every page load**
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/web/components/sidebar/heatmap.tsx:9-38`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/web/components/sidebar/heatmap.tsx:9-38`
 
 ```tsx
 useEffect(() => {
@@ -1842,7 +1842,7 @@ export function Heatmap() {
 **Severity: High**
 **Estimated Impact: No automatic refresh; stale data; redundant manual fetch logic**
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/paper-trading/page.tsx:64-76`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/web/app/paper-trading/page.tsx:64-76`
 
 ```tsx
 const fetchData = async () => {
@@ -1869,9 +1869,9 @@ This page uses raw `fetch` + `useState` instead of the project's established `us
 **Estimated Impact: Disk I/O on every API request; ~1-5ms per read but scales poorly**
 
 **Files:**
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/positions/route.ts:26-30` -- reads JSON from disk on every GET
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/alerts/route.ts:15-19` -- reads JSON from disk on every GET
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/paper-trades/route.ts:62-74` -- reads + writes JSON on every request
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/positions/route.ts:26-30` -- reads JSON from disk on every GET
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/alerts/route.ts:15-19` -- reads JSON from disk on every GET
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/paper-trades/route.ts:62-74` -- reads + writes JSON on every request
 
 Every API request reads the full JSON file from disk. With polling intervals of 30-60 seconds and potentially multiple users, this becomes a bottleneck. The `paper-trades` route also writes the entire portfolio to disk on every trade operation.
 
@@ -1895,7 +1895,7 @@ def _save_trades(self):
 **Severity: Medium**
 **Estimated Impact: O(n) per property access; called multiple times per operation**
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/paper_trader.py:101-107`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/paper_trader.py:101-107`
 
 ```python
 @property
@@ -1929,7 +1929,7 @@ def _invalidate_cache(self):
 **Severity: Medium**
 **Estimated Impact: Larger bundle size; slower Docker builds**
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/web/next.config.js`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/web/next.config.js`
 
 ```javascript
 const nextConfig = {
@@ -1961,7 +1961,7 @@ const nextConfig = {
 **Severity: Medium**
 **Estimated Impact: 5-10 seconds added to startup**
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/ml/regime_detector.py:200-206`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/ml/regime_detector.py:200-206`
 
 ```python
 spy = yf.download('SPY', start=start_date, end=end_date, progress=False)
@@ -1986,7 +1986,7 @@ with ThreadPoolExecutor(max_workers=3) as executor:
 **Severity: Medium**
 **Estimated Impact: Unexpected side effects; potential bugs**
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/strategy/technical_analysis.py:84-85`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/strategy/technical_analysis.py:84-85`
 
 ```python
 price_data['MA_fast'] = price_data['Close'].rolling(window=fast_period).mean()
@@ -2004,7 +2004,7 @@ This modifies the caller's DataFrame by adding columns. If the same DataFrame is
 **Severity: Medium**
 **Estimated Impact: 10-120 seconds per invocation; no streaming; blocks Next.js server worker**
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/scan/route.ts:21-24`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/scan/route.ts:21-24`
 
 ```typescript
 const { stdout, stderr } = await execPromise(command, {
@@ -2013,7 +2013,7 @@ const { stdout, stderr } = await execPromise(command, {
 });
 ```
 
-And `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/backtest/run/route.ts:22-25`:
+And `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/backtest/run/route.ts:22-25`:
 ```typescript
 const { stdout, stderr } = await execPromise('python3 main.py backtest', {
     cwd: systemPath,
@@ -2032,7 +2032,7 @@ These spawn a full Python process, which re-initializes everything (loads config
 **Severity: Medium**
 **Estimated Impact: 2-5 seconds at startup; questionable predictive value**
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/ml/ml_pipeline.py:96-103`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/ml/ml_pipeline.py:96-103`
 
 ```python
 if not self.signal_model.trained:
@@ -2054,7 +2054,7 @@ If no saved model exists, 2000 synthetic samples are generated and an XGBoost mo
 **Severity: Medium**
 **Estimated Impact: Unbounded memory growth under sustained load**
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/chat/route.ts:17-36`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/chat/route.ts:17-36`
 
 ```typescript
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -2077,7 +2077,7 @@ The cleanup only triggers when the map exceeds 1000 entries, and only removes ex
 **Severity: Low**
 **Estimated Impact: Unnecessary re-renders on filter/state changes**
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/page.tsx:36-56`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/web/app/page.tsx:36-56`
 
 ```tsx
 const filteredAlerts = alerts.filter(alert => { ... })
@@ -2105,7 +2105,7 @@ const stats = useMemo(() => {
 **Severity: Low**
 **Estimated Impact: Potential React reconciliation issues**
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/page.tsx:134`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/web/app/page.tsx:134`
 
 ```tsx
 {filteredAlerts.map((alert, idx) => (
@@ -2128,9 +2128,9 @@ key={`${alert.ticker}-${alert.type}-${alert.short_strike}-${alert.expiration}`}
 **Estimated Impact: Wasted CPU cycles; code duplication**
 
 The RSI calculation is implemented identically in three places:
-- `/home/pmcerlean/projects/pilotai-credit-spreads/strategy/technical_analysis.py:107-124`
-- `/home/pmcerlean/projects/pilotai-credit-spreads/ml/feature_engine.py:475-482`
-- `/home/pmcerlean/projects/pilotai-credit-spreads/ml/regime_detector.py:343-354`
+- `/home/pmcerlean/projects/attix-credit-spreads/strategy/technical_analysis.py:107-124`
+- `/home/pmcerlean/projects/attix-credit-spreads/ml/feature_engine.py:475-482`
+- `/home/pmcerlean/projects/attix-credit-spreads/ml/regime_detector.py:343-354`
 
 **Recommendation:** Extract to a shared `utils/indicators.py` module.
 
@@ -2141,7 +2141,7 @@ The RSI calculation is implemented identically in three places:
 **Severity: Low (correctness issue more than performance)**
 **Estimated Impact: Incorrect delta estimates when strike distribution is skewed**
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/strategy/options_analyzer.py:194`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/strategy/options_analyzer.py:194`
 
 ```python
 spot = df['strike'].median()
@@ -2204,7 +2204,7 @@ This trading system has **reasonable high-level error handling** (graceful ML fa
 
 ### C1. Bare `except:` Swallowing Errors During Price Fetch for Position Management
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/main.py`, lines 118-124
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/main.py`, lines 118-124
 **Severity:** CRITICAL
 
 ```python
@@ -2231,7 +2231,7 @@ Additionally, if no prices can be fetched at all, log a CRITICAL-level alert and
 
 ### C2. Bare `except:` Clauses in Paper Trader Expiration Date Parsing
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/paper_trader.py`, lines 257-263
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/paper_trader.py`, lines 257-263
 **Severity:** CRITICAL
 
 ```python
@@ -2262,8 +2262,8 @@ except ValueError as e:
 
 ### C3. No Atomic Writes on JSON Trade Files (Data Corruption Risk)
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/paper_trader.py`, lines 80-84
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/tracker/trade_tracker.py`, lines 57-65
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/paper_trader.py`, lines 80-84
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/tracker/trade_tracker.py`, lines 57-65
 **Severity:** CRITICAL
 
 ```python
@@ -2315,19 +2315,19 @@ def _load_trades(self) -> Dict:
 ### C4. Missing `@/lib/logger` Module -- All API Route Logging May Be Broken
 
 **Files:** All 7 API route files import `{ logger } from "@/lib/logger"`:
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/positions/route.ts`
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/trades/route.ts`
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/config/route.ts`
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/paper-trades/route.ts`
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/backtest/route.ts`
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/backtest/run/route.ts`
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/chat/route.ts`
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/positions/route.ts`
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/trades/route.ts`
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/config/route.ts`
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/paper-trades/route.ts`
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/backtest/route.ts`
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/backtest/run/route.ts`
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/chat/route.ts`
 
 **Severity:** CRITICAL
 
-The file `/home/pmcerlean/projects/pilotai-credit-spreads/web/lib/logger.ts` does not exist on disk. The test file (`web/tests/logger.test.ts`) tests a structured JSON logger, but the implementation module is not present. This means either the build fails (blocking deployment) or, if the module was somehow bundled previously, all server-side error logging is silent in production, and you will have zero visibility into API failures.
+The file `/home/pmcerlean/projects/attix-credit-spreads/web/lib/logger.ts` does not exist on disk. The test file (`web/tests/logger.test.ts`) tests a structured JSON logger, but the implementation module is not present. This means either the build fails (blocking deployment) or, if the module was somehow bundled previously, all server-side error logging is silent in production, and you will have zero visibility into API failures.
 
-**Recommended fix:** Create `/home/pmcerlean/projects/pilotai-credit-spreads/web/lib/logger.ts`:
+**Recommended fix:** Create `/home/pmcerlean/projects/attix-credit-spreads/web/lib/logger.ts`:
 ```typescript
 type LogLevel = 'info' | 'warn' | 'error';
 
@@ -2350,8 +2350,8 @@ export const logger = {
 
 ### H1. No Retry Logic or Timeout Handling on Polygon/Tradier API Calls
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/strategy/polygon_provider.py`, lines 28-35
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/strategy/tradier_provider.py`, lines 33-41
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/strategy/polygon_provider.py`, lines 28-35
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/strategy/tradier_provider.py`, lines 33-41
 **Severity:** HIGH
 
 ```python
@@ -2381,8 +2381,8 @@ session.mount("https://", HTTPAdapter(max_retries=retries))
 
 ### H2. Alpaca Trade Execution: No Verification After Order Submission
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/paper_trader.py`, lines 205-225
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/strategy/alpaca_provider.py`, lines 185-233
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/paper_trader.py`, lines 205-225
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/strategy/alpaca_provider.py`, lines 185-233
 **Severity:** HIGH
 
 ```python
@@ -2424,7 +2424,7 @@ if alpaca_result.get("status") == "submitted":
 
 ### H3. Alpaca Close Failure Doesn't Prevent Local Trade From Being Marked Closed
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/paper_trader.py`, lines 344-359
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/paper_trader.py`, lines 344-359
 **Severity:** HIGH
 
 ```python
@@ -2458,8 +2458,8 @@ if self.alpaca and trade.get("alpaca_order_id"):
 
 ### H4. Command Injection via API Scan/Backtest Routes
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/scan/route.ts`, lines 17-24
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/backtest/run/route.ts`, lines 19-25
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/scan/route.ts`, lines 17-24
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/backtest/run/route.ts`, lines 19-25
 **Severity:** HIGH
 
 ```typescript
@@ -2478,7 +2478,7 @@ While the current code uses hardcoded commands, the scan route returns raw `stdo
 
 ### H5. SWR Hooks Do Not Check HTTP Response Status
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/web/lib/hooks.ts`, lines 1-24
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/web/lib/hooks.ts`, lines 1-24
 **Severity:** HIGH
 
 ```typescript
@@ -2500,7 +2500,7 @@ const fetcher = async (url: string) => {
 
 ### H6. Config POST Overwrites Entire File With Partial Data (Data Loss)
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/config/route.ts`, lines 106-121
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/config/route.ts`, lines 106-121
 **Severity:** HIGH
 
 ```typescript
@@ -2528,7 +2528,7 @@ await fs.writeFile(configPath, yaml.dump(merged), 'utf-8');
 
 ### M1. Bare `except:` in Feature Engine Earnings Date Parsing
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/ml/feature_engine.py`, line 332
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/ml/feature_engine.py`, line 332
 **Severity:** MEDIUM
 
 ```python
@@ -2544,7 +2544,7 @@ except:
 
 ### M2. Division by Zero Not Guarded in RSI Calculation
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/strategy/technical_analysis.py`, lines 120-124
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/strategy/technical_analysis.py`, lines 120-124
 **Severity:** MEDIUM
 
 ```python
@@ -2565,7 +2565,7 @@ rsi = rsi.fillna(50)  # Default RSI when no movement
 
 ### M3. `_analyze_trend` Mutates Input DataFrame
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/strategy/technical_analysis.py`, lines 83-85
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/strategy/technical_analysis.py`, lines 83-85
 **Severity:** MEDIUM
 
 ```python
@@ -2585,7 +2585,7 @@ df['MA_fast'] = df['Close'].rolling(window=fast_period).mean()
 
 ### M4. No Rate Limiting or Backoff When yfinance Fails Repeatedly
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/ml/feature_engine.py`, lines 139, 207, 271, 284
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/ml/feature_engine.py`, lines 139, 207, 271, 284
 **Severity:** MEDIUM
 
 The `FeatureEngine` makes 4 separate `yf.download()` calls per ticker analyzed (technical features, volatility features, VIX, SPY). These are all independent network calls with no caching, no batching, and no rate limiting. For a scan of 3 tickers, this is 12+ yfinance calls. Yahoo Finance actively throttles and can return empty DataFrames or raise exceptions when rate limited.
@@ -2608,7 +2608,7 @@ def _get_cached_data(self, ticker: str, period: str) -> pd.DataFrame:
 
 ### M5. Backtest Profit Factor Division by Zero
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/backtest/backtester.py`, line 390
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/backtest/backtester.py`, line 390
 **Severity:** MEDIUM
 
 ```python
@@ -2627,7 +2627,7 @@ losers_sum = losers['pnl'].sum()
 
 ### M6. Rebalance Positions Division by Zero
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/ml/position_sizer.py`, line 349
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/ml/position_sizer.py`, line 349
 **Severity:** MEDIUM
 
 ```python
@@ -2642,7 +2642,7 @@ if abs(recommended_size - current_size) / current_size > 0.20:
 
 ### M7. Middleware Auth Token Comparison Is Not Timing-Safe
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/web/middleware.ts`, line 24
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/web/middleware.ts`, line 24
 **Severity:** MEDIUM
 
 ```typescript
@@ -2663,7 +2663,7 @@ const tokensMatch = token && Buffer.byteLength(token) === Buffer.byteLength(expe
 
 ### M8. Paper Trade File Lock Is In-Memory Only (Multi-Instance Unsafe)
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/paper-trades/route.ts`, lines 43-51
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/paper-trades/route.ts`, lines 43-51
 **Severity:** MEDIUM
 
 ```typescript
@@ -2679,7 +2679,7 @@ function withLock<T>(userId: string, fn: () => Promise<T>): Promise<T> {
 
 ### M9. Pickle Model Loading Is Insecure
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/ml/signal_model.py`, lines 422-424
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/ml/signal_model.py`, lines 422-424
 **Severity:** MEDIUM
 
 ```python
@@ -2697,7 +2697,7 @@ with open(filepath, 'rb') as f:
 
 ### L1. Telegram Bot `send_alert` Has No Timeout
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/alerts/telegram_bot.py`, lines 84-89
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/alerts/telegram_bot.py`, lines 84-89
 **Severity:** LOW
 
 The `bot.send_message()` call has no explicit timeout, potentially blocking indefinitely if Telegram's API is slow.
@@ -2707,9 +2707,9 @@ The `bot.send_message()` call has no explicit timeout, potentially blocking inde
 ### L2. Empty Catch Blocks in Frontend Components
 
 **Files:** Multiple frontend files with `} catch {` empty blocks:
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/components/sidebar/ai-chat.tsx`, line 70
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/components/sidebar/heatmap.tsx`, line 33
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/my-trades/page.tsx`, line 53
+- `/home/pmcerlean/projects/attix-credit-spreads/web/components/sidebar/ai-chat.tsx`, line 70
+- `/home/pmcerlean/projects/attix-credit-spreads/web/components/sidebar/heatmap.tsx`, line 33
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/my-trades/page.tsx`, line 53
 **Severity:** LOW
 
 These suppress errors silently. While less critical in UI code, they make debugging difficult.
@@ -2726,7 +2726,7 @@ The system will scan and generate alerts on weekends and holidays, fetching stal
 
 ### L4. `consolidate_levels` Potential Division by Zero
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/strategy/technical_analysis.py`, line 227
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/strategy/technical_analysis.py`, line 227
 **Severity:** LOW
 
 ```python
@@ -2739,8 +2739,8 @@ If `consolidated[-1]` is 0 (theoretically possible if a price level is 0), this 
 
 ### L5. Error Boundaries Don't Log to Server
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/error.tsx`
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/global-error.tsx`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/web/app/error.tsx`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/web/app/global-error.tsx`
 **Severity:** LOW
 
 Neither error boundary reports errors to any server-side logging or monitoring service. Client-side errors are invisible to operators.
@@ -2749,7 +2749,7 @@ Neither error boundary reports errors to any server-side logging or monitoring s
 
 ### L6. Health Endpoint Does Not Check Backend Dependencies
 
-**File:** `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/health/route.ts`
+**File:** `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/health/route.ts`
 **Severity:** LOW
 
 ```typescript
@@ -2822,7 +2822,7 @@ The codebase does several things well:
 
 **Python Backend: 0% coverage.** There are zero Python test files in the entire repository. No `conftest.py`, no `pytest.ini`, no `pyproject.toml`, no test directory in the Python project root. The `requirements.txt` lists `pytest>=7.4.0` and `pytest-cov>=4.1.0` as optional dependencies, but no tests exist.
 
-- File: `/home/pmcerlean/projects/pilotai-credit-spreads/requirements.txt`, lines 39-40 -- pytest is listed but never used.
+- File: `/home/pmcerlean/projects/attix-credit-spreads/requirements.txt`, lines 39-40 -- pytest is listed but never used.
 
 **Frontend: Partial coverage (~25-30% estimated).** The `web/tests/` directory contains 22 test files covering:
 
@@ -2855,30 +2855,30 @@ The codebase does several things well:
 ### Severity: MEDIUM
 
 **Strengths:**
-- The P&L calculation tests (`pnl.test.ts`, `pnl-calc.test.ts`) are genuinely robust -- they test edge cases like zero values, expired trades, NaN guards, and boundary conditions. See `/home/pmcerlean/projects/pilotai-credit-spreads/web/tests/pnl.test.ts`, lines 85-95 for comprehensive edge case testing.
+- The P&L calculation tests (`pnl.test.ts`, `pnl-calc.test.ts`) are genuinely robust -- they test edge cases like zero values, expired trades, NaN guards, and boundary conditions. See `/home/pmcerlean/projects/attix-credit-spreads/web/tests/pnl.test.ts`, lines 85-95 for comprehensive edge case testing.
 - `paper-trades-lib.test.ts` properly tests portfolio stats calculations including profitFactor, avgWin, avgLoss, openRisk.
 - The middleware test (`middleware.test.ts`) properly mocks NextRequest/NextResponse and tests auth bypass for health endpoint.
 
 **Weaknesses:**
 
 1. **Several tests verify only structure, not behavior.**
-   - `/home/pmcerlean/projects/pilotai-credit-spreads/web/tests/health.test.ts` -- This test reads the file system to check that strings exist in source code. It verifies `content.toContain('export async function GET')` (line 13). This is a source-code-scan test, not a behavior test. The integration test at `tests/integration/health.test.ts` is better.
+   - `/home/pmcerlean/projects/attix-credit-spreads/web/tests/health.test.ts` -- This test reads the file system to check that strings exist in source code. It verifies `content.toContain('export async function GET')` (line 13). This is a source-code-scan test, not a behavior test. The integration test at `tests/integration/health.test.ts` is better.
    
-   - `/home/pmcerlean/projects/pilotai-credit-spreads/web/tests/error-boundary.test.ts` -- Similarly reads source files and checks for string contents (line 13: `expect(content).toContain("'use client'")`). The companion `.tsx` file is a proper render test.
+   - `/home/pmcerlean/projects/attix-credit-spreads/web/tests/error-boundary.test.ts` -- Similarly reads source files and checks for string contents (line 13: `expect(content).toContain("'use client'")`). The companion `.tsx` file is a proper render test.
 
-   - `/home/pmcerlean/projects/pilotai-credit-spreads/web/tests/dockerfile.test.ts` -- Checks for `FROM`, `npm`, `EXPOSE` strings in Dockerfile. This is a CI lint check masquerading as a test.
+   - `/home/pmcerlean/projects/attix-credit-spreads/web/tests/dockerfile.test.ts` -- Checks for `FROM`, `npm`, `EXPOSE` strings in Dockerfile. This is a CI lint check masquerading as a test.
 
 2. **The rate-limit test tests a standalone reimplementation, not actual code.**
-   - `/home/pmcerlean/projects/pilotai-credit-spreads/web/tests/rate-limit.test.ts` -- This test defines its own `createRateLimiter` function (lines 4-27) and tests that. There is no actual rate limiter in the codebase that this test validates. The test passes regardless of whether the application implements rate limiting.
+   - `/home/pmcerlean/projects/attix-credit-spreads/web/tests/rate-limit.test.ts` -- This test defines its own `createRateLimiter` function (lines 4-27) and tests that. There is no actual rate limiter in the codebase that this test validates. The test passes regardless of whether the application implements rate limiting.
 
 3. **The paper-trades validation test tests standalone functions, not the actual route handler.**
-   - `/home/pmcerlean/projects/pilotai-credit-spreads/web/tests/paper-trades.test.ts` -- Lines 6-16 define `validateTradeInput` and `buildTrade` locally. The actual validation in `app/api/paper-trades/route.ts` uses a Zod schema (`PostTradeSchema`, lines 9-29). The test does not exercise the real code.
+   - `/home/pmcerlean/projects/attix-credit-spreads/web/tests/paper-trades.test.ts` -- Lines 6-16 define `validateTradeInput` and `buildTrade` locally. The actual validation in `app/api/paper-trades/route.ts` uses a Zod schema (`PostTradeSchema`, lines 9-29). The test does not exercise the real code.
 
 4. **The config-validation test recreates the Zod schema instead of importing it.**
-   - `/home/pmcerlean/projects/pilotai-credit-spreads/web/tests/config-validation.test.ts` -- Lines 5-32 redefine the config schema. If the actual schema in `app/api/config/route.ts` drifts from this copy, the test becomes meaningless.
+   - `/home/pmcerlean/projects/attix-credit-spreads/web/tests/config-validation.test.ts` -- Lines 5-32 redefine the config schema. If the actual schema in `app/api/config/route.ts` drifts from this copy, the test becomes meaningless.
 
 5. **The API helpers test only verifies TypeScript type instantiation.**
-   - `/home/pmcerlean/projects/pilotai-credit-spreads/web/tests/api-helpers.test.ts` -- Tests that you can create objects conforming to interfaces. Does not test `apiFetch`, `fetchAlerts`, `fetchPositions`, or any actual network logic.
+   - `/home/pmcerlean/projects/attix-credit-spreads/web/tests/api-helpers.test.ts` -- Tests that you can create objects conforming to interfaces. Does not test `apiFetch`, `fetchAlerts`, `fetchPositions`, or any actual network logic.
 
 ---
 
@@ -2912,7 +2912,7 @@ Zero Python tests exist for 7,708 lines of critical trading logic:
 
 Missing integration tests for:
 
-- **`/api/paper-trades` POST handler** (`/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/paper-trades/route.ts`, lines 121-190) -- Opening a paper trade. This is the most critical user-facing write operation. Tests needed: validation rejection, max position limit, duplicate detection, trade field calculation (max_profit, max_loss, profit_target, stop_loss).
+- **`/api/paper-trades` POST handler** (`/home/pmcerlean/projects/attix-credit-spreads/web/app/api/paper-trades/route.ts`, lines 121-190) -- Opening a paper trade. This is the most critical user-facing write operation. Tests needed: validation rejection, max position limit, duplicate detection, trade field calculation (max_profit, max_loss, profit_target, stop_loss).
 
 - **`/api/paper-trades` DELETE handler** (lines 193-238) -- Closing a paper trade. Tests needed: missing trade ID, trade not found, already-closed trade, P&L calculation on close, status assignment based on reason.
 
@@ -2934,7 +2934,7 @@ No component tests for:
 
 ### 4d. Hook Tests -- Severity: MEDIUM
 
-No tests for custom hooks in `/home/pmcerlean/projects/pilotai-credit-spreads/web/lib/hooks.ts`:
+No tests for custom hooks in `/home/pmcerlean/projects/attix-credit-spreads/web/lib/hooks.ts`:
 - `useAlerts()` -- SWR configuration, refresh interval, dedup interval
 - `usePositions()` -- SWR configuration
 - `usePaperTrades()` -- SWR configuration, userId parameter passing
@@ -2956,11 +2956,11 @@ No end-to-end tests exist. No Playwright or Cypress configuration found. For a t
 
 **Problematic:**
 
-1. **Config integration test mocks fs to return hardcoded YAML** (`/home/pmcerlean/projects/pilotai-credit-spreads/web/tests/integration/config.test.ts`, lines 7-31). This means the test never validates that real `config.yaml` can be parsed. The mock includes secrets (`real-secret-key`) that should be redacted, which is what the test verifies -- but the mock is tightly coupled to the specific redaction logic.
+1. **Config integration test mocks fs to return hardcoded YAML** (`/home/pmcerlean/projects/attix-credit-spreads/web/tests/integration/config.test.ts`, lines 7-31). This means the test never validates that real `config.yaml` can be parsed. The mock includes secrets (`real-secret-key`) that should be redacted, which is what the test verifies -- but the mock is tightly coupled to the specific redaction logic.
 
-2. **Backtest and positions integration tests mock `fs.readFile` to throw ENOENT** (e.g., `/home/pmcerlean/projects/pilotai-credit-spreads/web/tests/integration/backtest.test.ts`, lines 7-15). This only tests the empty/default case. There are no tests with populated data files.
+2. **Backtest and positions integration tests mock `fs.readFile` to throw ENOENT** (e.g., `/home/pmcerlean/projects/attix-credit-spreads/web/tests/integration/backtest.test.ts`, lines 7-15). This only tests the empty/default case. There are no tests with populated data files.
 
-3. **No mock for the chat API's Anthropic/OpenAI call** -- The chat route test (`/home/pmcerlean/projects/pilotai-credit-spreads/web/tests/integration/chat.test.ts`) only tests the fallback path (no API key set). There are zero tests for the path where an actual LLM API key is configured and a real API call would be made.
+3. **No mock for the chat API's Anthropic/OpenAI call** -- The chat route test (`/home/pmcerlean/projects/attix-credit-spreads/web/tests/integration/chat.test.ts`) only tests the fallback path (no API key set). There are zero tests for the path where an actual LLM API key is configured and a real API call would be made.
 
 ---
 
@@ -2970,26 +2970,26 @@ No end-to-end tests exist. No Playwright or Cypress configuration found. For a t
 
 These are the highest-risk untested code paths in the system:
 
-1. **Kelly Criterion Position Sizing** (`/home/pmcerlean/projects/pilotai-credit-spreads/ml/position_sizer.py`, lines 147-185)
+1. **Kelly Criterion Position Sizing** (`/home/pmcerlean/projects/attix-credit-spreads/ml/position_sizer.py`, lines 147-185)
    - `_calculate_kelly()` implements the Kelly formula. A bug here could lead to catastrophic over-sizing of positions. The formula `(p * b - q) / b` needs verification with known inputs/outputs. Edge cases: win_prob=0, win_prob=1, win_amount=0.
 
-2. **Spread P&L Evaluation** (`/home/pmcerlean/projects/pilotai-credit-spreads/paper_trader.py`, lines 280-342)
+2. **Spread P&L Evaluation** (`/home/pmcerlean/projects/attix-credit-spreads/paper_trader.py`, lines 280-342)
    - `_evaluate_position()` determines whether to close a trade. This contains the live P&L simulation model. Bugs here mean paper trades get closed at wrong prices. The ITM/OTM branching logic (lines 309-321) has complex arithmetic that could have off-by-one errors.
 
-3. **Trade Execution and Position Limits** (`/home/pmcerlean/projects/pilotai-credit-spreads/paper_trader.py`, lines 109-162)
+3. **Trade Execution and Position Limits** (`/home/pmcerlean/projects/attix-credit-spreads/paper_trader.py`, lines 109-162)
    - `execute_signals()` applies max position limits, duplicate filtering, ticker concentration limits, and then opens trades. Bugs here could lead to over-allocation.
 
-4. **Backtest P&L Calculation** (`/home/pmcerlean/projects/pilotai-credit-spreads/backtest/backtester.py`, lines 290-340)
+4. **Backtest P&L Calculation** (`/home/pmcerlean/projects/attix-credit-spreads/backtest/backtester.py`, lines 290-340)
    - `_close_position()` and `_calculate_results()` compute backtest performance. `return_pct` calculation on line 335 divides by `max_loss * contracts * 100` -- this could divide by zero if max_loss is 0.
 
-5. **ML Enhanced Score** (`/home/pmcerlean/projects/pilotai-credit-spreads/ml/ml_pipeline.py`, lines 229-295)
+5. **ML Enhanced Score** (`/home/pmcerlean/projects/attix-credit-spreads/ml/ml_pipeline.py`, lines 229-295)
    - `_calculate_enhanced_score()` combines ML predictions, regime data, IV analysis, and event risk into a 0-100 score that drives trading decisions. This is the core decision-making function.
 
-6. **Paper Trade API - POST/DELETE Handlers** (`/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/paper-trades/route.ts`)
+6. **Paper Trade API - POST/DELETE Handlers** (`/home/pmcerlean/projects/attix-credit-spreads/web/app/api/paper-trades/route.ts`)
    - POST (line 121): Creates new paper trades with Zod validation, duplicate checking, position limits.
    - DELETE (line 193): Closes trades and calculates realized P&L. The `withLock` mutex pattern (lines 45-51) for concurrent access is untested.
 
-7. **Spread Strategy Scoring** (`/home/pmcerlean/projects/pilotai-credit-spreads/strategy/spread_strategy.py`, lines 333-398)
+7. **Spread Strategy Scoring** (`/home/pmcerlean/projects/attix-credit-spreads/strategy/spread_strategy.py`, lines 333-398)
    - `_score_opportunities()` combines credit score, risk/reward score, POP score, technical alignment, and IV score. Each component has specific weighting and capping logic that needs validation.
 
 ---
@@ -3002,20 +3002,20 @@ These are the highest-risk untested code paths in the system:
 
 2. **No Python test infrastructure.** No `conftest.py`, `pytest.ini`, `pyproject.toml`, or `setup.cfg`. The project would need a test directory structure, fixtures, and mock factories.
 
-3. **Missing logger module.** Multiple source files and the logger test import `@/lib/logger`, but `/home/pmcerlean/projects/pilotai-credit-spreads/web/lib/logger.ts` does not exist. The logger test (`/home/pmcerlean/projects/pilotai-credit-spreads/web/tests/logger.test.ts`) likely fails at import time. This could cause cascading test failures in integration tests that import routes depending on the logger.
+3. **Missing logger module.** Multiple source files and the logger test import `@/lib/logger`, but `/home/pmcerlean/projects/attix-credit-spreads/web/lib/logger.ts` does not exist. The logger test (`/home/pmcerlean/projects/attix-credit-spreads/web/tests/logger.test.ts`) likely fails at import time. This could cause cascading test failures in integration tests that import routes depending on the logger.
 
 4. **Coverage reporting is configured but likely not run.** The `vitest.config.ts` (line 15-18) has coverage configured with `v8` provider, but there is no `test:coverage` script in `package.json`. Coverage is not collected by default with `vitest run`.
 
 5. **No test:coverage script.** `package.json` only has `"test": "vitest run"` and `"test:watch": "vitest"`. There should be a `"test:coverage": "vitest run --coverage"` script.
 
-6. **Duplicate error-boundary tests.** Both `/home/pmcerlean/projects/pilotai-credit-spreads/web/tests/error-boundary.test.ts` and `error-boundary.test.tsx` exist. The `.ts` version is a file-existence check; the `.tsx` version is a proper render test. The `.ts` version is redundant.
+6. **Duplicate error-boundary tests.** Both `/home/pmcerlean/projects/attix-credit-spreads/web/tests/error-boundary.test.ts` and `error-boundary.test.tsx` exist. The `.ts` version is a file-existence check; the `.tsx` version is a proper render test. The `.ts` version is redundant.
 
 ---
 
 ## 8. ADDITIONAL FINDINGS
 
 ### Missing File Issue (Severity: HIGH)
-The file `/home/pmcerlean/projects/pilotai-credit-spreads/web/lib/logger.ts` does not exist, yet it is imported by:
+The file `/home/pmcerlean/projects/attix-credit-spreads/web/lib/logger.ts` does not exist, yet it is imported by:
 - `app/api/positions/route.ts` (line 1)
 - `app/api/trades/route.ts` (line 1)
 - `app/api/config/route.ts` (line 1)
@@ -3040,7 +3040,7 @@ Three test files test local reimplementations rather than actual source code:
 Listed in order of priority (highest first):
 
 ### Priority 1: CRITICAL -- Fix broken infrastructure
-1. **Create `/home/pmcerlean/projects/pilotai-credit-spreads/web/lib/logger.ts`** or fix imports. Multiple tests and all API routes depend on this module.
+1. **Create `/home/pmcerlean/projects/attix-credit-spreads/web/lib/logger.ts`** or fix imports. Multiple tests and all API routes depend on this module.
 2. **Add `test:coverage` script** to `package.json`: `"test:coverage": "vitest run --coverage"`
 3. **Add CI/CD pipeline** (`.github/workflows/test.yml`) that runs both Python and JS tests on every push/PR.
 
@@ -3086,7 +3086,7 @@ Listed in order of priority (highest first):
 
 **Review Date:** 2026-02-14
 **Reviewer:** Claude Opus 4.6 (Automated DevOps Review)
-**Codebase:** `/home/pmcerlean/projects/pilotai-credit-spreads`
+**Codebase:** `/home/pmcerlean/projects/attix-credit-spreads`
 **Stack:** Python backend (strategy/ML/paper-trading) + Next.js 14 frontend (dashboard/API routes), deployed on Railway
 
 ---
@@ -3097,13 +3097,13 @@ Listed in order of priority (highest first):
 
 **1a. Dockerfile is missing**
 
-The Dockerfile was committed in `cd1482d` ("Dockerfile + standalone Next.js for Railway") but has since been deleted from the working tree. No `Dockerfile` exists anywhere in the repository. The existing test at `/home/pmcerlean/projects/pilotai-credit-spreads/web/tests/dockerfile.test.ts` (lines 9-16) explicitly asserts `Dockerfile` exists and will fail.
+The Dockerfile was committed in `cd1482d` ("Dockerfile + standalone Next.js for Railway") but has since been deleted from the working tree. No `Dockerfile` exists anywhere in the repository. The existing test at `/home/pmcerlean/projects/attix-credit-spreads/web/tests/dockerfile.test.ts` (lines 9-16) explicitly asserts `Dockerfile` exists and will fail.
 
 Similarly, there is no `.dockerignore` file, despite the test at line 18-24 of the same file asserting one exists.
 
 **1b. next.config.js is missing `output: 'standalone'`**
 
-File: `/home/pmcerlean/projects/pilotai-credit-spreads/web/next.config.js`
+File: `/home/pmcerlean/projects/attix-credit-spreads/web/next.config.js`
 ```js
 const nextConfig = {
   reactStrictMode: true,
@@ -3112,7 +3112,7 @@ const nextConfig = {
   },
 }
 ```
-The `output: 'standalone'` setting, which is essential for Docker/Railway deployment (it bundles `node_modules` into a self-contained build), is absent. The test at `/home/pmcerlean/projects/pilotai-credit-spreads/web/tests/dockerfile.test.ts` line 29 checks for this and will fail. The commit message `cd1482d` mentions "standalone Next.js for Railway" but the configuration was removed or never committed to `main`.
+The `output: 'standalone'` setting, which is essential for Docker/Railway deployment (it bundles `node_modules` into a self-contained build), is absent. The test at `/home/pmcerlean/projects/attix-credit-spreads/web/tests/dockerfile.test.ts` line 29 checks for this and will fail. The commit message `cd1482d` mentions "standalone Next.js for Railway" but the configuration was removed or never committed to `main`.
 
 **1c. No Railway configuration**
 
@@ -3120,7 +3120,7 @@ No `railway.toml`, `railway.json`, `nixpacks.toml`, or `Procfile` exists. Railwa
 
 **1d. ESLint disabled during builds**
 
-File: `/home/pmcerlean/projects/pilotai-credit-spreads/web/next.config.js`, line 5
+File: `/home/pmcerlean/projects/attix-credit-spreads/web/next.config.js`, line 5
 ```js
 eslint: { ignoreDuringBuilds: true }
 ```
@@ -3134,7 +3134,7 @@ This suppresses all lint errors during production builds, meaning broken code ca
 
 **2a. Hardcoded placeholder secrets in config.yaml committed to git**
 
-File: `/home/pmcerlean/projects/pilotai-credit-spreads/config.yaml`
+File: `/home/pmcerlean/projects/attix-credit-spreads/config.yaml`
 - Line 82: `bot_token: "YOUR_BOT_TOKEN_HERE"`
 - Line 83: `chat_id: "YOUR_CHAT_ID_HERE"`
 - Line 99: `api_key: "YOUR_TRADIER_API_KEY"`
@@ -3143,21 +3143,21 @@ While these are placeholders (not real keys), `config.yaml` is tracked in git an
 
 **2b. `python-dotenv` is not in requirements.txt**
 
-File: `/home/pmcerlean/projects/pilotai-credit-spreads/utils.py`, line 38
+File: `/home/pmcerlean/projects/attix-credit-spreads/utils.py`, line 38
 ```python
 from dotenv import load_dotenv
 ```
-The `python-dotenv` package is imported but not listed in `/home/pmcerlean/projects/pilotai-credit-spreads/requirements.txt`. This will cause `ImportError` in fresh environments.
+The `python-dotenv` package is imported but not listed in `/home/pmcerlean/projects/attix-credit-spreads/requirements.txt`. This will cause `ImportError` in fresh environments.
 
 **2c. Only 3 environment variables documented**
 
-File: `/home/pmcerlean/projects/pilotai-credit-spreads/.env.example` has only:
+File: `/home/pmcerlean/projects/attix-credit-spreads/.env.example` has only:
 ```
 ALPACA_API_KEY=your_alpaca_api_key
 ALPACA_API_SECRET=your_alpaca_api_secret
 POLYGON_API_KEY=your_polygon_api_key
 ```
-File: `/home/pmcerlean/projects/pilotai-credit-spreads/web/.env.example` has:
+File: `/home/pmcerlean/projects/attix-credit-spreads/web/.env.example` has:
 ```
 API_AUTH_TOKEN=
 OPENAI_API_KEY=
@@ -3174,19 +3174,19 @@ There is no unified `.env.example` documenting ALL required environment variable
 **3a. Frontend logger module is MISSING**
 
 Seven API route files and one test file import `@/lib/logger`:
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/config/route.ts`, line 1
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/trades/route.ts`, line 1
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/positions/route.ts`, line 1
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/paper-trades/route.ts`, line 1
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/chat/route.ts`, line 1
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/backtest/route.ts`, line 1
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/backtest/run/route.ts`, line 1
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/config/route.ts`, line 1
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/trades/route.ts`, line 1
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/positions/route.ts`, line 1
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/paper-trades/route.ts`, line 1
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/chat/route.ts`, line 1
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/backtest/route.ts`, line 1
+- `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/backtest/run/route.ts`, line 1
 
-However, the file `/home/pmcerlean/projects/pilotai-credit-spreads/web/lib/logger.ts` does **not exist**. This means the build will fail with a module resolution error. Based on the test at `/home/pmcerlean/projects/pilotai-credit-spreads/web/tests/logger.test.ts`, the expected interface is a structured JSON logger with `.info()`, `.error()`, `.warn()` methods.
+However, the file `/home/pmcerlean/projects/attix-credit-spreads/web/lib/logger.ts` does **not exist**. This means the build will fail with a module resolution error. Based on the test at `/home/pmcerlean/projects/attix-credit-spreads/web/tests/logger.test.ts`, the expected interface is a structured JSON logger with `.info()`, `.error()`, `.warn()` methods.
 
 **3b. Health endpoint is minimal**
 
-File: `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/health/route.ts`
+File: `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/health/route.ts`
 ```ts
 return NextResponse.json({ 
   status: 'ok', 
@@ -3202,7 +3202,7 @@ No Sentry, Datadog, or any APM integration. Errors are logged to console (when t
 
 **3d. Alerts route uses `console.log` instead of structured logger**
 
-File: `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/alerts/route.ts`, line 32:
+File: `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/alerts/route.ts`, line 32:
 ```ts
 console.log("Failed to read alerts:", error);
 ```
@@ -3218,17 +3218,17 @@ This is inconsistent with all other API routes that use the `logger` import.
 
 Railway containers have ephemeral filesystems. On every deploy, restart, or scale event, all data is lost. The following critical data is stored as local files:
 
-- Paper trade portfolios: `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/paper-trades/route.ts`, line 36: `const DATA_DIR = path.join(process.cwd(), "data")` and per-user JSON files under `data/user_trades/`
-- System paper trades: `/home/pmcerlean/projects/pilotai-credit-spreads/paper_trader.py`, line 18-19: `TRADES_FILE = DATA_DIR / "trades.json"` and `PAPER_LOG = DATA_DIR / "paper_trades.json"`
-- Alert outputs: `/home/pmcerlean/projects/pilotai-credit-spreads/alerts/alert_generator.py`, line 33: `self.output_dir = Path('output')`
-- Backtest results: `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/backtest/route.ts`, line 9: reads from `../output/backtest_results.json`
-- Configuration: `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/config/route.ts`, line 115: `await fs.writeFile(configPath, yamlStr, 'utf-8')` writes to `../config.yaml`
+- Paper trade portfolios: `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/paper-trades/route.ts`, line 36: `const DATA_DIR = path.join(process.cwd(), "data")` and per-user JSON files under `data/user_trades/`
+- System paper trades: `/home/pmcerlean/projects/attix-credit-spreads/paper_trader.py`, line 18-19: `TRADES_FILE = DATA_DIR / "trades.json"` and `PAPER_LOG = DATA_DIR / "paper_trades.json"`
+- Alert outputs: `/home/pmcerlean/projects/attix-credit-spreads/alerts/alert_generator.py`, line 33: `self.output_dir = Path('output')`
+- Backtest results: `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/backtest/route.ts`, line 9: reads from `../output/backtest_results.json`
+- Configuration: `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/config/route.ts`, line 115: `await fs.writeFile(configPath, yamlStr, 'utf-8')` writes to `../config.yaml`
 
 **Every Railway deploy will wipe all user trades, positions, alerts, and backtest results.**
 
 **4b. Multiple fallback paths for data files create confusion**
 
-File: `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/positions/route.ts`, lines 26-30:
+File: `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/positions/route.ts`, lines 26-30:
 ```ts
 const content = await tryRead(
   path.join(cwd, 'data', 'paper_trades.json'),
@@ -3250,7 +3250,7 @@ There is no PostgreSQL, Redis, SQLite, or any other persistent data store. For a
 
 **5a. No security headers configured**
 
-File: `/home/pmcerlean/projects/pilotai-credit-spreads/web/next.config.js` contains no `headers()` configuration. Missing:
+File: `/home/pmcerlean/projects/attix-credit-spreads/web/next.config.js` contains no `headers()` configuration. Missing:
 - Content-Security-Policy (CSP)
 - Strict-Transport-Security (HSTS)
 - X-Frame-Options
@@ -3264,7 +3264,7 @@ No CORS headers are set on any API route. The API routes accept requests from an
 
 **5c. Command injection risk in scan and backtest routes**
 
-File: `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/scan/route.ts`, lines 1-2, 19-24:
+File: `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/scan/route.ts`, lines 1-2, 19-24:
 ```ts
 import { exec } from "child_process";
 const command = "python3 main.py scan";
@@ -3273,7 +3273,7 @@ const { stdout, stderr } = await execPromise(command, {
   timeout: 120000,
 });
 ```
-File: `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/backtest/run/route.ts`, lines 3-4, 22-25:
+File: `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/backtest/run/route.ts`, lines 3-4, 22-25:
 ```ts
 import { exec } from 'child_process';
 const { stdout, stderr } = await execPromise('python3 main.py backtest', {
@@ -3285,7 +3285,7 @@ While the commands are hardcoded (no user input concatenation), using `exec` fro
 
 **5d. Auth token comparison is not timing-safe**
 
-File: `/home/pmcerlean/projects/pilotai-credit-spreads/web/middleware.ts`, line 24:
+File: `/home/pmcerlean/projects/attix-credit-spreads/web/middleware.ts`, line 24:
 ```ts
 if (!token || token !== expectedToken) {
 ```
@@ -3293,7 +3293,7 @@ Simple string comparison (`!==`) is vulnerable to timing attacks. Should use `cr
 
 **5e. Rate limiter is in-memory only**
 
-File: `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/chat/route.ts`, line 16:
+File: `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/chat/route.ts`, line 16:
 ```ts
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 ```
@@ -3319,7 +3319,7 @@ No `.pre-commit-config.yaml` or `husky` configuration exists. Nothing prevents c
 
 **6c. Tests will fail in CI**
 
-The test at `/home/pmcerlean/projects/pilotai-credit-spreads/web/tests/dockerfile.test.ts` will fail because:
+The test at `/home/pmcerlean/projects/attix-credit-spreads/web/tests/dockerfile.test.ts` will fail because:
 - No Dockerfile exists (line 11)
 - No .dockerignore exists (line 19)
 - `next.config.js` doesn't contain 'standalone' (line 29)
@@ -3334,7 +3334,7 @@ Additionally, the missing `web/lib/logger.ts` module means any test that imports
 
 **7a. Python dependencies use >= version ranges with no upper bounds**
 
-File: `/home/pmcerlean/projects/pilotai-credit-spreads/requirements.txt`
+File: `/home/pmcerlean/projects/attix-credit-spreads/requirements.txt`
 ```
 numpy>=1.24.0
 pandas>=2.0.0
@@ -3349,7 +3349,7 @@ As noted in section 2b, `python-dotenv` is used in `utils.py` but not listed in 
 
 **7c. `legacy-peer-deps=true` in .npmrc**
 
-File: `/home/pmcerlean/projects/pilotai-credit-spreads/web/.npmrc`
+File: `/home/pmcerlean/projects/attix-credit-spreads/web/.npmrc`
 ```
 legacy-peer-deps=true
 ```
@@ -3357,7 +3357,7 @@ This suppresses peer dependency resolution errors, which can mask compatibility 
 
 **7d. React 19 with Next.js 14**
 
-File: `/home/pmcerlean/projects/pilotai-credit-spreads/web/package.json`, lines 26-27:
+File: `/home/pmcerlean/projects/attix-credit-spreads/web/package.json`, lines 26-27:
 ```json
 "react": "^19.2.4",
 "react-dom": "^19.2.4",
@@ -3378,10 +3378,10 @@ No `npm audit`, `snyk`, `dependabot`, or `renovate` configuration exists.
 
 Several modules use in-memory state that would be lost or inconsistent across multiple instances:
 
-- Chat rate limiter: `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/chat/route.ts`, line 16
-- Scan concurrency guard: `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/scan/route.ts`, line 9: `let scanInProgress = false`
-- Backtest concurrency guard: `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/backtest/run/route.ts`, line 11: `let backtestInProgress = false`
-- File lock map: `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/paper-trades/route.ts`, line 43: `const fileLocks = new Map<string, Promise<void>>()`
+- Chat rate limiter: `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/chat/route.ts`, line 16
+- Scan concurrency guard: `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/scan/route.ts`, line 9: `let scanInProgress = false`
+- Backtest concurrency guard: `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/backtest/run/route.ts`, line 11: `let backtestInProgress = false`
+- File lock map: `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/paper-trades/route.ts`, line 43: `const fileLocks = new Map<string, Promise<void>>()`
 
 With multiple Railway instances, two users could trigger concurrent scans or backtests, and rate limits would not apply across instances.
 
@@ -3398,7 +3398,7 @@ The scan API (`/api/scan`) and backtest API (`/api/backtest/run`) spawn Python s
 
 **8d. Unbounded rate limit map growth**
 
-File: `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/chat/route.ts`, lines 23-26:
+File: `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/chat/route.ts`, lines 23-26:
 ```ts
 if (rateLimitMap.size > 1000) {
   for (const [key, val] of Array.from(rateLimitMap)) {
@@ -3422,7 +3422,7 @@ All trade data is stored in local JSON files with no backup mechanism. There is 
 - Database with WAL/replication
 - Export/import functionality
 
-The `sync-data.sh` script at `/home/pmcerlean/projects/pilotai-credit-spreads/web/sync-data.sh` copies files locally but provides no disaster recovery.
+The `sync-data.sh` script at `/home/pmcerlean/projects/attix-credit-spreads/web/sync-data.sh` copies files locally but provides no disaster recovery.
 
 **9b. No data migration strategy**
 
@@ -3430,7 +3430,7 @@ If the JSON schema changes (e.g., new fields on `PaperTrade`), there is no migra
 
 **9c. Config can be overwritten via API**
 
-File: `/home/pmcerlean/projects/pilotai-credit-spreads/web/app/api/config/route.ts`, line 115:
+File: `/home/pmcerlean/projects/attix-credit-spreads/web/app/api/config/route.ts`, line 115:
 ```ts
 await fs.writeFile(configPath, yamlStr, 'utf-8')
 ```
@@ -3445,11 +3445,11 @@ The POST endpoint overwrites `config.yaml` with parsed/validated data, but this 
 **10a. Documentation exists but is incomplete**
 
 The following docs exist:
-- `/home/pmcerlean/projects/pilotai-credit-spreads/README.md` (general overview)
-- `/home/pmcerlean/projects/pilotai-credit-spreads/QUICKSTART.md` (setup guide)
-- `/home/pmcerlean/projects/pilotai-credit-spreads/TESTING.md` (test guide)
-- `/home/pmcerlean/projects/pilotai-credit-spreads/CODE_REVIEW.md` (code review)
-- `/home/pmcerlean/projects/pilotai-credit-spreads/web/README.md` (frontend)
+- `/home/pmcerlean/projects/attix-credit-spreads/README.md` (general overview)
+- `/home/pmcerlean/projects/attix-credit-spreads/QUICKSTART.md` (setup guide)
+- `/home/pmcerlean/projects/attix-credit-spreads/TESTING.md` (test guide)
+- `/home/pmcerlean/projects/attix-credit-spreads/CODE_REVIEW.md` (code review)
+- `/home/pmcerlean/projects/attix-credit-spreads/web/README.md` (frontend)
 
 Missing:
 - No API documentation (OpenAPI/Swagger or equivalent)
@@ -3485,7 +3485,7 @@ No `tsconfig.json` was found in the web directory (glob for `**/tsconfig*` retur
 
 ### P0 -- Fix before deploying (Blocks production)
 
-1. **Create `web/lib/logger.ts`** -- The build literally cannot succeed without it. Based on the test at `/home/pmcerlean/projects/pilotai-credit-spreads/web/tests/logger.test.ts`, implement a structured JSON logger with `info`, `error`, `warn` methods.
+1. **Create `web/lib/logger.ts`** -- The build literally cannot succeed without it. Based on the test at `/home/pmcerlean/projects/attix-credit-spreads/web/tests/logger.test.ts`, implement a structured JSON logger with `info`, `error`, `warn` methods.
 
 2. **Restore Dockerfile and .dockerignore** -- Recreate the multi-stage Docker build with `output: 'standalone'` in `next.config.js`. Add `output: 'standalone'` to the `nextConfig` object.
 

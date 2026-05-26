@@ -49,26 +49,26 @@
 <p>Config file <code>paper_exp401.yaml</code> specifies:</p>
 <pre>db_path: "data/pilotai_exp401.db"</pre>
 <p>But the scheduler logs show:</p>
-<pre>Database initialized at /Users/charlesbot/projects/pilotai-credit-spreads/data/<span class="highlight">pilotai.db</span></pre>
+<pre>Database initialized at /Users/charlesbot/projects/attix-credit-spreads/data/<span class="highlight">pilotai.db</span></pre>
 
 <h3>Root Cause</h3>
 <p>The application reads DB path from <strong>two sources only</strong>:</p>
 <ol style="margin: 8px 0 8px 24px; font-size: 14px;">
-  <li><code>--db-path</code> CLI argument → sets <code>os.environ['PILOTAI_DB_PATH']</code></li>
-  <li><code>PILOTAI_DB_PATH</code> environment variable (checked at module import time)</li>
+  <li><code>--db-path</code> CLI argument → sets <code>os.environ['ATTIX_DB_PATH']</code></li>
+  <li><code>ATTIX_DB_PATH</code> environment variable (checked at module import time)</li>
 </ol>
 <p>The YAML <code>db_path</code> field is <strong>never read</strong>. Here's the chain:</p>
 
 <pre><span class="comment"># shared/database.py:19 — hardcoded fallback at import time</span>
-DB_PATH = Path(os.environ.get('PILOTAI_DB_PATH', str(Path(DATA_DIR) / <span class="highlight">"pilotai.db"</span>)))
+DB_PATH = Path(os.environ.get('ATTIX_DB_PATH', str(Path(DATA_DIR) / <span class="highlight">"pilotai.db"</span>)))
 
 <span class="comment"># main.py:824-826 — only CLI arg sets the env var</span>
 if args.db_path:
-    os.environ['PILOTAI_DB_PATH'] = args.db_path
+    os.environ['ATTIX_DB_PATH'] = args.db_path
 
 <span class="comment"># The YAML config['db_path'] is NEVER passed to any component</span></pre>
 
-<p>All downstream components (<code>ExecutionEngine</code>, <code>PositionMonitor</code>, <code>AlertRouter</code>, <code>PositionReconciler</code>) receive <code>db_path=os.environ.get('PILOTAI_DB_PATH')</code>, which defaults to <code>pilotai.db</code>.</p>
+<p>All downstream components (<code>ExecutionEngine</code>, <code>PositionMonitor</code>, <code>AlertRouter</code>, <code>PositionReconciler</code>) receive <code>db_path=os.environ.get('ATTIX_DB_PATH')</code>, which defaults to <code>pilotai.db</code>.</p>
 
 <div class="impact">
   <strong>Impact:</strong> All experiments share one database. Trade records from exp400 and exp401 co-mingle. PositionMonitor in one experiment can see and act on trades from another. P&L tracking is unreliable. This defeats the entire purpose of isolated experiments.
@@ -79,14 +79,14 @@ if args.db_path:
 In <code>main.py:create_system()</code>, after <code>load_config()</code>, read the YAML <code>db_path</code> and set the env var:
 
 <pre><span class="fix">config = load_config(config_file, env_file=env_file)
-if not os.environ.get('PILOTAI_DB_PATH') and config.get('db_path'):
-    os.environ['PILOTAI_DB_PATH'] = config['db_path']</span></pre>
+if not os.environ.get('ATTIX_DB_PATH') and config.get('db_path'):
+    os.environ['ATTIX_DB_PATH'] = config['db_path']</span></pre>
 
 This respects CLI arg priority (already set) but falls back to YAML config before the hardcoded default.
 </div>
 
 <div class="workaround">
-  <strong>Current workaround:</strong> Pass <code>--db-path data/pilotai_exp401.db</code> on the command line, or add <code>PILOTAI_DB_PATH=data/pilotai_exp401.db</code> to the <code>.env.exp*</code> file.
+  <strong>Current workaround:</strong> Pass <code>--db-path data/pilotai_exp401.db</code> on the command line, or add <code>ATTIX_DB_PATH=data/pilotai_exp401.db</code> to the <code>.env.exp*</code> file.
 </div>
 
 <hr>
@@ -189,7 +189,7 @@ if existing and existing['status'] not in ('rejected', 'cancelled'):
 <p><strong>Recommendation:</strong> Add a config schema validator or generate configs from a template that includes all required fields. The optimization pipeline should produce configs that pass <code>validate_config()</code> without manual patching.</p>
 
 <hr>
-<p style="color: #95a5a6; font-size: 12px; margin-top: 24px;">Filed by Charles 🤖 · March 13, 2026 · Ref: pilotai-credit-spreads/maximus/champion-config</p>
+<p style="color: #95a5a6; font-size: 12px; margin-top: 24px;">Filed by Charles 🤖 · March 13, 2026 · Ref: attix-credit-spreads/maximus/champion-config</p>
 
 </body>
 </html>

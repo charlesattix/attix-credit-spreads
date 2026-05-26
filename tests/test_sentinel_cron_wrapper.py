@@ -73,7 +73,7 @@ def _run_wrapper(bin_dir: Path, **env_overrides) -> subprocess.CompletedProcess:
     patched = script.replace("/usr/bin/python3", str(bin_dir / "python3"))
     # Replace cd target so the script doesn't fail on exotic CI checkouts.
     patched = patched.replace(
-        "cd /Users/charlesbot/projects/pilotai-credit-spreads",
+        "cd /Users/charlesbot/projects/attix-credit-spreads",
         f"cd {_PROJECT_ROOT}",
     )
 

@@ -24,7 +24,7 @@ We pulled all 57 Attix strategy portfolios, computed multi-period performance on
 | **Top-tier strategies** | 16 with QScore ≥ 0.40 (avg 1yr: +136.6%) |
 | **Consensus top-10 portfolio** | 1yr: +165.9% | 3mo: +52.3% | Sharpe: 3.72 |
 
-The signal service (`pilotai_signal/`) is implemented and running. First collection bootstrapped with today's API data.
+The signal service (`attix_signal/`) is implemented and running. First collection bootstrapped with today's API data.
 
 ---
 
@@ -352,7 +352,7 @@ Through Jaccard similarity analysis across holdings, strategies cluster into 5 f
 
 ## 8. Implemented Signal Service
 
-The full production signal service is implemented in `pilotai_signal/`.
+The full production signal service is implemented in `attix_signal/`.
 
 ### 8.1 Architecture
 
@@ -372,9 +372,9 @@ cron (9:35 AM ET Mon–Fri)
 ### 8.2 File Structure
 
 ```
-pilotai_signal/
+attix_signal/
 ├── __init__.py          # Package init
-├── __main__.py          # `python -m pilotai_signal` entry
+├── __main__.py          # `python -m attix_signal` entry
 ├── config.py            # All configuration (env-based)
 ├── db.py                # SQLite schema + read/write helpers
 ├── collector.py         # API fetch + storage
@@ -391,24 +391,24 @@ data/
 
 ```bash
 # Initialize (first time)
-python3 -m pilotai_signal init
+python3 -m attix_signal init
 
 # Full daily run (collect → score → alerts)
-python3 -m pilotai_signal run
+python3 -m attix_signal run
 
 # Individual steps
-python3 -m pilotai_signal collect [--date YYYY-MM-DD] [--force] [--dry-run]
-python3 -m pilotai_signal score   [--date YYYY-MM-DD] [--dry-run]
-python3 -m pilotai_signal alerts  [--date YYYY-MM-DD] [--no-digest] [--dry-run]
+python3 -m attix_signal collect [--date YYYY-MM-DD] [--force] [--dry-run]
+python3 -m attix_signal score   [--date YYYY-MM-DD] [--dry-run]
+python3 -m attix_signal alerts  [--date YYYY-MM-DD] [--no-digest] [--dry-run]
 
 # Monitoring & inspection
-python3 -m pilotai_signal show    [--date YYYY-MM-DD] [--top 30]
-python3 -m pilotai_signal status  [--last 10]
-python3 -m pilotai_signal history TICKER [--days 30]
-python3 -m pilotai_signal digest  [--dry-run]
+python3 -m attix_signal show    [--date YYYY-MM-DD] [--top 30]
+python3 -m attix_signal status  [--last 10]
+python3 -m attix_signal history TICKER [--days 30]
+python3 -m attix_signal digest  [--dry-run]
 
 # Maintenance
-python3 -m pilotai_signal rebuild  # recompute all historical signals
+python3 -m attix_signal rebuild  # recompute all historical signals
 ```
 
 ### 8.4 Database Schema Summary
@@ -447,16 +447,16 @@ conviction(ticker, date) = normalize(
 ```bash
 # Add to crontab (crontab -e)
 # 9:35 AM ET Mon–Fri
-35 9 * * 1-5 /Users/charlesbot/projects/pilotai-credit-spreads/scripts/run_signal_service.sh
+35 9 * * 1-5 /Users/charlesbot/projects/attix-credit-spreads/scripts/run_signal_service.sh
 
 # 4:00 PM ET digest (optional)
-0 16 * * 1-5 /Users/charlesbot/projects/pilotai-credit-spreads/scripts/run_signal_service.sh --digest-only
+0 16 * * 1-5 /Users/charlesbot/projects/attix-credit-spreads/scripts/run_signal_service.sh --digest-only
 ```
 
 ### 8.8 Required Environment Variables
 
 ```bash
-PILOTAI_API_KEY=cZZP6he1Qez8Lb6njh6w5vUe     # pre-configured
+ATTIX_API_KEY=cZZP6he1Qez8Lb6njh6w5vUe     # pre-configured
 TELEGRAM_BOT_TOKEN=<your-token>
 TELEGRAM_CHAT_ID=<your-chat-id>
 ```
@@ -513,24 +513,24 @@ Since the API has no historical endpoint, the service starts accumulating from t
 ## Appendix A: Implementation Quick-Start
 
 ```bash
-cd /Users/charlesbot/projects/pilotai-credit-spreads
+cd /Users/charlesbot/projects/attix-credit-spreads
 
 # 1. Initialize DB
-python3 -m pilotai_signal init
+python3 -m attix_signal init
 
 # 2. Set credentials
 export TELEGRAM_BOT_TOKEN="your-token"
 export TELEGRAM_CHAT_ID="your-chat-id"
 
 # 3. Run collection + scoring + alerts
-python3 -m pilotai_signal run
+python3 -m attix_signal run
 
 # 4. Inspect current signal
-python3 -m pilotai_signal show --top 25
+python3 -m attix_signal show --top 25
 
 # 5. Add to crontab
 crontab -e
-# Add: 35 9 * * 1-5 /Users/charlesbot/projects/pilotai-credit-spreads/scripts/run_signal_service.sh
+# Add: 35 9 * * 1-5 /Users/charlesbot/projects/attix-credit-spreads/scripts/run_signal_service.sh
 ```
 
 ---
@@ -538,7 +538,7 @@ crontab -e
 ## Appendix B: Database Location
 
 ```
-/Users/charlesbot/projects/pilotai-credit-spreads/data/pilotai_signal.db
+/Users/charlesbot/projects/attix-credit-spreads/data/pilotai_signal.db
 ```
 
 Day-1 bootstrap: 57 strategies stored, 401 ticker signals computed for 2026-03-07.

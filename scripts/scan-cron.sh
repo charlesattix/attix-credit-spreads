@@ -9,7 +9,7 @@
 
 set -euo pipefail
 
-PROJECT_DIR="/Users/charlesbot/projects/pilotai-credit-spreads"
+PROJECT_DIR="/Users/charlesbot/projects/attix-credit-spreads"
 LOG_DIR="${PROJECT_DIR}/logs"
 MAX_LOG_SIZE=$((5 * 1024 * 1024))  # 5 MB
 

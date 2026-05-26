@@ -40,7 +40,7 @@ def get_daily_summary_metrics(
     from shared.database import get_trades, get_latest_alerts
 
     date_str = report_date or datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    db_path = os.environ.get("PILOTAI_DB_PATH")
+    db_path = os.environ.get("ATTIX_DB_PATH")
 
     closed_all = (
         get_trades(status="closed_profit", path=db_path)
@@ -148,7 +148,7 @@ def collect_report_data(config: dict, report_date: Optional[str] = None) -> dict
     date_str = report_date or datetime.now(timezone.utc).strftime("%Y-%m-%d")
     db_path = config.get("db_path")
     if db_path:
-        os.environ["PILOTAI_DB_PATH"] = db_path
+        os.environ["ATTIX_DB_PATH"] = db_path
 
     experiment_id = config.get("experiment_id", "UNKNOWN")
     starting_equity = config.get("risk", {}).get("account_size", 100_000)
@@ -538,7 +538,7 @@ def main():
     # Set DB path from config
     db_path = config.get("db_path")
     if db_path:
-        os.environ["PILOTAI_DB_PATH"] = db_path
+        os.environ["ATTIX_DB_PATH"] = db_path
 
     # Set experiment ID
     exp_id = config.get("experiment_id", "UNKNOWN")

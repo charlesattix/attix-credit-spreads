@@ -1,5 +1,5 @@
 """
-Tests for pilotai_signal/alerts.py — filtering, digest footer, and cooldown.
+Tests for attix_signal/alerts.py — filtering, digest footer, and cooldown.
 
 All tests are pure (no network, no real DB) unless stated otherwise.
 """
@@ -11,13 +11,13 @@ from unittest.mock import patch
 
 import pytest
 
-from pilotai_signal.alerts import (
+from attix_signal.alerts import (
     _load_mover_cooldown,
     _save_mover_cooldown,
     build_digest,
     filter_alerts,
 )
-from pilotai_signal import config
+from attix_signal import config
 
 
 # ---------------------------------------------------------------------------

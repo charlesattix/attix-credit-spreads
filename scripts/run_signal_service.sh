@@ -3,7 +3,7 @@
 # Attix Signal Service — Cron wrapper
 #
 # Cron schedule (9:35 AM ET Mon–Fri):
-#   35 9 * * 1-5 /Users/charlesbot/projects/pilotai-credit-spreads/scripts/run_signal_service.sh
+#   35 9 * * 1-5 /Users/charlesbot/projects/attix-credit-spreads/scripts/run_signal_service.sh
 #
 # Optional afternoon digest (4:00 PM ET):
 #   0 16 * * 1-5 .../run_signal_service.sh --digest-only
@@ -31,8 +31,8 @@ fi
 : "${TELEGRAM_BOT_TOKEN:?TELEGRAM_BOT_TOKEN is required}"
 : "${TELEGRAM_CHAT_ID:?TELEGRAM_CHAT_ID is required}"
 
-export PILOTAI_API_KEY="${PILOTAI_API_KEY:-cZZP6he1Qez8Lb6njh6w5vUe}"
-export PILOTAI_DB_PATH="${PILOTAI_DB_PATH:-$PROJECT_ROOT/data/pilotai_signal.db}"
+export ATTIX_API_KEY="${ATTIX_API_KEY:-cZZP6he1Qez8Lb6njh6w5vUe}"
+export ATTIX_DB_PATH="${ATTIX_DB_PATH:-$PROJECT_ROOT/data/pilotai_signal.db}"
 
 # ── Activate virtualenv if present ───────────────────────────────────────────
 if [ -f "$PROJECT_ROOT/.venv/bin/activate" ]; then
@@ -67,12 +67,12 @@ log "=== Signal Service starting (digest_only=$DIGEST_ONLY dry_run=$DRY_RUN) ===
 cd "$PROJECT_ROOT"
 
 if [ "$DIGEST_ONLY" = true ]; then
-    CMD="python -m pilotai_signal digest"
+    CMD="python -m attix_signal digest"
     [ "$DRY_RUN" = true ] && CMD="$CMD --dry-run"
     log "Running: $CMD"
     eval "$CMD" 2>&1 | tee -a "$LOG_FILE"
 else
-    CMD="python -m pilotai_signal run"
+    CMD="python -m attix_signal run"
     [ "$FORCE" = true ]    && CMD="$CMD --force"
     [ "$DRY_RUN" = true ]  && CMD="$CMD --dry-run"
     log "Running: $CMD"

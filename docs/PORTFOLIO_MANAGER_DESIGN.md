@@ -954,7 +954,7 @@ After=network.target
 [Service]
 Type=simple
 User=trader
-WorkingDirectory=/home/trader/pilotai-credit-spreads
+WorkingDirectory=/home/trader/attix-credit-spreads
 ExecStart=/usr/bin/python3 scripts/position_monitor.py
 Restart=always
 RestartSec=10
@@ -1817,7 +1817,7 @@ PORTFOLIO_SCAN_OFFSETS = {
 **Complete directory layout for multi-portfolio system:**
 
 ```
-pilotai-credit-spreads/
+attix-credit-spreads/
 │
 ├── main.py                       # Main entry point (scanner, backtest, dashboard)
 ├── config.yaml.example           # Template config (do not use directly)
@@ -2296,7 +2296,7 @@ TELEGRAM_BOT_TOKEN=...
 TELEGRAM_CHAT_ID=...
 
 # Database path override (OPTIONAL — defaults to portfolios/<id>/pilotai.db)
-PILOTAI_DB_PATH=portfolios/exp_154/pilotai.db
+ATTIX_DB_PATH=portfolios/exp_154/pilotai.db
 ```
 
 **Validation:**

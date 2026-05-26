@@ -17,7 +17,7 @@
 After you `git pull` on branch `maximus/clean-features`, these files must exist:
 
 ```
-pilotai-credit-spreads/
+attix-credit-spreads/
 ├── scripts/
 │   ├── run_exp1220.py                 ← the scanner (1,010 lines)
 │   └── launch_exp1220.sh              ← one-command launcher (NEW)

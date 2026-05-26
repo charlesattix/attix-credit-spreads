@@ -1,5 +1,5 @@
 """
-Unit tests for pilotai_signal/trade_notifications.py.
+Unit tests for attix_signal/trade_notifications.py.
 
 All tests are fully offline: no Alpaca API calls, no Telegram sends.
 Alpaca Order/Position/Account objects are replaced with simple dataclass stubs.
@@ -17,7 +17,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from pilotai_signal.trade_notifications import (
+from attix_signal.trade_notifications import (
     _get_open_credit,
     _is_notified,
     _mark_notified,
@@ -411,7 +411,7 @@ class TestPollNewOrders:
     def test_new_filled_open_sends_notification(self, db_conn):
         order = _put_spread_order()
         client = self._make_client([order])
-        with patch("pilotai_signal.trade_notifications.send_telegram") as mock_tg:
+        with patch("attix_signal.trade_notifications.send_telegram") as mock_tg:
             notified = poll_new_orders(client, db_conn, dry_run=True)
         assert len(notified) == 1
         assert notified[0] == "order-open-001"
@@ -421,7 +421,7 @@ class TestPollNewOrders:
         _mark_notified(db_conn, order.id, "open")
         db_conn.commit()
         client = self._make_client([order])
-        with patch("pilotai_signal.trade_notifications.send_telegram") as mock_tg:
+        with patch("attix_signal.trade_notifications.send_telegram") as mock_tg:
             notified = poll_new_orders(client, db_conn, dry_run=True)
         assert notified == []
         mock_tg.assert_not_called()
@@ -429,7 +429,7 @@ class TestPollNewOrders:
     def test_rejected_order_sends_notification(self, db_conn):
         order = _rejected_order()
         client = self._make_client([order])
-        with patch("pilotai_signal.trade_notifications.send_telegram") as mock_tg:
+        with patch("attix_signal.trade_notifications.send_telegram") as mock_tg:
             notified = poll_new_orders(client, db_conn, dry_run=True)
         assert len(notified) == 1
         # Message should contain rejection emoji
@@ -447,7 +447,7 @@ class TestPollNewOrders:
 
         close_order = _close_spread_order(debit=0.37, qty=2)
         client = self._make_client([close_order])
-        with patch("pilotai_signal.trade_notifications.send_telegram") as mock_tg:
+        with patch("attix_signal.trade_notifications.send_telegram") as mock_tg:
             notified = poll_new_orders(client, db_conn, dry_run=True)
         assert len(notified) == 1
         call_args = mock_tg.call_args[0][0]
@@ -457,7 +457,7 @@ class TestPollNewOrders:
     def test_alpaca_error_returns_empty(self, db_conn):
         client = MagicMock()
         client.get_orders.side_effect = RuntimeError("API down")
-        with patch("pilotai_signal.trade_notifications.send_telegram"):
+        with patch("attix_signal.trade_notifications.send_telegram"):
             notified = poll_new_orders(client, db_conn, dry_run=True)
         assert notified == []
 
@@ -472,7 +472,7 @@ class TestPollNewOrders:
             legs=[],
         )
         client = self._make_client([order])
-        with patch("pilotai_signal.trade_notifications.send_telegram") as mock_tg:
+        with patch("attix_signal.trade_notifications.send_telegram") as mock_tg:
             notified = poll_new_orders(client, db_conn, dry_run=True)
         assert len(notified) == 1
         call_args = mock_tg.call_args[0][0]
@@ -489,7 +489,7 @@ class TestPollNewOrders:
             legs=[],
         )
         client = self._make_client([order])
-        with patch("pilotai_signal.trade_notifications.send_telegram") as mock_tg:
+        with patch("attix_signal.trade_notifications.send_telegram") as mock_tg:
             notified = poll_new_orders(client, db_conn, dry_run=True)
         # Not in notified (no message sent), but marked in DB for dedup
         assert notified == []
@@ -506,7 +506,7 @@ class TestSendDailySummary:
         client = MagicMock()
         client.get_account.return_value = Account()
         client.get_all_positions.return_value = []
-        with patch("pilotai_signal.trade_notifications.send_telegram"):
+        with patch("attix_signal.trade_notifications.send_telegram"):
             first = send_daily_summary(client, db_conn, dry_run=True)
             # dry_run=True doesn't mark in DB — call again to verify idempotency
             # For real test: use dry_run=False and check second call returns False
@@ -516,7 +516,7 @@ class TestSendDailySummary:
         _mark_daily_summary_sent(db_conn, date.today())
         db_conn.commit()
         client = MagicMock()
-        with patch("pilotai_signal.trade_notifications.send_telegram") as mock_tg:
+        with patch("attix_signal.trade_notifications.send_telegram") as mock_tg:
             result = send_daily_summary(client, db_conn, dry_run=True)
         assert result is False
         mock_tg.assert_not_called()
@@ -524,6 +524,6 @@ class TestSendDailySummary:
     def test_alpaca_error_returns_false(self, db_conn):
         client = MagicMock()
         client.get_account.side_effect = RuntimeError("Network error")
-        with patch("pilotai_signal.trade_notifications.send_telegram"):
+        with patch("attix_signal.trade_notifications.send_telegram"):
             result = send_daily_summary(client, db_conn, dry_run=True)
         assert result is False

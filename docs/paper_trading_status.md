@@ -140,7 +140,7 @@ Neither the data update cron nor the scanner cron is installed. The setup infras
 
 ### `scan-cron.sh` Portability Issue
 
-Line 12: `PROJECT_DIR="/Users/charlesbot/projects/pilotai-credit-spreads"` — hardcoded to a macOS path. This script will fail on any other machine. Should use `$(dirname "$(dirname "$(readlink -f "$0")")")` or similar.
+Line 12: `PROJECT_DIR="/Users/charlesbot/projects/attix-credit-spreads"` — hardcoded to a macOS path. This script will fail on any other machine. Should use `$(dirname "$(dirname "$(readlink -f "$0")")")` or similar.
 
 ---
 

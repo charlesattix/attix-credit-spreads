@@ -113,7 +113,7 @@ class CreditSpreadSystem:
         # Load persisted value from DB so restarts don't reset the high-water mark.
         starting_capital_init = float(self.config.get('risk', {}).get('account_size', 100_000))
         try:
-            _db_path = os.environ.get('PILOTAI_DB_PATH')
+            _db_path = os.environ.get('ATTIX_DB_PATH')
             _persisted = load_scanner_state("peak_equity", path=_db_path)
             self._peak_equity = float(_persisted) if _persisted is not None else starting_capital_init
         except Exception:
@@ -173,7 +173,7 @@ class CreditSpreadSystem:
         from execution.execution_engine import ExecutionEngine
         self.execution_engine = ExecutionEngine(
             alpaca_provider=self.alpaca_provider,
-            db_path=os.environ.get('PILOTAI_DB_PATH'),
+            db_path=os.environ.get('ATTIX_DB_PATH'),
         )
 
         # MASTERPLAN alert router pipeline (P0 Fix 1: now accepts execution_engine)
@@ -645,7 +645,7 @@ class CreditSpreadSystem:
             alpaca_positions = self.alpaca_provider.get_positions()
 
             # Load open trades from SQLite for metadata
-            db_positions = get_trades(status="open", path=os.environ.get('PILOTAI_DB_PATH'))
+            db_positions = get_trades(status="open", path=os.environ.get('ATTIX_DB_PATH'))
 
             # Build enriched position list from DB metadata + Alpaca market values
             open_positions = []
@@ -676,7 +676,7 @@ class CreditSpreadSystem:
 
             # Daily / weekly realized P&L from closed trades
             now = datetime.now(timezone.utc)
-            db_path = os.environ.get('PILOTAI_DB_PATH')
+            db_path = os.environ.get('ATTIX_DB_PATH')
             closed_all = (
                 get_trades(status="closed_profit", path=db_path) +
                 get_trades(status="closed_loss", path=db_path)
@@ -706,7 +706,7 @@ class CreditSpreadSystem:
             if account_value > self._peak_equity:
                 self._peak_equity = account_value
                 try:
-                    db_path = os.environ.get('PILOTAI_DB_PATH')
+                    db_path = os.environ.get('ATTIX_DB_PATH')
                     save_scanner_state("peak_equity", str(self._peak_equity), path=db_path)
                 except Exception as _pe_err:
                     logger.warning("_build_account_state: could not persist peak_equity: %s", _pe_err)
@@ -895,8 +895,8 @@ def create_system(config_file: str = 'config.yaml', env_file: str = None) -> Cre
 
     # Bug #1 fix: honour YAML db_path for experiment isolation.
     # CLI arg (--db-path) takes priority → already in env.  YAML is next.
-    if not os.environ.get('PILOTAI_DB_PATH') and config.get('db_path'):
-        os.environ['PILOTAI_DB_PATH'] = config['db_path']
+    if not os.environ.get('ATTIX_DB_PATH') and config.get('db_path'):
+        os.environ['ATTIX_DB_PATH'] = config['db_path']
         logger.info("Using db_path from config: %s", config['db_path'])
 
     setup_logging(config)
@@ -909,7 +909,7 @@ def create_system(config_file: str = 'config.yaml', env_file: str = None) -> Cre
             from shared.reconciler import PositionReconciler
             reconciler = PositionReconciler(
                 alpaca=system.alpaca_provider,
-                db_path=os.environ.get('PILOTAI_DB_PATH'),
+                db_path=os.environ.get('ATTIX_DB_PATH'),
             )
             result = reconciler.reconcile()
             logger.info("Startup reconciliation complete: %s", result)
@@ -1004,7 +1004,7 @@ Examples:
         # Set custom DB path before any database imports use the default.
         # CLI --db takes priority; fall back to db_path field in the YAML config.
         if args.db_path:
-            os.environ['PILOTAI_DB_PATH'] = args.db_path
+            os.environ['ATTIX_DB_PATH'] = args.db_path
         else:
             try:
                 import yaml as _yaml
@@ -1012,7 +1012,7 @@ Examples:
                     _raw = _yaml.safe_load(_f)
                 _cfg_db = (_raw or {}).get('db_path')
                 if _cfg_db:
-                    os.environ['PILOTAI_DB_PATH'] = _cfg_db
+                    os.environ['ATTIX_DB_PATH'] = _cfg_db
             except Exception:
                 pass
 
@@ -1043,7 +1043,7 @@ Examples:
             # still executing).  Lock path: /tmp/attix_{exp_id}.lock
             # Lock is held for the lifetime of this process; OS releases it on exit.
             import fcntl as _fcntl
-            _db_for_lock = args.db_path or os.environ.get("PILOTAI_DB_PATH", "")
+            _db_for_lock = args.db_path or os.environ.get("ATTIX_DB_PATH", "")
             _lock_base = os.path.basename(_db_for_lock).replace("attix_", "").replace(".db", "")
             _exp_id_lock = _lock_base if _lock_base else "unk"
             _lock_path = f"/tmp/attix_{_exp_id_lock}.lock"
@@ -1068,7 +1068,7 @@ Examples:
                 _pm = PositionMonitor(
                     alpaca_provider=system.alpaca_provider,
                     config=system.config,
-                    db_path=os.environ.get('PILOTAI_DB_PATH'),
+                    db_path=os.environ.get('ATTIX_DB_PATH'),
                 )
                 _pm._check_positions()
 
@@ -1134,7 +1134,7 @@ Examples:
                     # Derive experiment_id from db_path (e.g. data/attix_champion.db → champion)
                     # or fall back to config file name
                     _exp_id = "unknown"
-                    _db = args.db_path or os.environ.get("PILOTAI_DB_PATH", "")
+                    _db = args.db_path or os.environ.get("ATTIX_DB_PATH", "")
                     if _db:
                         _base = os.path.basename(_db).replace("attix_", "").replace(".db", "")
                         if _base:
@@ -1162,7 +1162,7 @@ Examples:
                 import numpy as np
                 import pandas as pd
                 try:
-                    db_path = args.db_path or os.environ.get("PILOTAI_DB_PATH")
+                    db_path = args.db_path or os.environ.get("ATTIX_DB_PATH")
                     trades = get_trades(status="closed", path=db_path)
                     if not trades or len(trades) < 30:
                         logger.info(
@@ -1220,9 +1220,9 @@ Examples:
                 # Sync trade data to dashboard (separate volume)
                 try:
                     import requests as _req
-                    _dashboard_url = os.environ.get("RAILWAY_SERVICE_PILOTAI_CREDIT_SPREADS_URL", "")
+                    _dashboard_url = os.environ.get("RAILWAY_SERVICE_ATTIX_CREDIT_SPREADS_URL", "")
                     _api_key = os.environ.get("DASHBOARD_API_KEY", "")
-                    _db_path = args.db_path or os.environ.get("PILOTAI_DB_PATH", "")
+                    _db_path = args.db_path or os.environ.get("ATTIX_DB_PATH", "")
                     if _dashboard_url and _api_key and _db_path and os.path.exists(_db_path):
                         _base = _dashboard_url if _dashboard_url.startswith("http") else f"https://{_dashboard_url}"
                         import sqlite3 as _sql
@@ -1248,7 +1248,7 @@ Examples:
                 # API-based watchdog can check scan recency without filesystem access.
                 try:
                     import requests as _req
-                    _dashboard_url = os.environ.get("RAILWAY_SERVICE_PILOTAI_CREDIT_SPREADS_URL", "")
+                    _dashboard_url = os.environ.get("RAILWAY_SERVICE_ATTIX_CREDIT_SPREADS_URL", "")
                     _api_key = os.environ.get("DASHBOARD_API_KEY", "")
                     if _dashboard_url and _api_key:
                         _base = _dashboard_url if _dashboard_url.startswith("http") else f"https://{_dashboard_url}"
@@ -1268,7 +1268,7 @@ Examples:
                 # Push Alpaca portfolio snapshot to dashboard
                 try:
                     import requests as _req
-                    _dashboard_url = os.environ.get("RAILWAY_SERVICE_PILOTAI_CREDIT_SPREADS_URL", "")
+                    _dashboard_url = os.environ.get("RAILWAY_SERVICE_ATTIX_CREDIT_SPREADS_URL", "")
                     _api_key = os.environ.get("DASHBOARD_API_KEY", "")
                     _alpaca_key = os.environ.get("ALPACA_API_KEY", "")
                     _alpaca_secret = os.environ.get("ALPACA_API_SECRET", "")

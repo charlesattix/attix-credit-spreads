@@ -145,7 +145,7 @@ python3 main.py backtest
 ## Project Structure
 
 ```
-pilotai-credit-spreads/
+attix-credit-spreads/
 ├── compass/                       # ~440 modules: strategy, research, production
 │   ├── exp1220_standalone.py      #   SPY put credit spread stream
 │   ├── exp2160_high_capacity_alts.py  #   XLF/XLI credit spreads

@@ -40,7 +40,7 @@ These read generic `ALPACA_API_KEY` but are **NOT on the Tue 09:25 ET vesper sig
 | `sentinel/guards.py`, `sentinel/monitor.py`, `sentinel/runtime.py`, `sentinel/v2/cadence_engine.py` | sentinel-watchdog service — out of scope for vesper cleanup. Will also fail with dead key. |
 | `shared/portfolio_risk.py` | Reads `creds` dict (per-env), not `os.environ` directly. Safe; the env file values may still be per-exp. |
 | `shared/credentials.py` | Reads from per-experiment `.env` files (e.g. `.env.exp400`), not Railway env vars. Files contain per-exp keys mapped to generic names — standard adapter pattern, safe. |
-| `pilotai_signal/trade_notifications.py` | Legacy notifier; not imported by vesper. |
+| `attix_signal/trade_notifications.py` | Legacy notifier; not imported by vesper. |
 | `scripts/*.py` (`daily_report.py`, `compare_leverage_sweep.py`, `monitor_exp880.py`, `north_star_monitor.py`, etc.) | One-off CLI tools, not scheduled. |
 | `tests/test_*.py`, `tests/archive/*`, `experiments/EXP-1570-max/*` | Test fixtures use dummy keys; archive code; not on hot path. |
 | `scheduler/jobs.py:_get_experiment_env` writes `env["ALPACA_API_KEY"]` | NOT a read of generic key — this maps per-exp Railway key into the subprocess env under the name the subprocess expects. Standard adapter; kept. |

@@ -2,7 +2,7 @@
 # Watch for exp_099 completion; then launch exp_100 seasonal overlay
 
 set -euo pipefail
-cd /Users/charlesbot/projects/pilotai-credit-spreads
+cd /Users/charlesbot/projects/attix-credit-spreads
 
 LOG=output/exp_100_watcher.log
 
