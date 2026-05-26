@@ -320,6 +320,9 @@ class PositionReconciler:
             # Step 4: detect Alpaca option positions with no DB record
             self._detect_orphan_positions(result, alpaca_positions)
 
+            # Step 5: promote needs_investigation → open when Alpaca confirms legs exist
+            self._promote_investigation_trades(result, alpaca_positions)
+
         if result:
             logger.info("Reconciliation complete: %s", result)
         else:
@@ -1151,6 +1154,46 @@ class PositionReconciler:
                 )
                 result.errors.append(f"phantom_write_fail:{trade_id}")
             result.phantom_resolved += 1
+
+    def _promote_investigation_trades(
+        self, result: ReconciliationResult, alpaca_positions: Dict
+    ) -> None:
+        """Promote ``needs_investigation`` trades to ``open`` when Alpaca confirms
+        both legs still exist.
+
+        This handles the common case where the DB was lost during a redeploy
+        and the reconciler created records but couldn't determine credit/PnL.
+        """
+        inv_trades = get_trades(status="needs_investigation", source="execution", path=self.db_path)
+        if not inv_trades:
+            return
+
+        alpaca_symbols = {p.get("symbol", "") for p in alpaca_positions.values()} if isinstance(alpaca_positions, dict) else set()
+        if not alpaca_symbols:
+            # Try list format
+            if isinstance(alpaca_positions, list):
+                alpaca_symbols = {p.get("symbol", "") for p in alpaca_positions}
+
+        for trade in inv_trades:
+            trade_id = trade.get("trade_id", "")
+            short_leg = trade.get("short_leg", "")
+            long_leg = trade.get("long_leg", "")
+
+            # Check if at least the short leg is in Alpaca (confirms position is real)
+            has_short = short_leg in alpaca_symbols if short_leg else False
+            has_long = long_leg in alpaca_symbols if long_leg else False
+
+            if has_short or has_long:
+                logger.info(
+                    "Reconciler: promoting %s from needs_investigation → open "
+                    "(Alpaca confirms legs: short=%s long=%s)",
+                    trade_id, has_short, has_long,
+                )
+                try:
+                    trade["status"] = "open"
+                    upsert_trade(trade, source="execution", path=self.db_path)
+                except Exception as e:
+                    logger.error("Reconciler: failed to promote %s: %s", trade_id, e)
 
     def _detect_orphan_positions(
         self, result: ReconciliationResult, alpaca_positions: Dict
