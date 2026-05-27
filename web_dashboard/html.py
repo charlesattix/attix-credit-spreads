@@ -418,6 +418,7 @@ h1 { font-size: 22px; font-weight: 700; margin-bottom: 3px; }
 .badge-yellow { background: #fef9c3; color: #854d0e; }
 .badge-red    { background: #fee2e2; color: #991b1b; }
 .badge-gray   { background: #f1f5f9; color: #64748b; }
+.badge-blue   { background: #dbeafe; color: #1e40af; }
 
 .no-alpaca {
     padding: 8px 22px 14px; font-size: 12px; color: #94a3b8; font-style: italic;
@@ -538,6 +539,19 @@ _EXP_DESCRIPTIONS: dict[str, str] = {
         "high_stress) while letting sector ETFs continue. Defensive "
         "SPX-VRP protection. Backtest: Sharpe 6.334, gates ~4% of days."
     ),
+}
+
+# Leverage multiplier per experiment (keyed by experiment ID).
+_LEVERAGE_MAP: dict[str, str] = {
+    "EXP-V8A":   "3.9×",
+    "EXP-3311":  "3.95×",
+    "EXP-800":   "2.0×",
+    "EXP-400":   "2.0×",
+    "EXP-401":   "2.0×",
+    "EXP-3303b": "1.8×",
+    "EXP-1220":  "1.1×",
+    "EXP-503":   "1.0×",
+    "EXP-3309":  "1.0×",
 }
 
 # ---------------------------------------------------------------------------
@@ -890,6 +904,8 @@ def _render_exp_card(s: dict) -> str:
     # SECURITY AUDIT #7: escape all registry-sourced values before inserting into HTML.
     eid      = _html.escape(str(s['id']))
     ename    = _html.escape(str(s['name']))
+    _lev = _LEVERAGE_MAP.get(s['id'])
+    lev_badge = f' &nbsp;<span class="badge badge-blue">{_html.escape(_lev)}</span>' if _lev else ''
     eticker  = _html.escape(str(s['ticker']))
     ecreator = _html.escape(str(s.get('creator', '—')))
     elive    = _html.escape(str(s.get('live_since', '—')))
@@ -916,7 +932,7 @@ def _render_exp_card(s: dict) -> str:
 <div class="exp-card">
   <div class="exp-header">
     <div class="exp-left">
-      <div class="exp-id-line">{eid}{source_badge}</div>
+      <div class="exp-id-line">{eid}{source_badge}{lev_badge}</div>
       <div class="exp-name">{ename}</div>
       {desc_html}
       <div class="exp-meta">
