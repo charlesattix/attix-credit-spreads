@@ -1025,7 +1025,12 @@ def render_dashboard(all_stats: list[dict]) -> str:
         equity_card = ""
         unrealized_card = ""
 
-    exp_rows = "".join(_render_exp_card(s) for s in all_stats)
+    def _lev_sort_key(s: dict) -> tuple:
+        lev_str = _LEVERAGE_MAP.get(s['id'], "1.0×")
+        lev_val = float(lev_str.rstrip("×"))
+        return (-lev_val, s['id'])
+
+    exp_rows = "".join(_render_exp_card(s) for s in sorted(all_stats, key=_lev_sort_key))
 
     nav = _render_nav("/", f'<span class="live-dot"></span> <span>Updated {now_str} &bull; Refresh in <span id="cd">300s</span></span>')
 
