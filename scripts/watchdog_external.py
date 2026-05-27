@@ -40,7 +40,7 @@ TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "451136954")
 
 DASHBOARD_URL = os.environ.get(
     "DASHBOARD_URL",
-    "https://attix-dashboard-production.up.railway.app",
+    "https://attix-production.up.railway.app",
 )
 DASHBOARD_API_KEY = os.environ.get("DASHBOARD_API_KEY", "dev-attix-2026")
 

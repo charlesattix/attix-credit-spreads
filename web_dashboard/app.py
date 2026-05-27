@@ -111,7 +111,7 @@ app = FastAPI(
 )
 
 # SECURITY AUDIT #6: restrict CORS to the configured dashboard origin.
-# Set DASHBOARD_ORIGIN env var to the exact deployed URL (e.g. https://attix-dashboard-production.up.railway.app).
+# Set DASHBOARD_ORIGIN env var to the exact deployed URL (e.g. https://attix-production.up.railway.app).
 # Falls back to no cross-origin access if unset.
 _CORS_ORIGINS = [o.strip() for o in getenv_or_default("DASHBOARD_ORIGIN", "").split(",") if o.strip()]
 app.add_middleware(

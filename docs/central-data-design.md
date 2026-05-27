@@ -19,7 +19,7 @@ After account resets, old trade data in DBs becomes misleading (shows losses fro
 
 ### Core Principle
 
-The Railway dashboard (`attix-dashboard-production.up.railway.app`) becomes the **authoritative view** of all experiment state. The sync pipeline remains the data transport, but gains awareness of resets and key health.
+The Railway dashboard (`attix-production.up.railway.app`) becomes the **authoritative view** of all experiment state. The sync pipeline remains the data transport, but gains awareness of resets and key health.
 
 ### 1. Reset Tracking
 
