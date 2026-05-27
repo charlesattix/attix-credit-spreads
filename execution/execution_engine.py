@@ -14,6 +14,7 @@ import os
 import time
 from datetime import datetime, timedelta, timezone
 from typing import Dict, Optional
+from zoneinfo import ZoneInfo
 
 from shared.database import get_trade_by_id, get_trades, init_db, load_scanner_state, save_scanner_state, upsert_trade, upsert_trade_legs
 
@@ -227,7 +228,8 @@ class ExecutionEngine:
         # the hash input so two experiments scanning the same strike/expiry
         # always produce different DB keys — preventing cross-experiment
         # dedup collisions.  Format: cs-{exp_id}-{sha256[:12]}
-        raw_id = f"{self._exp_id}-{ticker}-{spread_type}-{expiration}-{short_strike}-{long_strike}"
+        today_et = datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m-%d")
+        raw_id = f"{self._exp_id}-{ticker}-{spread_type}-{expiration}-{short_strike}-{long_strike}-{today_et}"
         client_id = f"cs-{self._exp_id}-" + hashlib.sha256(raw_id.encode()).hexdigest()[:12]
 
         # Alpaca permanently tracks client_order_id and rejects reuse, even for
