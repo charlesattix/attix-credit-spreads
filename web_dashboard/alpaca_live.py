@@ -24,6 +24,8 @@ from typing import Optional
 
 import httpx
 
+from .env_helpers import getenv_or_default
+
 logger = logging.getLogger(__name__)
 
 ALPACA_BASE = "https://paper-api.alpaca.markets"
@@ -46,12 +48,22 @@ def discover_experiment_keys() -> dict[str, tuple[str, str]]:
     """
     keys: dict[str, tuple[str, str]] = {}
     for var, val in os.environ.items():
-        if not var.startswith("ALPACA_API_KEY_EXP") or not val:
+        # `not val` skips empty-string keys (the empty-string footgun): a
+        # present-but-blank ALPACA_API_KEY_EXP* must NOT be treated as configured.
+        if not var.startswith("ALPACA_API_KEY_EXP") or not (val and val.strip()):
             continue
         suffix = var[len("ALPACA_API_KEY_"):]          # "EXP400"
-        secret = os.environ.get(f"ALPACA_API_SECRET_{suffix}", "")
+        secret = getenv_or_default(f"ALPACA_API_SECRET_{suffix}", "")
         if secret:
             keys[suffix] = (val, secret)
+        else:
+            # Key present but its secret is missing/blank — a half-configured
+            # credential that would silently disable this experiment's live data.
+            logger.warning(
+                "[alpaca_live] %s has an API key but ALPACA_API_SECRET_%s is "
+                "missing or empty — skipping (no live data for this experiment)",
+                suffix, suffix,
+            )
     return keys
 
 

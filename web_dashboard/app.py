@@ -34,7 +34,6 @@ from __future__ import annotations
 
 import html as _html
 import logging
-import os
 import time
 from collections import defaultdict, deque
 from datetime import datetime, timezone
@@ -54,6 +53,7 @@ from .auth import (
     make_token,
     verify_token,
 )
+from .env_helpers import getenv_or_default, is_blank
 from .data import (
     get_all_experiments,
     get_positions,
@@ -87,9 +87,13 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # SECURITY AUDIT #4: fail fast if DASHBOARD_API_KEY is not set — no hardcoded fallback.
-_API_KEY = os.environ.get("DASHBOARD_API_KEY")
+# getenv_or_default(name) with no default returns None for an empty/blank value,
+# so a present-but-empty DASHBOARD_API_KEY (the footgun) still trips the raise.
+_API_KEY = getenv_or_default("DASHBOARD_API_KEY")
 if not _API_KEY:
-    raise RuntimeError("DASHBOARD_API_KEY environment variable must be set before starting")
+    raise RuntimeError(
+        "DASHBOARD_API_KEY environment variable must be set (and non-empty) before starting"
+    )
 _RATE_LIMIT    = 120      # requests per 60s per API key
 _IP_RATE_LIMIT = 200      # requests per 60s per source IP (SECURITY AUDIT #10)
 _RATE_WINDOW   = 60.0
@@ -109,7 +113,7 @@ app = FastAPI(
 # SECURITY AUDIT #6: restrict CORS to the configured dashboard origin.
 # Set DASHBOARD_ORIGIN env var to the exact deployed URL (e.g. https://attix-dashboard-production.up.railway.app).
 # Falls back to no cross-origin access if unset.
-_CORS_ORIGINS = [o.strip() for o in os.environ.get("DASHBOARD_ORIGIN", "").split(",") if o.strip()]
+_CORS_ORIGINS = [o.strip() for o in getenv_or_default("DASHBOARD_ORIGIN", "").split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_CORS_ORIGINS,
@@ -294,7 +298,7 @@ async def login_submit(
         max_age=SESSION_TTL_SECS,
         httponly=True,
         samesite="lax",
-        secure=not os.environ.get("INSECURE_COOKIES"),  # secure in prod, off locally
+        secure=is_blank("INSECURE_COOKIES"),  # secure in prod; set INSECURE_COOKIES to disable locally
     )
     logger.info("[auth] Successful login from %s", request.client.host if request.client else "unknown")
     return response
@@ -832,6 +836,72 @@ async def sentinel_dashboard(request: Request, _: None = Depends(require_session
 
 
 # ---------------------------------------------------------------------------
+# Fail-loud env validation (FIX #4)
+# ---------------------------------------------------------------------------
+
+def validate_required_env() -> list[str]:
+    """Validate required environment variables at startup; log loudly on problems.
+
+    The empty-string footgun (``VAR=`` set to blank → default silently applied)
+    caused a silent outage. This check catches it at boot. It does NOT crash the
+    process — the dashboard should still come up so its logs and /health endpoint
+    stay reachable — but every problem is logged at ERROR level so it cannot be
+    missed in Railway logs.
+
+    Two classes are checked:
+      1. ALPACA_API_KEY_<EXP> / ALPACA_API_SECRET_<EXP> for every ACTIVE
+         experiment in the registry (a blank one disables that experiment's
+         live data silently).
+      2. The security-critical singletons DASHBOARD_PASSWORD, DASHBOARD_API_KEY
+         and SECRET_KEY — blank means falling back to an insecure dev default.
+
+    Returns the list of problem strings (empty == all good) so callers/tests can
+    assert on it.
+    """
+    problems: list[str] = []
+
+    # 1. Per-experiment Alpaca credentials for every ACTIVE experiment.
+    try:
+        mgr = get_manager()
+        mgr.reload()
+        active = mgr.by_status("active")
+    except Exception as e:
+        logger.error("[env-validate] could not load registry to check Alpaca keys: %s", e)
+        active = []
+
+    for exp in active:
+        exp_id = exp.get("id", "?")
+        norm = exp_id.upper().replace("-", "")          # EXP-400 → EXP400
+        for var in (f"ALPACA_API_KEY_{norm}", f"ALPACA_API_SECRET_{norm}"):
+            if is_blank(var):
+                problems.append(f"{var} missing/blank (required by active experiment {exp_id})")
+
+    # 2. Security-critical singletons that fall back to insecure dev defaults.
+    #    DASHBOARD_API_KEY has no fallback — a blank value already aborts import
+    #    above — but it is checked here too for a complete, explicit report.
+    for var, note in (
+        ("DASHBOARD_PASSWORD", "login password falling back to insecure dev default"),
+        ("DASHBOARD_API_KEY",  "API key for /api endpoints (startup is aborted if truly blank)"),
+        ("SECRET_KEY",         "session HMAC signing key falling back to insecure dev default"),
+    ):
+        if is_blank(var):
+            problems.append(f"{var} missing/blank ({note})")
+
+    if problems:
+        logger.error(
+            "[env-validate] %d environment problem(s) detected at startup "
+            "(this is exactly the empty-string footgun that caused the outage):",
+            len(problems),
+        )
+        for p in problems:
+            logger.error("[env-validate]   - %s", p)
+    else:
+        logger.info("[env-validate] OK — all required env vars present and non-blank")
+
+    return problems
+
+
+# ---------------------------------------------------------------------------
 # Startup log
 # ---------------------------------------------------------------------------
 
@@ -845,9 +915,8 @@ async def _on_startup():
     logger.info(f"  Registry      : {REGISTRY_PATH} (exists={REGISTRY_PATH.exists()})")
     # SECURITY AUDIT #4: do not log whether default key is in use (key is always required now).
     logger.info("  API key set   : yes")
-    import os as _os
-    logger.info(f"  Dashboard pw  : {'custom' if _os.environ.get('DASHBOARD_PASSWORD') else 'default (dev)'}")
-    logger.info(f"  Secret key    : {'custom' if _os.environ.get('SECRET_KEY') else 'default (dev — INSECURE)'}")
+    logger.info(f"  Dashboard pw  : {'custom' if not is_blank('DASHBOARD_PASSWORD') else 'default (dev — INSECURE)'}")
+    logger.info(f"  Secret key    : {'custom' if not is_blank('SECRET_KEY') else 'default (dev — INSECURE)'}")
     alpaca_keys = discover_experiment_keys()
     logger.info(f"  Alpaca keys   : {len(alpaca_keys)} experiments configured ({', '.join(sorted(alpaca_keys))})")
     logger.info("=" * 60)
@@ -861,13 +930,18 @@ async def _on_startup():
         except Exception as e:
             logger.warning(f"  Could not load registry: {e}")
 
+    # FIX #4: fail-loud env validation — logs ERROR for any missing/blank required var.
+    validate_required_env()
+
 
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000))
+    # getenv_or_default treats a present-but-empty PORT as missing; a bare
+    # int(os.environ.get("PORT", 8000)) would crash on PORT="".
+    port = int(getenv_or_default("PORT", "8000"))
     uvicorn.run("web_dashboard.app:app", host="0.0.0.0", port=port, reload=False)
 
 

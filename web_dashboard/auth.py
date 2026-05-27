@@ -13,15 +13,18 @@ from __future__ import annotations
 
 import hashlib
 import hmac
-import os
 import time
+
+from .env_helpers import getenv_or_default
 
 SESSION_COOKIE    = "attix_session"
 SESSION_TTL_SECS  = 86_400          # 24 hours
 
 # Read once at import time; must restart to pick up changes.
-_SECRET_KEY      = os.environ.get("SECRET_KEY", "dev-secret-change-me-in-prod").encode()
-_DASHBOARD_PASS  = os.environ.get("DASHBOARD_PASSWORD", "attix-dev-2026!")
+# getenv_or_default treats an empty-string env var as missing (the empty-string
+# footgun) and warns when falling back to these insecure dev defaults.
+_SECRET_KEY      = getenv_or_default("SECRET_KEY", "dev-secret-change-me-in-prod").encode()
+_DASHBOARD_PASS  = getenv_or_default("DASHBOARD_PASSWORD", "attix-dev-2026!")
 
 
 def _sign(timestamp_hex: str) -> str:
