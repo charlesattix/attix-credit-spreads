@@ -103,6 +103,56 @@ python3 -m pytest tests/ --cov=strategy --cov=ml --cov=alerts --cov=shared --cov
 
 ---
 
+## Post-deploy verification
+
+Railway's health probe only checks `/api/v1/health` for **liveness** (process up,
+HTTP 200). It does not assert the dashboard is showing *correct* data — a
+regression that drops the per-experiment Alpaca env vars or breaks live-equity
+injection renders a $0 / "No Alpaca credentials" dashboard while the probe stays
+green. The post-deploy smoke test closes that gap.
+
+**Enriched health endpoint.** `GET /api/v1/health` (unauthenticated) returns:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `status` | string | `"ok"` / `"error"` |
+| `alpaca_keys_discovered` | int | `ALPACA_API_KEY_EXP*` pairs found in env |
+| `live_injection_ok` | bool | live Alpaca equity reached ≥1 experiment |
+| `experiments_active` | int | experiments in a LIVE status |
+| `combined_equity_nonzero` | bool | summed live equity across accounts > 0 |
+
+(Legacy diagnostic fields `live_experiments`, `live_ids`, `alpaca_keys_found`,
+`registry_version` are retained.) The live-data fields share the 30s `/summary`
+cache so the probe never hammers Alpaca.
+
+**Smoke script.** `scripts/smoke_dashboard.sh [BASE_URL]` fetches the health
+endpoint (with retries while a fresh deploy settles) and **exits 1** if:
+
+- `alpaca_keys_discovered < 9` (always enforced), or
+- `live_injection_ok` is false, or
+- `combined_equity_nonzero` is false
+
+The last two are enforced only **during US market hours** (Mon–Fri 09:30–16:00
+ET); outside the session they print as advisory. Exit codes: `0` healthy,
+`1` regression, `2` unreachable/bad JSON.
+
+```bash
+# Against live production (default URL):
+scripts/smoke_dashboard.sh
+
+# Against a custom URL, forcing market-hours assertions:
+FORCE_MARKET_HOURS=1 scripts/smoke_dashboard.sh https://my-preview.up.railway.app
+```
+
+Overridable via env: `DASHBOARD_URL`, `MIN_KEYS`, `MAX_RETRIES`, `RETRY_DELAY`,
+`FORCE_MARKET_HOURS`.
+
+**CI.** The `post-deploy-smoke` job in `.github/workflows/ci.yml` runs this
+script against the live URL after every push to `main` (after `deploy-gate`),
+failing the run if a deploy silently regressed the dashboard.
+
+---
+
 ## Quick Start
 
 ### 1. Install Dependencies

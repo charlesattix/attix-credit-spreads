@@ -363,26 +363,65 @@ async def trades_page(request: Request, _: None = Depends(require_session)):
 
 @app.get("/api/v1/health")
 async def health():
-    """Health check — no auth required."""
+    """Health check — no auth required (Railway probe is unauthenticated).
+
+    Returns liveness *and* the assertions the post-deploy smoke test relies on
+    to catch silent regressions (lost Alpaca keys, broken live injection, a
+    dashboard rendering $0 combined equity):
+
+      status                  — "ok" / "error"
+      alpaca_keys_discovered  — int: ALPACA_API_KEY_EXP* pairs found in env
+      live_injection_ok       — bool: live Alpaca equity reached ≥1 experiment
+      experiments_active      — int: experiments in a LIVE status
+      combined_equity_nonzero — bool: summed live equity across accounts > 0
+
+    Legacy diagnostic fields (live_experiments, live_ids, alpaca_keys_found,
+    registry_version) are retained for backwards compatibility.
+    """
     try:
         mgr = get_manager()
         mgr.reload()
         live_count = len(mgr.by_status(*LIVE_STATUSES))
+
         # Alpaca key discovery diagnostic
-        alpaca_diag = {}
+        alpaca_diag: dict[str, Any] = {}
+        keys_discovered = 0
         try:
             from web_dashboard.alpaca_live import discover_experiment_keys
             keys = discover_experiment_keys()
+            keys_discovered = len(keys)
             alpaca_diag = {k: True for k in sorted(keys.keys())}
         except Exception as ae:
             alpaca_diag = {"error": str(ae)}
+
+        # Live injection + combined equity — share the 30s cache with /summary
+        # so the unauthenticated probe never hammers Alpaca on every poll.
+        alpaca_accounts = 0
+        combined_equity: Optional[float] = None
+        try:
+            summary = _cached("summary", 30.0, summary_all)
+            alpaca_accounts = summary.get("alpaca_accounts", 0) or 0
+            combined_equity = summary.get("total_equity")
+        except Exception as se:
+            logger.warning("[health] summary computation failed: %s", se)
+
+        live_injection_ok = alpaca_accounts > 0
+        combined_equity_nonzero = combined_equity is not None and combined_equity > 0
+
         return {
-            "status":           "ok",
-            "live_experiments": live_count,
-            "live_ids":         sorted([e["id"] for e in mgr.by_status(*LIVE_STATUSES)]),
+            "status":                  "ok",
+            "alpaca_keys_discovered":  keys_discovered,
+            "live_injection_ok":       live_injection_ok,
+            "experiments_active":      live_count,
+            "combined_equity_nonzero": combined_equity_nonzero,
+            # --- legacy / diagnostic fields ---
+            "live_experiments":  live_count,
+            "live_ids":          sorted([e["id"] for e in mgr.by_status(*LIVE_STATUSES)]),
             "alpaca_keys_found": alpaca_diag,
-            "registry_version": mgr._registry.get("schema_version"),
-            "timestamp":        datetime.now(timezone.utc).isoformat(),
+            "alpaca_accounts":   alpaca_accounts,
+            "combined_equity":   combined_equity,
+            "registry_version":  mgr._registry.get("schema_version"),
+            "timestamp":         datetime.now(timezone.utc).isoformat(),
         }
     except Exception as e:
         return JSONResponse(

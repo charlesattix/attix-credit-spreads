@@ -66,3 +66,20 @@ jobs:
     steps:
       - name: All checks passed
         run: echo "All CI checks passed — Python tests, web tests, Docker build verified. Safe for Railway auto-deploy."
+
+  post-deploy-smoke:
+    # Runs only on push to main, after the deploy gate. Railway auto-deploys on
+    # the same push; the smoke script retries to give the new revision time to
+    # come up, then asserts the live dashboard is not silently regressed
+    # (lost Alpaca keys, broken live injection, or a $0 combined equity).
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [deploy-gate]
+    runs-on: ubuntu-latest
+    env:
+      DASHBOARD_URL: ${{ vars.DASHBOARD_URL || 'https://attix-dashboard-production.up.railway.app' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+      - name: Smoke test live dashboard health
+        run: bash scripts/smoke_dashboard.sh "$DASHBOARD_URL"
