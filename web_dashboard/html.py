@@ -967,25 +967,26 @@ def render_dashboard(all_stats: list[dict]) -> str:
             for s in all_stats
             if s.get("alpaca") and s["alpaca"].get("equity") is not None
         ]
-    # Fallback: include worker-pushed portfolio data for experiments not covered
-    # by live Alpaca keys available in this dashboard process.
-    try:
-        import json as _json
-        from pathlib import Path as _Path
-        _portfolio_dir = _Path(__file__).resolve().parent.parent / "data" / "experiment_portfolio"
-        _covered_ids = set(_all_live.keys())
-        if _portfolio_dir.exists():
-            for _pf in _portfolio_dir.glob("*.json"):
-                _norm_id = _pf.stem.upper()
-                if _norm_id not in _covered_ids:
+    # Fallback: include worker-pushed portfolio data only when live Alpaca fetch
+    # returned nothing at all (no keys configured).  If _all_live has any entry,
+    # we trust the live data exclusively — ID normalisation mismatches between
+    # JSON filenames and _all_live keys (e.g. "EXP_400" vs "EXP400") would
+    # otherwise cause experiments to be double-counted.
+    if not _all_live:
+        try:
+            import json as _json
+            from pathlib import Path as _Path
+            _portfolio_dir = _Path(__file__).resolve().parent.parent / "data" / "experiment_portfolio"
+            if _portfolio_dir.exists():
+                for _pf in _portfolio_dir.glob("*.json"):
                     try:
                         _pdata = _json.loads(_pf.read_text())
                         if _pdata.get("equity") is not None:
                             equities.append(float(_pdata["equity"]))
                     except Exception:
                         pass
-    except Exception:
-        pass
+        except Exception:
+            pass
     combined_equity = sum(equities) if equities else None
     combined_unrealized = sum(
         s["alpaca"].get("unrealized_pl") or 0
