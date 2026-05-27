@@ -24,7 +24,7 @@
 # Exit codes: 0 = healthy, 1 = regression detected, 2 = unreachable/bad JSON.
 set -uo pipefail
 
-DEFAULT_URL="https://attix-dashboard-production.up.railway.app"
+DEFAULT_URL="https://attix-production.up.railway.app"
 BASE_URL="${1:-${DASHBOARD_URL:-$DEFAULT_URL}}"
 BASE_URL="${BASE_URL%/}"   # strip trailing slash
 HEALTH_URL="${BASE_URL}/api/v1/health"

@@ -76,7 +76,7 @@ jobs:
     needs: [deploy-gate]
     runs-on: ubuntu-latest
     env:
-      DASHBOARD_URL: ${{ vars.DASHBOARD_URL || 'https://attix-dashboard-production.up.railway.app' }}
+      DASHBOARD_URL: ${{ vars.DASHBOARD_URL || 'https://attix-production.up.railway.app' }}
     steps:
       - uses: actions/checkout@v4
       - name: Install jq

@@ -157,12 +157,12 @@ script change is picked up automatically). The Railway-side
 3. Wait for the next hourly cron (or manually run
    `bash scripts/sentinel-cron.sh`) — verify
    `data/.last_push.json` is written with `ok: true, http_status: 200`.
-4. Visit `https://attix-dashboard-production.up.railway.app/sentinel` —
+4. Visit `https://attix-production.up.railway.app/sentinel` —
    confirm scores reflect actual gate severities (no longer all 90/100),
    counters reflect per-gate severity, and the freshness banner shows
    minutes-old data.
 5. Optional sanity:
-   `curl -s https://attix-dashboard-production.up.railway.app/api/v1/sentinel
+   `curl -s https://attix-production.up.railway.app/api/v1/sentinel
      -H 'X-API-Key: ...' | jq .pushed_at`
    should report a recent timestamp.
 

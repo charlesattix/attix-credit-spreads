@@ -6,7 +6,7 @@ Branch: `feature/sentinel-health-reliability`
 ## 1. Mission
 
 The Railway-hosted Sentinel dashboard at
-`https://attix-dashboard-production.up.railway.app/sentinel`
+`https://attix-production.up.railway.app/sentinel`
 shows scores stuck at ~90/100 for every experiment. Charles's diagnosis (score
 cliff + lying counters + stale push) is correct, **and worse than reported**:
 the push-to-Railway pipeline has run **0 times** out of 68 cron invocations
