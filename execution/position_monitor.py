@@ -1687,6 +1687,45 @@ class PositionMonitor:
                                 "PositionMonitor: orphan long %s sell-to-close order submitted: %s",
                                 symbol, result.get("order_id"),
                             )
+                            # Auto-clear any position_conflict records whose long_strike
+                            # matches this orphan's strike so the dedup gate allows re-entry.
+                            try:
+                                orphan_strike = int(symbol[13:21]) / 1000.0
+                            except (ValueError, IndexError):
+                                orphan_strike = None
+                            if orphan_strike is not None:
+                                try:
+                                    conflict_trades = get_trades(
+                                        status="position_conflict", path=self.db_path
+                                    )
+                                    for ct in conflict_trades:
+                                        ct_long_strike = ct.get("long_strike")
+                                        if ct_long_strike is None:
+                                            continue
+                                        try:
+                                            if abs(float(ct_long_strike) - orphan_strike) < 0.001:
+                                                ct["status"] = "failed_open"
+                                                upsert_trade(
+                                                    ct, source="execution", path=self.db_path
+                                                )
+                                                logger.warning(
+                                                    "PositionMonitor: position_conflict trade %s "
+                                                    "auto-cleared to failed_open — orphan long %s "
+                                                    "(strike=%.3f) was closed",
+                                                    ct.get("id"), symbol, orphan_strike,
+                                                )
+                                        except Exception as _match_err:
+                                            logger.error(
+                                                "PositionMonitor: error clearing position_conflict "
+                                                "trade %s: %s",
+                                                ct.get("id"), _match_err,
+                                            )
+                                except Exception as _cf_err:
+                                    logger.error(
+                                        "PositionMonitor: failed to query position_conflict trades "
+                                        "for orphan %s: %s",
+                                        symbol, _cf_err,
+                                    )
                         else:
                             logger.error(
                                 "PositionMonitor: orphan long %s sell-to-close failed: %s",
