@@ -267,6 +267,7 @@ class ExecutionEngine:
                     except Exception as age_err:
                         logger.debug("ExecutionEngine: stale-pending age check failed (non-fatal): %s", age_err)
 
+                # 'position_conflict' intentionally absent — permanent block, never retried automatically
                 if existing_status not in ("rejected", "cancelled", "failed_open"):
                     logger.info(
                         "ExecutionEngine: trade %s already exists (status=%s), skipping duplicate",
@@ -453,23 +454,36 @@ class ExecutionEngine:
                             "ExecutionEngine: DB expiration update failed for %s: %s", client_id, db_err
                         )
             else:
+                err_msg = result.get("message", result.get("status", "unknown"))
                 logger.warning(
                     "ExecutionEngine: Alpaca returned non-submitted status for %s: %s",
                     client_id, result,
                 )
+                if "position intent mismatch" in str(err_msg).lower():
+                    new_status = "position_conflict"
+                    exit_reason = f"position_conflict: {err_msg}"
+                    logger.warning(
+                        "ExecutionEngine: PERMANENT BLOCK — position intent mismatch for %s. "
+                        "Trade will not be retried automatically. Clear the conflicting position; "
+                        "a fresh signal on the next scan cycle will generate a new client_id.",
+                        client_id,
+                    )
+                else:
+                    new_status = "failed_open"
+                    exit_reason = f"alpaca_rejected: {err_msg}"
                 try:
                     upsert_trade(
                         {
                             "id": client_id,
-                            "status": "failed_open",
-                            "exit_reason": f"alpaca_rejected: {result.get('message', result.get('status', 'unknown'))}",
+                            "status": new_status,
+                            "exit_reason": exit_reason,
                         },
                         source="execution",
                         path=self.db_path,
                     )
                 except Exception as db_err:
                     logger.error(
-                        "ExecutionEngine: DB update to failed_open failed for %s: %s", client_id, db_err
+                        "ExecutionEngine: DB update to %s failed for %s: %s", new_status, client_id, db_err
                     )
 
             result["client_order_id"] = client_id
@@ -477,19 +491,32 @@ class ExecutionEngine:
 
         except Exception as e:
             logger.error("ExecutionEngine: Alpaca submission failed for %s: %s", client_id, e, exc_info=True)
+            err_str = str(e)
+            if "position intent mismatch" in err_str.lower():
+                new_status = "position_conflict"
+                exit_reason = f"position_conflict: {e}"
+                logger.warning(
+                    "ExecutionEngine: PERMANENT BLOCK — position intent mismatch for %s. "
+                    "Trade will not be retried automatically. Clear the conflicting position; "
+                    "a fresh signal on the next scan cycle will generate a new client_id.",
+                    client_id,
+                )
+            else:
+                new_status = "failed_open"
+                exit_reason = f"alpaca_exception: {e}"
             try:
                 upsert_trade(
                     {
                         "id": client_id,
-                        "status": "failed_open",
-                        "exit_reason": f"alpaca_exception: {e}",
+                        "status": new_status,
+                        "exit_reason": exit_reason,
                     },
                     source="execution",
                     path=self.db_path,
                 )
             except Exception as db_err:
                 logger.error(
-                    "ExecutionEngine: DB update to failed_open failed for %s: %s", client_id, db_err
+                    "ExecutionEngine: DB update to %s failed for %s: %s", new_status, client_id, db_err
                 )
             return {"status": "error", "message": str(e), "client_order_id": client_id}
 
