@@ -134,6 +134,10 @@ class ExecutionEngine:
             )
         init_db(db_path)
 
+        # Pre-flight position conflict check cache (populated lazily, TTL=60s)
+        self._positions_cache: Optional[list] = None
+        self._positions_cache_ts: float = 0.0
+
     def _check_drawdown_cb(self) -> Optional[str]:
         """Return a human-readable block reason if the drawdown circuit breaker is tripped, else None.
 
@@ -290,6 +294,17 @@ class ExecutionEngine:
                 "client_order_id": client_id,
                 "message": f"drawdown circuit breaker triggered (>{self._drawdown_cb_pct}%)",
             }
+
+        # Pre-flight position conflict check — runs before DB write so no cleanup needed on block.
+        # Only active when an Alpaca provider is configured (dry-run has no live positions).
+        if self.alpaca:
+            conflict_sym = self._check_position_conflict(opp)
+            if conflict_sym:
+                return {
+                    "status": "position_conflict",
+                    "client_order_id": client_id,
+                    "message": f"Existing position conflicts with spread leg: {conflict_sym}",
+                }
 
         # Write to DB FIRST in pending_open state before touching Alpaca
         trade_record = {
@@ -537,6 +552,84 @@ class ExecutionEngine:
             logger.debug("ExecutionEngine: marked %s as failed_open (%s)", client_id, reason)
         except Exception as db_err:
             logger.error("ExecutionEngine: _mark_pending_failed DB update failed for %s: %s", client_id, db_err)
+
+    def _get_cached_positions(self) -> Optional[list]:
+        """Return Alpaca positions, using a 60-second in-memory cache to avoid per-trade API calls.
+
+        Returns None if the fetch fails (caller should fail open — don't block on API error).
+        """
+        _CACHE_TTL = 60.0
+        now = time.monotonic()
+        if self._positions_cache is not None and (now - self._positions_cache_ts) < _CACHE_TTL:
+            return self._positions_cache
+        try:
+            positions = self.alpaca.get_positions()
+            self._positions_cache = positions
+            self._positions_cache_ts = now
+            return positions
+        except Exception as e:
+            logger.warning(
+                "ExecutionEngine: pre-flight positions fetch failed (non-fatal, proceeding): %s", e
+            )
+            return None
+
+    def _check_position_conflict(self, opp: Dict) -> Optional[str]:
+        """Check if any leg of *opp* already exists as an open Alpaca position.
+
+        Returns the conflicting OCC symbol string if a conflict is found, else None.
+        Returns None (no-block) if the positions fetch failed.
+        """
+        positions = self._get_cached_positions()
+        if positions is None:
+            return None  # API failed — fail open
+
+        existing_symbols = {p["symbol"] for p in positions}
+        if not existing_symbols:
+            return None
+
+        ticker = opp.get("ticker", "UNK")
+        expiration = str(opp.get("expiration", ""))
+        spread_type = str(opp.get("type", opp.get("strategy_type", ""))).lower()
+        short_strike = float(opp.get("short_strike", 0) or 0)
+        long_strike = float(opp.get("long_strike", 0) or 0)
+
+        # Build the OCC symbols for every leg of this spread
+        legs_to_check: list = []
+        if "condor" in spread_type:
+            for strike, opt_type in [
+                (float(opp.get("put_short_strike") or short_strike), "put"),
+                (float(opp.get("put_long_strike") or long_strike), "put"),
+                (float(opp.get("call_short_strike") or short_strike), "call"),
+                (float(opp.get("call_long_strike") or long_strike), "call"),
+            ]:
+                if strike:
+                    legs_to_check.append(_build_occ_symbol(ticker, expiration, strike, opt_type))
+        elif "straddle" in spread_type or "strangle" in spread_type:
+            call_strike = float(opp.get("call_strike", 0) or 0)
+            put_strike = float(opp.get("put_strike", 0) or 0)
+            if call_strike:
+                legs_to_check.append(_build_occ_symbol(ticker, expiration, call_strike, "call"))
+            if put_strike:
+                legs_to_check.append(_build_occ_symbol(ticker, expiration, put_strike, "put"))
+        else:
+            opt_type = "call" if "call" in spread_type else "put"
+            if short_strike:
+                legs_to_check.append(_build_occ_symbol(ticker, expiration, short_strike, opt_type))
+            if long_strike:
+                legs_to_check.append(_build_occ_symbol(ticker, expiration, long_strike, opt_type))
+
+        for sym in legs_to_check:
+            if sym and sym in existing_symbols:
+                # Find qty for the log message
+                qty = next((p["qty"] for p in positions if p["symbol"] == sym), "?")
+                logger.warning(
+                    "ExecutionEngine: pre-flight conflict — OCC symbol %s already held "
+                    "(qty=%s). Blocking %s %s to prevent duplicate position.",
+                    sym, qty, ticker, spread_type,
+                )
+                return sym
+
+        return None
 
     def _check_drawdown_cb(self) -> bool:
         """Return True if account drawdown exceeds the configured threshold.
