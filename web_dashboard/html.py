@@ -349,6 +349,21 @@ h1 { font-size: 22px; font-weight: 700; margin-bottom: 3px; }
 }
 .ticker.ibit { background: #d97706; }
 
+/* Data-source freshness badge (card header) */
+.src-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    margin-left: 8px; padding: 1px 7px; border-radius: 10px;
+    font-size: 9px; font-weight: 700; letter-spacing: 0.4px;
+    vertical-align: middle; border: 1px solid transparent;
+}
+.src-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+.src-live   { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
+.src-live   .src-dot { background: #10b981; }
+.src-cached { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+.src-cached .src-dot { background: #f59e0b; }
+.src-stale  { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+.src-stale  .src-dot { background: #ef4444; }
+
 /* Live equity block (top-right of header) */
 .equity-block { text-align: right; }
 .equity-val { font-size: 28px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; }
@@ -688,6 +703,49 @@ def _render_chart_placeholder() -> str:
 
 # ---------------------------------------------------------------------------
 
+def _render_source_badge(s: dict) -> str:
+    """
+    Small, unobtrusive freshness badge for a card header. Reflects the
+    data_source / data_age_seconds tags set by data.query_all_live():
+
+      green  dot + LIVE         — real-time Alpaca data (< 2 min)
+      yellow dot + CACHED (Nm)  — pushed / local snapshot, < 10 min old
+      red    dot + STALE (Nm)   — snapshot >= 10 min old
+
+    Renders nothing when there is no live account block to describe
+    (data_source "empty" or no equity).
+    """
+    src = s.get("data_source")
+    if not src or src == "empty":
+        return ""
+    alp = s.get("alpaca") or {}
+    if alp.get("equity") is None:
+        return ""
+
+    age = s.get("data_age_seconds")
+    age = 0 if age is None else int(age)
+
+    def _age_label(sec: int) -> str:
+        return "&lt;1m" if sec < 60 else f"{round(sec / 60)}m"
+
+    if src == "live" and age < 120:
+        cls, label, tip = "live", "LIVE", "Real-time Alpaca data"
+    elif age < 600:
+        cls = "cached"
+        label = f"CACHED ({_age_label(age)})"
+        tip = f"Snapshot {_age_label(age)} old"
+    else:
+        cls = "stale"
+        label = f"STALE ({_age_label(age)})"
+        tip = f"Snapshot {_age_label(age)} old — may be out of date"
+
+    return (
+        f'<span class="src-badge src-{cls}" '
+        f'title="{tip} (source: {_html.escape(str(src))})">'
+        f'<span class="src-dot"></span>{label}</span>'
+    )
+
+
 def _render_exp_card(s: dict) -> str:
     alp = s.get("alpaca") or {}
     equity = alp.get("equity")
@@ -852,11 +910,13 @@ def _render_exp_card(s: dict) -> str:
     if not chart_html:
         chart_html = _render_chart_placeholder()
 
+    source_badge = _render_source_badge(s)
+
     return f"""
 <div class="exp-card">
   <div class="exp-header">
     <div class="exp-left">
-      <div class="exp-id-line">{eid}</div>
+      <div class="exp-id-line">{eid}{source_badge}</div>
       <div class="exp-name">{ename}</div>
       {desc_html}
       <div class="exp-meta">

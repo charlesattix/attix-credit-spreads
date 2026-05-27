@@ -9,6 +9,45 @@ Reads from:
   - data/pushed_dashboard.json / dashboard_export.json (Railway fallback)
 
 ATTIX_ROOT env var overrides the project root path.
+
+===========================================================================
+DATA-SOURCE PRIORITY  (the s["alpaca"] account block on each exp card)
+===========================================================================
+query_all_live() layers three sources by freshness. Each is tried in turn;
+a fresher source OVERRIDES whatever a staler one already wrote. The path that
+last populated s["alpaca"] is recorded on the dict as:
+
+    data_source       : "live" | "pushed" | "local-db" | "empty"
+    data_age_seconds  : int — age of that alpaca block (now − fetched_at)
+
+  highest priority  ┌───────────────────────────────────────────────┐
+        (freshest)  │ 1. LIVE  Alpaca REST API                      │  -> "live"
+                    │    alpaca_live.get_all_live_alpaca()          │
+                    │    real-time; fetched_at ~ now                │
+                    └───────────────────────┬───────────────────────┘
+                                  override if │ present
+                    ┌───────────────────────▼───────────────────────┐
+                    │ 2. PUSHED export (sentinel / worker snapshot)  │  -> "pushed"
+                    │    data/dashboard_export.json|pushed_*.json    │
+                    │    refreshed by the worker every few minutes   │
+                    └───────────────────────┬───────────────────────┘
+                                  override if │ present
+                    ┌───────────────────────▼───────────────────────┐
+                    │ 3. LOCAL on-disk fallback                      │  -> "local-db"
+                    │    data/experiment_portfolio/<ID>.json         │
+                    │    used only when no live/pushed alpaca exists │
+                    └───────────────────────┬───────────────────────┘
+         lowest                 nothing set  │
+       priority   ┌─────────────────────────▼────────────────────────┐
+       (stalest)  │ 4. EMPTY — card shows local-DB trade stats only,  │  -> "empty"
+                  │    no Alpaca account block (no badge rendered)    │
+                  └───────────────────────────────────────────────────┘
+
+NOTE: local SQLite (resolve_db_path / query_experiment) always supplies the
+trade-history stats; the priority above is specifically about which source
+fed the live ACCOUNT block (equity/positions). When none does, the tag is
+"empty" and html.py renders no freshness badge.
+===========================================================================
 """
 
 from __future__ import annotations
@@ -327,7 +366,32 @@ def query_experiment(exp: dict, report_date: Optional[str] = None) -> dict:
     return base
 
 
+def _age_seconds(iso_ts: Optional[str]) -> Optional[int]:
+    """
+    Seconds elapsed between an ISO-8601 timestamp and now (UTC).
+    Returns None if the timestamp is missing or unparseable. Never negative.
+    """
+    if not iso_ts:
+        return None
+    try:
+        ts = datetime.fromisoformat(str(iso_ts).replace("Z", "+00:00"))
+        if ts.tzinfo is None:
+            ts = ts.replace(tzinfo=timezone.utc)
+        return max(0, int((datetime.now(timezone.utc) - ts).total_seconds()))
+    except Exception:
+        return None
+
+
 def query_all_live(report_date: Optional[str] = None) -> List[dict]:
+    """
+    Assemble per-experiment dashboard rows, layering account data by freshness.
+
+    Each returned dict is tagged with:
+      data_source       : "live" | "pushed" | "local-db" | "empty"
+      data_age_seconds  : int | None — age of the s["alpaca"] block
+
+    See the module docstring for the full data-source priority diagram.
+    """
     results = [
         query_experiment(exp, report_date)
         for exp in get_live_experiments()
@@ -369,6 +433,9 @@ def query_all_live(report_date: Optional[str] = None) -> List[dict]:
                     "alpaca":       exp.get("alpaca"),
                     "alpaca_equity_history": exp.get("alpaca_equity_history") or [],
                 }
+                # Provenance: this row's account block came from the pushed export.
+                if flat["alpaca"]:
+                    flat["data_source"] = "pushed"
                 flattened.append(flat)
             # Keep registry-live experiments that aren't in the pushed export
             # so newly launched experiments still appear on the dashboard.
@@ -384,6 +451,8 @@ def query_all_live(report_date: Optional[str] = None) -> List[dict]:
                 pushed_exp = by_id.get(r["id"]) or {}
                 if r.get("alpaca") is None:
                     r["alpaca"] = pushed_exp.get("alpaca")
+                    if r["alpaca"]:
+                        r["data_source"] = "pushed"
                 # Always propagate equity history from pushed export (local DBs
                 # don't store it — it's fetched from Alpaca during sync).
                 if not r.get("alpaca_equity_history"):
@@ -408,6 +477,8 @@ def query_all_live(report_date: Optional[str] = None) -> List[dict]:
                     # Update open_count to reflect live positions count
                     r["open_count"] = len(alpaca_data.get("positions") or [])
                     live_injected += 1
+                    # Live API is the freshest source — overrides any pushed tag.
+                    r["data_source"] = "live"
     except Exception as exc:
         logger.warning("[data] Live Alpaca fetch failed, using cached/pushed data: %s", exc)
 
@@ -432,6 +503,8 @@ def query_all_live(report_date: Optional[str] = None) -> List[dict]:
             if portfolio_path.exists():
                 try:
                     r["alpaca"] = json.loads(portfolio_path.read_text())
+                    r["data_source"] = "local-db"
+                    r["_portfolio_path"] = portfolio_path
                 except Exception:
                     pass
 
@@ -451,6 +524,33 @@ def query_all_live(report_date: Optional[str] = None) -> List[dict]:
             r["alpaca_diag"] = "no-data"
         else:
             r["alpaca_diag"] = "cache-empty"
+
+    # --- Finalize provenance tags --------------------------------------------
+    # Stamp data_source / data_age_seconds on every row. Rows whose account
+    # block was never populated by any source above are tagged "empty".
+    pushed_at = pushed.get("pushed_at") if pushed else None
+    for r in results:
+        alp = r.get("alpaca")
+        src = r.get("data_source")
+        if not alp or not src:
+            r["data_source"] = "empty"
+            r["data_age_seconds"] = None
+            r.pop("_portfolio_path", None)
+            continue
+
+        age = _age_seconds(alp.get("fetched_at"))
+        if age is None and src == "pushed":
+            age = _age_seconds(pushed_at)
+        if age is None and src == "local-db":
+            p = r.pop("_portfolio_path", None)
+            if p is not None:
+                try:
+                    mtime = datetime.fromtimestamp(p.stat().st_mtime, tz=timezone.utc)
+                    age = max(0, int((datetime.now(timezone.utc) - mtime).total_seconds()))
+                except Exception:
+                    age = None
+        r["data_age_seconds"] = age if age is not None else 0
+        r.pop("_portfolio_path", None)
 
     return results
 
