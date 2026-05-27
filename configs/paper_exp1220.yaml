@@ -1,7 +1,7 @@
 # ============================================================================
 # paper_exp1220.yaml — EXP-1220 Dynamic Leverage 1.5× Paper Trading Config
 # ============================================================================
-# Strategy: Bull put spreads on SPY with 3× static leverage and VIX-based
+# Strategy: Bull put spreads on SPY with 1.1× static leverage and VIX-based
 #           tail risk protection. Regime-adaptive entry.
 # Validation: CAGR 99.2%, Sharpe 3.83, Max DD 11.2% (full period)
 #             OOS 2022-25: CAGR 92.7%, Sharpe 3.40
@@ -99,7 +99,7 @@ strategy:
 risk:
   account_size: 100000
 
-  # 3× leverage: 5% risk per trade (accounts for macro/VIX scaling)
+  # 1.1× leverage: 9.35% risk per trade (accounts for macro/VIX scaling)
   max_risk_per_trade: 9.35
 
   # Sizing: flat
@@ -127,7 +127,7 @@ risk:
 
   # Portfolio-level risk limits
   portfolio_risk:
-    max_portfolio_risk_pct: 31   # Hard cap for 3× leverage (accounts for scaling)
+    max_portfolio_risk_pct: 31   # Hard cap for 1.1× leverage (accounts for scaling)
     max_single_ticker_pct: 25
     max_same_expiration: 3
 

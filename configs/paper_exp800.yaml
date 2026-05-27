@@ -121,6 +121,8 @@ risk:
 
   portfolio_risk:
     max_portfolio_risk_pct: 60
+    max_single_ticker_pct: 40
+    max_same_expiration: 4
 
 # ============================================================================
 # Alpaca Paper Trading
