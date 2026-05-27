@@ -16,7 +16,7 @@ railway login
 ## Step 2: Link to Your Project
 ```bash
 railway link
-# Select: attix-credit-spreads-production
+# Select: attix-dashboard
 ```
 
 ## Step 3: Upload Database to Railway Volume
@@ -26,7 +26,7 @@ railway run --service=web cp data/pilotai.db /app/data/pilotai.db
 ```
 
 OR manually via Railway Dashboard:
-1. Go to Railway Dashboard → attix-credit-spreads-production
+1. Go to Railway Dashboard → attix-dashboard
 2. Go to Volumes → attix-data
 3. Upload `data/pilotai.db` to `/app/data/pilotai.db`
 

@@ -1220,7 +1220,7 @@ Examples:
                 # Sync trade data to dashboard (separate volume)
                 try:
                     import requests as _req
-                    _dashboard_url = os.environ.get("RAILWAY_SERVICE_ATTIX_CREDIT_SPREADS_URL", "")
+                    _dashboard_url = os.environ.get("RAILWAY_SERVICE_ATTIX_DASHBOARD_URL", "") or os.environ.get("RAILWAY_SERVICE_ATTIX_CREDIT_SPREADS_URL", "")
                     _api_key = os.environ.get("DASHBOARD_API_KEY", "")
                     _db_path = args.db_path or os.environ.get("ATTIX_DB_PATH", "")
                     if _dashboard_url and _api_key and _db_path and os.path.exists(_db_path):
@@ -1248,7 +1248,7 @@ Examples:
                 # API-based watchdog can check scan recency without filesystem access.
                 try:
                     import requests as _req
-                    _dashboard_url = os.environ.get("RAILWAY_SERVICE_ATTIX_CREDIT_SPREADS_URL", "")
+                    _dashboard_url = os.environ.get("RAILWAY_SERVICE_ATTIX_DASHBOARD_URL", "") or os.environ.get("RAILWAY_SERVICE_ATTIX_CREDIT_SPREADS_URL", "")
                     _api_key = os.environ.get("DASHBOARD_API_KEY", "")
                     if _dashboard_url and _api_key:
                         _base = _dashboard_url if _dashboard_url.startswith("http") else f"https://{_dashboard_url}"
@@ -1268,7 +1268,7 @@ Examples:
                 # Push Alpaca portfolio snapshot to dashboard
                 try:
                     import requests as _req
-                    _dashboard_url = os.environ.get("RAILWAY_SERVICE_ATTIX_CREDIT_SPREADS_URL", "")
+                    _dashboard_url = os.environ.get("RAILWAY_SERVICE_ATTIX_DASHBOARD_URL", "") or os.environ.get("RAILWAY_SERVICE_ATTIX_CREDIT_SPREADS_URL", "")
                     _api_key = os.environ.get("DASHBOARD_API_KEY", "")
                     _alpaca_key = os.environ.get("ALPACA_API_KEY", "")
                     _alpaca_secret = os.environ.get("ALPACA_API_SECRET", "")
