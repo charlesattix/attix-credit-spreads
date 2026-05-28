@@ -103,6 +103,33 @@ def load_pushed_data() -> Optional[dict]:
     return None
 
 
+def apply_pushed_equity_history(results: list, portfolio_dir) -> None:
+    """Surface each experiment's pushed equity-history curve onto its row.
+
+    Independent of whether the row already has a live ``alpaca`` account block —
+    the curve is only in the worker-pushed ``experiment_portfolio/<ID>.json``
+    snapshot, and the chart renders from ``alpaca_equity_history``. Sets the
+    field for every experiment that lacks it (idempotent, best-effort).
+    """
+    if not portfolio_dir.exists():
+        return
+    for r in results:
+        if r.get("alpaca_equity_history"):
+            continue
+        norm_id = r["id"].upper().replace("-", "") if r.get("id") else ""
+        if not norm_id:
+            continue
+        p = portfolio_dir / f"{norm_id}.json"
+        if not p.exists():
+            continue
+        try:
+            curve = json.loads(p.read_text()).get("equity_history")
+            if curve:
+                r["alpaca_equity_history"] = curve
+        except Exception:
+            pass
+
+
 def get_alpaca_for_exp(exp_id: str, pushed: Optional[dict]) -> Optional[dict]:
     """
     Extract the alpaca block for a given experiment ID from a pushed export.
@@ -513,6 +540,12 @@ def query_all_live(report_date: Optional[str] = None) -> List[dict]:
                         r["alpaca_equity_history"] = _portfolio["equity_history"]
                 except Exception:
                     pass
+
+    # The equity-history CURVE is independent of whether LIVE Alpaca data exists
+    # for an experiment: when the dashboard has its own Alpaca keys it populates
+    # r["alpaca"] live (no curve), which skips the fallback above and would drop
+    # the pushed curve. So always surface the pushed curve for the chart.
+    apply_pushed_equity_history(results, _portfolio_dir)
 
     # --- Diagnostic hint: WHY is Alpaca data empty? (rendered server-side) ----
     # After every fallback has run, classify each experiment still lacking live
