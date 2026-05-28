@@ -85,6 +85,20 @@ def init_db(path: Optional[str] = None) -> None:
                 created_at TEXT DEFAULT (datetime('now'))
             );
 
+            -- Durable equity curve: one canonical point per experiment per day,
+            -- written by the PositionMonitor scan (upsert by exp_id+as_of_date,
+            -- last scan of the day wins). Source of truth for the dashboard chart.
+            CREATE TABLE IF NOT EXISTS equity_history (
+                exp_id         TEXT NOT NULL,
+                as_of_date     TEXT NOT NULL,
+                equity         REAL NOT NULL,
+                realized_pnl   REAL,
+                unrealized_pnl REAL,
+                source         TEXT,
+                updated_at     TEXT DEFAULT (datetime('now')),
+                PRIMARY KEY (exp_id, as_of_date)
+            );
+
             CREATE TABLE IF NOT EXISTS scanner_state (
                 key TEXT PRIMARY KEY NOT NULL,
                 value TEXT NOT NULL,
@@ -388,6 +402,75 @@ def close_trade(
             trade_id,
         ))
         conn.commit()
+    finally:
+        conn.close()
+
+
+def upsert_equity_point(
+    exp_id: str,
+    as_of_date: str,
+    equity: float,
+    realized_pnl: Optional[float] = None,
+    unrealized_pnl: Optional[float] = None,
+    source: str = "position_monitor",
+    path: Optional[str] = None,
+) -> None:
+    """Upsert one daily equity point (idempotent by exp_id + as_of_date).
+
+    Called by the PositionMonitor scan; the last scan of a day overwrites that
+    day's point, so the latest scan's equity is what's stored.
+    """
+    conn = get_db(path)
+    try:
+        conn.execute(
+            """
+            INSERT INTO equity_history
+                (exp_id, as_of_date, equity, realized_pnl, unrealized_pnl, source, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+            ON CONFLICT(exp_id, as_of_date) DO UPDATE SET
+                equity=excluded.equity,
+                realized_pnl=excluded.realized_pnl,
+                unrealized_pnl=excluded.unrealized_pnl,
+                source=excluded.source,
+                updated_at=datetime('now')
+            """,
+            (exp_id, as_of_date, float(equity),
+             realized_pnl, unrealized_pnl, source),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def get_equity_history(
+    exp_id: Optional[str] = None,
+    limit: int = 365,
+    path: Optional[str] = None,
+) -> List[Dict[str, Any]]:
+    """Return the daily equity curve ascending by date.
+
+    Shape matches what the dashboard chart consumes:
+    ``[{"date", "equity", "profit_loss"}, ...]``.
+    """
+    conn = get_db(path)
+    try:
+        if exp_id:
+            rows = conn.execute(
+                "SELECT as_of_date, equity, realized_pnl FROM equity_history "
+                "WHERE exp_id = ? ORDER BY as_of_date ASC LIMIT ?",
+                (exp_id, int(limit)),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT as_of_date, equity, realized_pnl FROM equity_history "
+                "ORDER BY as_of_date ASC LIMIT ?",
+                (int(limit),),
+            ).fetchall()
+        return [
+            {"date": r["as_of_date"], "equity": r["equity"],
+             "profit_loss": r["realized_pnl"] if r["realized_pnl"] is not None else 0}
+            for r in rows
+        ]
     finally:
         conn.close()
 

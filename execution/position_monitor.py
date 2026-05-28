@@ -23,6 +23,7 @@ upsert_trade / close_trade (per-call connections, SQLite WAL mode).
 """
 
 import logging
+import os
 import re
 import threading
 from datetime import datetime, timezone
@@ -33,7 +34,14 @@ try:
 except ImportError:                        # pragma: no cover — Python < 3.9
     from backports.zoneinfo import ZoneInfo  # type: ignore
 
-from shared.database import close_trade, get_open_leg_symbols, get_trades, upsert_trade, init_db
+from shared.database import (
+    close_trade,
+    get_open_leg_symbols,
+    get_trades,
+    init_db,
+    upsert_equity_point,
+    upsert_trade,
+)
 from shared.strategy_adapter import trade_dict_to_position
 from shared.telegram_alerts import notify_api_failure as _notify_api_failure_raw
 from strategies.base import MarketSnapshot, PositionAction
@@ -410,6 +418,54 @@ class PositionMonitor:
         return open_mins <= current_mins < close_mins
 
     # ------------------------------------------------------------------
+    # Equity curve persistence
+    # ------------------------------------------------------------------
+
+    def _record_equity_point(self) -> None:
+        """Persist today's equity point to the durable equity_history table.
+
+        One canonical point per (experiment, day); the latest scan of the day
+        overwrites it (upsert). Best-effort — any failure is logged and ignored
+        so it never disrupts position monitoring.
+        """
+        if not self.alpaca:
+            return
+        exp_id = os.environ.get("EXPERIMENT_ID", "-")
+        try:
+            account = self.alpaca.get_account()
+            equity = float(account.get("equity") or 0)
+            if equity <= 0:
+                return  # nothing meaningful to record
+            today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+            realized = self._realized_pnl_to_date()
+            upsert_equity_point(
+                exp_id=exp_id,
+                as_of_date=today,
+                equity=equity,
+                realized_pnl=realized,
+                source="position_monitor",
+                path=self.db_path,
+            )
+            logger.info(
+                "[equity] exp=%s date=%s equity=%.2f source=position_monitor action=wrote",
+                exp_id, today, equity,
+            )
+        except Exception as e:
+            logger.warning("[equity] exp=%s action=skipped error=%s", exp_id, e)
+
+    def _realized_pnl_to_date(self) -> Optional[float]:
+        """Cumulative realized P&L from closed trades (best-effort)."""
+        try:
+            trades = get_trades(path=self.db_path)
+            return round(sum(
+                float(t.get("pnl") or 0)
+                for t in trades
+                if str(t.get("status", "")).startswith("closed") and t.get("pnl") is not None
+            ), 2)
+        except Exception:
+            return None
+
+    # ------------------------------------------------------------------
     # Core check loop
     # ------------------------------------------------------------------
 
@@ -507,6 +563,11 @@ class PositionMonitor:
                     self._consecutive_api_failures,
                 )
             return
+
+        # Step 3a: Persist today's equity point (durable equity curve for the
+        # dashboard chart). Additive + best-effort: failures never disrupt the
+        # monitoring cycle.
+        self._record_equity_point()
 
         # Step 3b: Detect unexpected equity positions (possible early assignment)
         if open_positions:
