@@ -278,8 +278,11 @@ def main() -> None:
     # The base stagger spaces processes out; the random jitter prevents any two
     # processes from re-aligning into the same 2-second fetch window after a
     # restart. (Phase 0 mitigation ahead of the shared SQLite cache.)
-    STAGGER_BASE_SECS = float(os.environ.get("STARTUP_STAGGER_SECS", "20"))
-    STAGGER_JITTER_SECS = float(os.environ.get("STARTUP_STAGGER_JITTER_SECS", "10"))
+    # The jitter (not the base) is what de-aligns processes, so keep the base
+    # modest to bound cold-start wall-clock: worst case ~9 × (12+8) = 3 min,
+    # avoiding late experiments missing pre-warm if a deploy lands near the open.
+    STAGGER_BASE_SECS = float(os.environ.get("STARTUP_STAGGER_SECS", "12"))
+    STAGGER_JITTER_SECS = float(os.environ.get("STARTUP_STAGGER_JITTER_SECS", "8"))
     for i, p in enumerate(procs.values()):
         p.start()
         if i < len(procs) - 1:
