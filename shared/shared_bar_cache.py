@@ -154,6 +154,17 @@ class SharedBarCache:
                 )
                 conn.execute("INSERT INTO cache_schema (version) VALUES (?)", (SCHEMA_VERSION,))
             # Future migrations: elif current < SCHEMA_VERSION: ... bump version.
+            # Cross-process single-flight advisory locks (idempotent create so
+            # an already-created v1 DB also gains the table).
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS fetch_locks (
+                    lock_key   TEXT PRIMARY KEY,
+                    owner_pid  INTEGER NOT NULL,
+                    expires_at REAL NOT NULL
+                )
+                """
+            )
 
     def _now(self) -> float:
         return time.time()
@@ -233,6 +244,49 @@ class SharedBarCache:
             return True
         except sqlite3.Error:
             return False
+
+    # ------------------------------------------------------------------
+    # Cross-process single-flight (advisory lock)
+    # ------------------------------------------------------------------
+
+    def try_acquire_fetch_lock(self, key: str, ttl: float = 30.0) -> bool:
+        """Best-effort cross-process lock for ``key``.
+
+        Returns True if this process won the right to fetch. Expired locks (a
+        crashed holder) are reclaimed, so the lock can never block permanently.
+        WAL serialises the delete+insert, so exactly one concurrent caller wins.
+        Raises :class:`SharedCacheError` on SQLite failure (caller may then just
+        fetch directly).
+        """
+        lk = key.upper()
+        now = self._now()
+        try:
+            conn = self._conn()
+            with conn:  # single write transaction
+                conn.execute(
+                    "DELETE FROM fetch_locks WHERE lock_key = ? AND expires_at < ?", (lk, now)
+                )
+                cur = conn.execute(
+                    "INSERT OR IGNORE INTO fetch_locks (lock_key, owner_pid, expires_at) "
+                    "VALUES (?, ?, ?)",
+                    (lk, os.getpid(), now + float(ttl)),
+                )
+                return cur.rowcount == 1
+        except sqlite3.Error as exc:
+            raise SharedCacheError(f"try_acquire_fetch_lock({key}) failed: {exc}") from exc
+
+    def release_fetch_lock(self, key: str) -> None:
+        """Release a lock held by this process (no-op if not held)."""
+        lk = key.upper()
+        try:
+            conn = self._conn()
+            with conn:
+                conn.execute(
+                    "DELETE FROM fetch_locks WHERE lock_key = ? AND owner_pid = ?",
+                    (lk, os.getpid()),
+                )
+        except sqlite3.Error as exc:
+            raise SharedCacheError(f"release_fetch_lock({key}) failed: {exc}") from exc
 
     def close(self) -> None:
         conn = getattr(self._local, "conn", None)

@@ -90,6 +90,9 @@ class DataCache:
         self._shared_init_failed = False
         self._refreshing: set = set()              # in-process single-flight
         self._refresh_lock = threading.Lock()
+        # Bounded wait for a peer subprocess's in-flight fetch before a loser
+        # falls back to a direct fetch (cross-process single-flight).
+        self._shared_wait_secs = float(os.environ.get("SHARED_CACHE_WAIT_SECS", "5"))
 
     # ------------------------------------------------------------------
     # Provider
@@ -233,30 +236,92 @@ class DataCache:
             self._schedule_refresh(ticker, polygon_ticker)
             return res.df  # serve stale immediately; background thread revalidates
 
-        # MISS — synchronous fetch + write-through.
+        # MISS — coordinate a single fetch across all subprocesses.
         metrics.inc("shared_cache_miss")
-        data = self._fetch_full(ticker, polygon_ticker)
+        return self._coordinated_fetch(ticker, polygon_ticker, sc)
+
+    def _coordinated_fetch(self, ticker: str, polygon_ticker: str, sc):
+        """Fetch a MISSing ticker under a cross-process single-flight lock.
+
+        Only the lock winner calls Polygon and writes through. Losers wait a
+        bounded time for the winner's result, then fall back to a direct fetch
+        rather than block the scan.
+        """
+        from shared.shared_bar_cache import Freshness, SharedCacheError
+
+        lock_key = ticker.upper()
         try:
-            sc.put_bars(ticker, data)
+            acquired = sc.try_acquire_fetch_lock(lock_key, ttl=30.0)
         except SharedCacheError as exc:
-            logger.warning("Shared cache write failed for %s (%s)", ticker, exc)
-        return data
+            logger.warning("Lock acquire failed for %s (%s) — direct fetch", ticker, exc)
+            acquired = True  # lock table broken → just fetch (degrade gracefully)
+
+        if acquired:
+            try:
+                # Double-check: a prior holder may have populated it between our
+                # MISS read and winning the lock — avoids a redundant fetch.
+                try:
+                    res = sc.get_bars(ticker)
+                    if res.status == Freshness.FRESH and res.df is not None:
+                        return res.df
+                except SharedCacheError:
+                    pass
+                data = self._fetch_full(ticker, polygon_ticker)
+                try:
+                    sc.put_bars(ticker, data)
+                except SharedCacheError as exc:
+                    logger.warning("Shared cache write failed for %s (%s)", ticker, exc)
+                return data
+            finally:
+                try:
+                    sc.release_fetch_lock(lock_key)
+                except SharedCacheError:
+                    pass
+
+        # Another process is fetching — wait briefly for its write-through.
+        deadline = time.monotonic() + self._shared_wait_secs
+        while time.monotonic() < deadline:
+            time.sleep(0.25)
+            try:
+                res = sc.get_bars(ticker)
+            except SharedCacheError:
+                break
+            if res.status in (Freshness.FRESH, Freshness.STALE) and res.df is not None:
+                metrics.inc("shared_cache_wait_hit")
+                return res.df
+
+        # Timed out waiting — fetch directly rather than stall the scan.
+        metrics.inc("shared_cache_wait_timeout")
+        return self._fetch_full(ticker, polygon_ticker)
 
     def _schedule_refresh(self, ticker: str, polygon_ticker: str) -> None:
-        """Kick a background revalidation for a stale ticker (single-flight)."""
+        """Kick a background revalidation for a stale ticker (single-flight).
+
+        In-process dedup uses a case-normalised key; cross-process dedup uses
+        the shared advisory lock so only one subprocess refreshes.
+        """
+        norm = ticker.upper()
         with self._refresh_lock:
-            if ticker in self._refreshing:
+            if norm in self._refreshing:
                 return
-            self._refreshing.add(ticker)
+            self._refreshing.add(norm)
 
         def _run():
             from shared.shared_bar_cache import Freshness, SharedCacheError
+            holds_lock = False
+            sc = None
             try:
                 sc = self._get_shared_cache()
                 if sc is None:
                     return
-                # Cross-process guard: another container subprocess may have
-                # already refreshed it to FRESH while we queued — skip if so.
+                # Cross-process single-flight: only one subprocess refreshes.
+                try:
+                    holds_lock = sc.try_acquire_fetch_lock(norm, ttl=30.0)
+                except SharedCacheError:
+                    holds_lock = False
+                if not holds_lock:
+                    return  # another process owns the refresh
+                # Re-check: it may have just been refreshed to FRESH.
                 try:
                     if sc.get_bars(ticker).status == Freshness.FRESH:
                         return
@@ -268,15 +333,20 @@ class DataCache:
                 except SharedCacheError as exc:
                     logger.warning("Background cache write failed for %s (%s)", ticker, exc)
                 with self._lock:
-                    self._cache[ticker.upper()] = (data, time.time())
+                    self._cache[norm] = (data, time.time())
                 logger.info("Shared cache background-refreshed %s", ticker)
             except Exception as exc:
                 logger.warning("Background refresh failed for %s: %s", ticker, exc)
             finally:
+                if holds_lock and sc is not None:
+                    try:
+                        sc.release_fetch_lock(norm)
+                    except SharedCacheError:
+                        pass
                 with self._refresh_lock:
-                    self._refreshing.discard(ticker)
+                    self._refreshing.discard(norm)
 
-        threading.Thread(target=_run, name=f"bar-refresh-{ticker}", daemon=True).start()
+        threading.Thread(target=_run, name=f"bar-refresh-{norm}", daemon=True).start()
 
     @staticmethod
     def _slice_to_period(data: pd.DataFrame, period: str) -> pd.DataFrame:

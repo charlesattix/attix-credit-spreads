@@ -1,4 +1,6 @@
 """Tests for the shared on-disk SQLite bar cache (shared/shared_bar_cache.py)."""
+import multiprocessing as mp
+import os
 import sqlite3
 import threading
 
@@ -228,6 +230,95 @@ def test_concurrent_readers_while_writing(tmp_path):
 
     assert not errors, f"concurrent access raised: {errors}"
     assert read_ok and all(n == 40 for n in read_ok)
+
+
+# ---------------------------------------------------------------------------
+# advisory lock primitive
+# ---------------------------------------------------------------------------
+
+def test_lock_acquire_release_cycle(cache):
+    assert cache.try_acquire_fetch_lock("SPY") is True
+    assert cache.try_acquire_fetch_lock("SPY") is False     # already held
+    assert cache.try_acquire_fetch_lock("spy") is False     # case-normalised
+    cache.release_fetch_lock("SPY")
+    assert cache.try_acquire_fetch_lock("SPY") is True       # reacquire after release
+
+
+def test_lock_expired_is_reclaimed(cache):
+    import time
+    # Hand-insert an expired lock owned by a dead pid.
+    conn = cache._conn()
+    with conn:
+        conn.execute(
+            "INSERT OR REPLACE INTO fetch_locks (lock_key, owner_pid, expires_at) VALUES (?,?,?)",
+            ("SPY", 999999, time.time() - 1),
+        )
+    assert cache.try_acquire_fetch_lock("SPY") is True       # stale lock reclaimed
+
+
+# ---------------------------------------------------------------------------
+# cross-process single-flight (Fix 1) — real subprocesses
+# ---------------------------------------------------------------------------
+
+def _mp_fetch_worker(args):
+    """Mimic DataCache's coordinated fetch in a separate process.
+
+    Records one byte per *actual* underlying fetch so the parent can assert
+    exactly one process fetched.
+    """
+    db_path, counter_path, key = args
+    import time as _t
+
+    import pandas as _pd
+
+    from shared.shared_bar_cache import Freshness as Fresh
+    from shared.shared_bar_cache import SharedBarCache as Cache
+
+    c = Cache(db_path=db_path, fresh_ttl=900)
+    # initial classify
+    if c.get_bars(key).status in (Fresh.FRESH, Fresh.STALE):
+        return "cache"
+    if c.try_acquire_fetch_lock(key, ttl=30):
+        try:
+            if c.get_bars(key).status == Fresh.FRESH:   # peer populated first
+                return "cache"
+            fd = os.open(counter_path, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
+            os.write(fd, b"x")                        # one byte == one real fetch
+            os.close(fd)
+            _t.sleep(1.0)                             # simulate Polygon latency, hold lock
+            idx = _pd.date_range("2024-01-02", periods=10, freq="B")
+            idx.name = "Date"
+            df = _pd.DataFrame(
+                {"Open": 1.0, "High": 1.0, "Low": 1.0,
+                 "Close": list(range(10)), "Volume": 1.0},
+                index=idx, columns=["Open", "High", "Low", "Close", "Volume"],
+            )
+            c.put_bars(key, df)
+            return "fetched"
+        finally:
+            c.release_fetch_lock(key)
+    # loser: wait bounded, re-read
+    deadline = _t.monotonic() + 8
+    while _t.monotonic() < deadline:
+        _t.sleep(0.1)
+        if c.get_bars(key).status in (Fresh.FRESH, Fresh.STALE):
+            return "cache"
+    return "timeout"
+
+
+def test_cross_process_single_flight(tmp_path):
+    db = str(tmp_path / "mp.db")
+    counter = str(tmp_path / "fetches.bin")
+    SharedBarCache(db_path=db)                          # init schema before forking
+    ctx = mp.get_context("spawn")
+    args = [(db, counter, "SPY")] * 5
+    with ctx.Pool(5) as pool:
+        results = pool.map(_mp_fetch_worker, args)
+
+    n_fetches = os.path.getsize(counter) if os.path.exists(counter) else 0
+    assert n_fetches == 1, f"expected exactly 1 real fetch, got {n_fetches} (results={results})"
+    assert results.count("fetched") == 1
+    assert all(r in ("fetched", "cache") for r in results), results  # nobody timed out
 
 
 # ---------------------------------------------------------------------------

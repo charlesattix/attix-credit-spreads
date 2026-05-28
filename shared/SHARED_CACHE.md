@@ -40,6 +40,15 @@ The cache covers exactly what `PolygonProvider.get_historical()` returns today.
     subprocess already refreshed it).
   - `MISS` (no rows, or age > `max_stale`): caller fetches synchronously from
     Polygon and writes through.
+- **Cross-process single-flight.** On a `MISS`, processes coordinate via an
+  advisory lock (`fetch_locks` table; `try_acquire_fetch_lock` /
+  `release_fetch_lock`): only the winner calls Polygon and writes through;
+  losers wait a bounded `SHARED_CACHE_WAIT_SECS` (default 5s) for the winner's
+  result, then fall back to a direct fetch rather than block the scan. Locks
+  carry a 30s expiry so a crashed holder never blocks permanently, and the
+  winner double-checks the cache after acquiring to avoid a redundant fetch. The
+  same lock gates the background `STALE` refresh. This stops the cold-start case
+  where all ~9 subprocesses independently miss and each fire their own fetch.
 - **Best-effort / never required.** Any SQLite error raises `SharedCacheError`;
   `DataCache` catches it and falls back to a direct Polygon fetch. A corrupt or
   missing cache can never take the scanner down.
@@ -52,6 +61,7 @@ The cache covers exactly what `PolygonProvider.get_historical()` returns today.
 |---|---|---|
 | `USE_SHARED_CACHE` | `false` | Master switch for the shared-cache path. |
 | `SHARED_CACHE_DB` | `<DATA_DIR>/shared_bars.db` | Override the DB file location. |
+| `SHARED_CACHE_WAIT_SECS` | `5` | How long a lock loser waits for the winner's write before falling back to a direct fetch. |
 
 `DATA_DIR` resolves to the Railway volume (`/app/data`) via `ATTIX_DATA_DIR`.
 
@@ -60,6 +70,7 @@ The cache covers exactly what `PolygonProvider.get_historical()` returns today.
 ```
 daily_bars(ticker, bar_date, open, high, low, close, volume)   PK (ticker, bar_date)
 bar_meta(ticker, last_fetch_ts, row_count)                     PK (ticker)
+fetch_locks(lock_key, owner_pid, expires_at)                   PK (lock_key)
 cache_schema(version)
 ```
 
