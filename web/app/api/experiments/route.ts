@@ -5,8 +5,10 @@
  * ExperimentsExport shape consumed by the paper-trading dashboard.
  *
  * Sources:
- *   - /api/v1/summary     → portfolio totals + per-experiment summary stats
- *   - /api/v1/experiments → full experiment list with live Alpaca equity data
+ *   - /api/v1/summary                        → portfolio totals + per-experiment summary stats
+ *   - /api/v1/experiments                    → full experiment list with live Alpaca equity data
+ *   - /api/v1/experiments/{id}/trades        → closed trade history → equity_curve
+ *   - /api/v1/experiments/{id}/positions     → open positions → real unrealized_pl / day_pl
  */
 import { NextResponse } from 'next/server'
 
@@ -25,8 +27,43 @@ async function attixGet(path: string) {
   return res.json()
 }
 
+type TradeRecord    = Record<string, unknown>
+type PositionRecord = Record<string, unknown>
+
+/** Build cumulative P&L equity curve from closed trades. */
+function buildEquityCurve(
+  tradesPayload: unknown,
+  startingEquity = 100_000,
+): Array<{ date: string; cumulative_pnl: number; cumulative_pnl_pct: number }> {
+  const raw   = (tradesPayload as Record<string, unknown>)
+  const list  = (raw?.trades ?? raw ?? []) as TradeRecord[]
+  const closed = list.filter(t => t.pnl != null && (t.closed_at ?? t.exit_date ?? t.close_date))
+  closed.sort((a, b) => {
+    const da = String(a.closed_at ?? a.exit_date ?? a.close_date ?? '')
+    const db = String(b.closed_at ?? b.exit_date ?? b.close_date ?? '')
+    return new Date(da).getTime() - new Date(db).getTime()
+  })
+  let cumPnl = 0
+  return closed.map(t => {
+    cumPnl += (t.pnl as number) ?? 0
+    const date = String(t.closed_at ?? t.exit_date ?? t.close_date ?? '').slice(0, 10)
+    return {
+      date,
+      cumulative_pnl:     cumPnl,
+      cumulative_pnl_pct: (cumPnl / startingEquity) * 100,
+    }
+  })
+}
+
+/** Sum unrealized_pl across all position legs. */
+function sumUnrealizedPl(positionsPayload: unknown): number {
+  const raw  = (positionsPayload as Record<string, unknown>)
+  const list = (raw?.positions ?? raw ?? []) as PositionRecord[]
+  return list.reduce((sum, p) => sum + ((p.unrealized_pl ?? p.unrealized_pnl ?? 0) as number), 0)
+}
+
 export async function GET() {
-  // ── Fetch both endpoints in parallel ───────────────────────────────────
+  // ── Fetch summary + experiment list in parallel ─────────────────────────
   let summary: Record<string, unknown>, experimentsPayload: Record<string, unknown>
   try {
     ;[summary, experimentsPayload] = await Promise.all([
@@ -48,11 +85,31 @@ export async function GET() {
   }
 
   // ── Map active experiments only ────────────────────────────────────────
-  const allExps = (experimentsPayload.experiments as Record<string, unknown>[]) ?? []
+  const allExps   = (experimentsPayload.experiments as Record<string, unknown>[]) ?? []
   const activeExps = allExps.filter(e => e.status === 'active')
 
+  // ── Fetch trades + positions for every active experiment in parallel ───
+  const perExpResults = await Promise.all(
+    activeExps.map(async e => {
+      const id = e.id as string
+      const [tradesResult, positionsResult] = await Promise.allSettled([
+        attixGet(`/experiments/${id}/trades`),
+        attixGet(`/experiments/${id}/positions`),
+      ])
+      return {
+        id,
+        trades:    tradesResult.status    === 'fulfilled' ? tradesResult.value    : null,
+        positions: positionsResult.status === 'fulfilled' ? positionsResult.value : null,
+      }
+    })
+  )
+
+  const perExpById: Record<string, { trades: unknown; positions: unknown }> = {}
+  for (const d of perExpResults) perExpById[d.id] = d
+
   const experiments = activeExps.map(e => {
-    const sd = summaryById[e.id as string] ?? {}
+    const sd  = summaryById[e.id as string] ?? {}
+    const exp = perExpById[e.id as string]  ?? {}
 
     const totalClosed = (sd.total_closed as number) ?? 0
     const winRate     = (sd.win_rate as number) ?? 0
@@ -62,21 +119,28 @@ export async function GET() {
 
     const be = e.backtest_expectations as Record<string, unknown> | null | undefined
 
-    // Build AlpacaAccount from live_ fields (day_pl and positions not available
-    // from this endpoint — they show as null / [] until a richer endpoint exists)
+    // Real unrealized P&L from positions endpoint; fall back to Attix summary field
+    const unrealizedPl: number | null =
+      exp.positions != null
+        ? sumUnrealizedPl(exp.positions)
+        : (e.live_unrealized_pl as number | null) ?? null
+
     const hasLiveData = e.live_equity != null
     const alpaca = hasLiveData ? {
       equity:          e.live_equity as number,
       last_equity:     null,
-      unrealized_pl:   (e.live_unrealized_pl as number | null) ?? null,
+      unrealized_pl:   unrealizedPl,
       portfolio_value: e.live_equity as number,
       cash:            (e.live_cash as number | null) ?? null,
       buying_power:    null,
-      day_pl:          null,
+      // Approximate day P&L as the current unrealized P&L on open positions
+      day_pl:          unrealizedPl,
       positions:       [] as unknown[],
       error:           (sd.error as string | null) ?? null,
       fetched_at:      (e.alpaca_fetched_at as string) ?? new Date().toISOString(),
     } : null
+
+    const equityCurve = exp.trades != null ? buildEquityCurve(exp.trades) : []
 
     return {
       id:         e.id as string,
@@ -108,7 +172,7 @@ export async function GET() {
         last_trade_date:  null,
         profit_factor:    null,
       },
-      equity_curve:   [],
+      equity_curve:   equityCurve,
       open_positions: [],
       recent_trades:  [],
     }
