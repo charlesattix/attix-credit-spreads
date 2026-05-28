@@ -25,3 +25,6 @@ httpx>=0.27.0
 # CBOE Athena integration
 boto3>=1.34.0
 duckdb>=0.10.0
+
+# LLM category analysis (compass.analysis.llm_categorizer)
+anthropic>=0.40.0
