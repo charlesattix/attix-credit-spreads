@@ -262,6 +262,7 @@ def query_experiment(exp: dict, report_date: Optional[str] = None) -> dict:
     base: dict = {
         "id":          exp_id,
         "name":        exp.get("name", exp_id),
+        "description": exp.get("description", ""),  # registry = source of truth for card desc
         "ticker":      exp.get("ticker", "SPY"),
         "creator":     exp.get("created_by", "—"),
         "live_since":  exp.get("live_since", "—"),
@@ -452,6 +453,7 @@ def query_all_live(report_date: Optional[str] = None) -> List[dict]:
                 flat = {
                     "id":          exp.get("id"),
                     "name":        exp.get("name"),
+                    "description": exp.get("description", ""),
                     "ticker":      exp.get("ticker", "SPY"),
                     "creator":     exp.get("creator", "—"),
                     "live_since":  exp.get("live_since", "—"),

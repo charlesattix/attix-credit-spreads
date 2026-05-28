@@ -489,48 +489,10 @@ def _pct_return(equity):
     return (equity - STARTING_EQUITY) / STARTING_EQUITY * 100
 
 # ---------------------------------------------------------------------------
-# Strategy descriptions shown below experiment names on the dashboard.
-# Keyed by experiment ID (matches registry.json "id" field).
-_EXP_DESCRIPTIONS: dict[str, str] = {
-    "EXP-400": (
-        "Regime-adaptive credit spreads &amp; iron condors on SPY. "
-        "Switches between bull puts and bear calls based on trend detection (MA crossovers). "
-        "No ML. Robustness score: 0.870."
-    ),
-    "EXP-401": (
-        "Blended strategy combining credit spreads with straddles/strangles on SPY. "
-        "Uses volatility regime detection to select optimal structure. "
-        "No ML. Walk-forward validated (3/3 passed)."
-    ),
-    "EXP-503": (
-        "Machine learning-driven credit spreads on SPY. "
-        "XGBoost regime classifier routes trades through ML-optimized position sizing. "
-        "Aggressive Kelly sizing with model confidence weighting."
-    ),
-    "EXP-600": (
-        "Direction-adaptive credit spreads on IBIT (Bitcoin ETF). "
-        "MA50-based trend detection, 14 DTE, 10% OTM. No ML. "
-        "Optimized via mega parameter sweep (139% avg annual backtest)."
-    ),
-    "EXP-3311": (
-        "NFP Entry Filter (paper). Champion strategy with the addition of "
-        "an entry gate that skips new positions the day BEFORE BLS Non-Farm "
-        "Payrolls releases. Defensive risk-reducer. Backtest: Sharpe 4.984, "
-        "Max DD 5.89%."
-    ),
-    "EXP-3309": (
-        "Pre-Close Execution Window (paper). Champion strategy restricted "
-        "to a 15:30-16:00 ET scanning window to capture pre-close liquidity. "
-        "Offensive execution-alpha. Backtest: Sharpe 5.879, 343 bps/yr "
-        "cost savings — empirical validation."
-    ),
-    "EXP-3303b": (
-        "Per-Stream Selective Regime Gate (paper). Champion strategy that "
-        "skips new SPY/QQQ entries during regime transitions (transition / "
-        "high_stress) while letting sector ETFs continue. Defensive "
-        "SPX-VRP protection. Backtest: Sharpe 6.334, gates ~4% of days."
-    ),
-}
+# NOTE: per-experiment strategy descriptions now live in experiments/registry.json
+# (single source of truth, propagated via data.py → s["description"]). The old
+# hardcoded _EXP_DESCRIPTIONS dict was removed — adding/editing a description no
+# longer requires a code change.
 
 # Leverage multiplier per experiment (keyed by experiment ID).
 _LEVERAGE_MAP: dict[str, str] = {
@@ -918,13 +880,9 @@ def _render_exp_card(s: dict) -> str:
     ecreator = _html.escape(str(s.get('creator', '—')))
     elive    = _html.escape(str(s.get('live_since', '—')))
 
-    # Description: prefer registry field, fall back to built-in dict.
-    # Registry value is escaped; built-in strings use &amp; literals so are safe as-is.
-    _reg_desc = s.get('description', '')
-    if _reg_desc:
-        edesc = _html.escape(str(_reg_desc))
-    else:
-        edesc = _EXP_DESCRIPTIONS.get(s['id'], '')
+    # Description comes from the registry (single source of truth — see
+    # experiments/registry.json). Escaped for safe HTML output.
+    edesc = _html.escape(str(s.get('description') or ''))
     desc_html = f'<div class="exp-desc">{edesc}</div>' if edesc else ''
 
     # Equity sparkline chart — pass live equity as today's intraday point.

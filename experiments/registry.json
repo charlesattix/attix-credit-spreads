@@ -802,7 +802,7 @@
     },
     "EXP-V8A": {
       "id": "EXP-V8A",
-      "name": "Maximus",
+      "name": "Variance Risk Premium Multi-Stream",
       "created_by": "carlos",
       "created_date": "2026-05-26",
       "status": "active",
@@ -811,7 +811,7 @@
       "live_since": "2026-05-26",
       "paper_config": "configs/paper_expv8a.yaml",
       "backtest_config": null,
-      "description": "V8A \u2014 Maximus. Champion strategy clone.",
+      "description": "8-stream options portfolio harvesting volatility risk premium across sectors (SPY/QQQ/XLF/XLI/GLD/SLV/VIX) with Ledoit-Wolf risk-parity and 12% vol target. Combines credit spreads, calendar spreads, and cross-vol arbitrage. Backtest: Sharpe 6.39, CAGR 118%, Max DD 5.1%.",
       "notes": "",
       "config_path": "configs/paper_expv8a.yaml",
       "alpaca_account_id": "PA3694QR73C1",
