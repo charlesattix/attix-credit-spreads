@@ -36,7 +36,19 @@ class PolygonProvider:
         self.api_key = api_key
         self.base_url = BASE_URL
         self.session = requests.Session()
-        retry = Retry(total=3, backoff_factor=0.5, status_forcelist=[429, 500, 502, 503, 504], backoff_jitter=0.25)
+        # 429-aware retry: honour Polygon's Retry-After header when present, and
+        # fall back to exponential backoff (with jitter) otherwise. More total
+        # retries for transient rate-limit bursts at cold-start; backoff is
+        # capped so a single call can't stall a scan indefinitely.
+        retry = Retry(
+            total=5,
+            backoff_factor=1.0,
+            backoff_max=30,
+            status_forcelist=[429, 500, 502, 503, 504],
+            allowed_methods=frozenset({"GET"}),
+            respect_retry_after_header=True,
+            backoff_jitter=0.5,
+        )
         self.session.mount("https://", HTTPAdapter(max_retries=retry))
         self._circuit_breaker = CircuitBreaker(failure_threshold=5, reset_timeout=60)
         self._last_call_time = 0.0

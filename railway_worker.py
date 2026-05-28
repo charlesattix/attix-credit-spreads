@@ -20,6 +20,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import random
 import signal
 import subprocess
 import sys
@@ -271,13 +272,20 @@ def main() -> None:
         e["id"]: ExperimentProcess(e) for e in active
     }
 
-    # Start all subprocesses with stagger to avoid Polygon API 429 rate limits
-    # during simultaneous pre-warm. 9 experiments × ~10 tickers = ~90 requests.
-    STAGGER_SECS = 10
+    # Start subprocesses with a staggered + jittered delay so their cold-cache
+    # pre-warm (each fetches ~760 days of SPY/TLT/^VIX daily bars) does not all
+    # hammer Polygon inside the same few-second window and trip 429 rate limits.
+    # The base stagger spaces processes out; the random jitter prevents any two
+    # processes from re-aligning into the same 2-second fetch window after a
+    # restart. (Phase 0 mitigation ahead of the shared SQLite cache.)
+    STAGGER_BASE_SECS = float(os.environ.get("STARTUP_STAGGER_SECS", "20"))
+    STAGGER_JITTER_SECS = float(os.environ.get("STARTUP_STAGGER_JITTER_SECS", "10"))
     for i, p in enumerate(procs.values()):
         p.start()
         if i < len(procs) - 1:
-            time.sleep(STAGGER_SECS)
+            delay = STAGGER_BASE_SECS + random.uniform(0.0, STAGGER_JITTER_SECS)
+            logger.info("Startup stagger: sleeping %.1fs before next experiment", delay)
+            time.sleep(delay)
 
     write_status(procs)
 
