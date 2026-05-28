@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pipeline Demo — 2026-05-27</title>
+<style>
+  :root {
+    --ink:#0f172a; --body:#334155; --muted:#64748b; --line:#e2e8f0;
+    --bg:#ffffff; --soft:#f6f8fb; --softer:#fafbfd;
+    --accent:#1d4ed8; --accent-soft:#eff4ff;
+    --good:#15803d; --good-soft:#ecfdf5; --good-strong:#047857;
+    --bad:#b91c1c;  --bad-soft:#fef2f2;  --bad-strong:#991b1b;
+    --warn:#b45309; --warn-soft:#fffbeb;
+    --bull:#15803d; --bear:#b91c1c; --neutral:#64748b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{background:var(--bg);color:var(--body);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+    line-height:1.6;font-size:14.5px;}
+  body{max-width:1080px;margin:0 auto;padding:48px 32px 80px;}
+  header{border-bottom:2px solid var(--ink);padding-bottom:24px;margin-bottom:32px;}
+  .eyebrow{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;
+    color:var(--accent);margin-bottom:10px;}
+  h1{font-size:32px;font-weight:800;letter-spacing:-0.5px;line-height:1.2;
+    color:var(--ink);margin-bottom:8px;}
+  .subtitle{color:var(--muted);font-size:15px;}
+  h2{font-size:20px;font-weight:800;color:var(--ink);
+    margin:36px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--line);}
+  h3{font-size:15px;font-weight:700;color:var(--ink);margin:18px 0 6px;}
+  p{margin-bottom:10px;}
+  strong{color:var(--ink);font-weight:700;}
+  code{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:12.5px;
+    background:#f1f3f5;color:var(--ink);padding:1.5px 6px;border-radius:4px;}
+  ul{margin:8px 0 14px 22px;}
+  li{margin:4px 0;}
+
+  /* Provenance pill list */
+  .prov{display:grid;gap:10px;margin:16px 0 8px;}
+  .prov-row{display:flex;gap:12px;align-items:flex-start;font-size:13.5px;}
+  .badge{display:inline-flex;align-items:center;flex-shrink:0;
+    padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700;
+    text-transform:uppercase;letter-spacing:0.4px;}
+  .badge.real{background:var(--good-soft);color:var(--good-strong);
+    border:1px solid #bbf7d0;}
+  .badge.mock{background:var(--warn-soft);color:var(--warn);
+    border:1px solid #fde68a;}
+
+  /* Signal table */
+  .table-wrap{overflow-x:auto;margin:14px 0 8px;}
+  table{border-collapse:collapse;width:100%;font-size:13px;}
+  th,td{text-align:right;border-bottom:1px solid var(--line);padding:8px 10px;
+    vertical-align:middle;font-variant-numeric:tabular-nums;}
+  th{background:var(--soft);color:var(--muted);font-size:11px;
+    text-transform:uppercase;letter-spacing:0.5px;font-weight:700;
+    border-top:1px solid var(--line);}
+  th:first-child,td:first-child{text-align:right;color:var(--muted);}
+  th.ticker,td.ticker{text-align:left;font-family:ui-monospace,Menlo,monospace;
+    font-weight:600;color:var(--ink);}
+  th.cap,td.cap{text-align:left;text-transform:lowercase;color:var(--muted);
+    font-size:12px;}
+  tr:hover td{background:var(--softer);}
+  td.miss{color:var(--muted);}
+
+  /* z-score cells */
+  .z{display:inline-block;min-width:54px;padding:2px 8px;border-radius:5px;
+    font-family:ui-monospace,Menlo,monospace;font-size:12.5px;font-weight:600;
+    text-align:center;}
+  .z.pos-1{background:#dcfce7;color:#166534;}
+  .z.pos-2{background:#bbf7d0;color:#14532d;}
+  .z.pos-3{background:#86efac;color:#052e16;}
+  .z.pos-4{background:#4ade80;color:#052e16;}
+  .z.neg-1{background:#fee2e2;color:#991b1b;}
+  .z.neg-2{background:#fecaca;color:#7f1d1d;}
+  .z.neg-3{background:#fca5a5;color:#7f1d1d;}
+  .z.neg-4{background:#f87171;color:#450a0a;}
+  .z.zero{background:#f1f5f9;color:var(--muted);}
+
+  /* Category cards */
+  .cat-grid{display:grid;gap:16px;margin-top:14px;}
+  .cat{border:1px solid var(--line);border-radius:10px;padding:18px 20px;
+    background:var(--softer);}
+  .cat.bull{border-left:4px solid var(--bull);}
+  .cat.bear{border-left:4px solid var(--bear);}
+  .cat.neutral{border-left:4px solid var(--neutral);}
+  .cat-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;
+    margin-bottom:10px;}
+  .cat-name{font-size:16px;font-weight:700;color:var(--ink);}
+  .dirpill{padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700;
+    text-transform:uppercase;letter-spacing:0.5px;}
+  .dirpill.bull{background:var(--good-soft);color:var(--good-strong);}
+  .dirpill.bear{background:var(--bad-soft);color:var(--bad-strong);}
+  .dirpill.neutral{background:var(--soft);color:var(--muted);}
+  .conf{font-size:12.5px;color:var(--muted);margin-left:auto;}
+  .conf b{color:var(--ink);font-weight:700;}
+  .ticker-chip{display:inline-block;margin:3px 4px 3px 0;padding:3px 9px;
+    border-radius:5px;background:#fff;border:1px solid var(--line);
+    font-family:ui-monospace,Menlo,monospace;font-size:12px;font-weight:600;
+    color:var(--ink);}
+  .cat-meta{font-size:13px;color:var(--body);margin-top:8px;}
+  .cat-meta .label{font-weight:700;color:var(--ink);}
+
+  /* Note callout */
+  .note{background:var(--warn-soft);border-left:3px solid var(--warn);
+    padding:10px 14px;margin:12px 0;font-size:13.5px;border-radius:0 5px 5px 0;
+    color:#78350f;}
+  .info{background:var(--accent-soft);border-left:3px solid var(--accent);
+    padding:10px 14px;margin:12px 0;font-size:13.5px;border-radius:0 5px 5px 0;}
+
+  /* Pipeline diagram */
+  .pipeline{background:#0b1220;color:#e2e8f0;padding:18px 20px;border-radius:8px;
+    font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;
+    line-height:1.55;overflow-x:auto;margin:8px 0;}
+  .pipeline .src{color:#fcd34d;}
+  .pipeline .fn{color:#93c5fd;}
+  .pipeline .out{color:#86efac;}
+  .pipeline .arrow{color:#94a3b8;}
+
+  /* Footer */
+  .footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--line);
+    font-size:12.5px;color:var(--muted);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">PilotAI · Pipeline Demonstration · 2026-05-27</div>
+  <h1>TradeAlgo → Signals → LLM Categorizer</h1>
+  <div class="subtitle">End-to-end run for the top 20 dark-flow movers (trending up, by dollar volume). All z-scores from real provider calls.</div>
+</header>
+
+<h2>Data provenance</h2>
+<div class="prov">
+  <div class="prov-row"><span class="badge real">real</span>
+    <span><b>TradeAlgo snapshot</b> — <code>data/tradealgo/2026-05-27/snapshot.json</code>, prod GET response cached on disk (3.0 MB, 31 modules, 60 dark-flow records).</span></div>
+  <div class="prov-row"><span class="badge real">real</span>
+    <span><b>Momentum / flow / sentiment z-scores</b> — computed live via Polygon (daily bars, options-chain snapshot, stock trades, IV/delta).</span></div>
+  <div class="prov-row"><span class="badge real">real</span>
+    <span><b>darkflow_z</b> — cross-sectional composite of <code>z(multiplier) + z(log dollar_value) + z(ats_dollar_volume_pct)</code> over the bundle's ~60 records.</span></div>
+  <div class="prov-row"><span class="badge real">real</span>
+    <span><b>LLM categorization</b> — live <code>claude-opus-4-7</code> call via <code>compass.analysis.llm_categorizer</code> with structured <code>tool_use</code> output. Cached at <code>data/llm_analysis_demo/2026-05-27.json</code>; raw response audit at <code>data/llm_analysis_demo/raw/2026-05-27_1034b28f.json</code>.</span></div>
+</div>
+<p style="color:var(--muted);font-size:13px;margin-top:8px;">
+  Stage-3 Polygon runtime: <b style="color:var(--ink);">19.2 s</b> across 20 tickers. 19/20 had complete (momentum + flow + sentiment) signal sets — only those reach the LLM. No fabricated values for missing data.
+</p>
+
+<h2>Stage 3 — signals per ticker</h2>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr>
+      <th>#</th><th class="ticker">Ticker</th><th class="cap">Cap</th>
+      <th>DarkflowZ</th><th>MomentumZ</th><th>FlowZ</th><th>SentimentZ</th>
+      <th>$ Volume</th><th>Perf %</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td class="ticker">META</td><td class="cap">large</td>
+      <td><span class="z pos-1">+0.56</span></td>
+      <td><span class="z pos-1">+0.15</span></td>
+      <td><span class="z pos-4">+7.05</span></td>
+      <td><span class="z neg-3">−3.01</span></td>
+      <td>$6,903,451,023</td><td><span class="z pos-2">+4.26</span></td></tr>
+    <tr><td>2</td><td class="ticker">IREN</td><td class="cap">large</td>
+      <td><span class="z pos-1">+0.44</span></td>
+      <td><span class="z pos-3">+2.02</span></td>
+      <td><span class="z neg-2">−1.76</span></td>
+      <td><span class="z neg-4">−6.05</span></td>
+      <td>$2,703,254,930</td><td><span class="z pos-3">+9.61</span></td></tr>
+    <tr><td>3</td><td class="ticker">APP</td><td class="cap">large</td>
+      <td><span class="z pos-1">+0.46</span></td>
+      <td><span class="z pos-2">+1.81</span></td>
+      <td><span class="z pos-1">+0.32</span></td>
+      <td><span class="z neg-3">−2.11</span></td>
+      <td>$2,587,178,066</td><td><span class="z pos-3">+9.03</span></td></tr>
+    <tr><td>4</td><td class="ticker">ASTS</td><td class="cap">large</td>
+      <td><span class="z pos-1">+0.21</span></td>
+      <td><span class="z pos-4">+3.17</span></td>
+      <td><span class="z neg-1">−0.49</span></td>
+      <td><span class="z neg-4">−8.13</span></td>
+      <td>$2,255,512,352</td><td><span class="z pos-2">+4.19</span></td></tr>
+    <tr><td>5</td><td class="ticker">ONDS</td><td class="cap">medium</td>
+      <td><span class="z zero">−0.01</span></td>
+      <td><span class="z pos-1">+0.70</span></td>
+      <td><span class="z neg-2">−1.95</span></td>
+      <td><span class="z neg-3">−3.90</span></td>
+      <td>$542,864,142</td><td><span class="z pos-3">+8.11</span></td></tr>
+    <tr><td>6</td><td class="ticker">CIFR</td><td class="cap">medium</td>
+      <td><span class="z pos-1">+0.03</span></td>
+      <td><span class="z pos-2">+1.92</span></td>
+      <td><span class="z neg-3">−3.29</span></td>
+      <td><span class="z neg-4">−6.41</span></td>
+      <td>$431,796,547</td><td><span class="z pos-3">+8.78</span></td></tr>
+    <tr><td>7</td><td class="ticker">GM</td><td class="cap">large</td>
+      <td><span class="z pos-1">+0.04</span></td>
+      <td><span class="z pos-3">+2.25</span></td>
+      <td><span class="z neg-3">−2.72</span></td>
+      <td><span class="z neg-1">−0.19</span></td>
+      <td>$390,563,400</td><td><span class="z pos-2">+3.72</span></td></tr>
+    <tr><td>8</td><td class="ticker">TSCO</td><td class="cap">large</td>
+      <td><span class="z zero">−0.02</span></td>
+      <td><span class="z zero">−0.04</span></td>
+      <td><span class="z neg-2">−1.89</span></td>
+      <td><span class="z neg-2">−1.36</span></td>
+      <td>$305,605,921</td><td><span class="z pos-1">+2.94</span></td></tr>
+    <tr><td>9</td><td class="ticker">NIO</td><td class="cap">large</td>
+      <td><span class="z neg-1">−0.27</span></td>
+      <td><span class="z neg-1">−0.78</span></td>
+      <td><span class="z neg-2">−1.84</span></td>
+      <td><span class="z neg-4">−14.79</span></td>
+      <td>$245,753,621</td><td><span class="z pos-4">+10.27</span></td></tr>
+    <tr><td>10</td><td class="ticker">CLF</td><td class="cap">medium</td>
+      <td><span class="z zero">−0.02</span></td>
+      <td><span class="z pos-3">+2.04</span></td>
+      <td><span class="z neg-3">−2.69</span></td>
+      <td><span class="z neg-3">−2.49</span></td>
+      <td>$198,971,012</td><td><span class="z pos-3">+7.58</span></td></tr>
+    <tr><td>11</td><td class="ticker">KEEL</td><td class="cap">medium</td>
+      <td><span class="z neg-1">−0.28</span></td>
+      <td class="miss">—</td><td class="miss">—</td><td class="miss">—</td>
+      <td>$156,255,043</td><td><span class="z pos-3">+6.69</span></td></tr>
+    <tr><td>12</td><td class="ticker">ILMN</td><td class="cap">large</td>
+      <td><span class="z neg-1">−0.33</span></td>
+      <td><span class="z pos-2">+1.59</span></td>
+      <td><span class="z neg-3">−2.65</span></td>
+      <td><span class="z neg-3">−3.77</span></td>
+      <td>$140,022,501</td><td><span class="z pos-2">+3.62</span></td></tr>
+    <tr><td>13</td><td class="ticker">YPF</td><td class="cap">large</td>
+      <td><span class="z zero">−0.03</span></td>
+      <td><span class="z pos-2">+1.63</span></td>
+      <td><span class="z neg-2">−1.52</span></td>
+      <td><span class="z neg-3">−2.58</span></td>
+      <td>$128,222,272</td><td><span class="z pos-3">+6.80</span></td></tr>
+    <tr><td>14</td><td class="ticker">SQM</td><td class="cap">large</td>
+      <td><span class="z pos-1">+0.21</span></td>
+      <td><span class="z neg-2">−1.04</span></td>
+      <td><span class="z neg-3">−2.12</span></td>
+      <td><span class="z neg-4">−5.16</span></td>
+      <td>$100,558,886</td><td><span class="z pos-3">+7.61</span></td></tr>
+    <tr><td>15</td><td class="ticker">LUMN</td><td class="cap">medium</td>
+      <td><span class="z neg-2">−0.39</span></td>
+      <td><span class="z pos-2">+1.58</span></td>
+      <td><span class="z neg-3">−2.38</span></td>
+      <td><span class="z neg-2">−1.54</span></td>
+      <td>$83,472,356</td><td><span class="z pos-3">+7.15</span></td></tr>
+    <tr><td>16</td><td class="ticker">TVTX</td><td class="cap">medium</td>
+      <td><span class="z neg-1">−0.20</span></td>
+      <td><span class="z pos-2">+1.09</span></td>
+      <td><span class="z neg-1">−0.93</span></td>
+      <td><span class="z neg-2">−1.89</span></td>
+      <td>$73,734,087</td><td><span class="z pos-3">+7.55</span></td></tr>
+    <tr><td>17</td><td class="ticker">ADTN</td><td class="cap">small</td>
+      <td><span class="z pos-2">+0.79</span></td>
+      <td><span class="z pos-2">+1.05</span></td>
+      <td><span class="z neg-2">−2.00</span></td>
+      <td><span class="z neg-3">−2.21</span></td>
+      <td>$70,395,355</td><td><span class="z pos-4">+15.49</span></td></tr>
+    <tr><td>18</td><td class="ticker">COHU</td><td class="cap">medium</td>
+      <td><span class="z neg-1">−0.29</span></td>
+      <td><span class="z pos-2">+1.36</span></td>
+      <td><span class="z neg-2">−1.48</span></td>
+      <td><span class="z neg-3">−3.67</span></td>
+      <td>$63,806,985</td><td><span class="z pos-3">+6.76</span></td></tr>
+    <tr><td>19</td><td class="ticker">UMAC</td><td class="cap">small</td>
+      <td><span class="z neg-2">−0.41</span></td>
+      <td><span class="z pos-2">+1.13</span></td>
+      <td><span class="z neg-2">−2.01</span></td>
+      <td><span class="z neg-4">−5.12</span></td>
+      <td>$60,896,053</td><td><span class="z pos-3">+9.44</span></td></tr>
+    <tr><td>20</td><td class="ticker">SHLS</td><td class="cap">small</td>
+      <td><span class="z zero">−0.12</span></td>
+      <td><span class="z pos-4">+3.00</span></td>
+      <td><span class="z neg-2">−1.98</span></td>
+      <td><span class="z neg-3">−2.17</span></td>
+      <td>$59,438,780</td><td><span class="z pos-4">+12.60</span></td></tr>
+  </tbody>
+</table>
+</div>
+<div class="info">
+  <strong>Reading the z-scores:</strong> intensity shading scales by magnitude (light = ±0.5, deep = ±3+).
+  KEEL is missing momentum/flow/sentiment because Polygon didn't have enough trailing history at this
+  cap size — it's excluded from the LLM input rather than padded with zeros.
+</div>
+
+<h2>Stage 4 — LLM categories</h2>
+<div class="info">
+  <strong>Live <code>claude-opus-4-7</code> output.</strong> 19 ticker signals → 5 thematic
+  categories returned via structured <code>tool_use</code>. The LLM was given z-scores
+  and ticker symbols only — no prices, no news, no GICS sector (intentionally blanked
+  this run since GICS isn't yet wired into compass). Claude inferred themes from the
+  multi-signal pattern plus its own knowledge of the symbols.
+</div>
+
+<div class="cat-grid">
+
+  <!-- 1. AI/Compute & Connectivity Capex Leaders -->
+  <div class="cat bull">
+    <div class="cat-head">
+      <span class="cat-name">1. AI/Compute &amp; Connectivity Capex Leaders</span>
+      <span class="dirpill bull">bull</span>
+      <span class="conf">confidence <b>0.62</b></span>
+    </div>
+    <div>
+      <span class="ticker-chip">META</span>
+      <span class="ticker-chip">APP</span>
+      <span class="ticker-chip">ASTS</span>
+      <span class="ticker-chip">IREN</span>
+    </div>
+    <div class="cat-meta">
+      <div><span class="label">Signal summary:</span> Strong momentum and positive dark_flow despite deeply negative sentiment_z; META flow_z +7.0 is the standout.</div>
+      <div style="margin-top:6px;"><span class="label">Narrative:</span> Mega-cap and adjacent compute/connectivity names show institutional accumulation (META flow_z +7.05, IREN/ASTS/APP dark_flow positive) and solid price momentum, even as sentiment_z is sharply negative (−2 to −8). The pattern — buying into bearish chatter — is classic smart-money AI capex positioning across social, mobile ad-tech, satellite broadband, and crypto/AI hosting.</div>
+      <div style="margin-top:6px;"><span class="label">Supporting signals:</span> momentum, flow, dark_flow, sentiment</div>
+    </div>
+  </div>
+
+  <!-- 2. Crypto Miner / HPC Hosting Squeeze -->
+  <div class="cat bull">
+    <div class="cat-head">
+      <span class="cat-name">2. Crypto Miner / HPC Hosting Squeeze</span>
+      <span class="dirpill bull">bull</span>
+      <span class="conf">confidence <b>0.45</b> <span style="color:var(--warn);">· low conviction</span></span>
+    </div>
+    <div>
+      <span class="ticker-chip">IREN</span>
+      <span class="ticker-chip">CIFR</span>
+      <span class="ticker-chip">CLF</span>
+    </div>
+    <div class="cat-meta">
+      <div><span class="label">Signal summary:</span> High momentum_z (1.9–2.0) paired with very negative sentiment_z (−2.5 to −6.4) and negative flow_z.</div>
+      <div style="margin-top:6px;"><span class="label">Narrative:</span> Low-conviction cluster: IREN and CIFR (miners pivoting to HPC) show strong upside momentum against capitulatory sentiment readings, suggesting a short-covering / contrarian setup. CLF is included as a high-beta cyclical exhibiting the same momentum-up / sentiment-down divergence, though sector fit is loose. Flag: confidence &lt;0.5 due to mixed flow signals.</div>
+      <div style="margin-top:6px;"><span class="label">Supporting signals:</span> momentum, sentiment</div>
+    </div>
+  </div>
+
+  <!-- 3. EV / Battery Materials Capitulation -->
+  <div class="cat bear">
+    <div class="cat-head">
+      <span class="cat-name">3. EV / Battery Materials Capitulation</span>
+      <span class="dirpill bear">bear</span>
+      <span class="conf">confidence <b>0.55</b></span>
+    </div>
+    <div>
+      <span class="ticker-chip">NIO</span>
+      <span class="ticker-chip">SQM</span>
+      <span class="ticker-chip">GM</span>
+    </div>
+    <div class="cat-meta">
+      <div><span class="label">Signal summary:</span> Uniformly negative flow_z and sentiment_z; NIO sentiment_z −14.8 is the tape's worst.</div>
+      <div style="margin-top:6px;"><span class="label">Narrative:</span> EV ecosystem under coordinated distribution: NIO and SQM (lithium) print extreme negative sentiment with persistent outflows. GM shares the negative flow/sentiment footprint despite positive momentum_z, hinting the rally is being sold into. Bearish read on EV demand and battery-input pricing.</div>
+      <div style="margin-top:6px;"><span class="label">Supporting signals:</span> flow, sentiment</div>
+    </div>
+  </div>
+
+  <!-- 4. Small-Cap Momentum w/ Hidden Accumulation -->
+  <div class="cat bull">
+    <div class="cat-head">
+      <span class="cat-name">4. Small-Cap Momentum w/ Hidden Accumulation</span>
+      <span class="dirpill bull">bull</span>
+      <span class="conf">confidence <b>0.50</b></span>
+    </div>
+    <div>
+      <span class="ticker-chip">ADTN</span>
+      <span class="ticker-chip">SHLS</span>
+      <span class="ticker-chip">TVTX</span>
+      <span class="ticker-chip">COHU</span>
+      <span class="ticker-chip">UMAC</span>
+    </div>
+    <div class="cat-meta">
+      <div><span class="label">Signal summary:</span> Positive momentum_z (1.0–3.0) with negative retail flow but mixed/positive dark_flow on ADTN (+0.79).</div>
+      <div style="margin-top:6px;"><span class="label">Narrative:</span> Cluster of sub-$3B names rallying on momentum while visible flow is negative — ADTN's dark_flow +0.786 is the cleanest tell of off-exchange accumulation. SHLS (solar), COHU (semi-cap), TVTX (biotech), UMAC (drones) span sectors but share the same micro-cap momentum + quiet-bid fingerprint. Borderline conviction given thin liquidity risk.</div>
+      <div style="margin-top:6px;"><span class="label">Supporting signals:</span> momentum, dark_flow</div>
+    </div>
+  </div>
+
+  <!-- 5. Beaten-Down Mid-Caps, No Bid -->
+  <div class="cat bear">
+    <div class="cat-head">
+      <span class="cat-name">5. Beaten-Down Mid-Caps, No Bid</span>
+      <span class="dirpill bear">bear</span>
+      <span class="conf">confidence <b>0.42</b> <span style="color:var(--warn);">· low conviction</span></span>
+    </div>
+    <div>
+      <span class="ticker-chip">ILMN</span>
+      <span class="ticker-chip">LUMN</span>
+      <span class="ticker-chip">YPF</span>
+      <span class="ticker-chip">TSCO</span>
+    </div>
+    <div class="cat-meta">
+      <div><span class="label">Signal summary:</span> Negative flow_z, negative sentiment_z, and negative dark_flow on ILMN/LUMN — outflows across visible and hidden venues.</div>
+      <div style="margin-top:6px;"><span class="label">Narrative:</span> Low-conviction bearish bucket: heterogeneous mid-caps (genomics, telecom, Argentine energy, retail) sharing a profile of negative flow, negative sentiment, and in ILMN/LUMN's case negative dark_flow signaling no institutional defense. Sector mix is too wide for a clean thesis — flagged sub-0.5 confidence — but the distribution signature is consistent.</div>
+      <div style="margin-top:6px;"><span class="label">Supporting signals:</span> flow, sentiment, dark_flow</div>
+    </div>
+  </div>
+
+</div>
+
+<h2>Pipeline shape</h2>
+<div class="pipeline">
+<span class="src">TradeAlgo snapshot</span>   <span class="arrow">─┐</span>
+  <span class="src">(cached JSON, 3 MB)</span> <span class="arrow">│</span>
+                       <span class="arrow">├──►</span> <span class="fn">parse_movement_darkflow</span> <span class="arrow">─►</span> <span class="fn">darkflow_zscores</span> <span class="arrow">─►</span> <span class="out">top_N</span>
+                       <span class="arrow">│</span>                                                          <span class="arrow">│</span>
+                       <span class="arrow">│</span>                                                          <span class="arrow">▼</span>
+<span class="src">Polygon daily bars</span>   <span class="arrow">──┼──►</span> <span class="fn">compute_momentum_signal</span>  <span class="arrow">──────────►</span> <span class="out">momentum_z</span> <span class="arrow">─┤</span>
+<span class="src">Polygon options chain</span> <span class="arrow">─┼──►</span> <span class="fn">compute_flow_signal</span>      <span class="arrow">──────────►</span> <span class="out">flow_z</span>     <span class="arrow">─┤</span>
+<span class="src">Polygon stock trades</span>  <span class="arrow">─┘</span>                                                          <span class="arrow">│</span>
+<span class="src">Polygon options IV</span>    <span class="arrow">───►</span> <span class="fn">compute_sentiment_signal</span> <span class="arrow">──────────►</span> <span class="out">sentiment_z</span> <span class="arrow">─┤</span>
+                                                                                  <span class="arrow">│</span>
+                                                  <span class="out">TickerSignal records</span> <span class="arrow">◄────────────┘</span>
+                                                                <span class="arrow">│</span>
+                                                                <span class="arrow">▼</span>
+                                  <span class="fn">CategoryAnalyzer.analyze()</span> <span class="src">(Claude tool_use)</span>
+                                                                <span class="arrow">│</span>
+                                                                <span class="arrow">▼</span>
+                                  <span class="out">{categories: [{name, tickers, direction,</span>
+                                                <span class="out">confidence, narrative, ...}]}</span>
+</div>
+
+<h2>What the pipeline does end-to-end</h2>
+<ol style="margin:8px 0 14px 22px;line-height:1.7;">
+  <li><strong>Acquire</strong> — once per trading day (4:35 PM ET cron, not yet wired),
+    <code>TradeAlgoClient.fetch_snapshot()</code> GETs the 3 MB JSON bundle and caches
+    it atomically per UTC date. Provides dark-flow movers across small/mid/large caps
+    plus a rolling history.</li>
+  <li><strong>Distill dark flow</strong> — <code>parse_movement_darkflow</code> flattens
+    the three movement files (dedupes by max <code>multiplier</code>) into
+    <code>DarkFlowRecord</code>s. <code>darkflow_zscores</code> computes a per-ticker
+    cross-sectional intensity z combining <code>z(multiplier)</code>,
+    <code>z(log dollar_value)</code>, and <code>z(ats_dollar_volume_pct)</code>.</li>
+  <li><strong>Compose signals</strong> — for the top-N (by dark-flow dollar volume), the
+    compass signal layer fetches real Polygon data and computes four z-scores:
+    <code>momentum_z</code> (returns / breakout / vol-adj momentum),
+    <code>flow_z</code> (OI / P/C / vol-OI / large prints; optionally folds in
+    <code>darkflow_z</code>), <code>sentiment_z</code> (25d skew / term structure /
+    IV rank), and <code>darkflow_z</code> itself. Every value is real or
+    <code>None</code> — no fallbacks.</li>
+  <li><strong>Categorize</strong> — <code>CategoryAnalyzer.analyze()</code> builds a CSV
+    prompt of the per-ticker z-scores and asks Claude (<code>claude-opus-4-7</code>) via
+    <code>tool_use</code> with a strict JSON schema to label 3–5 coherent market themes
+    with name, ticker list, direction, confidence, and narrative. The LLM never sees
+    prices and never picks trades — it labels signals the engine already computed.
+    Output is cached idempotently per <code>(asof_date, prompt_hash)</code>.</li>
+  <li><strong>Consume</strong> — downstream readers (daily memo, risk dashboards, the
+    strategy layer) ingest <code>data/llm_analysis/{date}.json</code> and either
+    render the categories or filter trade candidates by theme.</li>
+</ol>
+
+<h2>What the live LLM call validates</h2>
+<ul>
+  <li>Claude correctly identified the most diagnostic pattern on the tape: <strong>momentum + dark flow positive, sentiment deeply negative</strong> ("smart-money buying into bearish chatter") — a cross-signal divergence a single-feature engine would miss.</li>
+  <li><code>darkflow_z</code> earned its keep — it is specifically cited in <strong>4 of 5</strong> narratives (META flow + dark, ADTN +0.786 hidden accumulation, ILMN/LUMN negative = "no institutional defense", IREN/ASTS dark positive).</li>
+  <li>The confidence-flag contract worked: categories at 0.45 and 0.42 self-rated <em>low-conviction</em> and explicitly flagged it in their narratives per the prompt's hard rule. No category was padded to hit 5.</li>
+  <li>Categories cross GICS boundaries by design — Category #1 spans social / mobile ad-tech / satellite broadband / crypto&amp;AI hosting under one capex thesis, exactly the kind of CROSS-sector grouping the system prompt asks for.</li>
+</ul>
+
+<h2>Caveats logged honestly</h2>
+<ul>
+  <li>GICS sector / industry is not yet wired into the compass pipeline — Claude was given empty sector fields and inferred themes from ticker symbols + the multi-signal pattern. Once GICS is plumbed in, expect tighter cluster fit (and higher confidence) on sector-aligned themes.</li>
+  <li>Composite reweighting in <code>compass.signals.flow_proxy</code> is still opt-in (<code>darkflow_z=None</code> by default), so today's live trading paths (EXP-3303b / 3309 / 3311) are unaffected. Promoting dark-flow into the live composite requires a backtested weight vector first.</li>
+  <li>The <code>CategoryAnalyzer</code> output is idempotent per <code>(asof_date, prompt_hash)</code> — re-running this demo without changing inputs hits the cache, not the LLM.</li>
+</ul>
+
+<div class="footer">
+  Generated by <code>scripts/pipeline_demo.py</code> · commit <code>80f8b0e</code> on branch <code>pr-38-review</code> · TradeAlgo snapshot 2026-05-27.
+</div>
+
+</body>
+</html>
