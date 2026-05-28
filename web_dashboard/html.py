@@ -943,8 +943,9 @@ def _render_exp_card(s: dict) -> str:
 # ---------------------------------------------------------------------------
 
 def render_dashboard(all_stats: list[dict]) -> str:
-    now = datetime.now(timezone.utc)
-    now_str = now.strftime("%Y-%m-%d %H:%M UTC")
+    from zoneinfo import ZoneInfo
+    now = datetime.now(ZoneInfo("America/New_York"))
+    now_str = now.strftime("%b %d, %Y %-I:%M %p ET")
 
     total_pnl    = sum(s["total_pnl"] for s in all_stats)
     total_closed = sum(s["total_closed"] for s in all_stats)
