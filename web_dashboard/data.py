@@ -103,6 +103,21 @@ def load_pushed_data() -> Optional[dict]:
     return None
 
 
+def current_equity(exp: dict) -> Optional[float]:
+    """Single source of truth for an experiment's live current equity.
+
+    Returns the live ``/v2/account`` equity (which already includes unrealized
+    PnL from open positions) from the row's alpaca block. BOTH the Live Equity
+    card AND the chart's "today" point read from here, so the two can never
+    diverge — the architectural acceptance criterion (card == chart endpoint).
+    """
+    eq = (exp.get("alpaca") or {}).get("equity")
+    try:
+        return float(eq) if eq is not None else None
+    except (TypeError, ValueError):
+        return None
+
+
 def apply_pushed_equity_history(results: list, portfolio_dir) -> None:
     """Surface each experiment's pushed equity-history curve onto its row.
 

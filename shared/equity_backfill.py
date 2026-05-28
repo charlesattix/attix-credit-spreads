@@ -79,16 +79,25 @@ def backfill_equity_history(
     if not points:
         logger.info("[equity] exp=%s action=backfill source=alpaca points=0 (empty history)", exp_id)
         return 0
+    # Backfill owns PAST days only. TODAY's point is the live current equity
+    # (written by the PositionMonitor cycle / push) — Alpaca's portfolio-history
+    # current-day value lags at the prior close, so never let it overwrite the
+    # live "today" point.
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    past = [p for p in points if p.get("date") != today]
+    if not past:
+        logger.info("[equity] exp=%s action=backfill source=alpaca points=0 (only today, skipped)", exp_id)
+        return 0
     try:
-        bulk_upsert_equity_points(exp_id, points, source="alpaca_backfill", path=db_path)
+        bulk_upsert_equity_points(exp_id, past, source="alpaca_backfill", path=db_path)
     except Exception as e:
         logger.warning("[equity] exp=%s action=backfill_db_failed error=%s", exp_id, e)
         return 0
     logger.info(
-        "[equity] exp=%s action=backfill source=alpaca points=%d range=%s..%s",
-        exp_id, len(points), points[0]["date"], points[-1]["date"],
+        "[equity] exp=%s action=backfill source=alpaca points=%d range=%s..%s (today excluded)",
+        exp_id, len(past), past[0]["date"], past[-1]["date"],
     )
-    return len(points)
+    return len(past)
 
 
 def push_portfolio_snapshot(

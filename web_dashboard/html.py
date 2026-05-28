@@ -7,7 +7,7 @@ import html as _html
 import logging
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
-from .data import STARTING_EQUITY
+from .data import STARTING_EQUITY, current_equity
 
 _NY_TZ = ZoneInfo("America/New_York")
 
@@ -550,12 +550,35 @@ _LEVERAGE_MAP: dict[str, str] = {
 _chart_counter = 0
 
 
+def _build_equity_points(history: list[dict], today_equity: float | None) -> list[dict]:
+    """Final plotted points for the equity chart.
+
+    The last point is ALWAYS the live current equity (``today_equity``) when
+    provided — REPLACING any stale today-dated snapshot (Alpaca portfolio-history
+    lags at the prior close) rather than plotting it. This is what guarantees the
+    chart's endpoint equals the Live Equity card to the dollar: both read the
+    single source of truth ``data.current_equity``.
+    """
+    pts = list(history)
+    if today_equity is None:
+        return pts
+    from datetime import date as _date
+    today_str = _date.today().isoformat()
+    live_point = {"date": today_str, "equity": today_equity}
+    if pts and pts[-1].get("date") == today_str:
+        pts[-1] = live_point
+    else:
+        pts.append(live_point)
+    return pts
+
+
 def _render_equity_chart(history: list[dict], today_equity: float | None = None) -> str:
     """Render an inline SVG sparkline equity chart from alpaca_equity_history.
 
     Args:
         history: list of {"date": "YYYY-MM-DD", "equity": float} from Alpaca portfolio history.
-        today_equity: optional live intraday equity to append as a final "today" point.
+        today_equity: live current equity; becomes the chart's final point so the
+            chart endpoint matches the Live Equity card exactly.
 
     Returns "" when fewer than 2 plottable points are available.
     """
@@ -566,14 +589,8 @@ def _render_equity_chart(history: list[dict], today_equity: float | None = None)
     if len(history) < 2 and today_equity is None:
         return ""
 
-    # Build full point list, appending today if provided.
-    all_points_data = list(history)
+    all_points_data = _build_equity_points(history, today_equity)
     has_today = today_equity is not None
-    if has_today:
-        from datetime import date as _date
-        today_str = _date.today().isoformat()
-        if not all_points_data or all_points_data[-1].get("date") != today_str:
-            all_points_data.append({"date": today_str, "equity": today_equity})
 
     if len(all_points_data) < 2:
         return ""
@@ -753,7 +770,7 @@ def _render_source_badge(s: dict) -> str:
 
 def _render_exp_card(s: dict) -> str:
     alp = s.get("alpaca") or {}
-    equity = alp.get("equity")
+    equity = current_equity(s)   # single source of truth (card AND chart endpoint)
     unrealized_pl = alp.get("unrealized_pl")
     day_pl = alp.get("day_pl")
     cash = alp.get("cash")
