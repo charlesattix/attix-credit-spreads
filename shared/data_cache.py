@@ -93,6 +93,19 @@ class DataCache:
         # Bounded wait for a peer subprocess's in-flight fetch before a loser
         # falls back to a direct fetch (cross-process single-flight).
         self._shared_wait_secs = float(os.environ.get("SHARED_CACHE_WAIT_SECS", "5"))
+        # Experiment id (set per subprocess by railway_worker) for per-experiment
+        # cache observability during the Phase 2 rollout.
+        self._exp_id = os.environ.get("EXPERIMENT_ID", "-")
+
+    def _cache_log(self, ticker: str, outcome: str) -> None:
+        """Emit one greppable, experiment-tagged cache-resolution line.
+
+        Format (stable for log analysis):
+            [cache] exp=<id> ticker=<TICKER> outcome=<outcome>
+        outcomes: l1_hit | shared_fresh | shared_stale | miss_fetch |
+                  peer_wait_hit | wait_timeout_fetch | direct_fetch
+        """
+        logger.info("[cache] exp=%s ticker=%s outcome=%s", self._exp_id, ticker.upper(), outcome)
 
     # ------------------------------------------------------------------
     # Provider
@@ -142,6 +155,7 @@ class DataCache:
                 data, ts = entry
                 if time.time() - ts < self._ttl:
                     metrics.inc("cache_hits")
+                    self._cache_log(key, "l1_hit")
                     return self._slice_to_period(data, period).copy()
 
         metrics.inc("cache_misses")
@@ -156,6 +170,8 @@ class DataCache:
         if self._use_shared:
             data = self._try_shared(ticker, polygon_ticker)
         if data is None:
+            # Flag off, shared cache unavailable, or a shared read error.
+            self._cache_log(ticker, "direct_fetch")
             data = self._fetch_full(ticker, polygon_ticker)
 
         with self._lock:
@@ -229,10 +245,12 @@ class DataCache:
 
         if res.status == Freshness.FRESH:
             metrics.inc("shared_cache_fresh")
+            self._cache_log(ticker, "shared_fresh")
             return res.df
 
         if res.status == Freshness.STALE:
             metrics.inc("shared_cache_stale")
+            self._cache_log(ticker, "shared_stale")
             self._schedule_refresh(ticker, polygon_ticker)
             return res.df  # serve stale immediately; background thread revalidates
 
@@ -263,9 +281,11 @@ class DataCache:
                 try:
                     res = sc.get_bars(ticker)
                     if res.status == Freshness.FRESH and res.df is not None:
+                        self._cache_log(ticker, "shared_fresh")
                         return res.df
                 except SharedCacheError:
                     pass
+                self._cache_log(ticker, "miss_fetch")
                 data = self._fetch_full(ticker, polygon_ticker)
                 try:
                     sc.put_bars(ticker, data)
@@ -288,10 +308,12 @@ class DataCache:
                 break
             if res.status in (Freshness.FRESH, Freshness.STALE) and res.df is not None:
                 metrics.inc("shared_cache_wait_hit")
+                self._cache_log(ticker, "peer_wait_hit")
                 return res.df
 
         # Timed out waiting — fetch directly rather than stall the scan.
         metrics.inc("shared_cache_wait_timeout")
+        self._cache_log(ticker, "wait_timeout_fetch")
         return self._fetch_full(ticker, polygon_ticker)
 
     def _schedule_refresh(self, ticker: str, polygon_ticker: str) -> None:

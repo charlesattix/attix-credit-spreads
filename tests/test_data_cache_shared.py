@@ -233,3 +233,41 @@ def test_loser_times_out_then_falls_back_to_direct_fetch():
     out = dc.get_history("SPY", period="1y")
     assert len(out) == 252
     dc._provider.get_historical.assert_called_once()  # never blocked the scan
+
+
+# ---------------------------------------------------------------------------
+# Phase 2a — experiment-tagged cache observability
+# ---------------------------------------------------------------------------
+
+def test_cache_log_l1_hit_and_direct_fetch(caplog):
+    import logging
+    df = _make_price_df()
+    dc = DataCache(api_key="x")            # flag off
+    dc._provider = _provider_returning(df)
+    with caplog.at_level(logging.INFO, logger="shared.data_cache"):
+        dc.get_history("SPY", period="1y")    # miss -> direct_fetch
+        dc.get_history("SPY", period="6mo")   # in-memory L1 hit
+    msgs = "\n".join(caplog.messages)
+    assert "outcome=direct_fetch" in msgs
+    assert "outcome=l1_hit" in msgs
+    assert "ticker=SPY" in msgs
+
+
+def test_cache_log_tags_experiment_id(monkeypatch, caplog):
+    import logging
+    monkeypatch.setenv("EXPERIMENT_ID", "EXP-3309")
+    dc = DataCache(api_key="x")
+    dc._provider = _provider_returning(_make_price_df())
+    with caplog.at_level(logging.INFO, logger="shared.data_cache"):
+        dc.get_history("SPY", period="1y")
+    assert "exp=EXP-3309" in "\n".join(caplog.messages)
+
+
+def test_cache_log_shared_fresh(caplog):
+    import logging
+    df = _make_price_df()
+    shared = FakeSharedCache(BarResult(Freshness.FRESH, df, 5.0, time.time()))
+    dc = _enabled_dc(shared)
+    with caplog.at_level(logging.INFO, logger="shared.data_cache"):
+        dc.get_history("SPY", period="1y")
+    assert "outcome=shared_fresh" in "\n".join(caplog.messages)

@@ -133,6 +133,16 @@ def build_subprocess_env(exp: dict) -> dict:
         env["ALPACA_API_SECRET"] = railway_secret
         logger.debug("[%s] Using Railway env var ALPACA_API_SECRET_%s", exp_id, suffix)
 
+    # Per-experiment shared-cache flag (Phase 2 rollout): USE_SHARED_CACHE_<SUFFIX>
+    # overrides USE_SHARED_CACHE for THIS subprocess only. All experiments share
+    # one container, so a plain USE_SHARED_CACHE would flip everyone at once; the
+    # suffixed override lets us enable the shared cache one experiment at a time
+    # (e.g. USE_SHARED_CACHE_EXP3309=true). Unset -> inherits the global default.
+    cache_flag = os.environ.get(f"USE_SHARED_CACHE_{suffix}")
+    if cache_flag is not None:
+        env["USE_SHARED_CACHE"] = cache_flag
+        logger.info("[%s] USE_SHARED_CACHE=%s (per-experiment override)", exp_id, cache_flag)
+
     # Identify experiment inside the subprocess (heartbeat, SENTINEL gate)
     env["EXPERIMENT_ID"] = exp_id
 
