@@ -273,27 +273,30 @@ class TestComputeExternalClosePnl:
         assert pnl == pytest.approx(expected)
         assert reason == "expired_itm"
 
-    def test_assignment_returns_none(self):
-        """OASGN (assignment) is too complex to auto-compute — returns None."""
+    def test_assignment_returns_assignment(self):
+        """OASGN (assignment) is genuinely manual — flagged as 'assignment'."""
         trade = {"credit": 1.50, "contracts": 1, "strategy_type": "bull_put"}
         activities = [
             {"activity_type": "OASGN", "net_amount": "-500", "symbol": "SPY260516P00540000", "id": "asgn-1"},
         ]
         pnl, reason, act_id = self.reconciler._compute_external_close_pnl(trade, activities)
         assert pnl is None
-        assert reason is None
+        assert reason == "assignment"   # caller routes this to needs_investigation
         assert act_id == "asgn-1"
 
-    def test_external_fill(self):
-        """Position closed by external fill (someone bought back our legs)."""
-        trade = {"credit": 2.00, "contracts": 1, "strategy_type": "bull_put"}
+    def test_external_fill_defers_to_pending_without_orders(self):
+        """FILL close now values PnL from /v2/orders (Option B). With no orders
+        available it defers to 'pending' rather than fabricating PnL from the
+        activities feed."""
+        trade = {"credit": 2.00, "contracts": 1, "strategy_type": "bull_put",
+                 "ticker": "SPY", "expiration": "2026-05-16",
+                 "short_strike": 540.0, "long_strike": 535.0}
         activities = [
             {"activity_type": "FILL", "net_amount": "-80", "symbol": "SPY260516P00540000", "id": "fill-1"},
         ]
-        pnl, reason, act_id = self.reconciler._compute_external_close_pnl(trade, activities)
-        expected = 2.00 * 1 * 100 + (-80) - _DEFAULT_COMMISSION_PER_CONTRACT * 1 * 2
-        assert pnl == pytest.approx(expected)
-        assert reason == "external_fill"
+        pnl, reason, _ = self.reconciler._compute_external_close_pnl(trade, activities)
+        assert pnl is None
+        assert reason == "pending"
 
     def test_iron_condor_uses_4_legs(self):
         """IC has 4 legs, so commission is doubled."""
@@ -323,17 +326,19 @@ class TestComputeExternalClosePnl:
         assert pnl == pytest.approx(expected)
         assert reason == "expired_worthless"
 
-    def test_multiple_fill_activities(self):
-        """Multiple fills summed together."""
-        trade = {"credit": 1.00, "contracts": 1, "strategy_type": "bull_put"}
+    def test_multiple_fill_activities_defer_to_pending_without_orders(self):
+        """FILL close requires order fills to value PnL (Option B); with none
+        available it defers to 'pending' (no PnL fabricated from activities)."""
+        trade = {"credit": 1.00, "contracts": 1, "strategy_type": "bull_put",
+                 "ticker": "SPY", "expiration": "2026-05-16",
+                 "short_strike": 540.0, "long_strike": 535.0}
         activities = [
             {"activity_type": "FILL", "net_amount": "-30", "symbol": "A", "id": "f1"},
             {"activity_type": "FILL", "net_amount": "-20", "symbol": "B", "id": "f2"},
         ]
-        pnl, reason, act_id = self.reconciler._compute_external_close_pnl(trade, activities)
-        expected = 1.00 * 1 * 100 + (-50) - _DEFAULT_COMMISSION_PER_CONTRACT * 1 * 2
-        assert pnl == pytest.approx(expected)
-        assert reason == "external_fill"
+        pnl, reason, _ = self.reconciler._compute_external_close_pnl(trade, activities)
+        assert pnl is None
+        assert reason == "pending"
 
 
 # ─────────────────────────────────────────────────────────────────────────────

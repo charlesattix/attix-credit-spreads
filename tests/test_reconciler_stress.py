@@ -148,22 +148,22 @@ class TestComputeExternalClosePnl:
         assert reason == "expired_itm"
         assert abs(pnl - (2.50 * 2 * 100 + (-300.0) - expected_comm)) < 0.01
 
-    def test_external_fill_buy_to_close(self):
-        """External close via FILL: debit paid to close."""
+    def test_external_fill_defers_to_pending_without_orders(self):
+        """FILL close now values PnL from /v2/orders (Option B); with no orders
+        available it defers to 'pending' instead of valuing from activities."""
         trade = _make_trade(credit=3.00, contracts=1)
         activities = [{"activity_type": "FILL", "net_amount": "-150.0", "id": "act3", "symbol": "X"}]
         pnl, reason, _ = self.rec._compute_external_close_pnl(trade, activities)
-        expected_comm = _DEFAULT_COMMISSION_PER_CONTRACT * 1 * 2
-        assert reason == "external_fill"
-        assert abs(pnl - (3.00 * 1 * 100 + (-150.0) - expected_comm)) < 0.01
+        assert pnl is None
+        assert reason == "pending"
 
-    def test_assignment_returns_none(self):
-        """OASGN is too complex — must return None for manual review."""
+    def test_assignment_returns_assignment(self):
+        """OASGN is genuinely manual — flagged 'assignment' (→ needs_investigation)."""
         trade = _make_trade()
         activities = [{"activity_type": "OASGN", "id": "act4", "symbol": "X"}]
         pnl, reason, act_id = self.rec._compute_external_close_pnl(trade, activities)
         assert pnl is None
-        assert reason is None
+        assert reason == "assignment"
         assert act_id == "act4"
 
     def test_zero_credit_expired_worthless(self):
@@ -481,7 +481,9 @@ class TestOrphanDetection:
 class TestPhantomDetection:
     def test_phantom_with_no_activities_marks_investigation(self, mock_alpaca, mock_db_funcs):
         """Open trade whose legs are missing from Alpaca with no activity → needs_investigation."""
-        trade = _make_trade(status="open")
+        # Far-future expiration so this exercises the no-activity Step-3 path
+        # deterministically (not the expired-estimate fallback) regardless of date.
+        trade = _make_trade(status="open", exp="2099-12-18")
         mock_db_funcs["get_trades"].return_value = [trade]
         mock_alpaca.get_account_activities.return_value = []
 
@@ -582,8 +584,10 @@ class TestActivityReconciliation:
 
         assert result.phantom_resolved == 1  # marked needs_investigation
         assert result.externally_closed == 0  # NOT auto-closed
-        upserted = mock_db_funcs["upsert_trade"].call_args[0][0]
-        assert upserted["status"] == "needs_investigation"
+        mock_db_funcs["close_trade"].assert_not_called()
+        # Marking now goes through set_reconcile_state + a needs_investigation event.
+        event_types = [c.args[1] for c in mock_db_funcs["insert_event"].call_args_list]
+        assert "needs_investigation" in event_types
 
     def test_activity_api_failure_does_not_crash(self, mock_alpaca, mock_db_funcs):
         """If get_account_activities raises, it should be caught gracefully."""

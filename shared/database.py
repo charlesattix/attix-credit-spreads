@@ -185,6 +185,9 @@ def init_db(path: Optional[str] = None) -> None:
             "ALTER TABLE trades ADD COLUMN alpaca_client_order_id TEXT",
             "ALTER TABLE trades ADD COLUMN alpaca_fill_price REAL",
             "ALTER TABLE trades ADD COLUMN alpaca_status TEXT",
+            # Reconciler fills-based-PnL rollout: bounded retry counter for the
+            # 'pending_reconciliation' state (default 0).
+            "ALTER TABLE trades ADD COLUMN retry_count INTEGER DEFAULT 0",
             # Bug #2: existing DBs may have alert_dedup without direction column
             "ALTER TABLE alert_dedup ADD COLUMN direction TEXT DEFAULT ''",
             # C1 fix: existing DBs may have alert_dedup without alert_type column
@@ -387,6 +390,41 @@ def close_trade(
             alpaca_close_activity_id,
             trade_id,
         ))
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def set_reconcile_state(
+    trade_id: str,
+    status: str,
+    retry_count: Optional[int] = None,
+    exit_reason: Optional[str] = None,
+    path: Optional[str] = None,
+) -> None:
+    """Update a trade's reconciliation state without touching close fields.
+
+    Used by the reconciler for the ``pending_reconciliation`` /
+    ``needs_investigation`` transitions: sets ``status`` (and optionally
+    ``retry_count`` and ``exit_reason``) via a direct UPDATE so the real
+    ``retry_count`` column stays authoritative (``upsert_trade`` would route it
+    into the metadata blob instead).
+    """
+    conn = get_db(path)
+    try:
+        if retry_count is None:
+            conn.execute(
+                "UPDATE trades SET status=?, exit_reason=COALESCE(?, exit_reason), "
+                "updated_at=datetime('now') WHERE id=?",
+                (status, exit_reason, trade_id),
+            )
+        else:
+            conn.execute(
+                "UPDATE trades SET status=?, retry_count=?, "
+                "exit_reason=COALESCE(?, exit_reason), updated_at=datetime('now') "
+                "WHERE id=?",
+                (status, int(retry_count), exit_reason, trade_id),
+            )
         conn.commit()
     finally:
         conn.close()

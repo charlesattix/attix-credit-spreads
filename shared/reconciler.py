@@ -71,6 +71,12 @@ _DEFAULT_COMMISSION_PER_CONTRACT = 0.65
 # /Users/charlesbot/.openclaw/workspace/reports/orphan-spreads-root-cause-2026-05-02.html
 ENTRY_FILL_GRACE_SECONDS = 90
 
+# Fills-based-PnL reconciliation (Option B + D):
+PENDING_RECONCILIATION = "pending_reconciliation"   # retryable intermediate state
+NEEDS_INVESTIGATION = "needs_investigation"
+MAX_RECONCILE_RETRIES = 5            # escalate pending → needs_investigation after this
+_ORDERS_FETCH_LIMIT = 500            # how many recent orders to scan for close fills
+
 
 class ReconciliationResult:
     """Summary of what the reconciler did in one pass."""
@@ -207,6 +213,7 @@ class PositionReconciler:
         if alpaca_positions is not None:
             self._reconcile_open_positions(result, alpaca_positions)
             self._detect_orphan_positions(result, alpaca_positions)
+            self._resolve_stuck_trades(result, alpaca_positions)
 
         if result:
             logger.info("Tier2 reconciliation: %s", result)
@@ -245,6 +252,7 @@ class PositionReconciler:
         if alpaca_positions is not None:
             self._reconcile_open_positions(result, alpaca_positions)
             self._detect_orphan_positions(result, alpaca_positions)
+            self._resolve_stuck_trades(result, alpaca_positions)
 
         self._save_last_eod_run()
         logger.info("EOD reconciliation complete: %s", result)
@@ -281,6 +289,7 @@ class PositionReconciler:
         if alpaca_positions is not None:
             self._reconcile_open_positions(result, alpaca_positions)
             self._detect_orphan_positions(result, alpaca_positions)
+            self._resolve_stuck_trades(result, alpaca_positions)
 
         self._save_last_morning_run()
         logger.info("Morning reconciliation complete: %s", result)
@@ -322,6 +331,8 @@ class PositionReconciler:
 
             # Step 5: promote needs_investigation → open when Alpaca confirms legs exist
             self._promote_investigation_trades(result, alpaca_positions)
+            # Step 6: self-heal stuck pending/needs_investigation closes from fills
+            self._resolve_stuck_trades(result, alpaca_positions)
 
         if result:
             logger.info("Reconciliation complete: %s", result)
@@ -444,8 +455,12 @@ class PositionReconciler:
             Updates scanner_state["last_activity_check"] watermark.
         """
         from shared.database import (
-            close_trade, get_trades, insert_reconciliation_event,
-            load_scanner_state, save_scanner_state, upsert_trade,
+            close_trade,
+            get_trades,
+            insert_reconciliation_event,
+            load_scanner_state,
+            save_scanner_state,
+            set_reconcile_state,
         )
 
         now_iso = datetime.now(timezone.utc).isoformat()
@@ -526,10 +541,15 @@ class PositionReconciler:
             if not trade_activities:
                 continue
 
-            # Compute PnL and close the trade
+            # Classify the close. close_reason ∈ {expired_*/external_fill (with
+            # pnl) | "pending" (defer+retry) | "assignment" (manual) | None}.
             pnl, close_reason, activity_id = self._compute_external_close_pnl(
                 trade, trade_activities
             )
+            pnl_source = "fills" if close_reason == "external_fill" else (
+                "expiration" if close_reason and close_reason.startswith("expired") else "unknown"
+            )
+
             if pnl is not None and close_reason:
                 try:
                     close_trade(
@@ -540,55 +560,84 @@ class PositionReconciler:
                     )
                     insert_reconciliation_event(
                         trade_id, f"activity_close:{close_reason}",
-                        {
-                            "pnl": pnl,
-                            "close_reason": close_reason,
-                            "activity_id": activity_id,
-                            "activity_count": len(trade_activities),
-                        },
+                        {"pnl": pnl, "close_reason": close_reason,
+                         "pnl_source": pnl_source, "activity_id": activity_id,
+                         "activity_count": len(trade_activities)},
                         self.db_path,
                     )
                     result.externally_closed += 1
                     result.activities_processed += len(trade_activities)
                     processed_ids.add(trade_id)
-                    logger.info(
-                        "Reconciler: %s closed via %s activity — pnl=%.2f",
-                        trade_id, close_reason, pnl,
-                    )
+                    self._recon_log(trade_id, close_reason, pnl_source, "closed", pnl=pnl)
                 except Exception as e:
                     logger.error(
                         "Reconciler: close_trade failed for %s (activity): %s", trade_id, e
                     )
                     result.errors.append(f"activity_close_fail:{trade_id}")
-            else:
-                # OASGN or ambiguous — can't auto-compute PnL safely; flag for review
-                logger.warning(
-                    "Reconciler: %s has close activity (%d events) but PnL is "
-                    "undetermined — marking needs_investigation",
-                    trade_id, len(trade_activities),
+            elif close_reason == "pending":
+                # Option D: close fills not all visible yet (e.g. /v2/positions or
+                # the activities feed lagging) — defer to a retryable state rather
+                # than the terminal needs_investigation. The self-heal sweep
+                # retries each cycle and closes once the fills land.
+                self._mark_pending_or_escalate(trade, result, reason="awaiting_close_fills")
+                processed_ids.add(trade_id)
+            elif close_reason == "assignment":
+                # Assignment genuinely needs manual reconciliation.
+                set_reconcile_state(trade_id, NEEDS_INVESTIGATION,
+                                    exit_reason="assignment", path=self.db_path)
+                insert_reconciliation_event(
+                    trade_id, "needs_investigation",
+                    {"reason": "assignment", "activity_count": len(trade_activities)},
+                    self.db_path,
                 )
-                trade["status"] = "needs_investigation"
-                trade["exit_reason"] = "activity_undetermined_pnl"
-                try:
-                    upsert_trade(trade, source="reconciler", path=self.db_path)
-                    insert_reconciliation_event(
-                        trade_id, "needs_investigation",
-                        {
-                            "reason": "activity_undetermined_pnl",
-                            "activity_count": len(trade_activities),
-                        },
-                        self.db_path,
-                    )
-                    result.phantom_resolved += 1
-                    processed_ids.add(trade_id)
-                except Exception as e:
-                    logger.error(
-                        "Reconciler: DB write failed for activity-investigation %s: %s",
-                        trade_id, e,
-                    )
-                    result.errors.append(f"activity_investigation_fail:{trade_id}")
+                result.phantom_resolved += 1
+                processed_ids.add(trade_id)
+                self._recon_log(trade_id, NEEDS_INVESTIGATION, "unknown", "needs_investigation")
+            # else: nothing matched this trade — skip (re-evaluated next cycle).
 
         save_scanner_state("last_activity_check", now_iso, path=self.db_path)
+
+    # ------------------------------------------------------------------
+    # Pending-reconciliation state machine (Option D)
+    # ------------------------------------------------------------------
+
+    def _recon_log(self, trade_id: str, status: str, pnl_source: str,
+                   action: str, pnl: Optional[float] = None) -> None:
+        """Greppable per-attempt reconciliation log line."""
+        pnl_str = f"{pnl:.2f}" if pnl is not None else "n/a"
+        logger.info(
+            "[reconcile] trade=%s status=%s pnl_source=%s action=%s pnl=%s",
+            trade_id, status, pnl_source, action, pnl_str,
+        )
+
+    def _mark_pending_or_escalate(
+        self, trade: Dict, result: ReconciliationResult, reason: str
+    ) -> None:
+        """Set ``pending_reconciliation`` (incrementing retry_count) or, once
+        retries exceed ``MAX_RECONCILE_RETRIES``, escalate to
+        ``needs_investigation``.
+        """
+        from shared.database import insert_reconciliation_event, set_reconcile_state
+
+        trade_id = trade.get("id", "?")
+        retry = int(trade.get("retry_count", 0) or 0) + 1
+        if retry > MAX_RECONCILE_RETRIES:
+            set_reconcile_state(trade_id, NEEDS_INVESTIGATION,
+                                retry_count=retry, exit_reason=reason, path=self.db_path)
+            insert_reconciliation_event(
+                trade_id, "needs_investigation",
+                {"reason": f"max_retries:{reason}", "retry_count": retry}, self.db_path,
+            )
+            result.phantom_resolved += 1
+            self._recon_log(trade_id, NEEDS_INVESTIGATION, "unknown", "escalated")
+        else:
+            set_reconcile_state(trade_id, PENDING_RECONCILIATION,
+                                retry_count=retry, exit_reason=reason, path=self.db_path)
+            insert_reconciliation_event(
+                trade_id, "pending_reconciliation",
+                {"reason": reason, "retry_count": retry}, self.db_path,
+            )
+            self._recon_log(trade_id, PENDING_RECONCILIATION, "unknown", f"retry_{retry}")
 
     def _compute_external_close_pnl(
         self, trade: Dict, activities: List[Dict]
@@ -633,9 +682,9 @@ class PositionReconciler:
         # for those.
         fill_acts = self._filter_close_fills(trade, raw_fill_acts)
 
-        # OASGN (assignment): too complex to auto-compute — return None
+        # OASGN (assignment): too complex to auto-compute — genuinely manual.
         if oasgn_acts:
-            return None, None, oasgn_acts[0].get("id")
+            return None, "assignment", oasgn_acts[0].get("id")
 
         # OPEXP (expiration): one or more legs expired
         if opexp_acts:
@@ -650,30 +699,122 @@ class PositionReconciler:
                 pnl = credit * contracts * 100 + total_net - entry_comm
                 return pnl, "expired_itm", primary_id
 
-        # FILL (external close by someone buying/selling our legs)
+        # FILL (external close by someone buying/selling our legs).
+        # Option B: value the close from ORDER fills (avg_fill_price × side × qty
+        # × 100) — NOT gated on /v2/positions propagation. If every leg has a
+        # filled closing order we compute PnL immediately, even while
+        # /v2/positions still lags. If the closing fills aren't all visible yet,
+        # signal 'pending' so the caller defers and retries (Option D) instead
+        # of terminally marking needs_investigation.
         if fill_acts:
-            # Paranoid double-check: if any leg is still listed in /v2/positions,
-            # the FILL we matched cannot have been a closing fill — refuse to
-            # classify as external_fill rather than corrupt the trade row.
-            if self._trade_legs_still_open(trade):
-                logger.warning(
-                    "Reconciler: %s has close-eligible FILL activity but legs "
-                    "still appear in /v2/positions — aborting external_fill "
-                    "classification (possible missed entry fill in filter)",
-                    trade.get("id", "?"),
-                )
-                return None, None, None
-
-            # net_amount for closing fills: negative means we paid (bought back)
-            total_net = sum(float(a.get("net_amount") or 0) for a in fill_acts)
-            primary_id = fill_acts[0].get("id")
-            # total_net is the net dollar flow from the close transaction
-            # For a credit spread bought back: total_net < 0 (we paid the debit)
-            # pnl = original_credit_received + net_amount_from_close
-            pnl = credit * contracts * 100 + total_net - entry_comm
-            return pnl, "external_fill", primary_id
+            orders_pnl = self._compute_close_pnl_from_orders(trade)
+            if orders_pnl is not None:
+                pnl, primary_order_id = orders_pnl
+                return pnl, "external_fill", primary_order_id
+            return None, "pending", None
 
         return None, None, None
+
+    # ------------------------------------------------------------------
+    # Option B — fills-based PnL from /v2/orders
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _order_symbols(order: Dict) -> set:
+        """OCC symbols an order touches (its legs, or its own symbol if simple)."""
+        legs = order.get("legs") or []
+        if legs:
+            return {leg.get("symbol") for leg in legs if leg.get("symbol")}
+        sym = order.get("symbol")
+        return {sym} if sym else set()
+
+    def _compute_close_pnl_from_orders(
+        self, trade: Dict
+    ) -> Optional[Tuple[float, Optional[str]]]:
+        """Realised PnL for a closed credit spread, valued from order fills.
+
+        Returns ``(pnl_dollars, primary_close_order_id)`` once **every** expected
+        leg has a filled closing order, else ``None`` (not yet determinable →
+        caller should defer/retry). Position-endpoint independent.
+
+        PnL = entry_credit_received
+              + Σ_closing_legs(sign(side) · filled_avg_price · qty · 100)
+              − round-trip commission
+        where sign(sell)=+1 (cash in), sign(buy)=−1 (cash out).
+        """
+        ticker = trade.get("ticker", "")
+        exp = str(trade.get("expiration", "")).split(" ")[0]
+        spread_type = str(trade.get("strategy_type", trade.get("type", ""))).lower()
+        if not ticker or not exp:
+            return None
+        try:
+            expected = set(self._expected_symbols(trade, ticker, exp, spread_type))
+        except Exception:
+            return None
+        if not expected:
+            return None
+
+        try:
+            orders = self.alpaca.get_orders(status="all", limit=_ORDERS_FETCH_LIMIT)
+        except Exception as e:
+            logger.debug("Reconciler: orders fetch for PnL failed (%s)", e)
+            return None
+        if not isinstance(orders, list):
+            return None
+
+        entry_dt = self._parse_iso(trade.get("entry_date"))
+        grace_cutoff = (
+            entry_dt + timedelta(seconds=ENTRY_FILL_GRACE_SECONDS)
+            if entry_dt is not None else None
+        )
+
+        close_cash = 0.0
+        legs_closed: set = set()
+        primary_order_id: Optional[str] = None
+
+        for o in orders:
+            if str(o.get("status", "")).lower() != "filled":
+                continue
+            match = self._order_symbols(o) & expected
+            if not match:
+                continue
+            # Skip the trade's own entry fills (within the grace window).
+            filled_at = self._parse_iso(o.get("filled_at"))
+            if grace_cutoff is not None and filled_at is not None and filled_at < grace_cutoff:
+                continue
+
+            price = self._to_float(o.get("filled_avg_price"))
+            qty = self._to_float(o.get("qty"))
+            side = str(o.get("side") or "").lower()
+            sign = 1.0 if "sell" in side else (-1.0 if "buy" in side else 0.0)
+            if price is None or qty is None or sign == 0.0:
+                # A matched closing order we cannot value yet → not determinable.
+                return None
+
+            close_cash += sign * price * qty * 100.0
+            legs_closed |= match
+            if primary_order_id is None:
+                primary_order_id = o.get("id")
+
+        # Require a filled closing order for EVERY expected leg.
+        if not expected.issubset(legs_closed):
+            return None
+
+        credit = float(trade.get("credit") or 0)
+        contracts = int(trade.get("contracts", 1) or 1)
+        num_legs = 4 if "condor" in spread_type else 2
+        roundtrip_comm = self._entry_commission(contracts, num_legs) * 2.0
+        pnl = credit * contracts * 100.0 + close_cash - roundtrip_comm
+        return pnl, primary_order_id
+
+    @staticmethod
+    def _to_float(value) -> Optional[float]:
+        if value is None:
+            return None
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return None
 
     def _filter_close_fills(
         self, trade: Dict, fills: List[Dict]
@@ -832,11 +973,15 @@ class PositionReconciler:
 
         Idempotent: only processes trades still in 'open' status.
         """
+        import json
+
         from shared.database import (
-            close_trade, get_db, get_trades, insert_reconciliation_event,
+            close_trade,
+            get_db,
+            get_trades,
+            insert_reconciliation_event,
             upsert_trade,
         )
-        import json
 
         open_trades = get_trades(status="open", path=self.db_path)
         if not open_trades:
@@ -1211,6 +1356,74 @@ class PositionReconciler:
                     upsert_trade(trade, source="execution", path=self.db_path)
                 except Exception as e:
                     logger.error("Reconciler: failed to promote %s: %s", trade_id, e)
+
+    def _resolve_stuck_trades(
+        self, result: ReconciliationResult, alpaca_positions: Dict
+    ) -> None:
+        """Self-heal sweep (Option D): close stuck pending_reconciliation /
+        needs_investigation trades whose legs are gone, valuing them from order
+        fills. Runs every reconcile cycle, so a transient propagation lag (the
+        EXP-3303B race) auto-recovers on the next pass with no manual action.
+
+        - legs absent from /v2/positions + closing fills present → close (fills PnL)
+        - legs absent but no closing fills → advance retry / escalate (pending only)
+        - legs present → genuinely open; left to _promote_investigation_trades
+        - exit_reason == 'assignment' → skipped (genuine manual case)
+        """
+        from shared.database import close_trade, get_trades, insert_reconciliation_event
+
+        stuck = (
+            get_trades(status=PENDING_RECONCILIATION, path=self.db_path)
+            + get_trades(status=NEEDS_INVESTIGATION, path=self.db_path)
+        )
+        if not stuck:
+            return
+
+        held = set(alpaca_positions.keys()) if isinstance(alpaca_positions, dict) else set()
+
+        for trade in stuck:
+            trade_id = trade.get("id", "?")
+            if str(trade.get("exit_reason") or "") == "assignment":
+                continue  # assignments require manual reconciliation
+
+            ticker = trade.get("ticker", "")
+            exp = str(trade.get("expiration", "")).split(" ")[0]
+            spread_type = str(trade.get("strategy_type", trade.get("type", ""))).lower()
+            try:
+                expected = set(self._expected_symbols(trade, ticker, exp, spread_type))
+            except Exception:
+                expected = set()
+
+            if expected & held:
+                # Legs still live — genuinely open, not a stuck close.
+                continue
+
+            orders_pnl = self._compute_close_pnl_from_orders(trade)
+            if orders_pnl is not None:
+                pnl, oid = orders_pnl
+                try:
+                    close_trade(
+                        trade_id, pnl, "external_fill", path=self.db_path,
+                        close_source="external_fill", alpaca_close_activity_id=oid,
+                    )
+                    insert_reconciliation_event(
+                        trade_id, "self_heal_close",
+                        {"pnl": pnl, "pnl_source": "fills",
+                         "prior_status": trade.get("status")},
+                        self.db_path,
+                    )
+                    result.externally_closed += 1
+                    self._recon_log(trade_id, "external_fill", "fills",
+                                    "self_heal_close", pnl=pnl)
+                except Exception as e:
+                    logger.error("Reconciler: self-heal close failed for %s: %s", trade_id, e)
+                    result.errors.append(f"self_heal_fail:{trade_id}")
+            elif str(trade.get("status")) == PENDING_RECONCILIATION:
+                # Still can't value it — advance the retry counter / escalate.
+                self._mark_pending_or_escalate(trade, result, reason="legs_gone_no_close_fills")
+            else:
+                # needs_investigation with no determinable fills → leave for manual.
+                self._recon_log(trade_id, NEEDS_INVESTIGATION, "unknown", "unresolved")
 
     def _detect_orphan_positions(
         self, result: ReconciliationResult, alpaca_positions: Dict
