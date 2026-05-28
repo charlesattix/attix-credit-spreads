@@ -33,7 +33,7 @@ export default function PaperTradingPage() {
     <div className="min-h-screen bg-[#FAF9FB] flex items-center justify-center">
       <div className="text-center">
         <p className="text-red-500 font-medium">Failed to load experiments</p>
-        <p className="text-gray-400 text-sm mt-1">Run sync_dashboard_data.py --push on the Mac</p>
+        <p className="text-gray-400 text-sm mt-1">Could not reach the Attix API — check connectivity</p>
         <button onClick={() => mutate()} className="mt-3 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[#9B6DFF]">
           Retry
         </button>
