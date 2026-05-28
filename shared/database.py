@@ -442,6 +442,46 @@ def upsert_equity_point(
         conn.close()
 
 
+def bulk_upsert_equity_points(
+    exp_id: str,
+    points: List[Dict[str, Any]],
+    source: str = "alpaca_backfill",
+    path: Optional[str] = None,
+) -> int:
+    """Idempotent bulk upsert of daily equity points (by exp_id + date).
+
+    ``points`` is ``[{"date","equity","profit_loss"}, ...]`` (the
+    portfolio-history / get_equity_history shape). Re-running never duplicates —
+    each (exp_id, date) is overwritten. Returns the number of points written.
+    """
+    if not points:
+        return 0
+    conn = get_db(path)
+    try:
+        conn.executemany(
+            """
+            INSERT INTO equity_history
+                (exp_id, as_of_date, equity, realized_pnl, unrealized_pnl, source, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+            ON CONFLICT(exp_id, as_of_date) DO UPDATE SET
+                equity=excluded.equity,
+                realized_pnl=excluded.realized_pnl,
+                source=excluded.source,
+                updated_at=datetime('now')
+            """,
+            [
+                (exp_id, p["date"], float(p["equity"]),
+                 (p.get("profit_loss") if p.get("profit_loss") is not None else None),
+                 None, source)
+                for p in points if p.get("date") and p.get("equity") is not None
+            ],
+        )
+        conn.commit()
+    finally:
+        conn.close()
+    return len(points)
+
+
 def get_equity_history(
     exp_id: Optional[str] = None,
     limit: int = 365,

@@ -62,6 +62,11 @@ _CHECK_INTERVAL_SECONDS = 60
 # Tier 2: minimum interval between full position-check cycles (seconds)
 _TIER2_INTERVAL_SECONDS = 300  # 5 minutes
 
+# Equity-curve refresh: backfill from Alpaca + push to the dashboard. Runs every
+# cycle BEFORE the market-hours gate (so it works evenings/weekends/pre-open),
+# throttled to this interval. Idempotent.
+_EQUITY_REFRESH_INTERVAL_SECONDS = 3600  # hourly
+
 # Tier 3 EOD reconciliation window: 16:15–16:30 ET (runs once per day)
 _EOD_RECONCILE_HOUR_ET = 16
 _EOD_RECONCILE_MIN_ET = 15
@@ -233,6 +238,9 @@ class PositionMonitor:
         self.manage_dte = int(strategy.get("manage_dte", 0))  # 0 = disabled (matches backtester: no DTE exit)
         # Tracks consecutive Alpaca API failures for escalation alerting
         self._consecutive_api_failures = 0
+        # Equity-curve backfill+push throttle (runs 24/7, independent of market
+        # hours, so the dashboard chart shows inception→now and never blanks).
+        self._last_equity_refresh: Optional[float] = None
 
         # Three-tier reconciliation scheduling
         # _last_tier2_run: wall-clock time of the last Tier 2 (full position check) run
@@ -262,6 +270,8 @@ class PositionMonitor:
             self.manage_dte if self.manage_dte > 0 else "disabled",
         )
         self._startup_reconciliation()
+        # On startup (every deploy/restart) seed the chart immediately, off-hours OK.
+        self._maybe_refresh_equity(force=True)
         while not self._stop_event.is_set():
             try:
                 self._check_positions()
@@ -453,6 +463,25 @@ class PositionMonitor:
         except Exception as e:
             logger.warning("[equity] exp=%s action=skipped error=%s", exp_id, e)
 
+    def _maybe_refresh_equity(self, force: bool = False) -> None:
+        """Backfill the inception→now equity curve from Alpaca + push it to the
+        dashboard, throttled hourly. Runs **regardless of market hours** so the
+        chart is populated and never blanks evenings/weekends/pre-open. Idempotent
+        and best-effort — never disrupts the monitoring loop.
+        """
+        import time
+        now = time.monotonic()
+        if (not force and self._last_equity_refresh is not None
+                and (now - self._last_equity_refresh) < _EQUITY_REFRESH_INTERVAL_SECONDS):
+            return
+        self._last_equity_refresh = now
+        try:
+            from shared.equity_backfill import refresh_and_push
+            exp_id = os.environ.get("EXPERIMENT_ID", "-")
+            refresh_and_push(exp_id, self.db_path)
+        except Exception as e:
+            logger.warning("[equity] refresh_and_push failed: %s", e)
+
     def _realized_pnl_to_date(self) -> Optional[float]:
         """Cumulative realized P&L from closed trades (best-effort)."""
         try:
@@ -491,6 +520,10 @@ class PositionMonitor:
         """
         now_et = datetime.now(_ET)
         date_str = now_et.strftime("%Y-%m-%d")
+
+        # Equity-curve refresh runs FIRST, before any market-hours gate, so the
+        # dashboard chart stays populated 24/7 (throttled hourly, idempotent).
+        self._maybe_refresh_equity()
 
         # Tier 3 EOD: runs outside normal market hours — check first
         if self._should_run_eod(now_et, date_str):
