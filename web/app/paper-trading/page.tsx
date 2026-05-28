@@ -43,6 +43,15 @@ export default function PaperTradingPage() {
 
   const s = data.summary
   const starting = data.starting_equity ?? 100_000
+
+  const lastVerifiedStr = (() => {
+    const ts = data.last_verified_at
+    if (!ts) return null
+    const d = new Date(ts)
+    const datePart = d.toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'America/New_York' })
+    const timePart = d.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/New_York' })
+    return `${datePart} ${timePart} ET`
+  })()
   const combinedReturn = s.combined_equity
     ? ((s.combined_equity - starting * data.experiments.length) / (starting * data.experiments.length)) * 100
     : null
@@ -60,6 +69,9 @@ export default function PaperTradingPage() {
               {data.experiments.length} experiments · as of {new Date(data.generated_at).toLocaleString()}
               {stale && <span className="ml-2 text-amber-500">(data may be stale)</span>}
             </p>
+            {lastVerifiedStr && (
+              <p className="text-xs text-gray-400 mt-0.5">Last verified: {lastVerifiedStr}</p>
+            )}
           </div>
           <button onClick={() => mutate()}
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-white transition bg-gradient-brand">

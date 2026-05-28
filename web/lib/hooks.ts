@@ -146,6 +146,7 @@ export interface ExperimentData {
 export interface ExperimentsExport {
   schema_version: string
   generated_at: string
+  last_verified_at?: string
   generated_epoch: number
   report_date: string
   starting_equity: number

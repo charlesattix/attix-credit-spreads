@@ -58,8 +58,11 @@ function buildEquityCurve(
 /** Sum unrealized_pl across all position legs. */
 function sumUnrealizedPl(positionsPayload: unknown): number {
   const raw  = (positionsPayload as Record<string, unknown>)
-  const list = (raw?.positions ?? raw ?? []) as PositionRecord[]
-  return list.reduce((sum, p) => sum + ((p.unrealized_pl ?? p.unrealized_pnl ?? 0) as number), 0)
+  const list = (Array.isArray(raw) ? raw : (raw?.positions ?? [])) as PositionRecord[]
+  return list.reduce((sum, p) => {
+    const val = p.unrealized_pl ?? p.unrealized_pnl ?? p.unrealized_p_l ?? 0
+    return sum + Number(val)
+  }, 0)
 }
 
 export async function GET() {
@@ -181,9 +184,16 @@ export async function GET() {
   // ── Build ExperimentsExport payload ────────────────────────────────────
   const generatedAt = (summary.generated_at as string) ?? new Date().toISOString()
 
+  const lastVerifiedAt = experiments
+    .map(e => e.alpaca?.fetched_at)
+    .filter(Boolean)
+    .sort()
+    .at(-1) ?? generatedAt
+
   const payload = {
     schema_version:  (experimentsPayload.schema_version as string) ?? '3.0',
     generated_at:    generatedAt,
+    last_verified_at: lastVerifiedAt,
     generated_epoch: Math.floor(new Date(generatedAt).getTime() / 1000),
     report_date:     generatedAt.slice(0, 10),
     starting_equity: 100_000,
