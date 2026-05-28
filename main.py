@@ -1282,6 +1282,17 @@ Examples:
                         _account = _req.get(f"{_alpaca_base}/v2/account", headers=_alpaca_headers, timeout=5).json()
                         _positions = _req.get(f"{_alpaca_base}/v2/positions", headers=_alpaca_headers, timeout=5).json()
                         _orders = _req.get(f"{_alpaca_base}/v2/orders?status=open&limit=50", headers=_alpaca_headers, timeout=5).json()
+                        # PR2: include the durable equity curve the PositionMonitor
+                        # scan persists to this experiment's DB, so the dashboard
+                        # (a separate service/volume) can render the accruing chart.
+                        try:
+                            from shared.database import get_equity_history
+                            _eq_history = get_equity_history(
+                                _exp_id, limit=365,
+                                path=os.environ.get("ATTIX_DB_PATH"),
+                            )
+                        except Exception:
+                            _eq_history = []
                         _req.post(
                             f"{_base.rstrip('/')}/api/v1/experiments/{_exp_id}/push-portfolio",
                             json={
@@ -1291,6 +1302,7 @@ Examples:
                                 "unrealized_pl": float(_account.get("unrealized_pl") or 0),
                                 "positions": _positions if isinstance(_positions, list) else [],
                                 "orders": _orders if isinstance(_orders, list) else [],
+                                "equity_history": _eq_history,
                             },
                             headers={"X-API-Key": _api_key},
                             timeout=5,
