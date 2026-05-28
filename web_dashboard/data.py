@@ -502,9 +502,15 @@ def query_all_live(report_date: Optional[str] = None) -> List[dict]:
             portfolio_path = _portfolio_dir / f"{norm_id}.json"
             if portfolio_path.exists():
                 try:
-                    r["alpaca"] = json.loads(portfolio_path.read_text())
+                    _portfolio = json.loads(portfolio_path.read_text())
+                    r["alpaca"] = _portfolio
                     r["data_source"] = "local-db"
                     r["_portfolio_path"] = portfolio_path
+                    # PR2: the worker now pushes the durable equity curve
+                    # (PositionMonitor scan → equity_history) inside the
+                    # portfolio snapshot. Surface it as the chart's source field.
+                    if not r.get("alpaca_equity_history") and _portfolio.get("equity_history"):
+                        r["alpaca_equity_history"] = _portfolio["equity_history"]
                 except Exception:
                     pass
 
