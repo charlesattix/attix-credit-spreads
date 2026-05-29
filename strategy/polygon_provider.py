@@ -26,6 +26,12 @@ logger = logging.getLogger(__name__)
 BASE_URL = "https://api.polygon.io"
 MAX_PAGES = 50
 
+# Endpoint path markers that require the options-entitlement key. Matched as
+# substrings so both relative paths ("/v3/snapshot/options/SPY") and full
+# pagination URLs ("https://api.polygon.io/v3/snapshot/options/SPY?cursor=…")
+# route to the options key.
+_OPTIONS_PATH_MARKERS = ("/v3/snapshot/options", "/v3/reference/options", "/v2/snapshot/options")
+
 
 class PolygonProvider:
     """Options and stock data via Polygon.io API."""
@@ -34,6 +40,10 @@ class PolygonProvider:
         if not api_key:
             raise ValueError("api_key must be a non-empty string")
         self.api_key = api_key
+        # Options endpoints (chains/contracts) route to a dedicated options-
+        # entitlement key when POLYGON_OPTIONS_API_KEY is set; otherwise fall
+        # back to the stocks key (backward compatible). Aggregates keep api_key.
+        self.options_api_key = os.getenv("POLYGON_OPTIONS_API_KEY") or api_key
         self.base_url = BASE_URL
         self.session = requests.Session()
         # 429-aware retry: honour Polygon's Retry-After header (good citizenship
@@ -75,12 +85,21 @@ class PolygonProvider:
                 time.sleep(self._min_call_interval - elapsed)
             self._last_call_time = time.monotonic()
 
+    def _key_for_path(self, path_or_url: str) -> str:
+        """Pick the Polygon API key for an endpoint: options chains/contracts use
+        the options-entitlement key (POLYGON_OPTIONS_API_KEY, falling back to the
+        stocks key); everything else (aggregates) uses the stocks key. Accepts a
+        relative path or a full pagination URL."""
+        if any(m in path_or_url for m in _OPTIONS_PATH_MARKERS):
+            return self.options_api_key
+        return self.api_key
+
     def _get(self, path: str, params: Optional[Dict] = None, timeout: int = 10) -> Dict:
         """Make authenticated GET request with rate limiting."""
         def _do_request():
             self._rate_limit()
             p = (params or {}).copy()
-            p["apiKey"] = self.api_key
+            p["apiKey"] = self._key_for_path(path)
             url = f"{self.base_url}{path}"
             try:
                 resp = self.session.get(url, params=p, timeout=timeout)
@@ -94,7 +113,7 @@ class PolygonProvider:
         """Fetch a pagination URL through the circuit breaker."""
         def _do_request():
             try:
-                resp = self.session.get(next_url, params={"apiKey": self.api_key}, timeout=timeout)
+                resp = self.session.get(next_url, params={"apiKey": self._key_for_path(next_url)}, timeout=timeout)
                 resp.raise_for_status()
             except requests.exceptions.RequestException as e:
                 raise ProviderError(f"Polygon API pagination request failed: {e}") from e
