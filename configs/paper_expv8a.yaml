@@ -200,18 +200,22 @@ backtest:
 # When enabled, the scheduler routes to compass.live.vrp_runner.run_vrp_cycle
 # (the live counterpart of compass/exp2850) instead of the legacy champion scan.
 #
-# Ships DISABLED + DRY-RUN. The Champion→VRP flip is a deliberate two-line
-# toggle (enabled: true, dry_run: false) performed ONLY AFTER the open champion
-# positions are flat — see docs/V8A_VRP_RECON_FLUSH_PLAN.md. Until then this
-# section is inert and the account keeps running the champion clone.
+# Ships ENABLED + DRY-RUN: the worker boots the VRP strategy class (not the
+# champion) and runs plan-only cycles that place NO orders. Routing to VRP also
+# STOPS new champion entries (the scan slot no longer calls scan_opportunities),
+# while the background PositionMonitor keeps flushing the open champion spread to
+# flat — so no separate sentinel pause is needed.
 #
-# MVP scope at activation: 4 credit-spread streams live now
-# (exp1220/xlf_cs/xli_cs/qqq_cs); cross_vol + v5_hedge activate once their
-# signal generators land (PR-D-follow) → 6/8; gld_cal + slv_cal stay deferred
-# (futures execution venue pending — recon cc2 B1).
+# THE LIVE FLIP IS A SINGLE TOGGLE: set dry_run: false. cc5 does this Fri
+# 2026-05-29 ~09:40 ET, AFTER confirming the legacy positions are flat (see
+# docs/V8A_VRP_RECON_FLUSH_PLAN.md). dry_run MUST stay true until then.
+#
+# MVP scope at activation: 4 credit-spread streams (exp1220/xlf_cs/xli_cs/qqq_cs);
+# cross_vol + v5_hedge activate once their signal generators land (PR-D-follow)
+# → 6/8; gld_cal + slv_cal deferred (futures execution venue pending — recon cc2 B1).
 vrp_engine:
-  enabled: false      # ← set true post-flush to activate the cutover
-  dry_run: true       # ← plan-only (no orders) until explicitly flipped to false
+  enabled: true       # VRP strategy loaded + routed; champion entries stop on deploy
+  dry_run: true       # ← PLAN-ONLY, no orders. cc5 flips to false post-flush (Fri 09:40 ET)
   vol_target: 0.12    # 12% annualized portfolio vol target (matches exp2850)
   dte_range: [25, 50]
 
