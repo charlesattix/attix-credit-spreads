@@ -123,7 +123,7 @@ def job_pre_market_check() -> None:
     failures = []
 
     # 1. Required env vars — check per-experiment keys
-    exp_ids = ["EXP400", "EXP401", "EXP503", "EXP600", "EXP800", "EXP1220", "EXP3309", "EXP3311"]
+    exp_ids = ["EXP400", "EXP401", "EXP503", "EXP800", "EXP1220", "EXP3303B", "EXP3309", "EXP3311", "EXPV8A"]
     keys_found = 0
     for eid in exp_ids:
         key_var = f"ALPACA_API_KEY_{eid}"
