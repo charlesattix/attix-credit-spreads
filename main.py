@@ -1213,7 +1213,14 @@ Examples:
                     _write_heartbeat()
                     emit_heartbeat(_exp_id, notes="retrain check complete")
                 else:
-                    system.scan_opportunities()
+                    # EXP-V8A VRP cutover (PR-E): opt-in via vrp_engine.enabled.
+                    # Cheap dict check + lazy import — every other experiment runs
+                    # the legacy champion scan path completely unchanged.
+                    if (system.config.get("vrp_engine") or {}).get("enabled", False):
+                        from compass.live.vrp_runner import run_vrp_cycle
+                        run_vrp_cycle(system)
+                    else:
+                        system.scan_opportunities()
                     _write_heartbeat()
                     emit_heartbeat(_exp_id, notes="scan complete")
 
