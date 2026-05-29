@@ -215,7 +215,7 @@ backtest:
 # → 6/8; gld_cal + slv_cal deferred (futures execution venue pending — recon cc2 B1).
 vrp_engine:
   enabled: true       # VRP strategy loaded + routed; champion entries stop on deploy
-  dry_run: true       # ← PLAN-ONLY, no orders. cc5 flips to false post-flush (Fri 09:40 ET)
+  dry_run: false      # LIVE — VRP places real paper orders (flipped post-flush 2026-05-29)
   vol_target: 0.12    # 12% annualized portfolio vol target (matches exp2850)
   dte_range: [25, 50]
 
