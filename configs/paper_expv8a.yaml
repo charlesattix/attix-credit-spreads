@@ -100,6 +100,15 @@ strategy:
 risk:
   account_size: 100000
 
+  # SAFETY (2026-05-29): the champion-style PositionMonitor is NOT VRP-aware — VRP
+  # places spreads via compass.live AlpacaOrderSink and does not (yet) persist them
+  # to the trades/trade_legs DB the monitor reconciles against, so every VRP leg is
+  # mis-detected as an "orphan long" and auto-close is attempted (currently failing
+  # on buying power, but a latent naked-short risk if it ever succeeds). Disable the
+  # auto-close for V8A until VRP positions are persisted + a VRP-aware monitor lands
+  # (build-plan PR-H). Orphans are still logged for manual review; nothing is closed.
+  auto_close_orphan_longs: false
+
   # Credit spread: 3.9× leverage (8.5% baseline × 3.9 = 33.15%)
   max_risk_per_trade: 33.15
 
