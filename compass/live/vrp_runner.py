@@ -7,7 +7,16 @@ the scheduler calls when ``vrp_engine.enabled`` is set in an experiment's config
     cc3 PR-C  compute_weights        (LW risk-parity, via the engine)
     cc4 PR-D  resolve_vix_ladder_signal  (wrapped by Cc4VixExposure → multiplier)
     PR-B      VRPMultiStreamStrategy (the engine, merged #77)
-              AlpacaOrderSink        (order placement — only when not dry-run)
+              <OrderSink>            (Alpaca | Executor-REST — only when not dry-run)
+
+Two sinks are wired (selected per-cycle, ADDITIVE):
+
+  * :class:`compass.live.vrp_sinks.AlpacaOrderSink` — DEFAULT. The Railway live
+    worker already trades V8A through Alpaca via this path.
+  * :class:`compass.live.executor_order_sink.ExecutorOrderSink` — opt-in via
+    ``SINK_TYPE=executor`` env var (or ``vrp_engine.sink_type: executor`` in the
+    experiment config). Routes the same intents through the standalone Executor
+    REST service (IBKR paper, today). Inert for every existing experiment.
 
 ADDITIVE + INERT BY DEFAULT. The scheduler hook is guarded on
 ``config['vrp_engine']['enabled']`` (absent for every other experiment), and the
@@ -19,6 +28,7 @@ positions are flat (the flush — see docs/V8A_VRP_RECON_FLUSH_PLAN.md).
 from __future__ import annotations
 
 import logging
+import os
 from typing import Callable, Dict, Optional
 
 from compass.live.vrp_contracts import STREAM_SPECS, StreamStatus
@@ -61,12 +71,46 @@ class Cc4VixExposure:
             return 0.0
 
 
-def build_vrp_strategy(config: dict, alpaca_provider, *, data_feed=None, vix_provider=None):
+def _resolve_sink_type(config: dict) -> str:
+    """Return ``"alpaca"`` (default) or ``"executor"``.
+
+    Precedence: env var ``SINK_TYPE`` > ``vrp_engine.sink_type`` config key >
+    ``"alpaca"``. Unknown values warn and fall back to ``"alpaca"`` to keep the
+    Alpaca path the failsafe default for the existing Railway worker.
+    """
+    cfg = (config.get("vrp_engine") or {}) if config else {}
+    raw = (os.environ.get("SINK_TYPE") or cfg.get("sink_type") or "alpaca").strip().lower()
+    if raw not in ("alpaca", "executor"):
+        logger.warning("[vrp_runner] unknown SINK_TYPE=%r — defaulting to 'alpaca'", raw)
+        return "alpaca"
+    return raw
+
+
+def _equity_from_executor(sink) -> float:
+    """Read account equity from the executor balance endpoint, with a 0.0 fallback."""
+    try:
+        bal = sink.get_balance()
+        return float(bal.get("total_equity", 0.0))
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("[vrp_runner] executor balance fetch failed: %s", exc)
+        return 0.0
+
+
+def build_vrp_strategy(
+    config: dict,
+    alpaca_provider,
+    *,
+    data_feed=None,
+    vix_provider=None,
+    equity_source: Optional[Callable[[], float]] = None,
+):
     """Construct a configured ``VRPMultiStreamStrategy`` for the live worker.
 
-    Account equity is read live from Alpaca each cycle (falls back to 0 → no
-    allocation if unavailable). ``data_feed``/``vix_provider`` are injectable for
-    tests; defaults are cc2's process-global feed and the cc4 adapter.
+    Account equity defaults to live Alpaca each cycle (falls back to 0 → no
+    allocation if unavailable). ``equity_source`` overrides that — used to feed
+    equity from the executor balance endpoint when ``SINK_TYPE=executor``.
+    ``data_feed``/``vix_provider`` are injectable for tests; defaults are cc2's
+    process-global feed and the cc4 adapter.
     """
     from compass.live.vrp_data import get_default_feed
     from compass.live.vrp_strategy import VRPMultiStreamStrategy
@@ -75,14 +119,17 @@ def build_vrp_strategy(config: dict, alpaca_provider, *, data_feed=None, vix_pro
     feed = data_feed if data_feed is not None else get_default_feed()
     vix = vix_provider if vix_provider is not None else Cc4VixExposure()
 
-    def _equity() -> float:
-        if alpaca_provider is None:
-            return 0.0
-        try:
-            return float(alpaca_provider.get_account().get("equity", 0.0))
-        except Exception as exc:  # noqa: BLE001
-            logger.warning("[vrp_runner] equity fetch failed: %s", exc)
-            return 0.0
+    if equity_source is not None:
+        _equity = equity_source
+    else:
+        def _equity() -> float:
+            if alpaca_provider is None:
+                return 0.0
+            try:
+                return float(alpaca_provider.get_account().get("equity", 0.0))
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("[vrp_runner] equity fetch failed: %s", exc)
+                return 0.0
 
     dte = cfg.get("dte_range", [25, 50])
     return VRPMultiStreamStrategy(
@@ -105,18 +152,47 @@ def vrp_enabled(config: dict) -> bool:
 
 def run_vrp_cycle(system, *, strategy=None):
     """One VRP scan cycle for the scheduler. Plans intents; places them only when
-    ``vrp_engine.dry_run`` is false AND an Alpaca provider exists.
+    ``vrp_engine.dry_run`` is false AND a live sink (Alpaca provider OR an
+    Executor REST account) is wired.
+
+    The sink is selected per-cycle by :func:`_resolve_sink_type`. The default
+    ``alpaca`` path is byte-for-byte unchanged so the running Railway worker is
+    untouched until this experiment's config / env opts into ``executor``.
 
     Returns the :class:`CyclePlan` (also when dry-run) for logging/telemetry.
     """
     cfg = system.config.get("vrp_engine", {}) or {}
     provider = getattr(system, "alpaca_provider", None)
-    strat = strategy or build_vrp_strategy(system.config, provider)
+    sink_type = _resolve_sink_type(system.config)
 
-    dry_run = bool(cfg.get("dry_run", True)) or provider is None
+    # Build the live sink (and equity source) BEFORE the strategy so executor
+    # mode can swap its balance endpoint in for sizing.
+    live_sink = None
+    equity_source: Optional[Callable[[], float]] = None
+    if sink_type == "executor":
+        try:
+            from compass.live.executor_order_sink import ExecutorOrderSink
+            live_sink = ExecutorOrderSink.from_env()
+            equity_source = lambda s=live_sink: _equity_from_executor(s)
+        except Exception as exc:  # noqa: BLE001 — degrade to dry-run, never crash
+            logger.error("[vrp_runner] executor sink unavailable (%s) — forcing dry-run", exc)
+            live_sink = None
+
+    strat = strategy or build_vrp_strategy(
+        system.config, provider, equity_source=equity_source,
+    )
+
+    # Dry-run if the experiment is configured for it, OR no live sink is wired.
+    if sink_type == "executor":
+        dry_run = bool(cfg.get("dry_run", True)) or live_sink is None
+    else:
+        dry_run = bool(cfg.get("dry_run", True)) or provider is None
+
     if dry_run:
         plan = strat.plan_cycle()
         results = []
+    elif sink_type == "executor":
+        plan, results = strat.execute_cycle(sink=live_sink)
     else:
         from compass.live.vrp_sinks import AlpacaOrderSink
         plan, results = strat.execute_cycle(sink=AlpacaOrderSink(provider))
@@ -129,8 +205,9 @@ def run_vrp_cycle(system, *, strategy=None):
             logger.info("[vrp_runner] %s: %s", sid, status)
 
     logger.info(
-        "[vrp_runner] cycle %s equity=$%.0f vix_mult=%.3f intents=%d placed=%d streams=%s%s",
+        "[vrp_runner] cycle %s sink=%s equity=$%.0f vix_mult=%.3f intents=%d placed=%d streams=%s%s",
         "DRY-RUN" if dry_run else "LIVE",
+        sink_type,
         plan.account_equity, plan.vix_exposure, len(plan.intents), len(results),
         ",".join(plan.traded_streams) or "-",
         f" notes={plan.notes}" if plan.notes else "",

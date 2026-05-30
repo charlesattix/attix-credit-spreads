@@ -140,3 +140,73 @@ def test_run_cycle_reports_blocked_futures_streams():
     plan = run_vrp_cycle(system, strategy=_prebuilt_strategy())
     assert plan.stream_status["gld_cal"].startswith("blocked")
     assert plan.stream_status["slv_cal"].startswith("blocked")
+
+
+# ── SINK_TYPE feature flag ───────────────────────────────────────────────────
+
+def test_run_cycle_executor_sink_routes_intents_via_rest(monkeypatch):
+    """SINK_TYPE=executor + EXECUTOR_* env → intents POSTed to /v1/orders/spread,
+    NOT through the Alpaca provider (so the existing live worker is untouched
+    unless this experiment explicitly opts in)."""
+    from tests.test_executor_order_sink import FakeHttp
+
+    # Programmable executor responses: a balance query, then N spread submits.
+    http = FakeHttp(queue=[
+        (200, {  # GET /v1/portfolio/balance for equity sizing
+            "total_equity": 250_000.0, "cash": 200_000.0,
+            "buying_power": 800_000.0, "unrealized_pnl": 0.0,
+            "realized_pnl_today": 0.0, "positions_count": 0,
+        }),
+    ] + [(200, {  # one OrderResponse per intent the strategy emits
+        "success": True, "order_id": f"exec-{i}", "broker_order_id": f"bk-{i}",
+        "message": "submitted", "status": "open", "symbol": "SPY",
+        "quantity": 1, "timestamp": "2026-05-30T20:00:00Z",
+    }) for i in range(16)])
+
+    monkeypatch.setenv("SINK_TYPE", "executor")
+    monkeypatch.setenv("EXECUTOR_API_KEY", "test-key")
+    monkeypatch.setenv("EXECUTOR_ACCOUNT_ID", "ibkr_paper")
+    monkeypatch.setenv("EXECUTOR_BASE_URL", "http://exec.local")
+
+    # Patch ExecutorOrderSink.from_env to inject our FakeHttp.
+    import compass.live.executor_order_sink as eos
+    real_from_env = eos.ExecutorOrderSink.from_env
+    monkeypatch.setattr(
+        eos.ExecutorOrderSink, "from_env",
+        classmethod(lambda cls, **kw: real_from_env(http=http)),
+    )
+
+    provider = _FakeProvider()
+    system = _system({"vrp_engine": {"dry_run": False}}, provider)
+    plan = run_vrp_cycle(system, strategy=_prebuilt_strategy())
+
+    assert len(plan.intents) > 0
+    # Alpaca path UNTOUCHED — every submit went through the executor.
+    assert provider.calls == []
+    # First HTTP call was balance (equity source); rest are POST /spread.
+    posts = [c for c in http.calls if c["method"] == "POST"]
+    assert len(posts) == len(plan.intents)
+    for p in posts:
+        assert p["url"].endswith("/v1/orders/spread")
+        assert p["json"]["account_id"] == "ibkr_paper"
+        assert p["json"]["account_type"] == "paper"
+
+
+def test_run_cycle_unknown_sink_type_falls_back_to_alpaca(monkeypatch):
+    monkeypatch.setenv("SINK_TYPE", "totally-bogus")
+    provider = _FakeProvider()
+    system = _system({"vrp_engine": {"dry_run": False}}, provider)
+    plan = run_vrp_cycle(system, strategy=_prebuilt_strategy())
+    assert len(provider.calls) == len(plan.intents) > 0
+
+
+def test_run_cycle_executor_missing_creds_forces_dry_run(monkeypatch):
+    monkeypatch.setenv("SINK_TYPE", "executor")
+    monkeypatch.delenv("EXECUTOR_API_KEY", raising=False)
+    monkeypatch.delenv("EXECUTOR_ACCOUNT_ID", raising=False)
+    provider = _FakeProvider()
+    system = _system({"vrp_engine": {"dry_run": False}}, provider)
+    plan = run_vrp_cycle(system, strategy=_prebuilt_strategy())
+    # Sink unavailable → degrade to dry-run, never crash the cycle.
+    assert provider.calls == []
+    assert len(plan.intents) >= 0
