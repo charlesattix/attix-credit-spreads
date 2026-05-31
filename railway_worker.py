@@ -143,6 +143,24 @@ def build_subprocess_env(exp: dict) -> dict:
         env["USE_SHARED_CACHE"] = cache_flag
         logger.info("[%s] USE_SHARED_CACHE=%s (per-experiment override)", exp_id, cache_flag)
 
+    # Per-experiment executor-routing override (EXP-V8A-IBKR / future IBKR experiments).
+    # Same suffix pattern as ALPACA_API_KEY_<SUFFIX>: anything tagged with the
+    # experiment-id suffix is unmasked into the plain name for THIS subprocess only.
+    # Lets us route ONE experiment through the standalone Executor REST service
+    # (ExecutorOrderSink, PR #85) while every other subprocess keeps its default
+    # Alpaca path completely unchanged.
+    for plain_name in (
+        "SINK_TYPE",
+        "EXECUTOR_API_KEY",
+        "EXECUTOR_BASE_URL",
+        "EXECUTOR_ACCOUNT_ID",
+        "EXECUTOR_ACCOUNT_TYPE",
+    ):
+        suffixed = os.environ.get(f"{plain_name}_{suffix}")
+        if suffixed is not None:
+            env[plain_name] = suffixed
+            logger.debug("[%s] Using Railway env var %s_%s", exp_id, plain_name, suffix)
+
     # Identify experiment inside the subprocess (heartbeat, SENTINEL gate)
     env["EXPERIMENT_ID"] = exp_id
 
